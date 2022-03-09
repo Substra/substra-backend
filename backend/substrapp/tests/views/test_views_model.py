@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 import tempfile
-from operator import itemgetter
 from unittest import mock
 
 from django.contrib.auth.models import User
@@ -13,21 +12,17 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.model_pb2 as model_pb2
 from localrep.models import Model as ModelRep
-from localrep.serializers import AlgoSerializer as AlgoRepSerializer
-from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
-from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
-from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from node.authentication import NodeUser
+from substrapp.tests import factory
 from substrapp.views.model import ModelPermissionViewSet
 from substrapp.views.utils import AssetPermissionError
 
-from .. import assets
 from ..common import AuthenticatedClient
 from ..common import get_sample_model
 from ..common import internal_server_error_on_exception
-from .test_views_computetask import clean_input_data
-from .test_views_computetask import create_output_assets
 
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
@@ -53,36 +48,81 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:model-list")
 
-        self.algos = assets.get_algos()
-        for algo in self.algos:
-            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        algo = factory.create_algo()
+        compute_plan = factory.create_computeplan()
 
-        self.data_managers = assets.get_data_managers()
-        for data_manager in self.data_managers:
-            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        train_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_TRAIN)
+        simple_model_1 = factory.create_model(train_task, category=model_pb2.MODEL_SIMPLE)
+        simple_model_2 = factory.create_model(train_task, category=model_pb2.MODEL_SIMPLE)
 
-        self.compute_plans = assets.get_compute_plans()
-        for compute_plan in self.compute_plans:
-            serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        composite_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_COMPOSITE)
+        head_model = factory.create_model(composite_task, category=model_pb2.MODEL_HEAD)
 
-        self.compute_tasks = assets.get_train_tasks()
-        self.models = []
-        for compute_task in self.compute_tasks:
-            cleaned_compute_task = clean_input_data(compute_task)
-            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-            if compute_task["status"] == "STATUS_DONE":
-                create_output_assets(compute_task)
-                self.models += compute_task["train"]["models"]
-        self.models.sort(key=itemgetter("creation_date", "key"))
+        self.expected_results = [
+            {
+                "key": str(simple_model_1.key),
+                "category": "MODEL_SIMPLE",
+                "compute_task_key": str(train_task.key),
+                "address": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/model/{simple_model_1.key}/file/",
+                },
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "owner": "MyOrg1MSP",
+                "creation_date": simple_model_1.creation_date.isoformat().replace("+00:00", "Z"),
+            },
+            {
+                "key": str(simple_model_2.key),
+                "category": "MODEL_SIMPLE",
+                "compute_task_key": str(train_task.key),
+                "address": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/model/{simple_model_2.key}/file/",
+                },
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "owner": "MyOrg1MSP",
+                "creation_date": simple_model_2.creation_date.isoformat().replace("+00:00", "Z"),
+            },
+            {
+                "key": str(head_model.key),
+                "category": "MODEL_HEAD",
+                "compute_task_key": str(composite_task.key),
+                "address": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/model/{head_model.key}/file/",
+                },
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "owner": "MyOrg1MSP",
+                "creation_date": head_model.creation_date.isoformat().replace("+00:00", "Z"),
+            },
+        ]
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -96,7 +136,8 @@ class ModelViewTests(APITestCase):
     def test_model_list_success(self):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
-            response.json(), {"count": len(self.models), "next": None, "previous": None, "results": self.models}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_model_list_wrong_channel(self):
@@ -116,49 +157,59 @@ class ModelViewTests(APITestCase):
             model.save()
 
         response = self.client.get(self.url, **self.extra)
-        self.assertEqual(response.data["count"], len(self.models))
-        for result, model in zip(response.data["results"], self.models):
+        self.assertEqual(response.data["count"], len(self.expected_results))
+        for result, model in zip(response.data["results"], self.expected_results):
             self.assertEqual(result["address"]["storage_address"], model["address"]["storage_address"])
 
     def test_model_list_filter(self):
         """Filter model on key."""
-        key = self.models[0]["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"model:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.models[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_model_list_filter_and(self):
         """Filter model on key and owner."""
-        key, owner = self.models[0]["key"], self.models[0]["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"model:key:{key},model:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.models[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_model_list_filter_in(self):
         """Filter model in key_0, key_1."""
-        key_0 = self.models[0]["key"]
-        key_1 = self.models[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"model:key:{key_0},model:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.models[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_model_list_filter_or(self):
         """Filter model on key_0 or key_1."""
-        key_0 = self.models[0]["key"]
-        key_1 = self.models[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"model:key:{key_0}-OR-model:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.models[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_model_list_filter_or_and(self):
         """Filter model on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.models[0]["key"], self.models[0]["owner"]
-        key_1, owner_1 = self.models[1]["key"], self.models[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {"search": f"model:key:{key_0},model:owner:{owner_0}-OR-model:key:{key_1},model:owner:{owner_1}"}
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.models[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     @parameterized.expand(
         [
@@ -169,7 +220,7 @@ class ModelViewTests(APITestCase):
     )
     def test_model_list_filter_by_category(self, category):
         """Filter model on category."""
-        filtered_models = [task for task in self.models if task["category"] == category]
+        filtered_models = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"search": f"model:category:{category}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -179,43 +230,45 @@ class ModelViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_model_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.models))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.models[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_model_retrieve(self):
-        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        self.assertEqual(response.json(), self.models[0])
+        self.assertEqual(response.json(), self.expected_results[0])
 
     def test_model_retrieve_wrong_channel(self):
-        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_model_retrieve_storage_addresses_update(self):
-        model = ModelRep.objects.get(key=self.models[0]["key"])
+        model = ModelRep.objects.get(key=self.expected_results[0]["key"])
         model.model_address.replace("http://testserver", "http://remotetestserver")
         model.save()
 
-        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        self.assertEqual(response.data["address"]["storage_address"], self.models[0]["address"]["storage_address"])
+        self.assertEqual(
+            response.data["address"]["storage_address"], self.expected_results[0]["address"]["storage_address"]
+        )
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.model.ModelViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_model_retrieve_fail(self, _):
-        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 

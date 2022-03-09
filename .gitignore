@@ -109,6 +109,9 @@ venv.bak/
 # vscode files
 .vscode/
 
+# vim files
+*.swp
+
 # secret files
 SECRET
 

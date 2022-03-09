@@ -16,13 +16,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from localrep.models import DataSample as DataSampleRep
-from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
-from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from substrapp.tests import factory
 from substrapp.utils import get_dir_hash
 
-from .. import assets
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
 
@@ -70,19 +68,34 @@ class DataSampleViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        self.data_managers = assets.get_data_managers()
-        for data_manager in self.data_managers:
-            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        self.data_samples = assets.get_data_samples()
-        for data_sample in self.data_samples:
-            del data_sample["path"]
-            serializer = DataSampleRepSerializer(data={"channel": "mychannel", **data_sample})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            data_sample["creation_date"] = data_sample["creation_date"].replace("+00:00", "Z")
+        data_manager = factory.create_datamanager()
+        self.data_manager_key = str(data_manager.key)
+        train_data_sample_1 = factory.create_datasample([data_manager])
+        train_data_sample_2 = factory.create_datasample([data_manager])
+        test_data_sample = factory.create_datasample([data_manager], test_only=True)
+        self.expected_results = [
+            {
+                "key": str(train_data_sample_1.key),
+                "owner": "MyOrg1MSP",
+                "data_manager_keys": [str(data_manager.key)],
+                "creation_date": train_data_sample_1.creation_date.isoformat().replace("+00:00", "Z"),
+                "test_only": False,
+            },
+            {
+                "key": str(train_data_sample_2.key),
+                "owner": "MyOrg1MSP",
+                "data_manager_keys": [str(data_manager.key)],
+                "creation_date": train_data_sample_2.creation_date.isoformat().replace("+00:00", "Z"),
+                "test_only": False,
+            },
+            {
+                "key": str(test_data_sample.key),
+                "owner": "MyOrg1MSP",
+                "data_manager_keys": [str(data_manager.key)],
+                "creation_date": test_data_sample.creation_date.isoformat().replace("+00:00", "Z"),
+                "test_only": True,
+            },
+        ]
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -97,7 +110,7 @@ class DataSampleViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.data_samples), "next": None, "previous": None, "results": self.data_samples},
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_datasample_list_wrong_channel(self):
@@ -113,46 +126,46 @@ class DataSampleViewTests(APITestCase):
 
     def test_datasample_list_filter(self):
         """Filter datasample on key."""
-        key = self.data_samples[0]["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"datasample:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_samples[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_datasample_list_filter_and(self):
         """Filter datasample on key and owner."""
-        key, owner = self.data_samples[0]["key"], self.data_samples[0]["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"datasample:key:{key},datasample:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_samples[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_datasample_list_filter_in(self):
         """Filter datasample in key_0, key_1."""
-        key_0 = self.data_samples[0]["key"]
-        key_1 = self.data_samples[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"datasample:key:{key_0},datasample:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_samples[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_datasample_list_filter_or(self):
         """Filter datasample on key_0 or key_1."""
-        key_0 = self.data_samples[0]["key"]
-        key_1 = self.data_samples[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"datasample:key:{key_0}-OR-datasample:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_samples[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_datasample_list_filter_or_and(self):
         """Filter datasample on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.data_samples[0]["key"], self.data_samples[0]["owner"]
-        key_1, owner_1 = self.data_samples[1]["key"], self.data_samples[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {
                 "search": (
@@ -163,23 +176,23 @@ class DataSampleViewTests(APITestCase):
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_samples[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_datasample_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.data_samples))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.data_samples[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_data_create_upload(self):
         """Upload single datasample."""
@@ -188,7 +201,7 @@ class DataSampleViewTests(APITestCase):
             "file": open(data_path, "rb"),
             "json": json.dumps(
                 {
-                    "data_manager_keys": [self.data_managers[0]["key"]],
+                    "data_manager_keys": [self.data_manager_key],
                     "test_only": False,
                 }
             ),
@@ -203,7 +216,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[0]["checksum"], _get_archive_checksum(data_path))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples) + 1)
+        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 1)
 
         data["file"].close()
 
@@ -217,7 +230,7 @@ class DataSampleViewTests(APITestCase):
             path_leaf(data_path2): open(data_path2, "rb"),
             "json": json.dumps(
                 {
-                    "data_manager_keys": [self.data_managers[0]["key"]],
+                    "data_manager_keys": [self.data_manager_key],
                     "test_only": False,
                 }
             ),
@@ -234,7 +247,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[1]["checksum"], _get_archive_checksum(data_path2))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # assets created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples) + 2)
+        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 2)
 
         for x in data["files"]:
             data[x].close()
@@ -248,7 +261,7 @@ class DataSampleViewTests(APITestCase):
 
         data = {
             "path": target_path,
-            "data_manager_keys": [self.data_managers[0]["key"]],
+            "data_manager_keys": [self.data_manager_key],
             "test_only": False,
         }
 
@@ -261,7 +274,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[0]["checksum"], get_dir_hash(target_path))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples) + 1)
+        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 1)
 
     @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
     def test_data_create_parent_path(self):
@@ -276,7 +289,7 @@ class DataSampleViewTests(APITestCase):
 
         data = {
             "path": parent_path,
-            "data_manager_keys": [self.data_managers[0]["key"]],
+            "data_manager_keys": [self.data_manager_key],
             "test_only": False,
             "multiple": True,
         }
@@ -294,7 +307,7 @@ class DataSampleViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # assets created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples) + 2)
+        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 2)
 
     @override_settings(DATA_UPLOAD_MAX_SIZE=150)
     def test_file_size_limit(self):
@@ -303,7 +316,7 @@ class DataSampleViewTests(APITestCase):
             "file": open(data_path, "rb"),
             "json": json.dumps(
                 {
-                    "data_manager_keys": [self.data_managers[0]["key"]],
+                    "data_manager_keys": [self.data_manager_key],
                     "test_only": False,
                 }
             ),
@@ -326,7 +339,7 @@ class DataSampleViewTests(APITestCase):
             "file": open(data_path, "rb"),
             "json": json.dumps(
                 {
-                    "data_manager_keys": [self.data_managers[0]["key"]],
+                    "data_manager_keys": [self.data_manager_key],
                     "test_only": False,
                 }
             ),
@@ -337,7 +350,7 @@ class DataSampleViewTests(APITestCase):
         ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples))
+        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 

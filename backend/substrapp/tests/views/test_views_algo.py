@@ -45,14 +45,13 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:algo-list")
 
-        self.algos = [
-            factory.create_algo(category=algo_pb2.ALGO_SIMPLE),
-            factory.create_algo(category=algo_pb2.ALGO_AGGREGATE),
-            factory.create_algo(category=algo_pb2.ALGO_COMPOSITE),
-        ]
+        simple_algo = factory.create_algo(category=algo_pb2.ALGO_SIMPLE)
+        aggregate_algo = factory.create_algo(category=algo_pb2.ALGO_AGGREGATE)
+        composite_algo = factory.create_algo(category=algo_pb2.ALGO_COMPOSITE)
+        self.algos = [simple_algo, aggregate_algo, composite_algo]
         self.expected_results = [
             {
-                "key": str(algo.key),
+                "key": str(simple_algo.key),
                 "name": "algo",
                 "owner": "MyOrg1MSP",
                 "permissions": {
@@ -66,18 +65,69 @@ class AlgoViewTests(APITestCase):
                     },
                 },
                 "metadata": {},
-                "category": algo_pb2.AlgoCategory.Name(algo.category),
-                "creation_date": algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "category": "ALGO_SIMPLE",
+                "creation_date": simple_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{algo.key}/description/",
+                    "storage_address": f"http://testserver/algo/{simple_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{algo.key}/file/",
+                    "storage_address": f"http://testserver/algo/{simple_algo.key}/file/",
                 },
-            }
-            for algo in self.algos
+            },
+            {
+                "key": str(aggregate_algo.key),
+                "name": "algo",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "metadata": {},
+                "category": "ALGO_AGGREGATE",
+                "creation_date": aggregate_algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{aggregate_algo.key}/description/",
+                },
+                "algorithm": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{aggregate_algo.key}/file/",
+                },
+            },
+            {
+                "key": str(composite_algo.key),
+                "name": "algo",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "metadata": {},
+                "category": "ALGO_COMPOSITE",
+                "creation_date": composite_algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{composite_algo.key}/description/",
+                },
+                "algorithm": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{composite_algo.key}/file/",
+                },
+            },
         ]
 
     def tearDown(self):

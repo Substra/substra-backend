@@ -49,21 +49,21 @@ class NewsFeedViewTests(APITestCase):
         done_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
 
         # we expect items to be sorted from the latest to the earliest
-        expected_items = [
+        expected_results = [
             # PLAN_STATUS_DONE
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": done_cp.key,
+                "asset_key": str(done_cp.key),
                 "status": "STATUS_DONE",
-                "timestamp": done_cp.end_date,
+                "timestamp": done_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             # PLAN_STATUS_FAILED
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": failed_cp.key,
+                "asset_key": str(failed_cp.key),
                 "status": "STATUS_FAILED",
-                "timestamp": failed_cp.end_date,
+                "timestamp": failed_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {
                     "first_failed_task_key": failed_cp.failed_task_key,
                     "task_category": failed_cp.failed_task_category,
@@ -72,83 +72,80 @@ class NewsFeedViewTests(APITestCase):
             # PLAN_STATUS_CANCELED
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": canceled_cp.key,
+                "asset_key": str(canceled_cp.key),
                 "status": "STATUS_CANCELED",
-                "timestamp": canceled_cp.end_date,
+                "timestamp": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             # PLAN_STATUS_DOING
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": done_cp.key,
+                "asset_key": str(done_cp.key),
                 "status": "STATUS_DOING",
-                "timestamp": done_cp.start_date,
+                "timestamp": done_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": failed_cp.key,
+                "asset_key": str(failed_cp.key),
                 "status": "STATUS_DOING",
-                "timestamp": failed_cp.start_date,
+                "timestamp": failed_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": canceled_cp.key,
+                "asset_key": str(canceled_cp.key),
                 "status": "STATUS_DOING",
-                "timestamp": canceled_cp.start_date,
+                "timestamp": canceled_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": doing_cp.key,
+                "asset_key": str(doing_cp.key),
                 "status": "STATUS_DOING",
-                "timestamp": doing_cp.start_date,
+                "timestamp": doing_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             # PLAN_STATUS_CREATED
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": done_cp.key,
+                "asset_key": str(done_cp.key),
                 "status": "STATUS_CREATED",
-                "timestamp": done_cp.creation_date,
+                "timestamp": done_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": failed_cp.key,
+                "asset_key": str(failed_cp.key),
                 "status": "STATUS_CREATED",
-                "timestamp": failed_cp.creation_date,
+                "timestamp": failed_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": canceled_cp.key,
+                "asset_key": str(canceled_cp.key),
                 "status": "STATUS_CREATED",
-                "timestamp": canceled_cp.creation_date,
+                "timestamp": canceled_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": doing_cp.key,
+                "asset_key": str(doing_cp.key),
                 "status": "STATUS_CREATED",
-                "timestamp": doing_cp.creation_date,
+                "timestamp": doing_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": todo_cp.key,
+                "asset_key": str(todo_cp.key),
                 "status": "STATUS_CREATED",
-                "timestamp": todo_cp.creation_date,
+                "timestamp": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
         ]
-        for item in expected_items:
-            item["asset_key"] = str(item["asset_key"])
-            item["timestamp"] = item["timestamp"].isoformat().replace("+00:00", "Z")
 
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(expected_items), "next": None, "previous": None, "results": expected_items},
+            {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )

@@ -14,11 +14,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from localrep.models import DataManager as DataManagerRep
-from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from substrapp.tests import factory
 
-from .. import assets
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
 
@@ -46,18 +45,107 @@ class DataManagerViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        # retrieve view
-        self.data_manager = assets.get_data_manager()
-        self.data_manager["creation_date"] = self.data_manager["creation_date"].replace("+00:00", "Z")
-        # list view
-        self.data_managers = assets.get_data_managers()
-        for data_manager in self.data_managers:
-            del data_manager["train_data_sample_keys"]
-            del data_manager["test_data_sample_keys"]
-            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            data_manager["creation_date"] = data_manager["creation_date"].replace("+00:00", "Z")
+        data_manager_1 = factory.create_datamanager()
+        train_data_sample = factory.create_datasample([data_manager_1])
+        test_data_sample = factory.create_datasample([data_manager_1], test_only=True)
+        # only for retrieve view
+        self.train_data_sample_keys = [str(train_data_sample.key)]
+        self.test_data_sample_keys = [str(test_data_sample.key)]
+
+        data_manager_2 = factory.create_datamanager()
+        data_manager_3 = factory.create_datamanager()
+        self.expected_results = [
+            {
+                "key": str(data_manager_1.key),
+                "name": "datamanager",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "type": "Test",
+                "opener": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_1.key}/opener/",
+                },
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_1.key}/description/",
+                },
+                "metadata": {},
+                "creation_date": data_manager_1.creation_date.isoformat().replace("+00:00", "Z"),
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(data_manager_2.key),
+                "name": "datamanager",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "type": "Test",
+                "opener": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_2.key}/opener/",
+                },
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_2.key}/description/",
+                },
+                "metadata": {},
+                "creation_date": data_manager_2.creation_date.isoformat().replace("+00:00", "Z"),
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(data_manager_3.key),
+                "name": "datamanager",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "type": "Test",
+                "opener": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_3.key}/opener/",
+                },
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/data_manager/{data_manager_3.key}/description/",
+                },
+                "metadata": {},
+                "creation_date": data_manager_3.creation_date.isoformat().replace("+00:00", "Z"),
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+        ]
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -72,7 +160,7 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.data_managers), "next": None, "previous": None, "results": self.data_managers},
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_datamanager_list_wrong_channel(self):
@@ -94,53 +182,53 @@ class DataManagerViewTests(APITestCase):
             data_manager.save()
 
         response = self.client.get(self.url, **self.extra)
-        self.assertEqual(response.data["count"], len(self.data_managers))
-        for result, data_manager in zip(response.data["results"], self.data_managers):
+        self.assertEqual(response.data["count"], len(self.expected_results))
+        for result, data_manager in zip(response.data["results"], self.expected_results):
             for field in ("description", "opener"):
                 self.assertEqual(result[field]["storage_address"], data_manager[field]["storage_address"])
 
     def test_datamanager_list_filter(self):
         """Filter datamanager on key."""
-        key = self.data_manager["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"dataset:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_datamanager_list_filter_and(self):
         """Filter datamanager on key and owner."""
-        key, owner = self.data_manager["key"], self.data_manager["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"dataset:key:{key},dataset:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_datamanager_list_filter_in(self):
         """Filter datamanager in key_0, key_1."""
-        key_0 = self.data_manager["key"]
-        key_1 = self.data_managers[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"dataset:key:{key_0},dataset:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_datamanager_list_filter_or(self):
         """Filter datamanager on key_0 or key_1."""
-        key_0 = self.data_manager["key"]
-        key_1 = self.data_managers[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"dataset:key:{key_0}-OR-dataset:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_datamanager_list_filter_or_and(self):
         """Filter datamanager on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.data_manager["key"], self.data_manager["owner"]
-        key_1, owner_1 = self.data_managers[1]["key"], self.data_managers[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {
                 "search": (
@@ -150,23 +238,23 @@ class DataManagerViewTests(APITestCase):
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_datamanager_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.data_managers))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.data_managers[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_datamanager_create(self):
         def mock_orc_response(data):
@@ -213,7 +301,7 @@ class DataManagerViewTests(APITestCase):
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataManagerRep.objects.count(), len(self.data_managers) + 1)
+        self.assertEqual(DataManagerRep.objects.count(), len(self.expected_results) + 1)
 
         data["data_opener"].close()
         data["description"].close()
@@ -278,7 +366,7 @@ class DataManagerViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "register_datamanager", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(DataManagerRep.objects.count(), len(self.data_managers))
+        self.assertEqual(DataManagerRep.objects.count(), len(self.expected_results))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
@@ -293,12 +381,14 @@ class DataManagerViewTests(APITestCase):
 
     @mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"content")
     def test_datamanager_retrieve(self, _):
-        url = reverse("substrapp:data_manager-detail", args=[self.data_manager["key"]])
+        self.expected_results[0]["train_data_sample_keys"] = self.train_data_sample_keys
+        self.expected_results[0]["test_data_sample_keys"] = self.test_data_sample_keys
+        url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        self.assertEqual(response.json(), self.data_manager)
+        self.assertEqual(response.json(), self.expected_results[0])
 
     def test_datamanager_retrieve_wrong_channel(self):
-        url = reverse("substrapp:data_manager-detail", args=[self.data_manager["key"]])
+        url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -306,20 +396,22 @@ class DataManagerViewTests(APITestCase):
     @parameterized.expand([(True,), (False,)])
     @mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"content")
     def test_datamanager_retrieve_storage_addresses_update(self, has_cache, _):
-        data_manager = DataManagerRep.objects.get(key=self.data_manager["key"])
+        data_manager = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
         data_manager.description_address.replace("http://testserver", "http://remotetestserver")
         data_manager.opener_address.replace("http://testserver", "http://remotetestserver")
         data_manager.save()
 
-        url = reverse("substrapp:data_manager-detail", args=[self.data_manager["key"]])
+        url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         with mock.patch("substrapp.views.datamanager.node_has_process_permission", return_value=has_cache):
             response = self.client.get(url, **self.extra)
         for field in ("description", "opener"):
-            self.assertEqual(response.data[field]["storage_address"], self.data_manager[field]["storage_address"])
+            self.assertEqual(
+                response.data[field]["storage_address"], self.expected_results[0][field]["storage_address"]
+            )
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.datamanager.DataManagerViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_datamanager_retrieve_fail(self, _):
-        url = reverse("substrapp:data_manager-detail", args=[self.data_manager["key"]])
+        url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

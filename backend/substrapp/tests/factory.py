@@ -130,13 +130,13 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
         computeplan_pb2.PLAN_STATUS_FAILED,
         computeplan_pb2.PLAN_STATUS_CANCELED,
     ):
-        start_date = creation_date + datetime.timedelta(days=1)
+        start_date = creation_date + datetime.timedelta(hours=1)
     if status in (
         computeplan_pb2.PLAN_STATUS_DONE,
         computeplan_pb2.PLAN_STATUS_FAILED,
         computeplan_pb2.PLAN_STATUS_CANCELED,
     ):
-        end_date = creation_date + datetime.timedelta(days=2)
+        end_date = creation_date + datetime.timedelta(hours=2)
     return start_date, end_date
 
 
@@ -250,6 +250,7 @@ def create_computeplan(
     failed_task_key: str = None,
     failed_task_category: int = None,
     metadata: dict = None,
+    owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
 ) -> ComputePlan:
     creation_date = timezone.now()
@@ -267,6 +268,7 @@ def create_computeplan(
         failed_task_category=failed_task_category,
         metadata=metadata or {},
         creation_date=creation_date,
+        owner=owner,
         channel=channel,
     )
 
