@@ -81,15 +81,15 @@ def get_permissions(owner: str, public: bool):
     }
 
 
-def get_computetask_permissions(status: int, owner: str, public: bool):
-    if status in (computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_AGGREGATE):
+def get_computetask_permissions(category: int, owner: str, public: bool):
+    if category in (computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_AGGREGATE):
         return {
             "model_permissions_download_public": public,
             "model_permissions_download_authorized_ids": [owner],
             "model_permissions_process_public": public,
             "model_permissions_process_authorized_ids": [owner],
         }
-    elif status == computetask_pb2.TASK_COMPOSITE:
+    elif category == computetask_pb2.TASK_COMPOSITE:
         return {
             "head_permissions_download_public": public,
             "head_permissions_download_authorized_ids": [owner],
@@ -286,6 +286,7 @@ def create_computetask(
     rank: int = 1,
     worker: str = DEFAULT_OWNER,
     tag: str = "",
+    error_type: int = None,
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -298,7 +299,7 @@ def create_computetask(
     compute_task = ComputeTask.objects.create(
         compute_plan=compute_plan,
         algo=algo,
-        parent_tasks=parent_tasks,
+        parent_tasks=parent_tasks or [],
         data_manager=data_manager,
         data_samples=data_samples,
         key=key,
@@ -309,6 +310,7 @@ def create_computetask(
         tag=tag,
         start_date=start_date,
         end_date=end_date,
+        error_type=error_type,
         metadata=metadata or {},
         logs_address=get_storage_address("logs", key, "file"),
         logs_checksum=DUMMY_CHECKSUM,
@@ -317,7 +319,7 @@ def create_computetask(
         creation_date=creation_date,
         owner=owner,
         channel=channel,
-        **get_computetask_permissions(status, owner, public),
+        **get_computetask_permissions(category, owner, public),
     )
     if metrics:
         compute_task.metrics.set(metrics)
@@ -351,7 +353,7 @@ def create_model(
 def create_performance(
     compute_task: ComputeTask,
     metric: Metric,
-    value: float = "1.0",
+    value: float = 1.0,
     channel: str = DEFAULT_CHANNEL,
 ) -> Performance:
     return Performance.objects.create(

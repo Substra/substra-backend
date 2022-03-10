@@ -3,11 +3,9 @@ import os
 import shutil
 import tempfile
 from unittest import mock
-from uuid import uuid4
 
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
@@ -15,74 +13,20 @@ from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
-from localrep.models import DataManager as DataManagerRep
-from localrep.models import Metric as MetricRep
 from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
-from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
-from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
-from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
 from localrep.serializers import ModelSerializer as ModelRepSerializer
-from substrapp.compute_tasks.errors import ComputeTaskErrorType
+from substrapp.tests import factory
 
-from .. import assets
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
-
-
-def clean_input_data(compute_task):
-    # Missing field from test data
-    compute_task["logs_permission"] = {
-        "public": True,
-        "authorized_ids": [compute_task["owner"]],
-    }
-
-    # Remove unexpected fields from test data (only for expand relationships)
-    field = compute_task["category"].removeprefix("TASK_").lower()
-    del compute_task["parent_tasks"]  # only for expand relationships
-    del compute_task[field]["data_manager"]  # only for expand relationships
-    if compute_task["category"] == "TASK_TEST":
-        del compute_task["test"]["metrics"]  # only for expand relationships
-
-    data = {**compute_task}
-    if data["error_type"] is None:
-        del data["error_type"]
-    else:
-        data["error_type"] = failure_report_pb2.ErrorType.Name(getattr(ComputeTaskErrorType, data["error_type"]).value)
-    return data
-
-
-def create_output_assets(compute_task):
-    """Create models or performances."""
-    if compute_task["category"] == "TASK_TEST":
-        for metric_key, perf_value in compute_task["test"]["perfs"].items():
-            PerformanceRep.objects.create(
-                compute_task_id=compute_task["key"],
-                metric_id=metric_key,
-                value=perf_value,
-                creation_date=timezone.now(),
-                channel="mychannel",
-            )
-    else:
-        field = compute_task["category"].removeprefix("TASK_").lower()
-        for model in compute_task[field]["models"]:
-            # stale test data
-            if model["address"] is None:
-                model["key"] == uuid4()
-                model["address"] = {
-                    "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/model/{model['key']}/file/",
-                }
-            serializer = ModelRepSerializer(data={"channel": "mychannel", **model})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            model["creation_date"] = model["creation_date"].replace("+00:00", "Z")
 
 
 class ComputeTaskViewTests(APITestCase):
@@ -97,57 +41,58 @@ class ComputeTaskViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        self.algos = assets.get_algos()
-        for algo in self.algos:
-            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        self.algo = factory.create_algo()
+        self.metric = factory.create_metric()
+        self.data_manager = factory.create_datamanager()
+        self.data_sample = factory.create_datasample([self.data_manager])
+        self.compute_plan = factory.create_computeplan()
 
-        self.metrics = assets.get_metrics()
-        for metric in self.metrics:
-            serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        self.compute_tasks = {}
+        for category in (
+            computetask_pb2.TASK_TRAIN,
+            computetask_pb2.TASK_TEST,
+            computetask_pb2.TASK_COMPOSITE,
+        ):
+            self.compute_tasks[category] = {}
+            for _status in (
+                computetask_pb2.STATUS_TODO,
+                computetask_pb2.STATUS_WAITING,
+                computetask_pb2.STATUS_DOING,
+                computetask_pb2.STATUS_DONE,
+                computetask_pb2.STATUS_FAILED,
+                computetask_pb2.STATUS_CANCELED,
+            ):
+                metrics = error_type = None
+                if _status == computetask_pb2.STATUS_FAILED:
+                    error_type = failure_report_pb2.ERROR_TYPE_EXECUTION
+                if category == computetask_pb2.TASK_TEST:
+                    metrics = [self.metric]
+                self.compute_tasks[category][_status] = factory.create_computetask(
+                    self.compute_plan,
+                    self.algo,
+                    metrics=metrics,
+                    data_manager=self.data_manager,
+                    data_samples=[self.data_sample.key],
+                    category=category,
+                    status=_status,
+                    error_type=error_type,
+                )
 
-        self.data_managers = assets.get_data_managers()
-        for data_manager in self.data_managers:
-            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        done_train_task = self.compute_tasks[computetask_pb2.TASK_TRAIN][computetask_pb2.STATUS_DONE]
+        self.simple_model = factory.create_model(done_train_task, category=model_pb2.MODEL_SIMPLE)
 
-        self.data_samples = assets.get_data_samples()
-        for data_sample in self.data_samples:
-            serializer = DataSampleRepSerializer(data={"channel": "mychannel", **data_sample})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        done_composite_task = self.compute_tasks[computetask_pb2.TASK_COMPOSITE][computetask_pb2.STATUS_DONE]
+        self.head_model = factory.create_model(done_composite_task, category=model_pb2.MODEL_HEAD)
 
-        self.compute_plans = assets.get_compute_plans()
-        for compute_plan in self.compute_plans:
-            serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        done_failed_task = self.compute_tasks[computetask_pb2.TASK_TEST][computetask_pb2.STATUS_DONE]
+        self.performance = factory.create_performance(done_failed_task, self.metric)
 
-        self.train_tasks = assets.get_train_tasks()
-        self.test_tasks = assets.get_test_tasks()
-        self.composite_tasks = assets.get_composite_tasks()
-        for compute_task in self.train_tasks + self.test_tasks + self.composite_tasks:
-            cleaned_compute_task = clean_input_data(compute_task)
-            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            self.patch_dates(compute_task)
-
-            if compute_task["status"] == "STATUS_DONE":
-                create_output_assets(compute_task)
-
-    @staticmethod
-    def patch_dates(compute_task):
-        compute_task["creation_date"] = compute_task["creation_date"].replace("+00:00", "Z")
-        if compute_task["start_date"]:
-            compute_task["start_date"] = compute_task["start_date"].replace("+00:00", "Z")
-        if compute_task["end_date"]:
-            compute_task["end_date"] = compute_task["end_date"].replace("+00:00", "Z")
-        compute_task["algo"]["creation_date"] = compute_task["algo"]["creation_date"].replace("+00:00", "Z")
+        # we don't explicit serialized relationships as this test module is focused on computetask
+        self.algo_data = AlgoRepSerializer(instance=self.algo).data
+        self.metric_data = MetricRepSerializer(instance=self.metric).data
+        self.data_manager_data = DataManagerRepSerializer(instance=self.data_manager).data
+        self.simple_model_data = ModelRepSerializer(instance=self.simple_model).data
+        self.head_model_data = ModelRepSerializer(instance=self.head_model).data
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -162,6 +107,231 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:traintuple-list")
+        train_tasks = self.compute_tasks[computetask_pb2.TASK_TRAIN]
+        todo_train_task = train_tasks[computetask_pb2.STATUS_TODO]
+        waiting_train_task = train_tasks[computetask_pb2.STATUS_WAITING]
+        doing_train_task = train_tasks[computetask_pb2.STATUS_DOING]
+        done_train_task = train_tasks[computetask_pb2.STATUS_DONE]
+        failed_train_task = train_tasks[computetask_pb2.STATUS_FAILED]
+        canceled_train_task = train_tasks[computetask_pb2.STATUS_CANCELED]
+        self.expected_results = [
+            {
+                "key": str(todo_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_TODO",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": todo_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(waiting_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_WAITING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": waiting_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(doing_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DOING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": doing_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": doing_train_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": None,
+                "error_type": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(done_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DONE",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": done_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": done_train_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": done_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": [self.simple_model_data],
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(failed_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_FAILED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": failed_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": failed_train_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": failed_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": "EXECUTION_ERROR",
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(canceled_train_task.key),
+                "category": "TASK_TRAIN",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_CANCELED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": canceled_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": canceled_train_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": canceled_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+        ]
 
     def test_traintask_list_empty(self):
         ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_TRAIN).delete()
@@ -173,7 +343,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.train_tasks), "next": None, "previous": None, "results": self.train_tasks},
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_traintask_list_wrong_channel(self):
@@ -189,38 +359,46 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     def test_traintask_list_filter(self):
         """Filter traintask on key."""
-        key = self.train_tasks[0]["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"traintuple:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.train_tasks[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_traintask_list_filter_and(self):
         """Filter traintask on key and owner."""
-        key, owner = self.train_tasks[0]["key"], self.train_tasks[0]["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"traintuple:key:{key},traintuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.train_tasks[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_traintask_list_filter_in(self):
         """Filter traintask in key_0, key_1."""
-        key_0 = self.train_tasks[0]["key"]
-        key_1 = self.train_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"traintuple:key:{key_0},traintuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_traintask_list_filter_or(self):
         """Filter traintask on key_0 or key_1."""
-        key_0 = self.train_tasks[0]["key"]
-        key_1 = self.train_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"traintuple:key:{key_0}-OR-traintuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_traintask_list_filter_or_and(self):
         """Filter traintask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.train_tasks[0]["key"], self.train_tasks[0]["owner"]
-        key_1, owner_1 = self.train_tasks[1]["key"], self.train_tasks[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {
                 "search": (
@@ -230,7 +408,9 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     @parameterized.expand(
         [
@@ -245,7 +425,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     )
     def test_traintask_list_filter_by_status(self, status):
         """Filter traintask on status."""
-        filtered_train_tasks = [task for task in self.train_tasks if task["status"] == status]
+        filtered_train_tasks = [task for task in self.expected_results if task["status"] == status]
         params = urlencode({"search": f"traintuple:status:{status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -255,58 +435,47 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_traintask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.train_tasks))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.train_tasks[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_traintask_cp_list_success(self):
         """List traintasks for a specific compute plan (CPtraintaskViewSet)."""
-        # Get a CP with more than one task to have "interesting" results
-        compute_plan_key = [cp["key"] for cp in self.compute_plans if cp["task_count"] > 1][0]
-        related_task_keys = [ct["key"] for ct in self.train_tasks if ct["compute_plan_key"] == compute_plan_key]
-        related_tasks = [ct for ct in self.train_tasks if ct["key"] in related_task_keys]
-
-        url = reverse("substrapp:compute_plan_traintuple-list", args=[compute_plan_key])
+        url = reverse("substrapp:compute_plan_traintuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(
-            response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_traintask_list_filter_cp_key(self):
         """Filter traintask on key."""
-        compute_plan_key = [cp["key"] for cp in self.compute_plans if cp["task_count"] > 1][0]
-        related_task_keys = [ct["key"] for ct in self.train_tasks if ct["compute_plan_key"] == compute_plan_key]
-        related_tasks = [ct for ct in self.train_tasks if ct["key"] in related_task_keys]
-
-        params = urlencode({"search": f"traintuple:compute_plan_key:{compute_plan_key}"})
+        params = urlencode({"search": f"traintuple:compute_plan_key:{self.compute_plan.key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_traintask_retrieve(self):
-        url = reverse("substrapp:traintuple-detail", args=[self.train_tasks[0]["key"]])
+        url = reverse("substrapp:traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        # retrieve view expand relationships
-        data_manager = DataManagerRep.objects.get(key=self.train_tasks[0]["train"]["data_manager_key"])
-        self.train_tasks[0]["train"]["data_manager"] = DataManagerRepSerializer(data_manager).data
-        parent_tasks = ComputeTaskRep.objects.filter(key__in=self.train_tasks[0]["parent_task_keys"]).order_by(
-            "creation_date", "key"
-        )
-        self.train_tasks[0]["parent_tasks"] = ComputeTaskRepSerializer(parent_tasks, many=True).data
-        self.assertEqual(response.json(), self.train_tasks[0])
+        # patch expected results with extended data
+        self.expected_results[0]["train"]["data_manager"] = self.data_manager_data
+        self.expected_results[0]["parent_tasks"] = []
+        self.assertEqual(response.json(), self.expected_results[0])
 
     def test_traintask_retrieve_wrong_channel(self):
-        url = reverse("substrapp:traintuple-detail", args=[self.train_tasks[0]["key"]])
+        url = reverse("substrapp:traintuple-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -314,7 +483,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computetask.ComputeTaskViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_traintask_retrieve_fail(self, _):
-        url = reverse("substrapp:traintuple-detail", args=[self.train_tasks[0]["key"]])
+        url = reverse("substrapp:traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -327,6 +496,177 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:testtuple-list")
+        test_tasks = self.compute_tasks[computetask_pb2.TASK_TEST]
+        todo_test_task = test_tasks[computetask_pb2.STATUS_TODO]
+        waiting_test_task = test_tasks[computetask_pb2.STATUS_WAITING]
+        doing_test_task = test_tasks[computetask_pb2.STATUS_DOING]
+        done_test_task = test_tasks[computetask_pb2.STATUS_DONE]
+        failed_test_task = test_tasks[computetask_pb2.STATUS_FAILED]
+        canceled_test_task = test_tasks[computetask_pb2.STATUS_CANCELED]
+        self.expected_results = [
+            {
+                "key": str(todo_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_TODO",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": todo_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(waiting_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_WAITING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": waiting_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(doing_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DOING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": doing_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": doing_test_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": None,
+                "error_type": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(done_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DONE",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": done_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": done_test_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": done_test_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": {str(self.metric.key): self.performance.value},
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(failed_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_FAILED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": failed_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": failed_test_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": failed_test_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": "EXECUTION_ERROR",
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(canceled_test_task.key),
+                "category": "TASK_TEST",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_CANCELED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": canceled_test_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": canceled_test_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": canceled_test_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+        ]
 
     def test_testtask_list_empty(self):
         PerformanceRep.objects.filter(compute_task__category=computetask_pb2.TASK_TEST).delete()
@@ -338,7 +678,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.test_tasks), "next": None, "previous": None, "results": self.test_tasks},
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_testtask_list_wrong_channel(self):
@@ -354,38 +694,46 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     def test_testtask_list_filter(self):
         """Filter testtask on key."""
-        key = self.test_tasks[0]["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"testtuple:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_testtask_list_filter_and(self):
         """Filter testtask on key and owner."""
-        key, owner = self.test_tasks[0]["key"], self.test_tasks[0]["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"testtuple:key:{key},testtuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
     def test_testtask_list_filter_in(self):
         """Filter testtask in key_0, key_1."""
-        key_0 = self.test_tasks[0]["key"]
-        key_1 = self.test_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"testtuple:key:{key_0},testtuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_testtask_list_filter_or(self):
         """Filter testtask on key_0 or key_1."""
-        key_0 = self.test_tasks[0]["key"]
-        key_1 = self.test_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"testtuple:key:{key_0}-OR-testtuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     def test_testtask_list_filter_or_and(self):
         """Filter testtask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.test_tasks[0]["key"], self.test_tasks[0]["owner"]
-        key_1, owner_1 = self.test_tasks[1]["key"], self.test_tasks[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {
                 "search": (
@@ -395,7 +743,9 @@ class TestTaskViewTests(ComputeTaskViewTests):
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
 
     @parameterized.expand(
         [
@@ -410,7 +760,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
     )
     def test_testtask_list_filter_by_status(self, status):
         """Filter testtask on status."""
-        filtered_test_tasks = [task for task in self.test_tasks if task["status"] == status]
+        filtered_test_tasks = [task for task in self.expected_results if task["status"] == status]
         params = urlencode({"search": f"testtuple:status:{status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -420,49 +770,39 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_testtask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.test_tasks))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.test_tasks[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_testtask_cp_list_success(self):
         """List testtasks for a specific compute plan (CPtesttaskViewSet)."""
-        # Get a CP with more than one task to have "interesting" results
-        compute_plan_key = [cp["key"] for cp in self.compute_plans if cp["task_count"] > 1][0]
-        related_task_keys = [ct["key"] for ct in self.test_tasks if ct["compute_plan_key"] == compute_plan_key]
-        related_tasks = [ct for ct in self.test_tasks if ct["key"] in related_task_keys]
-
-        url = reverse("substrapp:compute_plan_testtuple-list", args=[compute_plan_key])
+        url = reverse("substrapp:compute_plan_testtuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(
-            response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_testtask_retrieve(self):
-        url = reverse("substrapp:testtuple-detail", args=[self.test_tasks[0]["key"]])
+        url = reverse("substrapp:testtuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        # retrieve view expand relationships
-        data_manager = DataManagerRep.objects.get(key=self.test_tasks[0]["test"]["data_manager_key"])
-        self.test_tasks[0]["test"]["data_manager"] = DataManagerRepSerializer(data_manager).data
-        metrics = MetricRep.objects.filter(key__in=self.test_tasks[0]["test"]["metric_keys"])
-        self.test_tasks[0]["test"]["metrics"] = MetricRepSerializer(metrics, many=True).data
-        parent_tasks = ComputeTaskRep.objects.filter(key__in=self.test_tasks[0]["parent_task_keys"]).order_by(
-            "creation_date", "key"
-        )
-        self.test_tasks[0]["parent_tasks"] = ComputeTaskRepSerializer(parent_tasks, many=True).data
-        self.assertEqual(response.json(), self.test_tasks[0])
-        # self.assertDictEqual(response.json(), self.test_tasks[0])
+        # patch expected results with extended data
+        self.expected_results[0]["test"]["data_manager"] = self.data_manager_data
+        self.expected_results[0]["test"]["metrics"] = [self.metric_data]
+        self.expected_results[0]["parent_tasks"] = []
+        self.assertEqual(response.json(), self.expected_results[0])
 
     def test_testtask_retrieve_wrong_channel(self):
-        url = reverse("substrapp:testtuple-detail", args=[self.test_tasks[0]["key"]])
+        url = reverse("substrapp:testtuple-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -470,7 +810,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computetask.ComputeTaskViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_testtask_retrieve_fail(self, _):
-        url = reverse("substrapp:testtuple-detail", args=[self.test_tasks[0]["key"]])
+        url = reverse("substrapp:testtuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -483,6 +823,291 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:composite_traintuple-list")
+        composite_tasks = self.compute_tasks[computetask_pb2.TASK_COMPOSITE]
+        todo_composite_task = composite_tasks[computetask_pb2.STATUS_TODO]
+        waiting_composite_task = composite_tasks[computetask_pb2.STATUS_WAITING]
+        doing_composite_task = composite_tasks[computetask_pb2.STATUS_DOING]
+        done_composite_task = composite_tasks[computetask_pb2.STATUS_DONE]
+        failed_composite_task = composite_tasks[computetask_pb2.STATUS_FAILED]
+        canceled_composite_task = composite_tasks[computetask_pb2.STATUS_CANCELED]
+        self.expected_results = [
+            {
+                "key": str(todo_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_TODO",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": todo_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(waiting_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_WAITING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": waiting_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "error_type": None,
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(doing_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DOING",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": doing_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": doing_composite_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": None,
+                "error_type": None,
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(done_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_DONE",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": done_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": done_composite_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": done_composite_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": [self.head_model_data],
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(failed_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_FAILED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": failed_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": failed_composite_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": failed_composite_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": "EXECUTION_ERROR",
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+            {
+                "key": str(canceled_composite_task.key),
+                "category": "TASK_COMPOSITE",
+                "algo": self.algo_data,
+                "owner": "MyOrg1MSP",
+                "compute_plan_key": str(self.compute_plan.key),
+                "metadata": {},
+                "status": "STATUS_CANCELED",
+                "worker": "MyOrg1MSP",
+                "rank": 1,
+                "parent_task_keys": [],
+                "tag": "",
+                "creation_date": canceled_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": canceled_composite_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": canceled_composite_task.end_date.isoformat().replace("+00:00", "Z"),
+                "error_type": None,
+                "composite": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "head_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "trunk_permissions": {
+                        "process": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                        "download": {
+                            "public": False,
+                            "authorized_ids": ["MyOrg1MSP"],
+                        },
+                    },
+                    "models": None,
+                },
+                "logs_permission": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+            },
+        ]
 
     def test_compositetask_list_empty(self):
         ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_COMPOSITE).delete()
@@ -494,7 +1119,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.composite_tasks), "next": None, "previous": None, "results": self.composite_tasks},
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_compositetask_list_wrong_channel(self):
@@ -510,46 +1135,46 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
     def test_compositetask_list_filter(self):
         """Filter compositetask on key."""
-        key = self.composite_tasks[0]["key"]
+        key = self.expected_results[0]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.composite_tasks[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_compositetask_list_filter_and(self):
         """Filter compositetask on key and owner."""
-        key, owner = self.composite_tasks[0]["key"], self.composite_tasks[0]["owner"]
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"composite_traintuple:key:{key},composite_traintuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.composite_tasks[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_compositetask_list_filter_in(self):
         """Filter compositetask in key_0, key_1."""
-        key_0 = self.composite_tasks[0]["key"]
-        key_1 = self.composite_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key_0},composite_traintuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_compositetask_list_filter_or(self):
         """Filter compositetask on key_0 or key_1."""
-        key_0 = self.composite_tasks[0]["key"]
-        key_1 = self.composite_tasks[1]["key"]
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key_0}-OR-composite_traintuple:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     def test_compositetask_list_filter_or_and(self):
         """Filter compositetask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.composite_tasks[0]["key"], self.composite_tasks[0]["owner"]
-        key_1, owner_1 = self.composite_tasks[1]["key"], self.composite_tasks[1]["owner"]
+        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
         params = urlencode(
             {
                 "search": (
@@ -560,7 +1185,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
     @parameterized.expand(
@@ -576,7 +1201,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     )
     def test_compositetask_list_filter_by_status(self, status):
         """Filter compositetask on status."""
-        filtered_composite_tasks = [task for task in self.composite_tasks if task["status"] == status]
+        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == status]
         params = urlencode({"search": f"composite_traintuple:status:{status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -591,46 +1216,38 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("page_size_5_page_1", 5, 1),
-            ("page_size_1_page_2", 1, 2),
-            ("page_size_2_page_3", 2, 3),
+            ("page_size_1_page_3", 1, 3),
+            ("page_size_2_page_2", 2, 2),
+            ("page_size_3_page_1", 3, 1),
         ]
     )
     def test_compositetask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.composite_tasks))
+        self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.composite_tasks[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
     def test_compositetask_cp_list_success(self):
         """List compositetasks for a specific compute plan (CPcompositetaskViewSet)."""
-        # Get a CP with more than one task to have "interesting" results
-        compute_plan_key = [cp["key"] for cp in self.compute_plans if cp["task_count"] > 1][0]
-        related_task_keys = [ct["key"] for ct in self.composite_tasks if ct["compute_plan_key"] == compute_plan_key]
-        related_tasks = [ct for ct in self.composite_tasks if ct["key"] in related_task_keys]
-
-        url = reverse("substrapp:compute_plan_composite_traintuple-list", args=[compute_plan_key])
+        url = reverse("substrapp:compute_plan_composite_traintuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(
-            response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_compositetask_retrieve(self):
-        url = reverse("substrapp:composite_traintuple-detail", args=[self.composite_tasks[0]["key"]])
+        url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        # retrieve view expand relationships
-        data_manager = DataManagerRep.objects.get(key=self.composite_tasks[0]["composite"]["data_manager_key"])
-        self.composite_tasks[0]["composite"]["data_manager"] = DataManagerRepSerializer(data_manager).data
-        parent_tasks = ComputeTaskRep.objects.filter(key__in=self.composite_tasks[0]["parent_task_keys"]).order_by(
-            "creation_date", "key"
-        )
-        self.composite_tasks[0]["parent_tasks"] = ComputeTaskRepSerializer(parent_tasks, many=True).data
-        self.assertEqual(response.json(), self.composite_tasks[0])
+        # patch expected results with extended data
+        self.expected_results[0]["composite"]["data_manager"] = self.data_manager_data
+        self.expected_results[0]["parent_tasks"] = []
+        self.assertEqual(response.json(), self.expected_results[0])
 
     def test_compositetask_retrieve_wrong_channel(self):
-        url = reverse("substrapp:composite_traintuple-detail", args=[self.composite_tasks[0]["key"]])
+        url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -638,6 +1255,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computetask.ComputeTaskViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_compositetask_retrieve_fail(self, _):
-        url = reverse("substrapp:composite_traintuple-detail", args=[self.composite_tasks[0]["key"]])
+        url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
