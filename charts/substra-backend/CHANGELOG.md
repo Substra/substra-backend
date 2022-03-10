@@ -1,5 +1,10 @@
 # Changelog
 
+## 16.1.1
+
+### Changed
+- removed duplicate label `app.kubernetes.io/instance` to fix deployment with Flux
+
 ## 16.1.0
 
 ### Added

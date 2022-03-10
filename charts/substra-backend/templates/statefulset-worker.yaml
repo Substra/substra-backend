@@ -6,7 +6,6 @@ metadata:
   name: {{ template "substra.fullname" . }}-worker
   labels:
     {{- include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-worker
 spec:
   clusterIP: None
@@ -20,7 +19,6 @@ metadata:
   name: {{ template "substra.fullname" . }}-worker
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-worker
 spec:
   replicas: {{ .Values.worker.replicaCount }}
