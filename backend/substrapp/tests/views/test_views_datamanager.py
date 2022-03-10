@@ -81,7 +81,7 @@ class DataManagerViewTests(APITestCase):
                 "metadata": {},
                 "creation_date": data_manager_1.creation_date.isoformat().replace("+00:00", "Z"),
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -111,7 +111,7 @@ class DataManagerViewTests(APITestCase):
                 "metadata": {},
                 "creation_date": data_manager_2.creation_date.isoformat().replace("+00:00", "Z"),
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -141,7 +141,7 @@ class DataManagerViewTests(APITestCase):
                 "metadata": {},
                 "creation_date": data_manager_3.creation_date.isoformat().replace("+00:00", "Z"),
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },

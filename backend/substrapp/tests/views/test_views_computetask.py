@@ -147,7 +147,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -183,7 +183,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -219,7 +219,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -255,7 +255,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": [self.simple_model_data],
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -291,7 +291,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -327,7 +327,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -527,7 +527,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -554,7 +554,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -581,7 +581,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -608,7 +608,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": {str(self.metric.key): self.performance.value},
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -635,7 +635,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -662,7 +662,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -873,7 +873,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -919,7 +919,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -965,7 +965,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -1011,7 +1011,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": [self.head_model_data],
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -1057,7 +1057,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },
@@ -1103,7 +1103,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "logs_permission": {
-                    "public": True,
+                    "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
             },

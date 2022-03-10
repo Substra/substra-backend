@@ -68,11 +68,11 @@ DEFAULT_CHANNEL = "mychannel"
 DUMMY_CHECKSUM = "dummy-checksum"
 
 
-def get_storage_address(asset: str, key: str, field: str):
+def get_storage_address(asset: str, key: str, field: str) -> str:
     return f"http://testserver/{asset}/{key}/{field}/"
 
 
-def get_permissions(owner: str, public: bool):
+def get_permissions(owner: str, public: bool) -> dict:
     return {
         "permissions_download_public": public,
         "permissions_download_authorized_ids": [owner],
@@ -81,7 +81,14 @@ def get_permissions(owner: str, public: bool):
     }
 
 
-def get_computetask_permissions(category: int, owner: str, public: bool):
+def get_log_permissions(owner: str, public: bool) -> dict:
+    return {
+        "logs_permission_public": public,
+        "logs_permission_authorized_ids": [owner],
+    }
+
+
+def get_computetask_permissions(category: int, owner: str, public: bool) -> dict:
     if category in (computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_AGGREGATE):
         return {
             "model_permissions_download_public": public,
@@ -212,12 +219,11 @@ def create_datamanager(
         opener_checksum=DUMMY_CHECKSUM,
         description_address=get_storage_address("data_manager", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
-        logs_permission_public=True,
-        logs_permission_authorized_ids=[owner],
         creation_date=timezone.now(),
         owner=owner,
         channel=channel,
         **get_permissions(owner, public),
+        **get_log_permissions(owner, public),
     )
 
 
@@ -314,12 +320,12 @@ def create_computetask(
         metadata=metadata or {},
         logs_address=get_storage_address("logs", key, "file"),
         logs_checksum=DUMMY_CHECKSUM,
-        logs_permission_public=True,
-        logs_permission_authorized_ids=[owner],
+        logs_owner=owner,
         creation_date=creation_date,
         owner=owner,
         channel=channel,
         **get_computetask_permissions(category, owner, public),
+        **get_log_permissions(owner, public),
     )
     if metrics:
         compute_task.metrics.set(metrics)
