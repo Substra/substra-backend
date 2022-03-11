@@ -100,8 +100,6 @@ spec:
     path: "/tmp/org-2/servermedias"
 ```
 
-
-
 ## Django management
 
 To get access to the [Django management tool](https://docs.djangoproject.com/en/2.2/ref/django-admin), spawn a shell in the running container:
@@ -110,6 +108,11 @@ kubectl -n org-1 exec -i -t $(kubectl -n org-1 get pods -l=app.kubernetes.io/nam
 ```
 
 This will also gives you access to the [celery CLI](https://docs.celeryproject.org/en/stable/reference/cli.html). You can issue `celery inspect active_queues` to examine consumed queues.
+
+## Running substrap in a venv
+If your useCase only involves the django app (not the eventapp, nor the compute engine for instance), you may easily run it and serve the API without a k8s cluster.
+See [this page](./docs/localdev.md)
+
 
 ## Execute unit tests
 
