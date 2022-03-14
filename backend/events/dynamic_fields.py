@@ -1,7 +1,6 @@
 from typing import Optional
 
 import orchestrator.computetask_pb2 as computetask_pb2
-from localrep.models import ComputePlan
 from orchestrator import client as orc_client
 
 
@@ -28,24 +27,3 @@ def fetch_failure_report_from_event(event: dict, client: orc_client.Orchestrator
     status = computetask_pb2.ComputeTaskStatus.Value(event["metadata"]["status"])
     if status == computetask_pb2.STATUS_FAILED:
         return client.get_failure_report({"compute_task_key": event["asset_key"]})
-
-
-def add_cp_dates(compute_plan_key: str) -> None:
-    """Update start_date, end_date"""
-
-    compute_plan = ComputePlan.objects.get(key=compute_plan_key)
-
-    if not compute_plan.start_date:
-        first_started_task = compute_plan.compute_tasks.filter(start_date__isnull=False).order_by("start_date").first()
-        if first_started_task:
-            compute_plan.start_date = first_started_task.start_date
-
-    ongoing_tasks = compute_plan.compute_tasks.filter(end_date__isnull=True).exists()
-    if ongoing_tasks:
-        compute_plan.end_date = None  # end date could be reset when cp is updated with new tasks
-    else:
-        last_ended_task = compute_plan.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
-        if last_ended_task:
-            compute_plan.end_date = last_ended_task.end_date
-
-    compute_plan.save()

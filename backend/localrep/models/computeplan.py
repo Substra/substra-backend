@@ -98,3 +98,21 @@ class ComputePlan(models.Model):
             self._add_failed_task()
 
         self.save()
+
+    def update_dates(self) -> None:
+        """Update start_date, end_date"""
+
+        if not self.start_date:
+            first_started_task = self.compute_tasks.filter(start_date__isnull=False).order_by("start_date").first()
+            if first_started_task:
+                self.start_date = first_started_task.start_date
+
+        ongoing_tasks = self.compute_tasks.filter(end_date__isnull=True).exists()
+        if ongoing_tasks:
+            self.end_date = None  # end date could be reset when cp is updated with new tasks
+        else:
+            last_ended_task = self.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
+            if last_ended_task:
+                self.end_date = last_ended_task.end_date
+
+        self.save()
