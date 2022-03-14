@@ -167,6 +167,9 @@ class PermissionMixin(object):
         return StorageAddress(url, node_id)
 
     def download_file(self, request, query_method, django_field, orchestrator_field=None):
+        if settings.ISOLATED:
+            return ApiResponse({"message": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
+
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
