@@ -17,7 +17,7 @@ updates:
       interval: "monthly"
 
   - package-ecosystem: "docker"
-    directory: "/docker/substra-backend"
+    directory: "/docker/connect-backend"
     schedule:
       interval: "monthly"
 
