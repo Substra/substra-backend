@@ -227,6 +227,23 @@ server:
     failureThreshold: 3
     successThreshold: 1
 
+  metrics:
+    ## @param server.metrics.enabled Start a prometheus exporter
+    ##
+    enabled: false
+    ## Metrics exporter image version
+    ## @param server.metrics.image.registry Substra backend server Prometheus Exporter image registry
+    ## @param server.metrics.image.repository Substra backend server Prometheus Exporter image repository
+    ## @param server.metrics.image.tag Substra backend server Prometheus Exporter image tag
+    ## @param server.metrics.image.pullPolicy Substra backend server Prometheus Exporter image pull policy
+    ##
+    image:
+      registry: gcr.io
+      repository: connect-314908/metrics-exporter
+      tag: 0.4.0
+      pullPolicy: IfNotPresent
+
+
 ## @section Substra worker settings
 ##
 worker:

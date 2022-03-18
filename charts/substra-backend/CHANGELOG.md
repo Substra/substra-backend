@@ -1,5 +1,11 @@
 # Changelog
 
+## 16.2.0
+
+### Added
+- Add lazy-apps to the uWSGI config
+- Exposed Django metrics behind the flag `server.metrics`
+
 ## 16.1.1
 
 ### Changed

@@ -35,7 +35,13 @@ spec:
     - name: http
       port: {{ .Values.server.service.port }}
       protocol: TCP
-      targetPort: 8000
+      targetPort: http
+    {{- if .Values.server.metrics.enabled }}
+    - name: metrics
+      port: 9100
+      protocol: TCP
+      targetPort: metrics
+    {{- end }}
 {{ if (and (eq .Values.server.service.type "NodePort") (not (empty .Values.server.service.nodePort))) }}
       nodePort: {{ .Values.server.service.nodePort }}
 {{ end }}

@@ -33,3 +33,6 @@ data:
     ignore-write-errors           = true
     disable-write-exception       = true
     wsgi-disable-file-wrapper     = true
+    ; lazy-apps is required to prevent django-prometheus from leaking file descriptors
+    ; https://github.com/korfuri/django-prometheus/blob/49d0e4f14947af1f46716ed8cbca0c6451301ee3/documentation/exports.md?plain=1#L132-L134
+    lazy-apps                     = true
