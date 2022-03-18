@@ -284,6 +284,9 @@ WORKER_REPLICA_SET_NAME = os.environ.get("WORKER_REPLICA_SET_NAME")
 
 NAMESPACE = os.getenv("NAMESPACE")
 
+# Used by the Secure aggregation mechanism to retrieve chainkeys
+K8S_SECRET_NAMESPACE = os.getenv("K8S_SECRET_NAMESPACE", "default")
+
 REGISTRY = os.getenv("REGISTRY")
 REGISTRY_SCHEME = os.getenv("REGISTRY_SCHEME")
 REGISTRY_PULL_DOMAIN = os.getenv("REGISTRY_PULL_DOMAIN")

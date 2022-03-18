@@ -40,6 +40,7 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 | `HOST_IP` | `nil` |
 | `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |
 | `ISOLATED` | `nil` |
+| `K8S_SECRET_NAMESPACE` | `default` |
 | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | `nil` |
 | `KANIKO_IMAGE` | `nil` |
 | `KANIKO_MIRROR` | `False` |
