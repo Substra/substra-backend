@@ -17,7 +17,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: azure/setup-helm@v1
         with:
           version: "v3.5.0"
@@ -48,14 +48,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout bitnami-labs/readme-generator-for-helm
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: 'bitnami-labs/readme-generator-for-helm'
           ref: '3300343a6cd1c9cd86d13b04d8c85a7415cb849e' # There is no release on the repo so we target an arbitrary commit
           path: readme-generator-for-helm
       - name: Install readme-generator-for-helm dependencies
         run: cd readme-generator-for-helm && npm install
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           path: backend
       - name: Execute readme-generator-for-helm
@@ -78,7 +78,7 @@ jobs:
       - test
       - generate-chart-readme
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: azure/setup-helm@v1
         with:
           version: "v3.5.0"
