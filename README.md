@@ -118,7 +118,9 @@ See [this page](./docs/localdev.md)
 
 Unit tests require to have a running postgres instance.
 
-If it is not already running, you could start a new DB, using the command below. It is recommanded to use the same version as the one defined in the charts.
+If it is not already running, you could start a new DB, using the command below.
+This command will only work if you have a local docker daemon running.
+It is recommanded to use the same version as the one defined in the charts.
 
 ```sh
 make db-test
