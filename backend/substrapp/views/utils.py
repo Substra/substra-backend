@@ -1,9 +1,7 @@
-import dataclasses
 import datetime
 import os
 import uuid
 from typing import Callable
-from typing import Optional
 from wsgiref.util import is_hop_by_hop
 
 import django.http
@@ -32,7 +30,6 @@ from substrapp.clients import node as node_client
 from substrapp.compute_tasks import errors
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.storages.minio import MinioStorage
 from substrapp.utils import get_owner
 
@@ -95,20 +92,6 @@ class CustomFileResponse(django.http.FileResponse):
         self["Access-Control-Expose-Headers"] = "Content-Disposition"
 
 
-@dataclasses.dataclass
-class StorageAddress:
-    url: Optional[str]
-    node_id: str
-
-    @property
-    def is_available(self) -> bool:
-        return bool(self.url)
-
-    @property
-    def is_local(self) -> bool:
-        return get_owner() == self.node_id
-
-
 class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
@@ -122,92 +105,44 @@ class PermissionMixin(object):
         if user.is_anonymous:  # safeguard, should never happen
             raise AssetPermissionError()
 
-        permission = self.get_permission(asset)
-
         if type(user) is NodeUser:  # for node
             node_id = user.username
         else:
             # for classic user, test on current msp id
             node_id = get_owner()
 
-        if not permission["public"] and node_id not in permission["authorized_ids"]:
+        if not asset.is_public("process") and node_id not in asset.get_authorized_ids("process"):
             raise AssetPermissionError()
 
-    def get_permission(self, asset):
-        """Get the permission to check from the asset."""
-        # FIXME: This should be 'download' instead of 'process',
-        #  but 'download' is not consistently exposed by chaincode yet.
-        return asset["permissions"]["process"]
-
-    def get_storage_address(self, asset, orchestrator_field) -> StorageAddress:
-        """Returns the storage address of the asset.
-
-        Args:
-            asset (Dict): Asset from the Orchestrator
-            orchestrator_field (str): Key of the dict containing the storage address
-
-        Returns:
-            The asset storage address
-        """
-        url = asset.get(orchestrator_field, {}).get("storage_address")
-        node_id = asset["owner"]
-        return StorageAddress(url, node_id)
-
-    def download_file(self, request, query_method, django_field, orchestrator_field=None):
+    def download_file(self, request, asset_class, content_field, address_field):
         if settings.ISOLATED:
             return ApiResponse({"message": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
-
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
 
         validated_key = validate_key(key)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            asset = getattr(client, query_method)(validated_key)
+        asset = asset_class.objects.filter(channel=channel_name).get(key=validated_key)
 
         try:
             self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except AssetPermissionError as e:
             return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-        if not orchestrator_field:
-            orchestrator_field = django_field
-        storage_address = self.get_storage_address(asset, orchestrator_field)
-        if not storage_address.is_available:
+        url = getattr(asset, address_field)
+        if not url:
             return ApiResponse({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 
-        if storage_address.is_local:
-            response = self.get_local_file_response(django_field)
+        if get_owner() == asset.get_owner():
+            response = self._get_local_file_response(content_field)
         else:
-            response = self._download_remote_file(channel_name, storage_address)
+            response = self._download_remote_file(channel_name, asset.get_owner(), url)
 
         return response
 
-    def download_local_file(self, request, query_method, django_field, orchestrator_field=None):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = self.kwargs[lookup_url_kwarg]
-
-        validated_key = validate_key(key)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            asset = getattr(client, query_method)(validated_key)
-
-        try:
-            self.check_access(
-                get_channel_name(request),
-                request.user,
-                asset,
-                is_proxied_request(request),
-            )
-        except AssetPermissionError as e:
-            return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
-
-        return self.get_local_file_response(django_field)
-
-    def get_local_file_response(self, django_field):
+    def _get_local_file_response(self, content_field):
         obj = self.get_object()
-        data = getattr(obj, django_field)
+        data = getattr(obj, content_field)
 
         if isinstance(data.storage, MinioStorage):
             filename = str(obj.key)
@@ -222,11 +157,11 @@ class PermissionMixin(object):
         )
         return response
 
-    def _download_remote_file(self, channel_name: str, storage_address: StorageAddress) -> django.http.FileResponse:
+    def _download_remote_file(self, channel_name: str, owner: str, url: str) -> django.http.FileResponse:
         proxy_response = node_client.http_get(
             channel=channel_name,
-            node_id=storage_address.node_id,
-            url=storage_address.url,
+            node_id=owner,
+            url=url,
             stream=True,
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
         )

@@ -23,7 +23,10 @@ class Migration(migrations.Migration):
                     "category",
                     models.IntegerField(choices=[(0, "MODEL_UNKNOWN"), (1, "MODEL_SIMPLE"), (2, "MODEL_HEAD")]),
                 ),
-                ("model_address", models.URLField(validators=[localrep.models.utils.URLValidatorWithOptionalTLD()])),
+                (
+                    "model_address",
+                    models.URLField(validators=[localrep.models.utils.URLValidatorWithOptionalTLD()], null=True),
+                ),
                 ("model_checksum", models.CharField(max_length=64)),
                 ("permissions_download_public", models.BooleanField()),
                 (

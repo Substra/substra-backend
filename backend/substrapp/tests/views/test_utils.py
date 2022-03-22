@@ -1,158 +1,103 @@
-import functools
 import os
+import shutil
 import tempfile
 import uuid
 from unittest import mock
 
-import requests
-from django.core.files.storage import FileSystemStorage
+import responses
 from django.test import override_settings
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from orchestrator.client import OrchestratorClient
-from substrapp.views.utils import AssetPermissionError
-from substrapp.views.utils import PermissionMixin
-from substrapp.views.utils import if_true
+from node.authentication import NodeUser
+from node.models import OutgoingNode
+from substrapp.models import Algo
+from substrapp.tests import factory
 
+from ..common import AuthenticatedClient
+from ..common import get_description_algo
+from ..common import get_sample_algo
 
-class MockRequest:
-    user = None
-    headers = {"Substra-Channel-Name": "mychannel"}
-
-
-def with_permission_mixin(remote, same_file_property, has_access):
-    def inner(f):
-        @functools.wraps(f)
-        def wrapper(self):
-            orchestrator_value = {
-                "owner": "owner-foo",
-                "file_property" if same_file_property else "orchestrator_file_property": {"storage_address": "foo"},
-            }
-
-            with mock.patch.object(
-                OrchestratorClient, "query_algo", return_value=orchestrator_value
-            ), tempfile.NamedTemporaryFile() as tmp_file, mock.patch(
-                "substrapp.views.utils.get_owner",
-                return_value="not-owner-foo" if remote else "owner-foo",
-            ):
-                tmp_file_content = b"foo bar"
-                tmp_file.write(tmp_file_content)
-                tmp_file.seek(0)
-
-                class TestFieldFile:
-                    path = tmp_file.name
-                    storage = FileSystemStorage()
-
-                class TestModel:
-                    file_property = TestFieldFile()
-
-                permission_mixin = PermissionMixin()
-                permission_mixin.get_object = mock.MagicMock(return_value=TestModel())
-                if has_access:
-                    permission_mixin.check_access = mock.MagicMock()
-                else:
-                    permission_mixin.check_access = mock.MagicMock(side_effect=AssetPermissionError())
-                permission_mixin.lookup_url_kwarg = "foo"
-                permission_mixin.kwargs = {"foo": str(uuid.uuid4())}
-                permission_mixin.ledger_query_call = "foo"
-
-                kwargs = {
-                    "tmp_file": tmp_file,
-                    "content": tmp_file_content,
-                    "filename": os.path.basename(tmp_file.name),
-                }
-
-                f(self, permission_mixin, **kwargs)
-
-        return wrapper
-
-    return inner
-
-
-def with_requests_mock(allowed):
-    def inner(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            tmp_file = kwargs["tmp_file"]
-            filename = kwargs["filename"]
-
-            requests_response = requests.Response()
-            if allowed:
-                requests_response.raw = tmp_file
-                requests_response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
-                requests_response.status_code = status.HTTP_200_OK
-            else:
-                requests_response._content = b'{"message": "nope"}'
-                requests_response.status_code = status.HTTP_401_UNAUTHORIZED
-
-            kwargs["requests_response"] = requests_response
-            with mock.patch("substrapp.views.utils.node_client.http_get", return_value=requests_response):
-                f(*args, **kwargs)
-
-        return wrapper
-
-    return inner
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
 class PermissionMixinDownloadFileTests(APITestCase):
-    @with_permission_mixin(remote=False, same_file_property=False, has_access=True)
-    def test_download_file_local_allowed(self, permission_mixin, content, filename, **kwargs):
-        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
-        res_content = b"".join(list(res.streaming_content))
-        self.assertEqual(res_content, content)
-        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
-        self.assertTrue(permission_mixin.get_object.called)
+    client_class = AuthenticatedClient
 
-    @with_permission_mixin(remote=False, same_file_property=True, has_access=False)
-    def test_download_file_local_denied(self, permission_mixin, **kwargs):
-        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property")
-        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
 
-    @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
-    @with_requests_mock(allowed=True)
-    def test_download_file_remote_allowed(self, permission_mixin, content, filename, **kwargs):
-        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
-        res_content = b"".join(list(res.streaming_content))
-        self.assertEqual(res_content, content)
-        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
-        self.assertFalse(permission_mixin.get_object.called)
+        self.algo_file, self.algo_filename = get_sample_algo()
+        self.algo_file.seek(0)
+        self.algo_content = self.algo_file.read()
+        self.algo_description_file, self.algo_description_filename = get_description_algo()
+        self.algo_key = uuid.uuid4()
+        self.algo_url = reverse("substrapp:algo-file", kwargs={"pk": self.algo_key})
+        self.extra = {
+            "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
+            "HTTP_ACCEPT": "application/json;version=0.0",
+        }
 
-    @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
-    @with_requests_mock(allowed=False)
-    def test_download_file_remote_denied(self, permission_mixin, **kwargs):
-        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertFalse(permission_mixin.get_object.called)
+    def tearDown(self):
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    @with_permission_mixin(remote=True, same_file_property=True, has_access=True)
-    @with_requests_mock(allowed=True)
-    def test_download_file_remote_same_file_property(self, permission_mixin, content, filename, **kwargs):
-        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property")
-        res_content = b"".join(list(res.streaming_content))
-        self.assertEqual(res_content, content)
-        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
-        self.assertFalse(permission_mixin.get_object.called)
+    def test_download_file_local_allowed(self):
+        """Asset is local (owner is local-node) and local-node in authorized ids."""
+        Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-node")
+        self.assertIn("local-node", metadata.permissions_process_authorized_ids)
 
+        with mock.patch("substrapp.views.utils.get_owner", return_value="local-node"):
+            response = self.client.get(self.algo_url, **self.extra)
 
-def test_if_true():
-    def double(func):
-        @functools.wraps(func)
-        def wrapper_func(*args, **kwargs):
-            return func(*args, **kwargs) * 2
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers["Content-Disposition"], f'attachment; filename="{self.algo_filename}"')
+        self.assertEqual(response.getvalue(), self.algo_content)
 
-        return wrapper_func
+    def test_download_file_local_denied(self):
+        """Asset is local (owner is local-node) and local-node NOT in authorized ids."""
+        Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-node")
+        metadata.permissions_process_authorized_ids = []
+        metadata.save()
 
-    @if_true(double, False)
-    def not_decorated_func(x):
-        return x
+        with mock.patch("substrapp.views.utils.get_owner", return_value="local-node"):
+            response = self.client.get(self.algo_url, **self.extra)
 
-    @if_true(double, True)
-    def decorated_func(x):
-        return x
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    assert not_decorated_func(1) == 1
-    assert decorated_func(1) == 2
-    assert not_decorated_func.__name__ == "not_decorated_func"
-    assert decorated_func.__name__ == "decorated_func"
+    def test_download_file_remote_allowed(self):
+        """Asset is remote (owner is remote-node) and local-node in authorized ids."""
+        metadata = factory.create_algo(key=self.algo_key, public=True, owner="remote-node")
+        metadata.permissions_process_authorized_ids = ["remote-node", "local-node"]
+        metadata.save()
+        OutgoingNode.objects.create(node_id="remote-node", secret="s3cr37")
+
+        with mock.patch(
+            "substrapp.views.utils.get_owner", return_value="local-node"
+        ), responses.RequestsMock() as mocked_responses:
+            mocked_responses.add(
+                responses.GET,
+                metadata.algorithm_address,
+                body=self.algo_content,
+                content_type="text/plain; charset=utf-8",
+            )
+            response = self.client.get(self.algo_url, **self.extra)
+            mocked_responses.assert_call_count(metadata.algorithm_address, 1)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.getvalue(), self.algo_content)
+
+    def test_download_file_remote_denied(self):
+        """Asset is remote (owner is remote-node) and local-node NOT in authorized ids."""
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="remote-node")
+        metadata.permissions_process_authorized_ids = ["remote-node"]
+        metadata.save()
+
+        self.client.force_authenticate(user=NodeUser(username="local-node"))
+        response = self.client.get(self.algo_url, **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

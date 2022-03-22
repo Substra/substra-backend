@@ -30,3 +30,14 @@ def get_enum_choices(proto_enum: EnumTypeWrapper) -> list[tuple[str, int]]:
     Get model choices from protobuf enum.
     """
     return [(name, value) for (value, name) in proto_enum.items()]
+
+
+class AssetPermissionMixin:
+    def is_public(self, field: str):
+        return getattr(self, f"permissions_{field}_public")
+
+    def get_authorized_ids(self, field: str):
+        return getattr(self, f"permissions_{field}_authorized_ids")
+
+    def get_owner(self):
+        return self.owner

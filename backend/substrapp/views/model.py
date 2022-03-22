@@ -16,6 +16,7 @@ from localrep.serializers import ModelSerializer as ModelRepSerializer
 from node.authentication import NodeUser
 from substrapp.clients import node as node_client
 from substrapp.models import Model
+from substrapp.utils import get_owner
 from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import AssetPermissionError
@@ -116,14 +117,17 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
 
         elif type(user) is NodeUser and is_proxied_request:  # Export request (proxied)
             self._check_export_enabled(channel_name)
-            self._check_permission("download", asset, node_id=user.username)
+            field, node_id = "download", user.username
 
         elif type(user) is NodeUser:  # Node-to-node download
-            self._check_permission("process", asset, node_id=user.username)
+            field, node_id = "process", user.username
 
         else:  # user is an end-user (not a NodeUser): this is an export request
             self._check_export_enabled(channel_name)
-            self._check_permission("download", asset, node_id=settings.LEDGER_MSP_ID)
+            field, node_id = "download", get_owner()
+
+        if not asset.is_public(field) and node_id not in asset.get_authorized_ids(field):
+            raise AssetPermissionError()
 
     @staticmethod
     def _check_export_enabled(channel_name):
@@ -131,15 +135,7 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
         if not channel.get("model_export_enabled", False):
             raise AssetPermissionError(f"Disabled: model_export_enabled is disabled on {settings.LEDGER_MSP_ID}")
 
-    @staticmethod
-    def _check_permission(permission_type, asset, node_id):
-        permissions = asset["permissions"][permission_type]
-        if not permissions["public"] and node_id not in permissions["authorized_ids"]:
-            raise AssetPermissionError(f'{node_id} doesn\'t have permission to download model {asset["key"]}')
-
     @if_true(gzip.gzip_page, settings.GZIP_MODELS)
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(
-            request, query_method="query_model", django_field="file", orchestrator_field="address"
-        )
+        return self.download_file(request, ModelRep, "file", "model_address")

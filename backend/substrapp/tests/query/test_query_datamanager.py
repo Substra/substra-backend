@@ -17,10 +17,10 @@ from substrapp.models import DataManager
 from substrapp.models import Metric
 from substrapp.serializers import OrchestratorDataManagerSerializer
 from substrapp.tests import assets
+from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_datamanager
-from ..common import get_sample_datamanager_metadata
 from ..common import get_sample_metric
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -124,11 +124,9 @@ class DataManagerQueryTests(APITestCase):
         datamanager = DataManager.objects.create(
             name="slide opener", description=self.data_description, data_opener=self.data_data_opener
         )
+        metadata = factory.create_datamanager(key=datamanager.key)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_datamanager", return_value=get_sample_datamanager_metadata()
-        ):
-
+        with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner):
             extra = {
                 "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
                 "HTTP_ACCEPT": "application/json;version=0.0",

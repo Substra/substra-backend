@@ -16,11 +16,11 @@ from substrapp.models import DataManager
 from substrapp.models import Metric
 from substrapp.serializers import OrchestratorMetricSerializer
 from substrapp.tests import assets
+from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_datamanager
 from ..common import get_sample_metric
-from ..common import get_sample_metric_metadata
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -117,13 +117,11 @@ class MetricQueryTests(APITestCase):
         response = self.client.post(self.url, data, format="multipart", **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_metric_metrics(self):
+    def test_get_metric_files(self):
         metric = Metric.objects.create(description=self.metric_description, address=self.metric_metrics)
+        metadata = factory.create_metric(key=metric.key)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_metric", return_value=get_sample_metric_metadata()
-        ):
-
+        with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner):
             extra = {
                 "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
                 "HTTP_ACCEPT": "application/json;version=0.0",

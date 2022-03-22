@@ -1,10 +1,11 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 
 
-class DataManager(models.Model):
+class DataManager(models.Model, AssetPermissionMixin):
     """Datamanager represent a datamanager and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)

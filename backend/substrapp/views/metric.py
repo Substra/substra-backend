@@ -154,8 +154,8 @@ class MetricPermissionViewSet(PermissionMixin, GenericViewSet):
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, "query_metric", "description")
+        return self.download_file(request, MetricRep, "description", "description_address")
 
     @action(detail=True)
     def metrics(self, request, *args, **kwargs):
-        return self.download_file(request, "query_metric", "address")
+        return self.download_file(request, MetricRep, "address", "metric_address")

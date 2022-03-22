@@ -16,12 +16,12 @@ from orchestrator.error import OrcError
 from substrapp.models import Algo
 from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.tests import assets
+from substrapp.tests import factory
 from substrapp.utils import compute_hash
 from users.models import Channel
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_algo
-from ..common import get_sample_algo_metadata
 from ..common import get_sample_algo_zip
 from ..common import get_sample_datamanager
 
@@ -132,10 +132,8 @@ class AlgoQueryTests(APITestCase):
 
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.algo)
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_algo", return_value=get_sample_algo_metadata()
-        ):
-
+        metadata = factory.create_algo(key=algo.key)
+        with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner):
             extra = {
                 "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
                 "HTTP_ACCEPT": "application/json;version=0.0",

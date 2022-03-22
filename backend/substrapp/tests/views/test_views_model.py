@@ -51,9 +51,9 @@ class ModelViewTests(APITestCase):
         algo = factory.create_algo()
         compute_plan = factory.create_computeplan()
 
-        train_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_TRAIN)
-        simple_model_1 = factory.create_model(train_task, category=model_pb2.MODEL_SIMPLE)
-        simple_model_2 = factory.create_model(train_task, category=model_pb2.MODEL_SIMPLE)
+        self.train_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_TRAIN)
+        simple_model_1 = factory.create_model(self.train_task, category=model_pb2.MODEL_SIMPLE)
+        simple_model_2 = factory.create_model(self.train_task, category=model_pb2.MODEL_SIMPLE)
 
         composite_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_COMPOSITE)
         head_model = factory.create_model(composite_task, category=model_pb2.MODEL_HEAD)
@@ -62,7 +62,7 @@ class ModelViewTests(APITestCase):
             {
                 "key": str(simple_model_1.key),
                 "category": "MODEL_SIMPLE",
-                "compute_task_key": str(train_task.key),
+                "compute_task_key": str(self.train_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/model/{simple_model_1.key}/file/",
@@ -83,7 +83,7 @@ class ModelViewTests(APITestCase):
             {
                 "key": str(simple_model_2.key),
                 "category": "MODEL_SIMPLE",
-                "compute_task_key": str(train_task.key),
+                "compute_task_key": str(self.train_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/model/{simple_model_2.key}/file/",
@@ -279,7 +279,7 @@ class ModelViewTests(APITestCase):
         pvs.check_access(
             CHANNEL,
             NodeUser(),
-            {"key": MODEL_KEY, "permissions": {"process": {"public": True}}},
+            factory.create_model(self.train_task, public=True),
             is_proxied_request=False,
         )
 
@@ -287,14 +287,14 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {"key": MODEL_KEY, "permissions": {"process": {"public": False, "authorized_ids": []}}},
+                factory.create_model(self.train_task, public=False),
                 is_proxied_request=False,
             )
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username="foo"),
-            {"key": MODEL_KEY, "permissions": {"process": {"public": False, "authorized_ids": ["foo"]}}},
+            factory.create_model(self.train_task, public=False, owner="foo"),
             is_proxied_request=False,
         )
 
@@ -306,7 +306,7 @@ class ModelViewTests(APITestCase):
         pvs.check_access(
             CHANNEL,
             NodeUser(),
-            {"key": MODEL_KEY, "permissions": {"download": {"public": True}}},
+            factory.create_model(self.train_task, public=True),
             is_proxied_request=True,
         )
 
@@ -314,14 +314,14 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {"key": MODEL_KEY, "permissions": {"download": {"public": False, "authorized_ids": []}}},
+                factory.create_model(self.train_task, public=False),
                 is_proxied_request=True,
             )
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username="foo"),
-            {"key": MODEL_KEY, "permissions": {"download": {"public": False, "authorized_ids": ["foo"]}}},
+            factory.create_model(self.train_task, public=False, owner="foo"),
             is_proxied_request=True,
         )
 
@@ -334,7 +334,7 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {"key": MODEL_KEY, "permissions": {"download": {"public": True}}},
+                factory.create_model(self.train_task, public=True),
                 is_proxied_request=True,
             )
 
@@ -344,14 +344,17 @@ class ModelViewTests(APITestCase):
         pvs = ModelPermissionViewSet()
 
         pvs.check_access(
-            CHANNEL, User(), {"key": MODEL_KEY, "permissions": {"download": {"public": True}}}, is_proxied_request=False
+            CHANNEL,
+            User(),
+            factory.create_model(self.train_task, public=True),
+            is_proxied_request=False,
         )
 
         with self.assertRaises(AssetPermissionError):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {"key": MODEL_KEY, "permissions": {"download": {"public": False, "authorized_ids": []}}},
+                factory.create_model(self.train_task, public=False),
                 is_proxied_request=False,
             )
 
@@ -364,7 +367,7 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {"key": MODEL_KEY, "permissions": {"process": {"public": True}}},
+                factory.create_model(self.train_task, public=True),
                 is_proxied_request=False,
             )
 
@@ -378,6 +381,6 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {"key": MODEL_KEY, "permissions": {"process": {"public": True}}},
+                factory.create_model(self.train_task, public=True),
                 is_proxied_request=False,
             )

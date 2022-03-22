@@ -11,13 +11,12 @@ from rest_framework.test import APITestCase
 
 from node.models import IncomingNode
 from node.models import OutgoingNode
-from orchestrator.client import OrchestratorClient
 from substrapp.models import Algo
+from substrapp.tests import factory
 
 from ..common import generate_basic_auth_header
 from ..common import get_description_algo
 from ..common import get_sample_algo
-from ..common import get_sample_algo_metadata
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -36,6 +35,9 @@ class AuthenticationTests(APITestCase):
         self.algo_file, self.algo_filename = get_sample_algo()
         self.algo_description_file, self.algo_description_filename = get_description_algo()
         self.algo = Algo.objects.create(file=self.algo_file, description=self.algo_description_file)
+        metadata = factory.create_algo(key=self.algo.key, public=True, owner="foo")
+        metadata.algorithm_address = "http://fake_address.com"
+        metadata.save()
         self.algo_url = reverse("substrapp:algo-file", kwargs={"pk": self.algo.key})
 
     def tearDown(self):
@@ -61,9 +63,7 @@ class AuthenticationTests(APITestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_algo", return_value=get_sample_algo_metadata()
-        ):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"):
             response = self.client.get(self.algo_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -81,9 +81,7 @@ class AuthenticationTests(APITestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_algo", return_value=get_sample_algo_metadata()
-        ):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"):
             response = self.client.get(self.algo_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -124,9 +122,7 @@ class AuthenticationTests(APITestCase):
         invalid_auth_token_header = f"Token {token_old}"
         self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_algo", return_value=get_sample_algo_metadata()
-        ):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"):
             response = self.client.get(self.algo_url, **self.extra)
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
@@ -134,9 +130,7 @@ class AuthenticationTests(APITestCase):
         valid_auth_token_header = f"Token {token}"
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"), mock.patch.object(
-            OrchestratorClient, "query_algo", return_value=get_sample_algo_metadata()
-        ):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="foo"):
             response = self.client.get(self.algo_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)

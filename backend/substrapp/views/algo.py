@@ -175,7 +175,7 @@ class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, "query_algo", "file", "algorithm")
+        return self.download_file(request, AlgoRep, "file", "algorithm_address")
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -183,4 +183,4 @@ class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, "query_algo", "description")
+        return self.download_file(request, AlgoRep, "description", "description_address")

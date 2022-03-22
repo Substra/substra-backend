@@ -3,6 +3,7 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 from localrep.models.utils import get_enum_choices
 
@@ -11,7 +12,7 @@ STATUS_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskStatus)
 ERROR_TYPE_CHOICES = get_enum_choices(failure_report_pb2.ErrorType)
 
 
-class ComputeTask(models.Model):
+class ComputeTask(models.Model, AssetPermissionMixin):
     """ComputeTask represent a computetask and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)
@@ -65,3 +66,13 @@ class ComputeTask(models.Model):
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations
+
+    # used for logs download
+    def is_public(self, _):
+        return self.logs_permission_public
+
+    def get_authorized_ids(self, _):
+        return self.logs_permission_authorized_ids
+
+    def get_owner(self):
+        return self.logs_owner

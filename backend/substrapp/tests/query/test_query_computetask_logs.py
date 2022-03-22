@@ -1,9 +1,5 @@
 import io
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Union
-from unittest import mock
+import uuid
 
 import pytest
 import responses
@@ -14,170 +10,130 @@ from rest_framework import response as drf_response
 from rest_framework import status
 from rest_framework import test
 
+from localrep.models import ComputeTask
 from node import authentication as node_auth
 from node import models as node_models
-from orchestrator import client as orc_client
-from substrapp import models
 from substrapp import utils
+from substrapp.models import ComputeTaskFailureReport
+from substrapp.tests import factory
 from substrapp.views import utils as view_utils
 
 
 @pytest.fixture
-def compute_task_failure_report() -> models.ComputeTaskFailureReport:
+def compute_task_failure_report() -> tuple[ComputeTask, ComputeTaskFailureReport]:
     file = files.File(io.BytesIO(b"Hello, World!"))
-    compute_task_key = "1abe0aae-0308-49a0-8c57-238bfecdbcc0"
-    failure_report = models.ComputeTaskFailureReport(
-        compute_task_key=compute_task_key, logs_checksum=utils.get_hash(file)
+    compute_task_key = uuid.uuid4()
+    failure_report = ComputeTaskFailureReport(
+        compute_task_key=compute_task_key,
+        logs_checksum=utils.get_hash(file),
     )
     failure_report.logs.save(name=compute_task_key, content=file, save=True)
-    return failure_report
+
+    # create computetask metadata in localrep
+    compute_task = factory.create_computetask(
+        factory.create_computeplan(),
+        factory.create_algo(),
+        key=compute_task_key,
+        public=False,
+        owner=conf.settings.LEDGER_MSP_ID,
+    )
+    return compute_task, failure_report
 
 
-def get_compute_task(key: str, authorized_ids: List[str]) -> Dict[str, Any]:
-    return {
-        "key": key,
-        "owner": "task owner",
-        "logs_permission": {"public": False, "authorized_ids": authorized_ids},
-    }
-
-
-def get_failure_report(compute_task_key: str, owner: str, logs_address: str) -> Dict[str, Union[str, Dict[str, str]]]:
-    return {
-        "compute_task_key": compute_task_key,
-        "owner": owner,
-        "logs_address": {
-            "checksum": "dummy checksum",
-            "storage_address": logs_address,
-        },
-    }
-
-
-def get_logs(key: str, client: test.APIClient, **extra) -> drf_response.Response:
-    url = urls.reverse("substrapp:logs-file", kwargs={"pk": key})
+def get_logs(key: uuid.uuid4, client: test.APIClient, **extra) -> drf_response.Response:
+    url = urls.reverse("substrapp:logs-file", kwargs={"pk": str(key)})
     return client.get(url, **extra)
 
 
 def test_download_logs_failure_unauthenticated(api_client: test.APIClient):
     """An unauthenticated user cannot download logs."""
-    res = get_logs(key="13c2c61e-ffe5-476f-a7fd-dd6a132f4480", client=api_client)
+    res = get_logs(key=uuid.uuid4(), client=api_client)
     assert res.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "get_failure_report")
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_download_local_logs_success(
-    mocked_query_task: mock.Mock,
-    mocked_get_failure_report: mock.Mock,
     compute_task_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authorized user download logs located on the node."""
 
-    compute_task_key = str(compute_task_failure_report.compute_task_key)
-    owner = conf.settings.LEDGER_MSP_ID
+    compute_task, failure_report = compute_task_failure_report
+    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
+    assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
-    mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, owner, compute_task_failure_report.logs_address
-    )
-
-    res = get_logs(key=compute_task_key, client=authenticated_client)
+    res = get_logs(key=compute_task.key, client=authenticated_client)
 
     assert res.status_code == status.HTTP_200_OK
     assert res.headers["Content-Type"] == "text/plain; charset=utf-8"
-    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task_key}.txt"'
-    assert res.getvalue() == compute_task_failure_report.logs.read()
-    mocked_query_task.assert_called_once()
-    mocked_get_failure_report.assert_called_once()
+    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task.key}.txt"'
+    assert res.getvalue() == failure_report.logs.read()
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_download_logs_failure_forbidden(
-    mocked_query_task: mock.Mock,
     compute_task_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authenticated user cannot download logs if he is not authorized."""
 
-    compute_task_key = str(compute_task_failure_report.compute_task_key)
+    compute_task, failure_report = compute_task_failure_report
+    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
+    compute_task.logs_permission_authorized_ids = []  # not allowed
+    compute_task.save()
 
-    owner = "foo"
-    assert owner != conf.settings.LEDGER_MSP_ID
-
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
-
-    res = get_logs(key=compute_task_key, client=authenticated_client)
+    res = get_logs(key=str(compute_task.key), client=authenticated_client)
 
     assert res.status_code == status.HTTP_403_FORBIDDEN
-    mocked_query_task.assert_called_once()
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "get_failure_report")
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_download_local_logs_failure_not_found(
-    mocked_query_task: mock.Mock,
-    mocked_get_failure_report: mock.Mock,
     compute_task_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authorized user attempt to download logs that are not referenced in the database."""
 
-    compute_task_key = str(compute_task_failure_report.compute_task_key)
-    owner = conf.settings.LEDGER_MSP_ID
+    compute_task, failure_report = compute_task_failure_report
+    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
+    assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
+    failure_report.delete()  # not found
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
-    mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, owner, compute_task_failure_report.logs_address
-    )
-
-    compute_task_failure_report.delete()
-
-    res = get_logs(key=compute_task_key, client=authenticated_client)
+    res = get_logs(key=compute_task.key, client=authenticated_client)
 
     assert res.status_code == status.HTTP_404_NOT_FOUND
-    mocked_query_task.assert_called_once()
-    mocked_get_failure_report.assert_called_once()
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "get_failure_report")
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_download_remote_logs_success(
-    mocked_query_task: mock.Mock, mocked_get_failure_report: mock.Mock, authenticated_client: test.APIClient
+    compute_task_failure_report,
+    authenticated_client: test.APIClient,
 ):
     """An authorized user download logs on a remote node by using his node as proxy."""
 
-    compute_task_key = "13c2c61e-ffe5-476f-a7fd-dd6a132f4480"
-    current_node = conf.settings.LEDGER_MSP_ID
+    compute_task, failure_report = compute_task_failure_report
     outgoing_node = "outgoing-node"
-    storage_address = f"https://another-node.foo.com/logs/{compute_task_key}"
-    logs_content = b"Lorem ipsum dolor sit amet"
-
+    compute_task.logs_owner = outgoing_node  # remote
+    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_node]  # allowed
+    compute_task.save()
     node_models.OutgoingNode.objects.create(node_id=outgoing_node, secret=node_models.Node.generate_secret())
 
-    mocked_query_task.return_value = get_compute_task(
-        key=compute_task_key, authorized_ids=[outgoing_node, current_node]
-    )
-    mocked_get_failure_report.return_value = get_failure_report(compute_task_key, outgoing_node, storage_address)
-
+    logs_content = failure_report.logs.read()
     with responses.RequestsMock() as mocked_responses:
         mocked_responses.add(
-            responses.GET, storage_address, body=logs_content, content_type="text/plain; charset=utf-8"
+            responses.GET,
+            compute_task.logs_address,
+            body=logs_content,
+            content_type="text/plain; charset=utf-8",
         )
+        res = get_logs(key=compute_task.key, client=authenticated_client)
 
-        res = get_logs(key=compute_task_key, client=authenticated_client)
-
-        mocked_responses.assert_call_count(storage_address, 1)
+        mocked_responses.assert_call_count(compute_task.logs_address, 1)
 
     assert res.status_code == status.HTTP_200_OK
     assert res.headers["Content-Type"] == "text/plain; charset=utf-8"
-    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task_key}.txt"'
+    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task.key}.txt"'
     assert res.getvalue() == logs_content
-    mocked_query_task.assert_called_once()
-    mocked_get_failure_report.assert_called_once()
 
 
 @pytest.fixture
@@ -187,66 +143,53 @@ def incoming_node_user(settings: conf.Settings) -> node_auth.NodeUser:
     return node_auth.NodeUser(username=incoming_node)
 
 
-def get_proxy_headers(channel_name: str) -> Dict[str, str]:
+def get_proxy_headers(channel_name: str) -> dict[str, str]:
     return {view_utils.HTTP_HEADER_PROXY_ASSET: "True", "HTTP_SUBSTRA_CHANNEL_NAME": channel_name}
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "get_failure_report")
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_node_download_logs_success(
-    mocked_query_task: mock.Mock,
-    mocked_get_failure_report: mock.Mock,
     compute_task_failure_report,
     api_client: test.APIClient,
     incoming_node_user: node_auth.NodeUser,
 ):
     """An authorized node can download logs from another node."""
 
-    compute_task_key = str(compute_task_failure_report.compute_task_key)
-    owner = conf.settings.LEDGER_MSP_ID
-    incoming_node = incoming_node_user.username
-    authorized_ids = [owner, incoming_node]
-
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=authorized_ids)
-    mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, owner, compute_task_failure_report.logs_address
-    )
+    compute_task, failure_report = compute_task_failure_report
+    compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
+    compute_task.logs_permission_authorized_ids = [
+        conf.settings.LEDGER_MSP_ID,
+        incoming_node_user.username,
+    ]  # incoming user allowed
+    compute_task.channel = incoming_node_user.username
+    compute_task.save()
 
     api_client.force_authenticate(user=incoming_node_user)
     extra_headers = get_proxy_headers(incoming_node_user.username)
-    res = get_logs(key=compute_task_key, client=api_client, **extra_headers)
+    res = get_logs(key=compute_task.key, client=api_client, **extra_headers)
 
     assert res.status_code == status.HTTP_200_OK
     assert res.headers["Content-Type"] == "text/plain; charset=utf-8"
-    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task_key}.txt"'
-    assert res.getvalue() == compute_task_failure_report.logs.read()
-    mocked_query_task.assert_called_once()
-    mocked_get_failure_report.assert_called_once()
+    assert res.headers["Content-Disposition"] == f'attachment; filename="tuple_logs_{compute_task.key}.txt"'
+    assert res.getvalue() == failure_report.logs.read()
 
 
 @pytest.mark.django_db
-@mock.patch.object(orc_client.OrchestratorClient, "query_task")
 def test_node_download_logs_forbidden(
-    mocked_query_task: mock.Mock,
     compute_task_failure_report,
     api_client: test.APIClient,
     incoming_node_user: node_auth.NodeUser,
 ):
     """An unauthorized node cannot download logs from another node."""
 
-    compute_task_key = str(compute_task_failure_report.compute_task_key)
-    owner = conf.settings.LEDGER_MSP_ID
-    incoming_node = incoming_node_user.username
-    authorized_ids = [owner]
-
-    assert owner != incoming_node
-
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=authorized_ids)
+    compute_task, failure_report = compute_task_failure_report
+    compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
+    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID]  # incoming user not allowed
+    compute_task.channel = incoming_node_user.username
+    compute_task.save()
 
     api_client.force_authenticate(user=incoming_node_user)
-    extra_headers = get_proxy_headers(incoming_node)
-    res = get_logs(key=compute_task_key, client=api_client, **extra_headers)
+    extra_headers = get_proxy_headers(incoming_node_user.username)
+    res = get_logs(key=compute_task.key, client=api_client, **extra_headers)
 
     assert res.status_code == status.HTTP_403_FORBIDDEN
-    mocked_query_task.assert_called_once()

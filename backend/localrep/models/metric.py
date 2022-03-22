@@ -1,10 +1,11 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 
 
-class Metric(models.Model):
+class Metric(models.Model, AssetPermissionMixin):
     """Metric represent a metric and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)

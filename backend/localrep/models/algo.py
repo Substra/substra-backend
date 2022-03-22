@@ -2,13 +2,14 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 import orchestrator.algo_pb2 as algo_pb2
+from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 from localrep.models.utils import get_enum_choices
 
 CATEGORY_CHOICES = get_enum_choices(algo_pb2.AlgoCategory)
 
 
-class Algo(models.Model):
+class Algo(models.Model, AssetPermissionMixin):
     """Algo represent an algorithm and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)
