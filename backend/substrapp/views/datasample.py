@@ -208,7 +208,11 @@ class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
                 yield {"file": File(open(archive, "rb")), "checksum": checksum}
 
     def list(self, request, *args, **kwargs):
-        queryset = DataSampleRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
+        queryset = (
+            DataSampleRep.objects.filter(channel=get_channel_name(request))
+            .prefetch_related("data_managers")
+            .order_by("creation_date", "key")
+        )
 
         query_params = request.query_params.get("search")
         if query_params is not None:
