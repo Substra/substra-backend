@@ -167,8 +167,7 @@ class MetricViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
-    def test_metric_list_storage_addresses_update(self, _):
+    def test_metric_list_storage_addresses_update(self):
         for metric in MetricRep.objects.all():
             metric.description_address.replace("http://testserver", "http://remotetestserver")
             metric.metric_address.replace("http://testserver", "http://remotetestserver")
@@ -339,8 +338,7 @@ class MetricViewTests(APITestCase):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
-    def test_metric_retrieve(self, _):
+    def test_metric_retrieve(self):
         url = reverse("substrapp:metric-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_results[0])
@@ -351,17 +349,14 @@ class MetricViewTests(APITestCase):
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @parameterized.expand([(True,), (False,)])
-    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
-    def test_metric_retrieve_storage_addresses_update(self, has_cache, _):
+    def test_metric_retrieve_storage_addresses_update(self):
         metric = MetricRep.objects.get(key=self.expected_results[0]["key"])
         metric.description_address.replace("http://testserver", "http://remotetestserver")
         metric.metric_address.replace("http://testserver", "http://remotetestserver")
         metric.save()
 
         url = reverse("substrapp:metric-detail", args=[self.expected_results[0]["key"]])
-        with mock.patch("substrapp.views.metric.node_has_process_permission", return_value=has_cache):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         for field in ("description", "address"):
             self.assertEqual(
                 response.data[field]["storage_address"], self.expected_results[0][field]["storage_address"]

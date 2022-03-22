@@ -174,8 +174,7 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"content")
-    def test_datamanager_list_storage_addresses_update(self, _):
+    def test_datamanager_list_storage_addresses_update(self):
         for data_manager in DataManagerRep.objects.all():
             data_manager.description_address.replace("http://testserver", "http://remotetestserver")
             data_manager.opener_address.replace("http://testserver", "http://remotetestserver")
@@ -379,8 +378,7 @@ class DataManagerViewTests(APITestCase):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"content")
-    def test_datamanager_retrieve(self, _):
+    def test_datamanager_retrieve(self):
         self.expected_results[0]["train_data_sample_keys"] = self.train_data_sample_keys
         self.expected_results[0]["test_data_sample_keys"] = self.test_data_sample_keys
         url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
@@ -393,17 +391,14 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @parameterized.expand([(True,), (False,)])
-    @mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"content")
-    def test_datamanager_retrieve_storage_addresses_update(self, has_cache, _):
+    def test_datamanager_retrieve_storage_addresses_update(self):
         data_manager = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
         data_manager.description_address.replace("http://testserver", "http://remotetestserver")
         data_manager.opener_address.replace("http://testserver", "http://remotetestserver")
         data_manager.save()
 
         url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
-        with mock.patch("substrapp.views.datamanager.node_has_process_permission", return_value=has_cache):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         for field in ("description", "opener"):
             self.assertEqual(
                 response.data[field]["storage_address"], self.expected_results[0][field]["storage_address"]

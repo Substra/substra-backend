@@ -1,7 +1,4 @@
-import tempfile
-
 import structlog
-from django.http import Http404
 from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
@@ -13,7 +10,6 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Metric as MetricRep
 from localrep.serializers import MetricSerializer as MetricRepSerializer
-from substrapp.clients import node as node_client
 from substrapp.models import Metric
 from substrapp.serializers import MetricSerializer
 from substrapp.serializers import OrchestratorMetricSerializer
@@ -23,7 +19,6 @@ from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import node_has_process_permission
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -115,23 +110,6 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
         headers = self.get_success_headers(data)
         return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def create_or_update_metric_description(self, channel_name, metric, key):
-        # We need to have, at least, metric description for the frontend
-        content = node_client.get(
-            channel=channel_name,
-            node_id=metric["owner"],
-            url=metric["description"]["storage_address"],
-            checksum=metric["description"]["checksum"],
-        )
-
-        description_file = tempfile.TemporaryFile()
-        description_file.write(content)
-
-        instance, created = Metric.objects.update_or_create(key=key)
-        instance.description.save("description.md", description_file)
-
-        return instance
-
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
         try:
@@ -139,23 +117,6 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
         except MetricRep.DoesNotExist:
             raise NotFound
         data = MetricRepSerializer(metric).data
-
-        # verify if metric description exists for the frontend view
-        # if not fetch it if it's possible
-        # do not fetch metric description if node has no process permission
-        if node_has_process_permission(data):
-            try:
-                instance = self.get_object()
-            except Http404:
-                instance = None
-            finally:
-                if not instance or not instance.description:
-                    instance = self.create_or_update_metric_description(get_channel_name(request), data, validated_key)
-
-            # For security reason, do not give access to local file address
-            # Restrain data to some fields
-            serializer = self.get_serializer(instance, fields=("owner"))
-            data.update(serializer.data)
 
         replace_storage_addresses(request, data)
 

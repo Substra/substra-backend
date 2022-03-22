@@ -95,19 +95,6 @@ class CustomFileResponse(django.http.FileResponse):
         self["Access-Control-Expose-Headers"] = "Content-Disposition"
 
 
-def node_has_process_permission(asset):
-    """Check if current node can process input asset."""
-
-    if settings.ISOLATED:
-        # In isolated frontend there is no access to data
-        # (only non sensitive metadata from orchestrator is exported)
-        # So by returning always False here, backend will not try to retrieve data
-        return False
-
-    permission = asset["permissions"]["process"]
-    return permission["public"] or get_owner() in permission["authorized_ids"]
-
-
 @dataclasses.dataclass
 class StorageAddress:
     url: Optional[str]

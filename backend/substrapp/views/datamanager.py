@@ -1,7 +1,4 @@
-import tempfile
-
 import structlog
-from django.http import Http404
 from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
@@ -14,7 +11,6 @@ from localrep.errors import AlreadyExistsError
 from localrep.models import DataManager as DataManagerRep
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import DataManagerWithRelationsSerializer as DataManagerRepWithRelationsSerializer
-from substrapp.clients import node as node_client
 from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer
 from substrapp.serializers import OrchestratorDataManagerSerializer
@@ -24,7 +20,6 @@ from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import node_has_process_permission
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -122,34 +117,6 @@ class DataManagerViewSet(mixins.CreateModelMixin, GenericViewSet):
         headers = self.get_success_headers(data)
         return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def create_or_update_datamanager(self, channel_name, data_manager, key):
-
-        instance, created = DataManager.objects.update_or_create(key=key, name=data_manager["name"])
-
-        if not instance.data_opener:
-            content = node_client.get(
-                channel=channel_name,
-                node_id=data_manager["owner"],
-                url=data_manager["opener"]["storage_address"],
-                checksum=data_manager["opener"]["checksum"],
-            )
-            opener_file = tempfile.TemporaryFile()
-            opener_file.write(content)
-            instance.data_opener.save("opener.py", opener_file)
-
-        if not instance.description:
-            content = node_client.get(
-                channel=channel_name,
-                node_id=data_manager["owner"],
-                url=data_manager["description"]["storage_address"],
-                checksum=data_manager["description"]["checksum"],
-            )
-            description_file = tempfile.TemporaryFile()
-            description_file.write(content)
-            instance.description.save("description.md", description_file)
-
-        return instance
-
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
         try:
@@ -157,21 +124,6 @@ class DataManagerViewSet(mixins.CreateModelMixin, GenericViewSet):
         except DataManagerRep.DoesNotExist:
             raise NotFound
         data = DataManagerRepWithRelationsSerializer(data_manager).data
-
-        # do not cache if node has not process permission
-        if node_has_process_permission(data):
-            try:
-                instance = self.get_object()
-            except Http404:
-                instance = None
-            finally:
-                if not instance or not instance.description or not instance.data_opener:
-                    instance = self.create_or_update_datamanager(get_channel_name(request), data, validated_key)
-
-                # For security reason, do not give access to local file address
-                # Restrain data to some fields
-                serializer = self.get_serializer(instance, fields=("owner"))
-                data.update(serializer.data)
 
         replace_storage_addresses(request, data)
 

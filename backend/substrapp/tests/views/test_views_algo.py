@@ -382,8 +382,7 @@ class AlgoViewTests(APITestCase):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
-    def test_algo_retrieve(self, _):
+    def test_algo_retrieve(self):
         url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_results[0])
@@ -394,17 +393,14 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @parameterized.expand([(True,), (False,)])
-    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
-    def test_algo_retrieve_storage_addresses_update(self, has_cache, _):
+    def test_algo_retrieve_storage_addresses_update(self):
         algo = AlgoRep.objects.get(key=self.expected_results[0]["key"])
         algo.description_address.replace("http://testserver", "http://remotetestserver")
         algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
         algo.save()
 
         url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
-        with mock.patch("substrapp.views.algo.node_has_process_permission", return_value=has_cache):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         for field in ("description", "algorithm"):
             self.assertEqual(
                 response.data[field]["storage_address"], self.expected_results[0][field]["storage_address"]
