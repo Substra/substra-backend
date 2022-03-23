@@ -15,7 +15,7 @@ class Model(models.Model, AssetPermissionMixin):
     key = models.UUIDField(primary_key=True)
     category = models.IntegerField(choices=CATEGORY_CHOICES)
     compute_task = models.ForeignKey("ComputeTask", on_delete=models.deletion.DO_NOTHING, related_name="models")
-    model_address = models.URLField(validators=[URLValidatorWithOptionalTLD()], null=True)  # delete intermediary model
+    model_address = models.URLField(validators=[URLValidatorWithOptionalTLD()], null=True)  # disabled model
     model_checksum = models.CharField(max_length=64)
     permissions_download_public = models.BooleanField()
     permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)

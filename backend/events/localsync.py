@@ -276,8 +276,24 @@ def _create_model(channel: str, data: dict) -> bool:
         return True
 
 
+def _on_disable_model_event(event: dict) -> None:
+    """Process disable model event to update local database."""
+    logger.debug("Syncing model disable", asset_key=event["asset_key"], event_id=event["id"])
+
+    _disable_model(event["asset_key"])
+
+
+def _disable_model(key: str) -> None:
+    """Disable model."""
+    from localrep.models import Model
+
+    model = Model.objects.get(key=key)
+    model.model_address = None
+    model.save()
+
+
 @transaction.atomic
-def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) -> None:
+def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) -> None:  # noqa: C901
     """Handler to consume event.
     This function is idempotent (can be called in sync and resync mode)
     """
@@ -300,6 +316,8 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
         _on_create_computetask_event(event, client)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_UPDATED, common_pb2.ASSET_COMPUTE_TASK):
         _on_update_computetask_event(event, client)
+    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_DISABLED, common_pb2.ASSET_MODEL):
+        _on_disable_model_event(event)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_NODE):
         _on_create_node_event(event, client)
     else:
