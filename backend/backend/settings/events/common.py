@@ -11,4 +11,5 @@ INSTALLED_APPS = [
     "events",
     "substrapp",
     "users",
+    "node",
 ]

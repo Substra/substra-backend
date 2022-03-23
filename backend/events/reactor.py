@@ -5,7 +5,6 @@ from contextlib import closing
 
 import pika
 import structlog
-from django.apps import AppConfig
 from django.conf import settings
 from django.db import close_old_connections
 
@@ -203,21 +202,3 @@ def resync():
             logger.exception("Retry connecting to orchestrator GRPC api", e=e)
         else:
             break
-
-
-class EventsConfig(AppConfig):
-    name = "events"
-    logger.info("starting event app")
-
-    def ready(self):
-
-        # Init: resync all orchestrator assets
-        resync()
-
-        # Consume rabbitmq messages infinitely
-        while True:
-            try:
-                consume()
-            except Exception as e:
-                time.sleep(5)
-                logger.exception("Retry consume messages from the orchestrator RabbitMQ queue", e=e)

@@ -37,9 +37,9 @@ spec:
           imagePullPolicy: {{ .Values.events.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
-          args: ["-c", "uwsgi --ini uwsgi.ini"]
+          args: ["-c", "python manage.py consume"]
           {{- else }}
-          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python manage.py consume"]
           {{- end }}
           envFrom:
             - configMapRef:
@@ -61,14 +61,7 @@ spec:
                     fieldPath: metadata.namespace
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.events.{{ .Values.settings }}
-            # it's safe to allow async django db calls as the event app only reads
-            - name: DJANGO_ALLOW_ASYNC_UNSAFE
-              value: "true"
           volumeMounts:
-            - name: uwsgi
-              mountPath: /usr/src/app/uwsgi.ini
-              subPath: uwsgi.ini
-              readOnly: true
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
               name: ssl-certs
@@ -130,9 +123,6 @@ spec:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.{{ .Values.settings }}
       volumes:
-      - name: uwsgi
-        configMap:
-          name: {{ include "substra.fullname" . }}-events-uwsgi
       - name: volume-wait-init-migrations
         configMap:
           name: {{ include "substra.fullname" . }}-wait-init-migrations

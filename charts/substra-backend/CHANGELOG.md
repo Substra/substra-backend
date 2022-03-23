@@ -1,5 +1,13 @@
 # Changelog
 
+## 17.0.0
+
+### Changed
+- (BREAKING) Event app command changed and is only compatible with images >0.9.0
+
+### Removed
+- uwsgi configmap for event app
+
 ## 16.2.0
 
 ### Added
