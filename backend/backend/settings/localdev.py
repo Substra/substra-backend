@@ -9,7 +9,7 @@ REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
 # Allow locally deployed frontend
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = [".node-1.com"]
+ALLOWED_HOSTS = ["127.0.0.1", ".node-1.com"]
 COMMON_HOST_DOMAIN = "node-1.com"
 
 LEDGER_MSP_ID = os.environ.get("LEDGER_MSP_ID", "MyOrg1MSP")

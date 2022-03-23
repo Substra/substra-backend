@@ -123,7 +123,7 @@ This command will only work if you have a local docker daemon running.
 It is recommanded to use the same version as the one defined in the charts.
 
 ```sh
-make db-test
+make db
 ```
 
 Alternatively, you could also set the environment variables defined in `backend.settings.test` to provide any DB info.

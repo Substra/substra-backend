@@ -6,8 +6,8 @@ SRC_DIRS := backend metrics-exporter fixtures
 install:  ## Install Python development dependencies
 	pip install -r backend/dev-requirements.txt
 
-.PHONY: db-test
-db-test:  ## Set up test database
+.PHONY: db
+db:  ## Set up test database
 	docker run --name postgres --rm \
 		-e POSTGRES_DB=substra \
 		-e POSTGRES_USER=postgres \
