@@ -3,6 +3,7 @@ from urllib.parse import unquote
 import structlog
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from rest_framework.filters import BaseFilterBackend
 
 from substrapp import exceptions
 
@@ -152,3 +153,19 @@ def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
         return queryset.filter(or_params)
     except ValidationError:
         raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
+
+
+class CustomSearchFilter(BaseFilterBackend):
+    """Bridge to use our custom filtering system with django_filters.
+
+    You must set the custom_search_object_type attr on the view that uses it
+
+    It should be removed soon when we abandon them for the default filter implementation
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        query_params = request.query_params.get("search")
+        object_type = view.custom_search_object_type
+        if query_params is not None:
+            queryset = filter_queryset(object_type, queryset, query_params)
+        return queryset

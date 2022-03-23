@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from localrep.models import Metric
@@ -26,3 +27,15 @@ class MetricSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "owner",
             "permissions",
         ]
+
+    def to_representation(self, instance):
+        res = super().to_representation(instance)
+        request = self.context.get("request")
+        if request:
+            res["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:metric-description", args=[res["key"]])
+            )
+            res["address"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:metric-metrics", args=[res["key"]])
+            )
+        return res

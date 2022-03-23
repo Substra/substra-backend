@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use the connect-tools image 0.10.0 in the example yaml files (#850)
 - Return 410 error for all attempts at file download in isolated mode (#849)
 - Removed unused description files cache for remote assets (#873)
+- Use standard ModelViewSet to handle Metric list and retrieve calls (#856)
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)

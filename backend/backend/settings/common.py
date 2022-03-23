@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "users",
     "localrep",
     "drf_spectacular",
+    "django_filters",
 ]
 
 AUTHENTICATION_BACKENDS = [
