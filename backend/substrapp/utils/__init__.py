@@ -20,6 +20,10 @@ from substrapp.utils.safezip import ZipFile
 logger = structlog.get_logger(__name__)
 
 
+class PathTraversalError(Exception):
+    pass
+
+
 def get_dir_hash(directory):
     if not os.listdir(directory):
         raise Exception(f"Cannot compute hash of folder {directory}: folder is empty.")
@@ -80,7 +84,9 @@ def raise_if_path_traversal(requested_paths, to_directory):
         is_valid = common_prefix == safe_directory or real_requested_path + "/" == safe_directory
 
         if not is_valid:
-            raise Exception(f"Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.")
+            raise PathTraversalError(
+                f"Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe."
+            )
 
 
 def uncompress_path(archive_path, to_directory):

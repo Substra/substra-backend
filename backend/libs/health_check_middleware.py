@@ -45,7 +45,7 @@ class HealthCheckMiddleware(object):
 def validate_connections():
     if not settings.ISOLATED:
         # Check orchestrator connection for each channel
-        for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
+        for channel_name, _ in settings.LEDGER_CHANNELS.items():
             with get_orchestrator_client(channel_name) as client:
                 client.query_version()
 

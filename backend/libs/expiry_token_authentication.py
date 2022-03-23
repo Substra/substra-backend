@@ -10,7 +10,7 @@ from rest_framework.exceptions import AuthenticationFailed
 def expires_at(token):
     """Return time left."""
     time_elapsed = timezone.now() - token.created
-    left_time = getattr(settings, "EXPIRY_TOKEN_LIFETIME") - time_elapsed
+    left_time = settings.EXPIRY_TOKEN_LIFETIME - time_elapsed
     return left_time
 
 

@@ -13,7 +13,7 @@ from substrapp.utils import timeit
 logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
-HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
+HTTP_CLIENT_TIMEOUT_SECONDS = settings.HTTP_CLIENT_TIMEOUT_SECONDS
 RUN_AS_GROUP = settings.COMPUTE_POD_RUN_AS_GROUP
 RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
 FS_GROUP = settings.COMPUTE_POD_FS_GROUP

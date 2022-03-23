@@ -150,19 +150,31 @@ class ComputeTaskTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.clear_assets_buffer"
         ) as m_clear_assets_buffer:
 
-            # retry because of generic exception
-            mexecute_compute_task.side_effect = Exception("an exception that should trigger the retry mechanism")
+            def basic_retry(exc, **retry_kwargs):
+                # retry function that just re-raise the exception
+                return exc
 
-            with self.assertRaises(Exception):
+            # Explicitly set a side_effect for mretry that return an Exception,
+            # otherwise mretry will be a MagicMock, which will make celery unhappy
+            mretry.side_effect = basic_retry
+
+            # retry because of generic exception
+            exception_message = "an exception that should trigger the retry mechanism"
+            mexecute_compute_task.side_effect = Exception(exception_message)
+
+            with pytest.raises(Exception) as excinfo:
                 compute_task(CHANNEL, task, None)
 
+            assert str(excinfo.value) == exception_message
             self.assertEqual(mretry.call_count, 1)
 
             # retry because no space left on device error
             mexecute_compute_task.side_effect = IOError(errno.ENOSPC, "no file left on device")
 
-            with self.assertRaises(Exception):
+            with self.assertRaises(IOError) as excinfo:
                 compute_task(CHANNEL, task, None)
+
+            assert "no file left on device" in str(excinfo.exception)
 
             self.assertEqual(mretry.call_count, 2)
             self.assertEqual(m_clear_assets_buffer.call_count, 1)

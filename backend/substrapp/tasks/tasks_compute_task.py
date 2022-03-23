@@ -240,7 +240,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
                 if ctx.has_chainkeys:
                     commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
-        except (OSError, IOError) as e:
+        except OSError as e:
             if e.errno == errno.ENOSPC:
                 # "No space left on device"
                 # clear asset buffer and retry the task

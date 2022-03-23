@@ -31,7 +31,7 @@ FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/owkin/metrics/metric
 
 def zip_folder(path, destination):
     zipf = zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED)
-    for root, dirs, files in os.walk(path):
+    for root, _dirs, files in os.walk(path):
         for f in files:
             abspath = os.path.join(root, f)
             archive_path = os.path.relpath(abspath, start=path)

@@ -7,12 +7,14 @@ from abc import abstractmethod
 from collections import ChainMap
 from unittest import mock
 
+import pytest
 from django.core.files import File
 from django.test import override_settings
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp import models
 from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import _add_datasample_to_buffer
 from substrapp.compute_tasks.asset_buffer import _add_model_to_buffer
@@ -249,8 +251,12 @@ class AssetBufferTests(APITestCase):
             data_samples = list(self.data_samples.values())
 
             # Test 1: DB is empty
-            with self.assertRaises(Exception):
-                _add_datasample_to_buffer(self.data_samples.keys()[0])
+            # if the object is not present in the DB Django raise this error
+            mget.side_effect = models.DataSample.DoesNotExist("datasample does not exist")
+            data_sample_key = list(self.data_samples.keys())[0]
+            with pytest.raises(models.DataSample.DoesNotExist) as excinfo:
+                _add_datasample_to_buffer(data_sample_key)
+            assert "datasample does not exist" in str(excinfo.value)
 
             # Test 2: OK
             mget.side_effect = lambda key: self.data_samples[key].to_fake_data_sample()
@@ -270,8 +276,9 @@ class AssetBufferTests(APITestCase):
             # Test 3: File corrupted
             data_samples[0].falsify_content("corrupted")
 
-            with self.assertRaises(Exception):
+            with pytest.raises(Exception) as excinfo:
                 _add_datasample_to_buffer(data_samples[0].key)
+            assert "checksum in tuple is not the same as in local db" in str(excinfo.value)
 
     @parameterized.expand(
         [
@@ -293,15 +300,16 @@ class AssetBufferTests(APITestCase):
         if is_head_model:
 
             with mock.patch("substrapp.models.Model.objects.get") as mget:
-                instance = None
-                mget.side_effect = lambda key: instance
+                mget.side_effect = models.Model.DoesNotExist("model does not exist")
 
                 # Test 1: DB is empty
-                with self.assertRaises(Exception):
+                with pytest.raises(models.Model.DoesNotExist) as excinfo:
                     _add_model_to_buffer(CHANNEL, model, "node 1")
+                assert "model does not exist" in str(excinfo.value)
 
                 # Test 2: OK
                 instance = FakeModel(File(open(self.model_path, "rb")), self.model_checksum)
+                mget.side_effect = lambda key: instance
                 _add_model_to_buffer(CHANNEL, model, "node 1")
 
                 with open(dest) as f:
@@ -314,8 +322,9 @@ class AssetBufferTests(APITestCase):
                 with open(self.model_path, "a+") as f:
                     f.write("corrupted")
 
-                with self.assertRaises(Exception):
+                with pytest.raises(Exception) as excinfo:
                     _add_model_to_buffer(CHANNEL, model, "node 1")
+                assert "checksum in Subtuple is not the same as in local db" in str(excinfo.value)
 
         else:
             node_id = "node 1"
