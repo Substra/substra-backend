@@ -192,7 +192,7 @@ def _build_container_image(path: str, tag: str, ctx: Context) -> None:  # noqa: 
     # it needs some capabilities and to be root
     # https://github.com/GoogleContainerTools/kaniko/issues/778
     capabilities = ["CHOWN", "SETUID", "SETGID", "FOWNER", "DAC_OVERRIDE"]
-    container_security_context = get_security_context(root=True, add_capabilities=capabilities)
+    container_security_context = get_security_context(root=True, capabilities=capabilities)
 
     container = kubernetes.client.V1Container(
         name=pod_name,

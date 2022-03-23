@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 import kubernetes
 import structlog
@@ -19,10 +20,7 @@ RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
 FS_GROUP = settings.COMPUTE_POD_FS_GROUP
 
 
-def get_pod_security_context(enabled=True, root=False):
-    if not enabled or root:
-        return None
-
+def get_pod_security_context():
     return kubernetes.client.V1PodSecurityContext(
         run_as_non_root=True,
         fs_group=int(FS_GROUP),
@@ -31,25 +29,19 @@ def get_pod_security_context(enabled=True, root=False):
     )
 
 
-def get_security_context(enabled=True, root=False, privileged=False, add_capabilities=None):
-    if not enabled:
-        return None
+def get_security_context(root: bool = False, capabilities: List[str] = None) -> kubernetes.client.V1SecurityContext:
+    security_context = kubernetes.client.V1SecurityContext(
+        privileged=False,
+        allow_privilege_escalation=False,
+        capabilities=kubernetes.client.V1Capabilities(drop=["ALL"], add=capabilities),
+    )
 
-    if root:
-        return kubernetes.client.V1SecurityContext(
-            privileged=privileged,
-            allow_privilege_escalation=privileged,
-            capabilities=kubernetes.client.V1Capabilities(drop=["ALL"], add=add_capabilities),
-        )
-    else:
-        return kubernetes.client.V1SecurityContext(
-            privileged=privileged,
-            allow_privilege_escalation=privileged,
-            capabilities=kubernetes.client.V1Capabilities(drop=["ALL"], add=add_capabilities),
-            run_as_non_root=True,
-            run_as_group=int(RUN_AS_GROUP),
-            run_as_user=int(RUN_AS_USER),
-        )
+    if not root:
+        security_context.run_as_non_root = True
+        security_context.run_as_group = int(RUN_AS_GROUP)
+        security_context.run_as_user = int(RUN_AS_USER)
+
+    return security_context
 
 
 # TODO: 'watch_pod' is too complex, consider refactoring
