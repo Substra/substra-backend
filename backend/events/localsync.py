@@ -129,9 +129,12 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     # because when the status is done, the outputs should be available.
     _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, failure_report)
     compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
-    compute_plan.update_status()
+    # update CP dates:
+    # - after task status, to ensure proper rules are applied
+    # - before CP status, to ensure dates are up-to-date when client wait on status
     if status != computetask_pb2.STATUS_TODO:
         compute_plan.update_dates()
+    compute_plan.update_status()
 
 
 def _update_computetask(key: str, status: str, start_date: str, end_date: str, failure_report: dict = None) -> None:
