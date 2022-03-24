@@ -114,7 +114,13 @@ class ComputeTaskTests(APITestCase):
             mexecute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
             with self.assertRaises(Exception) as exc:
                 compute_task(CHANNEL, task, None)
-                self.assertEqual(str(exc.exception), "No space left on device")
+            self.assertTrue("No space left on device" in str(exc.exception))
+
+            # test other OS error
+            mexecute_compute_task.side_effect = OSError(errno.EACCES, "Dummy error")
+            with self.assertRaises(Exception) as exc:
+                compute_task(CHANNEL, task, None)
+            self.assertTrue("Dummy error" in str(exc.exception))
 
     def test_celery_retry(self):
         task = {

@@ -249,7 +249,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 )
                 with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
                     clear_assets_buffer()
-                raise
+            raise
 
         finally:
             # Teardown

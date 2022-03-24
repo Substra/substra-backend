@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)
+- Compute task stays doing forever if saving the model raises an OSError (#880)
 
 ### Fixed
 - Disable model in localrep (#848)
