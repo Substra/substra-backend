@@ -255,6 +255,15 @@ class DataManagerViewTests(APITestCase):
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
+    def test_datamanager_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+
     def test_datamanager_create(self):
         def mock_orc_response(data):
             """Build orchestrator register response from request data."""
