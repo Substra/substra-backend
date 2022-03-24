@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 import orchestrator.algo_pb2 as algo_pb2
@@ -37,3 +38,15 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "owner",
             "permissions",
         ]
+
+    def to_representation(self, instance):
+        res = super().to_representation(instance)
+        request = self.context.get("request")
+        if request:
+            res["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:algo-description", args=[res["key"]])
+            )
+            res["algorithm"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:algo-file", args=[res["key"]])
+            )
+        return res

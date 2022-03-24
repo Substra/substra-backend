@@ -237,6 +237,15 @@ class AlgoViewTests(APITestCase):
             {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
         )
 
+    def test_algo_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+
     @parameterized.expand(
         [
             ("page_size_1_page_3", 1, 3),

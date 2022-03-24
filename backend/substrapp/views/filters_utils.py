@@ -166,6 +166,13 @@ class CustomSearchFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         query_params = request.query_params.get("search")
         object_type = view.custom_search_object_type
+        mapping_callback = getattr(view, "custom_search_mapping_callback", None)
+        if mapping_callback:
+            # filter_queryset expects a callback with signature (key: str, values: str[]) -> (str, str[])
+            # However mapping_callback is a bound method instance.
+            # It wraps the function underneath and automatically injects the class instance as first argument (self)
+            # What we need to pass to filter_queryset is therefore the function underneath itself, without the wrapping
+            mapping_callback = mapping_callback.__func__
         if query_params is not None:
-            queryset = filter_queryset(object_type, queryset, query_params)
+            queryset = filter_queryset(object_type, queryset, query_params, mapping_callback)
         return queryset
