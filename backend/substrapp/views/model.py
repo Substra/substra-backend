@@ -1,5 +1,3 @@
-import tempfile
-
 import structlog
 from django.conf import settings
 from django.urls.base import reverse
@@ -14,7 +12,6 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Model as ModelRep
 from localrep.serializers import ModelSerializer as ModelRepSerializer
 from node.authentication import NodeUser
-from substrapp.clients import node as node_client
 from substrapp.models import Model
 from substrapp.utils import get_owner
 from substrapp.views.filters_utils import filter_queryset
@@ -40,23 +37,6 @@ def replace_storage_addresses(request, model):
 class ModelViewSet(GenericViewSet):
     queryset = Model.objects.all()
     pagination_class = DefaultPageNumberPagination
-
-    def create_or_update_model(self, channel_name, traintuple, key):
-        if traintuple["out_model"] is None:
-            raise Exception(f"This traintuple related to this model key {key} does not have a out_model")
-
-        # get model from remote node
-        url = traintuple["out_model"]["storage_address"]
-
-        content = node_client.get(channel_name, traintuple["creator"], url, traintuple["key"])
-
-        # write model in local db for later use
-        tmp_model = tempfile.TemporaryFile()
-        tmp_model.write(content)
-        instance, created = Model.objects.update_or_create(key=key)
-        instance.file.save("model", tmp_model)
-
-        return instance
 
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
