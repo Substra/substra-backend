@@ -26,6 +26,10 @@ class BadRequestError(ApiError):
     message = "Bad request."
 
 
+class KubernetesError(Exception):
+    pass
+
+
 class PodError(Exception):
     pass
 

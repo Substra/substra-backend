@@ -9,6 +9,7 @@ import structlog
 from django.conf import settings
 
 from substrapp.kubernetes_utils import get_pod_by_label_selector
+from substrapp.kubernetes_utils import get_service_node_port
 
 logger = structlog.get_logger(__name__)
 
@@ -26,23 +27,11 @@ class ImageNotFoundError(Exception):
     pass
 
 
-def get_docker_registry_port() -> int:
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    svc = k8s_client.read_namespaced_service(REGISTRY_SERVICE_NAME, NAMESPACE)
-
-    return svc.spec.ports[0].node_port
-
-
 def get_container_image_name(image_name: str) -> str:
     pull_domain = REGISTRY_PULL_DOMAIN
 
     if REGISTRY_IS_LOCAL:
-        try:
-            registry_port = get_docker_registry_port()
-        except Exception as e:
-            raise Exception("Failed to retrieve docker registry node port") from e
+        registry_port = get_service_node_port(REGISTRY_SERVICE_NAME)
         pull_domain += f":{registry_port}"
 
     return f"{pull_domain}/{USER_IMAGE_REPOSITORY}:{image_name}"

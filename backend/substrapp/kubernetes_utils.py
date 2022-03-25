@@ -5,6 +5,7 @@ import kubernetes
 import structlog
 from django.conf import settings
 
+from substrapp.exceptions import KubernetesError
 from substrapp.exceptions import PodDeletedError
 from substrapp.exceptions import PodError
 from substrapp.exceptions import PodReadinessTimeoutError
@@ -270,3 +271,22 @@ def get_volume(
     for volume in pod.spec.volumes:
         if volume.name == volume_name:
             return volume
+
+
+def get_service_node_port(service: str) -> int:
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    try:
+        svc: kubernetes.client.V1Service = k8s_client.read_namespaced_service(service, NAMESPACE)
+    except kubernetes.client.ApiException as exception:
+        raise KubernetesError(f"Failed to retrieve node port service={service}") from exception
+
+    port: kubernetes.client.V1ServicePort = svc.spec.ports[0]
+
+    if not port.node_port:
+        raise KubernetesError(
+            f"Failed to retrieve node port, nodePort is not set on this port. service={service}, port={port.port}"
+        )
+
+    return port.node_port
