@@ -243,6 +243,15 @@ class ModelViewTests(APITestCase):
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
 
+    def test_model_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+
     def test_model_retrieve(self):
         url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
