@@ -186,6 +186,7 @@ def _add_datasample_to_buffer_internal(data_sample_key: str, dst: str) -> None:
     if data_sample.file:
         # add from storage
         content = data_sample.file.read()
+        data_sample.file.close()
         uncompress_content(content, dst)
     elif not settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:
         # the `datasample.path` field is filled but Server Media is not available.

@@ -17,10 +17,11 @@ src_paths = ["backend", "metrics-exporter/metrics_exporter"]
 [tool.pytest.ini_options]
 testpaths = ["backend"]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
-addopts = "-n auto --cov=. --cov-config=../pyproject.toml"
+# we set no:unraisableexception because we have a lot of files left open due to Django models FileFields
+addopts = "-n auto --cov=. --cov-config=../pyproject.toml -p no:unraisableexception"
 filterwarnings = [
-    # TODO: turns all warnings into errors
-    # "error",
+    "error",
+    "ignore:'rest_framework_simplejwt.token_blacklist' defines default_app_config:DeprecationWarning",
 ]
 
 [tool.coverage.run]
