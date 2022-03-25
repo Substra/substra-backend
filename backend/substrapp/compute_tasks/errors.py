@@ -7,6 +7,18 @@ from typing import BinaryIO
 from orchestrator import failure_report_pb2
 
 
+class CeleryRetryError(Exception):
+    """Inherit from this error if you want Celery to retry on your exception"""
+
+    pass
+
+
+class CeleryNoRetryError(Exception):
+    """Inherit from this error if you don't want Celery to retry on your exception"""
+
+    pass
+
+
 class ComputeTaskErrorType(enum.Enum):
     """The types of errors that can occur in a compute task.
 
@@ -49,13 +61,13 @@ class _ComputeTaskError(RuntimeError, abc.ABC):
     error_type: ComputeTaskErrorType
 
 
-class BuildError(_ComputeTaskError):
+class BuildError(_ComputeTaskError, CeleryRetryError):
     """An error occurred during the build of a container image."""
 
     error_type = ComputeTaskErrorType.BUILD_ERROR
 
 
-class ExecutionError(_ComputeTaskError):
+class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
     """An error occurred during the execution of a command in a container image."""
 
     error_type = ComputeTaskErrorType.EXECUTION_ERROR

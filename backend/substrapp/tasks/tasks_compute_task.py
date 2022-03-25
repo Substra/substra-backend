@@ -144,6 +144,12 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
         return _run(self, channel_name, task, compute_plan_key)
     except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError):
         raise celery.exceptions.Ignore
+    except compute_task_errors.CeleryNoRetryError:
+        raise
+    except compute_task_errors.CeleryRetryError:
+        raise
+    except Exception as exception:
+        raise compute_task_errors.CeleryRetryError() from exception
 
 
 # TODO: function too complex, consider refactoring

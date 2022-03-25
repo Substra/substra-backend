@@ -106,21 +106,21 @@ class ComputeTaskTests(APITestCase):
 
             with mock.patch.object(OrchestratorClient, "update_task_status"):
                 mexecute_compute_task.side_effect = Exception("Test")
-                with self.assertRaises(Exception) as exc:
+                with self.assertRaises(errors.CeleryRetryError) as exc:
                     compute_task(CHANNEL, task, None)
-                self.assertEqual(str(exc.exception), "Test")
+                self.assertEqual(str(exc.exception.__cause__), "Test")
 
             # test not enough space on disk error
             mexecute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
-            with self.assertRaises(Exception) as exc:
+            with self.assertRaises(errors.CeleryRetryError) as exc:
                 compute_task(CHANNEL, task, None)
-            self.assertTrue("No space left on device" in str(exc.exception))
+            self.assertTrue("No space left on device" in str(exc.exception.__cause__))
 
             # test other OS error
             mexecute_compute_task.side_effect = OSError(errno.EACCES, "Dummy error")
-            with self.assertRaises(Exception) as exc:
+            with self.assertRaises(errors.CeleryRetryError) as exc:
                 compute_task(CHANNEL, task, None)
-            self.assertTrue("Dummy error" in str(exc.exception))
+            self.assertTrue("Dummy error" in str(exc.exception.__cause__))
 
     def test_celery_retry(self):
         task = {
@@ -168,22 +168,31 @@ class ComputeTaskTests(APITestCase):
             exception_message = "an exception that should trigger the retry mechanism"
             mexecute_compute_task.side_effect = Exception(exception_message)
 
-            with pytest.raises(Exception) as excinfo:
+            with pytest.raises(errors.CeleryRetryError) as excinfo:
                 compute_task(CHANNEL, task, None)
 
-            assert str(excinfo.value) == exception_message
+            assert str(excinfo.value.__cause__) == exception_message
             self.assertEqual(mretry.call_count, 1)
 
             # retry because no space left on device error
             mexecute_compute_task.side_effect = IOError(errno.ENOSPC, "no file left on device")
 
-            with self.assertRaises(IOError) as excinfo:
+            with pytest.raises(errors.CeleryRetryError) as excinfo:
                 compute_task(CHANNEL, task, None)
 
-            assert "no file left on device" in str(excinfo.exception)
+            assert "no file left on device" in str(excinfo.value.__cause__)
 
             self.assertEqual(mretry.call_count, 2)
             self.assertEqual(m_clear_assets_buffer.call_count, 1)
+
+            # do not retry because the error happened in the compute pod
+            mexecute_compute_task.side_effect = errors.ExecutionError("python not found", "Error while running command")
+
+            with pytest.raises(errors.CeleryNoRetryError) as excinfo:
+                compute_task(CHANNEL, task, None)
+
+            assert "Error while running command" in str(excinfo.value)
+            assert mretry.call_count == 2
 
 
 @pytest.mark.django_db

@@ -20,6 +20,7 @@ import structlog
 from django.core.files.storage import FileSystemStorage
 
 from libs.gen_secret_key import write_secret_key
+from substrapp.compute_tasks.errors import CeleryRetryError
 
 from .deps.org import *
 
@@ -264,7 +265,7 @@ CELERY_TASK_TRACK_STARTED = True  # since 4.0
 #
 # > If this option is set to True, the delay value calculated by retry_backoff is treated as a maximum, and the actual
 # > delay value will be a random number between zero and that maximum.
-CELERY_TASK_AUTORETRY_FOR = (Exception,)  # Retry on any exception
+CELERY_TASK_AUTORETRY_FOR = (CeleryRetryError,)
 CELERY_TASK_MAX_RETRIES = int(os.environ.get("CELERY_TASK_MAX_RETRIES", 7))
 CELERY_TASK_RETRY_BACKOFF = int(os.environ.get("CELERY_TASK_RETRY_BACKOFF", 60))  # time in seconds
 CELERY_TASK_RETRY_BACKOFF_MAX = int(os.environ.get("CELERY_TASK_RETRY_BACKOFF_MAX", 64 * 60))
