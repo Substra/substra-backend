@@ -158,7 +158,7 @@ def _get_pod_error(state) -> str:
 def pod_exists(k8s_client, name: str) -> bool:
     try:
         k8s_client.read_namespaced_pod(name=name, namespace=NAMESPACE)
-    except Exception:
+    except kubernetes.client.ApiException:
         return False
     else:
         return True
@@ -186,7 +186,7 @@ def get_pod_logs(k8s_client, name: str, container: str) -> str:
     if pod_exists(k8s_client, name):
         try:
             logs = k8s_client.read_namespaced_pod_log(name=name, namespace=NAMESPACE, container=container)
-        except Exception:  # nosec
+        except kubernetes.client.ApiException:
             pass
 
     return logs
