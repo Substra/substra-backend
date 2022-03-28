@@ -1,5 +1,6 @@
 import copy
 
+from django.urls import reverse
 from rest_framework import serializers
 
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -10,6 +11,8 @@ from localrep.models import ComputeTask
 from localrep.models import DataManager
 from localrep.models import Metric
 from localrep.serializers.algo import AlgoSerializer
+from localrep.serializers.datamanager import DataManagerSerializer
+from localrep.serializers.metric import MetricSerializer
 from localrep.serializers.model import ModelSerializer
 from localrep.serializers.performance import PerformanceSerializer
 from localrep.serializers.utils import SafeSerializerMixin
@@ -17,6 +20,8 @@ from localrep.serializers.utils import get_channel_choices
 from localrep.serializers.utils import make_addressable_serializer
 from localrep.serializers.utils import make_download_process_permission_serializer
 from localrep.serializers.utils import make_permission_serializer
+from substrapp.compute_tasks.context import TASK_DATA_FIELD
+from substrapp.compute_tasks.errors import ComputeTaskErrorType
 
 
 class CategoryField(serializers.Field):
@@ -166,7 +171,60 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         if "metric_keys" in data:
             del data["metric_keys"]
 
+        # error_type
+        if data["error_type"] is not None:
+            data["error_type"] = ComputeTaskErrorType.from_int(
+                failure_report_pb2.ErrorType.Value(data["error_type"])
+            ).name
+
+        # replace storage addresses
+        self._replace_storage_addresses(data)
+
         return data
+
+    def _replace_storage_addresses(self, task):
+        request = self.context.get("request")
+        if not request:
+            return task
+
+        # replace in common relationships
+
+        if "algo" in task:
+            task["algo"]["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:algo-description", args=[task["algo"]["key"]])
+            )
+            task["algo"]["algorithm"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:algo-file", args=[task["algo"]["key"]])
+            )
+
+        # replace in category-dependent relationships
+
+        category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
+        task_details = task[TASK_DATA_FIELD[category]]
+
+        if "data_manager" in task_details and task_details["data_manager"]:
+            data_manager = task_details["data_manager"]
+            data_manager["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:data_manager-description", args=[data_manager["key"]])
+            )
+            data_manager["opener"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:data_manager-opener", args=[data_manager["key"]])
+            )
+
+        models = task_details.get("models") or []  # field may be set to None
+        for model in models:
+            if "address" in model and model["address"]:
+                model["address"]["storage_address"] = request.build_absolute_uri(
+                    reverse("substrapp:model-file", args=[model["key"]])
+                )
+
+        for metric in task_details.get("metrics", []):
+            metric["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:metric-description", args=[metric["key"]])
+            )
+            metric["address"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:metric-metrics", args=[metric["key"]])
+            )
 
     class Meta:
         model = ComputeTask
@@ -199,3 +257,39 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "trunk_permissions",
             "worker",
         ]
+
+
+TASK_FIELD = {
+    computetask_pb2.TASK_TRAIN: "train",
+    computetask_pb2.TASK_TEST: "test",
+    computetask_pb2.TASK_AGGREGATE: "aggregate",
+    computetask_pb2.TASK_COMPOSITE: "composite",
+}
+
+
+class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.category in [computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST, computetask_pb2.TASK_COMPOSITE]:
+            data_manager = DataManager.objects.get(
+                key=data[TASK_FIELD[instance.category]]["data_manager_key"],
+                channel=instance.channel,
+            )
+            data[TASK_FIELD[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
+
+        if instance.category == computetask_pb2.TASK_TEST:
+            metrics = Metric.objects.filter(
+                key__in=data[TASK_FIELD[instance.category]]["metric_keys"],
+                channel=instance.channel,
+            ).order_by("creation_date", "key")
+            data[TASK_FIELD[instance.category]]["metrics"] = MetricSerializer(metrics, many=True).data
+
+        # parent_tasks
+        parent_tasks = ComputeTask.objects.filter(
+            key__in=data["parent_task_keys"],
+            channel=instance.channel,
+        ).order_by("creation_date", "key")
+        data["parent_tasks"] = ComputeTaskSerializer(parent_tasks, many=True).data
+        for parent_task in data.get("parent_tasks", []):
+            self._replace_storage_addresses(parent_task)
+        return data

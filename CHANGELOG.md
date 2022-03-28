@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use standard ModelViewSet to handle Algo list and retrieve calls (#878)
 - Removed unused create_or_update_model method (#885)
 - Use standard ModelViewSet to handle DataManager list and retrieve calls (#882)
-- Use standard ModelViewSet to handle Model list and retrieve calls (#XXX)
+- Use standard ModelViewSet to handle Model list and retrieve calls (#892)
+- Use standard ModelViewSet to handle ComputeTask list and retrieve calls (#891)
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)

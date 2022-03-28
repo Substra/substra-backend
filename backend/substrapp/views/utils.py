@@ -19,15 +19,8 @@ import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
-from localrep.models import DataManager as DataManagerRep
-from localrep.models import Metric as MetricRep
-from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
-from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
-from localrep.serializers import MetricSerializer as MetricRepSerializer
 from node.authentication import NodeUser
-from orchestrator import failure_report_pb2
 from substrapp.clients import node as node_client
-from substrapp.compute_tasks import errors
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
 from substrapp.storages.minio import MinioStorage
@@ -41,13 +34,6 @@ TASK_CATEGORY = {
     "testtuple": computetask_pb2.TASK_TEST,
     "aggregatetuple": computetask_pb2.TASK_AGGREGATE,
     "composite_traintuple": computetask_pb2.TASK_COMPOSITE,
-}
-
-TASK_FIELD = {
-    "traintuple": "train",
-    "testtuple": "test",
-    "aggregatetuple": "aggregate",
-    "composite_traintuple": "composite",
 }
 
 
@@ -228,36 +214,6 @@ def is_proxied_request(request) -> bool:
     :param request: incoming HTTP request
     """
     return HTTP_HEADER_PROXY_ASSET in request.headers
-
-
-def add_task_extra_information(basename, data, channel, expand_relationships=False):
-    if expand_relationships and basename in ["traintuple", "testtuple", "composite_traintuple"]:
-        data_manager = DataManagerRep.objects.get(
-            key=data[TASK_FIELD[basename]]["data_manager_key"],
-            channel=channel,
-        )
-        data[TASK_FIELD[basename]]["data_manager"] = DataManagerRepSerializer(data_manager).data
-
-    if expand_relationships and basename == "testtuple":
-        metrics = MetricRep.objects.filter(
-            key__in=data[TASK_FIELD[basename]]["metric_keys"],
-            channel=channel,
-        ).order_by("creation_date", "key")
-        data[TASK_FIELD[basename]]["metrics"] = MetricRepSerializer(metrics, many=True).data
-
-    if expand_relationships:
-        parent_tasks = ComputeTaskRep.objects.filter(
-            key__in=data["parent_task_keys"],
-            channel=channel,
-        ).order_by("creation_date", "key")
-        data["parent_tasks"] = ComputeTaskRepSerializer(parent_tasks, many=True).data
-
-    if data["error_type"] is not None:
-        data["error_type"] = errors.ComputeTaskErrorType.from_int(
-            failure_report_pb2.ErrorType.Value(data["error_type"])
-        ).name
-
-    return data
 
 
 def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:

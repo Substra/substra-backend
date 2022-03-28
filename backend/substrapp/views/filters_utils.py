@@ -158,14 +158,23 @@ def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
 class CustomSearchFilter(BaseFilterBackend):
     """Bridge to use our custom filtering system with django_filters.
 
-    You must set the custom_search_object_type attr on the view that uses it
+    You must set the custom_search_object_type attr or a get_custom_search_object_type method on the view that uses it.
+
+    You can set a custom_search_mapping_callback attr on the view that uses it.
 
     It should be removed soon when we abandon them for the default filter implementation
     """
 
     def filter_queryset(self, request, queryset, view):
-        query_params = request.query_params.get("search")
-        object_type = view.custom_search_object_type
+        # object type
+        if hasattr(view, "custom_search_object_type"):
+            object_type = view.custom_search_object_type
+        elif hasattr(view, "get_custom_search_object_type"):
+            object_type = view.get_custom_search_object_type()
+        else:
+            raise Exception("Missing configuration")
+
+        # mapping callback
         mapping_callback = getattr(view, "custom_search_mapping_callback", None)
         if mapping_callback:
             # filter_queryset expects a callback with signature (key: str, values: str[]) -> (str, str[])
@@ -173,6 +182,9 @@ class CustomSearchFilter(BaseFilterBackend):
             # It wraps the function underneath and automatically injects the class instance as first argument (self)
             # What we need to pass to filter_queryset is therefore the function underneath itself, without the wrapping
             mapping_callback = mapping_callback.__func__
+
+        # apply filters to queryset
+        query_params = request.query_params.get("search")
         if query_params is not None:
             queryset = filter_queryset(object_type, queryset, query_params, mapping_callback)
         return queryset

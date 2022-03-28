@@ -466,6 +466,15 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
+    def test_traintask_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+
     def test_traintask_retrieve(self):
         url = reverse("substrapp:traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
@@ -791,6 +800,15 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
+
+    def test_testtask_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
 
     def test_testtask_retrieve(self):
         url = reverse("substrapp:testtuple-detail", args=[self.expected_results[0]["key"]])
@@ -1237,6 +1255,15 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
+
+    def test_compositetask_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
 
     def test_compositetask_retrieve(self):
         url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])

@@ -20,6 +20,7 @@ from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
+from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
 
@@ -107,7 +108,7 @@ def map_category(key, values):
     return key, values
 
 
-class AlgoViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
+class AlgoViewSetConfig:
     serializer_class = AlgoRepSerializer
     filter_backends = (OrderingFilter, CustomSearchFilter)
     ordering_fields = ["creation_date", "key", "name", "owner", "category"]
@@ -119,25 +120,20 @@ class AlgoViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.Creat
     def get_queryset(self):
         return AlgoRep.objects.filter(channel=get_channel_name(self.request))
 
+
+class AlgoViewSet(
+    AlgoViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet
+):
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
 
 
-class CPAlgoViewSet(mixins.ListModelMixin, GenericViewSet):
-    serializer_class = AlgoRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter)
-    ordering_fields = ["creation_date", "key", "name", "owner", "category"]
-    ordering = ["creation_date", "key"]
-    pagination_class = DefaultPageNumberPagination
-    custom_search_object_type = "algo"
-    custom_search_mapping_callback = map_category
-
+class CPAlgoViewSet(AlgoViewSetConfig, mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
-        return (
-            AlgoRep.objects.filter(channel=get_channel_name(self.request))
-            .filter(compute_tasks__compute_plan__key=self.kwargs.get("compute_plan_pk"))
-            .distinct()
-        )
+        compute_plan_key = self.kwargs.get("compute_plan_pk")
+        validate_key(compute_plan_key)
+        queryset = super().get_queryset()
+        return queryset.filter(compute_tasks__compute_plan__key=compute_plan_key).distinct()
 
 
 class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
