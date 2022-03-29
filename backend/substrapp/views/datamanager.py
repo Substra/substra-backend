@@ -1,4 +1,6 @@
 import structlog
+from django.conf import settings
+from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -11,8 +13,8 @@ from localrep.models import DataManager as DataManagerRep
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import DataManagerWithRelationsSerializer as DataManagerRepWithRelationsSerializer
 from substrapp.models import DataManager
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
-from substrapp.serializers import OrchestratorDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
@@ -25,19 +27,36 @@ logger = structlog.get_logger(__name__)
 
 def _register_in_orchestrator(request, instance):
     """Register datamanager in orchestrator."""
-    orchestrator_serializer = OrchestratorDataManagerSerializer(
-        data={
-            "name": request.data.get("name"),
-            "permissions": request.data.get("permissions"),
-            "type": request.data.get("type"),
-            "metadata": request.data.get("metadata"),
-            "logs_permission": request.data.get("logs_permission"),
-            "instance": instance,
+
+    current_site = settings.DEFAULT_DOMAIN
+    permissions = request.data.get("permissions", {})
+    logs_permission = request.data.get("logs_permission", {})
+
+    orc_dm = {
+        "key": str(instance.key),
+        "name": request.data.get("name"),
+        "opener": {
+            "checksum": get_hash(instance.data_opener),
+            "storage_address": current_site + reverse("substrapp:data_manager-opener", args=[instance.key]),
         },
-        context={"request": request},
-    )
-    orchestrator_serializer.is_valid(raise_exception=True)
-    return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+        "type": request.data.get("type"),
+        "description": {
+            "checksum": get_hash(instance.description),
+            "storage_address": current_site + reverse("substrapp:data_manager-description", args=[instance.key]),
+        },
+        "new_permissions": {
+            "public": permissions.get("public"),
+            "authorized_ids": permissions.get("authorized_ids"),
+        },
+        "metadata": request.data.get("metadata"),
+        "logs_permission": {
+            "public": logs_permission.get("public"),
+            "authorized_ids": logs_permission.get("authorized_ids"),
+        },
+    }
+
+    with get_orchestrator_client(get_channel_name(request)) as client:
+        return client.register_datamanager(orc_dm)
 
 
 def create(request, get_success_headers):

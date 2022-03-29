@@ -15,7 +15,6 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.models import DataManager
 from substrapp.models import Metric
-from substrapp.serializers import OrchestratorDataManagerSerializer
 from substrapp.tests import assets
 from substrapp.tests import factory
 
@@ -107,7 +106,7 @@ class DataManagerQueryTests(APITestCase):
         error.code = StatusCode.ALREADY_EXISTS
 
         # already exists
-        with mock.patch.object(OrchestratorDataManagerSerializer, "create", side_effect=error):
+        with mock.patch.object(OrchestratorClient, "register_datamanager", side_effect=error):
             response = self.client.post(self.url, self.get_default_datamanager_data(), format="multipart", **extra)
             self.assertIn("OE0006", response.json()["message"])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
