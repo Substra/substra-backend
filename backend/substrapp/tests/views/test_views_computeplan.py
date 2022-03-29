@@ -17,7 +17,7 @@ import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import ComputePlan as ComputePlanRep
 from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
-from substrapp.views import ComputePlanViewSet
+from substrapp.views.computeplan import parse_composite_traintuple
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -425,17 +425,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_results[0])
 
-    def test_computeplan_retrieve_fail(self):
-        # Key < 32 chars
-        url = reverse("substrapp:compute_plan-detail", args=["12312323"])
-        response = self.client.get(url, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # Key not hexa
-        url = reverse("substrapp:compute_plan-detail", args=["X" * 32])
-        response = self.client.get(url, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_computeplan_retrieve_fail_internal_server_error(self, _):
@@ -475,8 +464,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             }
         ]
 
-        cp = ComputePlanViewSet()
-        tasks = cp.parse_composite_traintuple(None, composite, dummy_key)
+        tasks = parse_composite_traintuple(None, composite, dummy_key)
 
         self.assertEqual(len(tasks[dummy_key]["parent_task_keys"]), 2)
 

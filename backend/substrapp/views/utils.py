@@ -1,4 +1,3 @@
-import datetime
 import os
 import uuid
 from typing import Callable
@@ -6,19 +5,14 @@ from wsgiref.util import is_hop_by_hop
 
 import django.http
 from django.conf import settings
-from django.db.models import Count
-from django.db.models import Q
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
-from localrep.models import ComputeTask as ComputeTaskRep
 from node.authentication import NodeUser
 from substrapp.clients import node as node_client
 from substrapp.exceptions import AssetPermissionError
@@ -227,42 +221,6 @@ def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:
         str: UUID of form '412511b1-f9f5-49cc-a4bb-4f1640c877f6'
     """
     return str(uuid.UUID(str_or_hex_uuid))
-
-
-def add_cp_task_counts(data):
-    stats = ComputeTaskRep.objects.filter(compute_plan__key=data["key"]).aggregate(
-        task_count=Count("key"),
-        done_count=Count("key", filter=Q(status=computetask_pb2.STATUS_DONE)),
-        waiting_count=Count("key", filter=Q(status=computetask_pb2.STATUS_WAITING)),
-        todo_count=Count("key", filter=Q(status=computetask_pb2.STATUS_TODO)),
-        doing_count=Count("key", filter=Q(status=computetask_pb2.STATUS_DOING)),
-        canceled_count=Count("key", filter=Q(status=computetask_pb2.STATUS_CANCELED)),
-        failed_count=Count("key", filter=Q(status=computetask_pb2.STATUS_FAILED)),
-    )
-    data.update(stats)
-    return data
-
-
-def add_compute_plan_estimated_end_date(data):
-    """Add the estimated time of arrival to a compute plan data."""
-
-    compute_plan_status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
-
-    if compute_plan_status == computeplan_pb2.PLAN_STATUS_DOING:
-        if data["done_count"] and data["start_date"] is not None:
-            remaining_tasks_count = data["task_count"] - data["done_count"]
-            time_per_task = data["duration"] / data["done_count"]
-            estimated_duration = remaining_tasks_count * time_per_task
-            data["estimated_end_date"] = (timezone.now() + datetime.timedelta(seconds=estimated_duration)).strftime(
-                "%Y-%m-%dT%H:%M:%S.%fZ"
-            )
-    elif compute_plan_status in [
-        computeplan_pb2.PLAN_STATUS_FAILED,
-        computeplan_pb2.PLAN_STATUS_CANCELED,
-        computeplan_pb2.PLAN_STATUS_DONE,
-    ]:
-        data["estimated_end_date"] = data["end_date"]
-    return data
 
 
 def if_true(decorator: Callable, condition: bool):
