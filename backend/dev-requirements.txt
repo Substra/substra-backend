@@ -1,5 +1,6 @@
 -r requirements.txt
 bandit==1.7.4
+click==8.0.4 # black requires click>=8.0.0 but breaks with version 8.1.0 https://github.com/pallets/click/issues/2232
 black==22.1.0
 coverage==6.3.2
 flake8==4.0.1
