@@ -1,5 +1,4 @@
 from .algo import AlgoSerializer
-from .algo import OrchestratorAlgoSerializer
 from .computeplan import OrchestratorComputePlanSerializer
 from .computetask import OrchestratorAggregateTaskSerializer
 from .computetask import OrchestratorCompositeTrainTaskSerializer
@@ -23,7 +22,6 @@ __all__ = [
     "MetricSerializer",
     "OrchestratorMetricSerializer",
     "AlgoSerializer",
-    "OrchestratorAlgoSerializer",
     "OrchestratorTrainTaskSerializer",
     "OrchestratorModelSerializer",
     "OrchestratorTestTaskSerializer",

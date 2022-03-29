@@ -1,4 +1,6 @@
 import structlog
+from django.conf import settings
+from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -12,8 +14,8 @@ from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from substrapp.models import Algo
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
-from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
@@ -32,18 +34,30 @@ def _register_in_orchestrator(request, instance):
     except ValueError:
         raise ValidationError({"category": "Invalid category"})
 
-    orchestrator_serializer = OrchestratorAlgoSerializer(
-        data={
-            "name": request.data.get("name"),
-            "category": category,
-            "permissions": request.data.get("permissions"),
-            "metadata": request.data.get("metadata"),
-            "instance": instance,
+    current_site = settings.DEFAULT_DOMAIN
+    permissions = request.data.get("permissions", {})
+
+    orc_algo = {
+        "key": str(instance.key),
+        "name": request.data.get("name"),
+        "category": category,
+        "description": {
+            "checksum": get_hash(instance.description),
+            "storage_address": current_site + reverse("substrapp:algo-description", args=[instance.key]),
         },
-        context={"request": request},
-    )
-    orchestrator_serializer.is_valid(raise_exception=True)
-    return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+        "algorithm": {
+            "checksum": instance.checksum,
+            "storage_address": current_site + reverse("substrapp:algo-file", args=[instance.key]),
+        },
+        "new_permissions": {
+            "public": permissions.get("public"),
+            "authorized_ids": permissions.get("authorized_ids"),
+        },
+        "metadata": request.data.get("metadata"),
+    }
+
+    with get_orchestrator_client(get_channel_name(request)) as client:
+        return client.register_algo(orc_algo)
 
 
 def create(request, get_success_headers):

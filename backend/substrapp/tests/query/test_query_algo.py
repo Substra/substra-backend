@@ -14,7 +14,6 @@ from rest_framework.test import APITestCase
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.models import Algo
-from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.tests import assets
 from substrapp.tests import factory
 from substrapp.utils import compute_hash
@@ -106,7 +105,7 @@ class AlgoQueryTests(APITestCase):
         error.code = StatusCode.ALREADY_EXISTS
 
         # already exists
-        with mock.patch.object(OrchestratorAlgoSerializer, "create", side_effect=error):
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=error):
             response = self.client.post(self.url, self.get_default_algo_data(), format="multipart", **extra)
             self.assertIn("OE0006", response.json()["message"])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)

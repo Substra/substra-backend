@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use standard ModelViewSet to handle Model list and retrieve calls (#892)
 - Add field compute plan name in NewsFeedViewSet (#905)
 - Use standard ModelViewSet to handle ComputePlan list and retrieve calls (#893)
+- Remove OrchestratorAlgoSerializer and use orchestrator client directly (#818)
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)
