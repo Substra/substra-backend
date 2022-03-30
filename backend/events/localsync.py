@@ -16,6 +16,28 @@ from substrapp.orchestrator import get_orchestrator_client
 logger = structlog.get_logger(__name__)
 
 
+def _on_create_node_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+    """Process create node event to update local database."""
+    logger.debug("Syncing node create", asset_key=event["asset_key"], event_id=event["id"])
+
+    # there is no query_node method, we extract data from the event directly
+    _create_node(event["channel"], {"id": event["asset_key"], "creation_date": event["timestamp"]})
+
+
+def _create_node(channel: str, data: dict) -> bool:
+    from localrep.serializers import ChannelNodeSerializer
+
+    data["channel"] = channel
+    serializer = ChannelNodeSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("Node already exists", node_id=data["id"], channel=data["channel"])
+        return False
+    else:
+        return True
+
+
 def _on_create_algo_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process create algo event to update local database."""
     logger.debug("Syncing algo create", asset_key=event["asset_key"], event_id=event["id"])
@@ -279,7 +301,7 @@ def _create_model(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_disable_model_event(event: dict) -> None:
+def _on_disable_model_event(event: dict, _client: orc_client.OrchestratorClient) -> None:
     """Process disable model event to update local database."""
     logger.debug("Syncing model disable", asset_key=event["asset_key"], event_id=event["id"])
 
@@ -295,34 +317,48 @@ def _disable_model(key: str) -> None:
     model.save()
 
 
+EVENT_CALLBACKS = {
+    common_pb2.ASSET_COMPUTE_PLAN: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_computeplan_event,
+    },
+    common_pb2.ASSET_ALGO: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_algo_event,
+    },
+    common_pb2.ASSET_COMPUTE_TASK: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_computetask_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_computetask_event,
+    },
+    common_pb2.ASSET_DATA_MANAGER: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_datamanager_event,
+    },
+    common_pb2.ASSET_DATA_SAMPLE: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_datasample_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_datasample_event,
+    },
+    common_pb2.ASSET_METRIC: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_metric_event,
+    },
+    common_pb2.ASSET_MODEL: {
+        event_pb2.EVENT_ASSET_DISABLED: _on_disable_model_event,
+    },
+    common_pb2.ASSET_NODE: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_node_event,
+    },
+}
+
+
 @transaction.atomic
-def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) -> None:  # noqa: C901
+def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Handler to consume event.
     This function is idempotent (can be called in sync and resync mode)
     """
     event_kind = event_pb2.EventKind.Value(event["event_kind"])
     asset_kind = common_pb2.AssetKind.Value(event["asset_kind"])
 
-    if (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_ALGO):
-        _on_create_algo_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_COMPUTE_PLAN):
-        _on_create_computeplan_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_DATA_MANAGER):
-        _on_create_datamanager_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_DATA_SAMPLE):
-        _on_create_datasample_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_UPDATED, common_pb2.ASSET_DATA_SAMPLE):
-        _on_update_datasample_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_METRIC):
-        _on_create_metric_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_COMPUTE_TASK):
-        _on_create_computetask_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_UPDATED, common_pb2.ASSET_COMPUTE_TASK):
-        _on_update_computetask_event(event, client)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_DISABLED, common_pb2.ASSET_MODEL):
-        _on_disable_model_event(event)
-    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_NODE):
-        _on_create_node_event(event, client)
+    callback = EVENT_CALLBACKS.get(asset_kind, {}).get(event_kind)
+
+    if callback:
+        callback(event, client)
     else:
         logger.debug("Nothing to sync", event_kind=event["event_kind"], asset_kind=event["asset_kind"])
 
@@ -515,28 +551,6 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
         compute_plan.update_status()
 
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
-
-
-def _on_create_node_event(event: dict, client: orc_client.OrchestratorClient) -> None:
-    """Process create node event to update local database."""
-    logger.debug("Syncing node create", asset_key=event["asset_key"], event_id=event["id"])
-
-    # there is no query_node method, we extract data from the event directly
-    _create_node(event["channel"], {"id": event["asset_key"], "creation_date": event["timestamp"]})
-
-
-def _create_node(channel: str, data: dict) -> bool:
-    from localrep.serializers import ChannelNodeSerializer
-
-    data["channel"] = channel
-    serializer = ChannelNodeSerializer(data=data)
-    try:
-        serializer.save_if_not_exists()
-    except AlreadyExistsError:
-        logger.debug("Node already exists", node_id=data["id"], channel=data["channel"])
-        return False
-    else:
-        return True
 
 
 def resync_nodes(client: orc_client.OrchestratorClient):
