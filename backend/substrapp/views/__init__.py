@@ -13,6 +13,7 @@ from .metric import MetricViewSet
 from .model import ModelPermissionViewSet
 from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
+from .performance import CPPerformanceViewSet
 
 __all__ = [
     "DataSampleViewSet",
@@ -30,4 +31,5 @@ __all__ = [
     "CPAlgoViewSet",
     "NewsFeedViewSet",
     "ComputeTaskLogsViewSet",
+    "CPPerformanceViewSet",
 ]

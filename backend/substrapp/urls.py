@@ -39,6 +39,7 @@ compute_plan_router.register(
 )
 compute_plan_router.register(r"testtuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}testtuple")
 compute_plan_router.register(r"algos", views.CPAlgoViewSet, basename=f"{CP_BASENAME_PREFIX}algo")
+compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP_BASENAME_PREFIX}perf")
 
 
 urlpatterns = [
