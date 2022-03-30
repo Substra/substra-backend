@@ -10,7 +10,7 @@ from substrapp.compute_tasks.context import get_image_tag
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
 from substrapp.compute_tasks.lock import get_compute_plan_lock
-from substrapp.docker_registry import delete_container_image
+from substrapp.docker_registry import delete_container_image_safe
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import release_worker
 
@@ -77,4 +77,4 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
 def _remove_docker_images(image_prefix, keys):
     for key in keys:
         image_tag = get_image_tag(image_prefix, key)
-        delete_container_image(image_tag)
+        delete_container_image_safe(image_tag)

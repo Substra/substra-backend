@@ -8,6 +8,7 @@ import requests
 import structlog
 from django.conf import settings
 
+from substrapp.exceptions import ImageDeletionError
 from substrapp.kubernetes_utils import get_pod_by_label_selector
 from substrapp.kubernetes_utils import get_service_node_port
 
@@ -27,6 +28,10 @@ class ImageNotFoundError(Exception):
     pass
 
 
+class RetrieveDigestError(Exception):
+    pass
+
+
 def get_container_image_name(image_name: str) -> str:
     pull_domain = REGISTRY_PULL_DOMAIN
 
@@ -37,9 +42,32 @@ def get_container_image_name(image_name: str) -> str:
     return f"{pull_domain}/{USER_IMAGE_REPOSITORY}:{image_name}"
 
 
-def delete_container_image(image_tag: str) -> None:
-    logger.info("Deleting image", image=image_tag)
+def delete_container_image_safe(image_tag: str) -> None:
+    """deletes a container image from the docker registry but will fail silently"""
+    try:
+        delete_container_image(image_tag)
+    except ImageDeletionError as exception:
+        logger.exception("Deletion of the container image failed", exc=exception, image_tag=image_tag)
 
+
+def delete_container_image(image_tag: str) -> None:
+    """deletes a container image from the docker registry"""
+    logger.info("Deleting image", image=image_tag)
+    try:
+        digest = _retrieve_image_digest()
+        response = requests.delete(
+            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{digest}",
+            headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
+            timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
+        )
+    except (requests.exceptions.RequestException, RetrieveDigestError) as exception:
+        raise ImageDeletionError(image_tag=image_tag) from exception
+
+    if response.status_code != requests.status_codes.codes.accepted:
+        raise ImageDeletionError(image_tag=image_tag, status_code=response.status_code)
+
+
+def _retrieve_image_digest(image_tag: str) -> str:
     try:
         response = requests.get(
             f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_tag}",
@@ -47,21 +75,13 @@ def delete_container_image(image_tag: str) -> None:
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
         )
 
-        if response.status_code != requests.status_codes.codes.ok:
-            return
+    except requests.exceptions.RequestException as exception:
+        raise RetrieveDigestError() from exception
 
-        digest = response.headers["Docker-Content-Digest"]
+    if response.status_code != requests.status_codes.codes.ok:
+        raise RetrieveDigestError()
 
-        response = requests.delete(
-            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{digest}",
-            headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-            timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-        )
-        if response.status_code != requests.status_codes.codes.accepted:
-            return
-
-    except Exception as e:
-        logger.exception(e)
+    return response.headers["Docker-Content-Digest"]
 
 
 def container_image_exists(image_name: str) -> bool:
