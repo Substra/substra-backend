@@ -381,6 +381,11 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
+        "localrep": {
+            "level": LOG_LEVEL,
+            "handlers": ["console"],
+            "propagate": False,
+        },
         "events": {
             "level": LOG_LEVEL,
             "handlers": ["console"],
