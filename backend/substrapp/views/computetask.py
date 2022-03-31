@@ -150,9 +150,17 @@ def map_status_and_cp_key(key, values):
     return key, values
 
 
+class ComputePlanKeyOrderingFilter(OrderingFilter):
+    """Allow ordering on compute_plan_key."""
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        return [v.replace("compute_plan_key", "compute_plan_id") for v in ordering]
+
+
 class ComputeTaskViewSetConfig:
     serializer_class = ComputeTaskRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter)
+    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter)
     ordering_fields = [
         "creation_date",
         "start_date",
@@ -164,6 +172,7 @@ class ComputeTaskViewSetConfig:
         "status",
         "worker",
         "tag",
+        "compute_plan_key",
     ]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination

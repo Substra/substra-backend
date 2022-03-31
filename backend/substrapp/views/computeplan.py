@@ -259,10 +259,28 @@ def map_status(key, values):
     return key, values
 
 
+class MetadataOrderingFilter(OrderingFilter):
+    """Allows ordering on any metadata value."""
+
+    def remove_invalid_fields(self, queryset, fields, view, request):
+        # This method considers all fields starting with metadata__ as valid fields.
+        # This is because adding "metadata" to the ordering_fields conf doesn't automatically
+        # allows filtering on metadata subvalues
+        valid_fields = [item[0] for item in self.get_valid_fields(queryset, view, {"request": request})]
+
+        def term_valid(term):
+            if term.startswith("-"):
+                term = term[1:]
+            return term in valid_fields or term.startswith("metadata__")
+
+        return [term for term in fields if term_valid(term)]
+
+
 class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = ComputePlanRepSerializer
     pagination_class = DefaultPageNumberPagination
-    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter)
+    filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter)
+    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
     custom_search_object_type = "compute_plan"
     custom_search_mapping_callback = map_status
 
