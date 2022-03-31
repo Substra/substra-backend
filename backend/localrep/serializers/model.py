@@ -43,9 +43,10 @@ class ModelSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     def to_representation(self, instance):
         model = super().to_representation(instance)
         request = self.context.get("request")
-        if request:
-            # Here we might need to check if there is a storage address, might not be the case with
-            # delete_intermediary_model
+        if model["address"]["storage_address"] is None:
+            # disabled model
+            model["address"] = None
+        elif request:
             if "address" in model and model["address"]:
                 model["address"]["storage_address"] = request.build_absolute_uri(
                     reverse("substrapp:model-file", args=[model["key"]])

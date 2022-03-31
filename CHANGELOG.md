@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use standard ModelViewSet to handle ComputePlan list and retrieve calls (#893)
 - Remove OrchestratorAlgoSerializer and use orchestrator client directly (#818)
 - Remove OrchestratorDataManagerSerializer and use orchestrator client directly (#908)
+- Disabled models do not expose an address (#910)
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)
