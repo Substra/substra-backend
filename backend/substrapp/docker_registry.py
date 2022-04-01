@@ -54,7 +54,7 @@ def delete_container_image(image_tag: str) -> None:
     """deletes a container image from the docker registry"""
     logger.info("Deleting image", image=image_tag)
     try:
-        digest = _retrieve_image_digest()
+        digest = _retrieve_image_digest(image_tag)
         response = requests.delete(
             f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{digest}",
             headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
