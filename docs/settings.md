@@ -51,7 +51,7 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 | `OBJECTSTORE_ACCESSKEY` | `nil` |
 | `OBJECTSTORE_SECRETKEY` | `nil` |
 | `OBJECTSTORE_URL` | `nil` |
-| `PAGINATION_MAX_PAGE_SIZE` | `100` |
+| `PAGINATION_MAX_PAGE_SIZE` | `10000` |
 | `POD_IP` | `nil` |
 | `REGISTRY` | `nil` |
 | `REGISTRY_IS_LOCAL` | `nil` |
