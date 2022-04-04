@@ -433,6 +433,30 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
         )
 
+    def test_traintask_match(self):
+        """Match traintask on part of the name."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_traintask_match_and_filter(self):
+        """Match traintask with filter."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        params = urlencode(
+            {
+                "search": "traintuple:status:STATUS_TODO",
+                "match": key[2:5],
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
     @parameterized.expand(
         [
             ("page_size_1_page_3", 1, 3),
@@ -775,6 +799,30 @@ class TestTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(),
             {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
+        )
+
+    def test_testtask_match(self):
+        """Match testtask on part of the name."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_testtask_match_and_filter(self):
+        """Match testtask with filter."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        params = urlencode(
+            {
+                "search": "testtuple:status:STATUS_TODO",
+                "match": key[2:5],
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     @parameterized.expand(
@@ -1230,6 +1278,30 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                 "previous": None,
                 "results": filtered_composite_tasks,
             },
+        )
+
+    def test_compositetask_match(self):
+        """Match compositetask on part of the name."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_compositetask_match_and_filter(self):
+        """Match compositetask with filter."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[2:5]})
+        params = urlencode(
+            {
+                "search": "composite_traintuple:status:STATUS_TODO",
+                "match": key[2:5],
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     @parameterized.expand(

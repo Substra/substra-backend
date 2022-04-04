@@ -18,6 +18,7 @@ from substrapp.serializers import DataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
@@ -121,7 +122,7 @@ def create(request, get_success_headers):
 
 
 class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
-    filter_backends = (OrderingFilter, CustomSearchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter)
     ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination

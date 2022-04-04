@@ -45,7 +45,7 @@ class DataManagerViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        data_manager_1 = factory.create_datamanager()
+        data_manager_1 = factory.create_datamanager(name="datamanager foo")
         train_data_sample = factory.create_datasample([data_manager_1])
         test_data_sample = factory.create_datasample([data_manager_1], test_only=True)
         # only for retrieve view
@@ -57,7 +57,7 @@ class DataManagerViewTests(APITestCase):
         self.expected_results = [
             {
                 "key": str(data_manager_1.key),
-                "name": "datamanager",
+                "name": "datamanager foo",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -238,6 +238,27 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_datamanager_match(self):
+        """Match datamanager on part of the name."""
+        params = urlencode({"match": "manager fo"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datamanager_match_and_filter(self):
+        """Match datamanager with filter."""
+        params = urlencode(
+            {
+                "search": f"dataset:key:{self.expected_results[0]['key']}",
+                "match": "manager fo",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     @parameterized.expand(

@@ -45,14 +45,14 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:algo-list")
 
-        simple_algo = factory.create_algo(category=algo_pb2.ALGO_SIMPLE)
+        simple_algo = factory.create_algo(category=algo_pb2.ALGO_SIMPLE, name="simple algo")
         aggregate_algo = factory.create_algo(category=algo_pb2.ALGO_AGGREGATE)
         composite_algo = factory.create_algo(category=algo_pb2.ALGO_COMPOSITE)
         self.algos = [simple_algo, aggregate_algo, composite_algo]
         self.expected_results = [
             {
                 "key": str(simple_algo.key),
-                "name": "algo",
+                "name": "simple algo",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -235,6 +235,27 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(
             response.json(),
             {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+        )
+
+    def test_algo_match(self):
+        """Match algo on part of the name."""
+        params = urlencode({"match": "le al"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_algo_match_and_filter(self):
+        """Match algo with filter."""
+        params = urlencode(
+            {
+                "search": f"algo:key:{self.expected_results[0]['key']}",
+                "match": "le al",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     def test_algo_list_ordering(self):

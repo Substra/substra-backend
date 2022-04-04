@@ -22,6 +22,7 @@ from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
@@ -160,7 +161,7 @@ class ComputePlanKeyOrderingFilter(OrderingFilter):
 
 class ComputeTaskViewSetConfig:
     serializer_class = ComputeTaskRepSerializer
-    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter)
+    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter, MatchFilter)
     ordering_fields = [
         "creation_date",
         "start_date",
@@ -177,6 +178,7 @@ class ComputeTaskViewSetConfig:
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     custom_search_mapping_callback = map_status_and_cp_key
+    search_fields = ("key",)
 
     @property
     def short_basename(self):

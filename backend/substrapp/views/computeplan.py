@@ -1,12 +1,9 @@
 import uuid
 
 import structlog
-from django.db.models import CharField
-from django.db.models.functions import Cast
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.filters import BaseFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
@@ -25,6 +22,7 @@ from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
@@ -243,16 +241,6 @@ def create(request, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class MatchFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        match_values = request.query_params.get("match")
-        if match_values is not None:
-            queryset = queryset.annotate(name=Cast("metadata__name", CharField()))
-            for value in match_values.split(" "):
-                queryset = queryset.filter(name__contains=value)
-        return queryset
-
-
 def map_status(key, values):
     if key == "status":
         values = [computeplan_pb2.ComputePlanStatus.Value(value) for value in values]
@@ -283,6 +271,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
     custom_search_object_type = "compute_plan"
     custom_search_mapping_callback = map_status
+    search_fields = ("key", "metadata__name")
 
     def get_queryset(self):
         return ComputePlanRep.objects.filter(channel=get_channel_name(self.request))

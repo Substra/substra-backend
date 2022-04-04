@@ -7,6 +7,7 @@ import django.http
 from django.conf import settings
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -237,3 +238,16 @@ def if_true(decorator: Callable, condition: bool):
         return decorator(func)
 
     return wrapper
+
+
+class MatchFilter(SearchFilter):
+    """Full text search in a selected number of fields.
+
+    Searches by default in key and name.
+    The list can be customized through the search_fields attribute on the view."""
+
+    search_param = "match"
+    default_search_fields = ("key", "name")
+
+    def get_search_fields(self, view, request):
+        return getattr(view, "search_fields", self.default_search_fields)

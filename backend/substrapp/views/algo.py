@@ -19,6 +19,7 @@ from substrapp.serializers import AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
@@ -124,7 +125,7 @@ def map_category(key, values):
 
 class AlgoViewSetConfig:
     serializer_class = AlgoRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter)
     ordering_fields = ["creation_date", "key", "name", "owner", "category"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination

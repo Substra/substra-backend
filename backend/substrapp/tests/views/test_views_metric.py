@@ -58,13 +58,13 @@ class MetricViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        metric_1 = factory.create_metric()
+        metric_1 = factory.create_metric(name="metric foo")
         metric_2 = factory.create_metric()
         metric_3 = factory.create_metric()
         self.expected_results = [
             {
                 "key": str(metric_1.key),
-                "name": "metric",
+                "name": "metric foo",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "permissions": {
@@ -218,6 +218,27 @@ class MetricViewTests(APITestCase):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_metric_match(self):
+        """Match metric on part of the name."""
+        params = urlencode({"match": "met fo"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_metric_match_and_filter(self):
+        """Match metric with filter."""
+        params = urlencode(
+            {
+                "search": f"metric:key:{self.expected_results[0]['key']}",
+                "match": "met fo",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     @parameterized.expand(
