@@ -18,7 +18,6 @@ from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_dir_hash
-from substrapp.utils import get_hash
 from substrapp.utils import get_owner
 from substrapp.utils import uncompress_content
 
@@ -262,28 +261,14 @@ def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
 
 @add_to_buffer_safe
 def _add_model_to_buffer_internal(channel_name: str, model: Dict, node_id: str, dst: str) -> None:
-    from substrapp.models import Model
-
-    if "address" in model and "storage_address" in model["address"] and model["address"]["storage_address"]:
-        node_client.download(
-            channel_name,
-            node_id,
-            model["address"]["storage_address"],
-            dst,
-            model["address"]["checksum"],
-            salt=model["compute_task_key"],
-        )
-
-    else:  # head model
-        m = Model.objects.get(key=model["key"])
-        content = m.file.read()
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        with open(dst, "wb") as f:
-            f.write(content)
-
-        if get_hash(dst, model["compute_task_key"]) != m.checksum:
-            shutil.rmtree(os.path.dirname(dst))
-            raise Exception("Model checksum in Subtuple is not the same as in local db")
+    node_client.download(
+        channel_name,
+        node_id,
+        model["address"]["storage_address"],
+        dst,
+        model["address"]["checksum"],
+        salt=model["compute_task_key"],
+    )
 
 
 def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, node_id: str) -> None:

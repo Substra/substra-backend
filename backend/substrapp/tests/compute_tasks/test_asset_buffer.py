@@ -10,7 +10,6 @@ from unittest import mock
 import pytest
 from django.core.files import File
 from django.test import override_settings
-from parameterized import parameterized
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -28,12 +27,12 @@ from substrapp.utils import get_dir_hash
 from substrapp.utils import get_hash
 
 from ..common import FakeDataSample
-from ..common import FakeModel
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_2 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_3 = tempfile.mkdtemp()
+ASSET_BUFFER_DIR_4 = tempfile.mkdtemp()
 CHANNEL = "mychannel"
 NUM_DATA_SAMPLES = 2 * 3  # half will be registered via a path in the db, the other half by a file
 
@@ -280,14 +279,8 @@ class AssetBufferTests(APITestCase):
                 _add_datasample_to_buffer(data_samples[0].key)
             assert "checksum in tuple is not the same as in local db" in str(excinfo.value)
 
-    @parameterized.expand(
-        [
-            ("composite_head_model", True),
-            ("non_composite_head_model", False),
-        ]
-    )
     @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_3)
-    def test_add_model_to_buffer(self, _, is_head_model):
+    def test_add_model_to_buffer(self):
 
         init_asset_buffer()
         dest = os.path.join(ASSET_BUFFER_DIR_3, AssetBufferDirName.Models, self.model_key)
@@ -297,53 +290,23 @@ class AssetBufferTests(APITestCase):
             "compute_task_key": self.model_compute_task_key,
         }
 
-        if is_head_model:
+        node_id = "node 1"
+        storage_address = "some storage address"
 
-            with mock.patch("substrapp.models.Model.objects.get") as mget:
-                mget.side_effect = models.Model.DoesNotExist("model does not exist")
+        model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
-                # Test 1: DB is empty
-                with pytest.raises(models.Model.DoesNotExist) as excinfo:
-                    _add_model_to_buffer(CHANNEL, model, "node 1")
-                assert "model does not exist" in str(excinfo.value)
+        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
 
-                # Test 2: OK
-                instance = FakeModel(File(open(self.model_path, "rb")), self.model_checksum)
-                mget.side_effect = lambda key: instance
-                _add_model_to_buffer(CHANNEL, model, "node 1")
+            _add_model_to_buffer(CHANNEL, model, node_id)
 
-                with open(dest) as f:
-                    contents = f.read()
-                    self.assertEqual(contents, self.model_contents)
-
-                os.remove(dest)  # delete file, otherwise next call to _add_model_to_buffer will be a noop
-
-                # Test 3: File corrupted
-                with open(self.model_path, "a+") as f:
-                    f.write("corrupted")
-
-                with pytest.raises(Exception) as excinfo:
-                    _add_model_to_buffer(CHANNEL, model, "node 1")
-                assert "checksum in Subtuple is not the same as in local db" in str(excinfo.value)
-
-        else:
-            node_id = "node 1"
-            storage_address = "some storage address"
-
-            model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
-
-            with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
-
-                _add_model_to_buffer(CHANNEL, model, node_id)
-
-                mdownload.assert_called_once_with(
-                    CHANNEL,
-                    node_id,
-                    storage_address,
-                    dest,
-                    self.model_checksum,
-                    salt=self.model_compute_task_key,
-                )
+            mdownload.assert_called_once_with(
+                CHANNEL,
+                node_id,
+                storage_address,
+                dest,
+                self.model_checksum,
+                salt=self.model_compute_task_key,
+            )
 
     @override_settings(ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True)
     def test_add_assets_to_taskdir_data_sample(self):
@@ -369,6 +332,7 @@ class AssetBufferTests(APITestCase):
                 contents = f.read()
                 self.assertEqual(contents, data_sample.contents)
 
+    @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_4)
     def test_add_assets_to_taskdir_model(self):
 
         # populate the buffer
@@ -376,9 +340,14 @@ class AssetBufferTests(APITestCase):
         model = {
             "key": self.model_key,
             "compute_task_key": self.model_compute_task_key,
+            "address": {"storage_address": "some storage address", "checksum": self.model_checksum},
         }
-        with mock.patch("substrapp.models.Model.objects.get") as mget:
-            mget.return_value = FakeModel(File(open(self.model_path, "rb")), self.model_checksum)
+
+        def download_model(channel, node_id, storage_address, dest, checksum, salt):
+            shutil.copyfile(self.model_path, dest)
+
+        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
+            mdownload.side_effect = download_model
             _add_model_to_buffer(CHANNEL, model, "node 1")
 
         # load from buffer into task dir
