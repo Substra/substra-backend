@@ -21,7 +21,7 @@ zxcvbn==4.4.28
 boto3==1.21.31
 grpcio==1.44.0
 grpcio-tools==1.44.0
-minio==7.1.4
+minio==7.1.5
 django-prometheus==2.2.0
 django-filter==21.1
 # Dependencies used in local dev mode
