@@ -27,9 +27,8 @@ from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager
 from substrapp.models import DataSample
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataSampleSerializer
-from substrapp.serializers import OrchestratorDataSampleSerializer
-from substrapp.serializers import OrchestratorDataSampleUpdateSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
@@ -88,16 +87,21 @@ class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
 
     def _register_in_orchestrator(self, request, instances):
         """Register datasamples in orchestrator."""
-        orchestrator_serializer = OrchestratorDataSampleSerializer(
-            data={
-                "test_only": request.data.get("test_only", False),
-                "data_manager_keys": request.data.get("data_manager_keys") or [],
-                "instances": instances,
-            },
-            context={"request": request},
-        )
-        orchestrator_serializer.is_valid(raise_exception=True)
-        return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+        data_manager_keys = request.data.get("data_manager_keys") or []
+
+        orc_ds = {
+            "samples": [
+                {
+                    "key": str(i.key),
+                    "data_manager_keys": [str(key) for key in data_manager_keys],
+                    "test_only": request.data.get("test_only", False),
+                    "checksum": i.checksum,
+                }
+                for i in instances
+            ]
+        }
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            return client.register_datasamples(orc_ds)
 
     def _localrep_create(self, request, instances, orc_response):
         results = []
@@ -224,18 +228,19 @@ class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
 
     @action(methods=["post"], detail=False)
     def bulk_update(self, request):
-        # serialized data for orchestrator db
-        orchestrator_serializer = OrchestratorDataSampleUpdateSerializer(
-            data=dict(request.data), context={"request": request}
-        )
-        orchestrator_serializer.is_valid(raise_exception=True)
+        # convert QueryDict request.data into dict
+        # using QueryDict.getlist does not seem to work for all cases
+        data_manager_keys = [str(key) for key in (dict(request.data).get("data_manager_keys") or [])]
+        data_sample_keys = [str(key) for key in (dict(request.data).get("data_sample_keys") or [])]
 
-        # create on orchestrator db
-        data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+        orc_ds = {
+            "keys": data_sample_keys,
+            "data_manager_keys": data_manager_keys,
+        }
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.update_datasample(orc_ds)
 
         # Update relations directly in local db to ensure consistency
-        data_sample_keys = [str(key) for key in orchestrator_serializer.validated_data.get("data_sample_keys")]
-        data_manager_keys = [str(key) for key in orchestrator_serializer.validated_data.get("data_manager_keys")]
         data_managers = DataManagerRep.objects.filter(key__in=data_manager_keys)
         data_samples = DataSampleRep.objects.filter(key__in=data_sample_keys)
         for data_sample in data_samples:

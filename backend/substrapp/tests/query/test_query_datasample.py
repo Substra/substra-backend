@@ -11,7 +11,6 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from grpc import StatusCode
-from rest_framework import serializers
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -444,28 +443,6 @@ class DataSampleQueryTests(APITestCase):
         ):
             response = self.client.post(self.url, data, format="multipart", **self.extra)
             self.assertEqual(response.json()["message"], "Failed")
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_add_data_sample_ko_orchestrator_invalid(self, *_):
-        file_mock = MagicMock(spec=InMemoryUploadedFile)
-        file_mock.name = "foo.zip"
-        file_mock.read = MagicMock(return_value=self.data_file.file.read())
-
-        data = {
-            "file": file_mock,
-            "json": json.dumps(
-                {
-                    "data_manager_keys": [self.data_managers[0]["key"]],
-                    "test_only": True,
-                }
-            ),
-        }
-        with mock.patch.object(zipfile, "is_zipfile", return_value=True), mock.patch(
-            "substrapp.views.datasample.OrchestratorDataSampleSerializer.is_valid",
-            side_effect=serializers.ValidationError("Failed"),
-        ):
-            response = self.client.post(self.url, data, format="multipart", **self.extra)
-            self.assertEqual(response.json()["message"], "[ErrorDetail(string='Failed', code='invalid')]")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_bulk_update_data(self, *_):

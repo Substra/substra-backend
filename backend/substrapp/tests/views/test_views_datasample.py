@@ -363,14 +363,8 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.datasample.OrchestratorDataSampleUpdateSerializer")
     @mock.patch("substrapp.views.datasample.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_datasamples_bulk_update_fail_internal_server_error(
-        self, serializer_constructor: mock.Mock, get_channel_name: mock.Mock
-    ):
-        data_sample_serializer = mock.Mock()
-        serializer_constructor.return_value = data_sample_serializer
-
+    def test_datasamples_bulk_update_fail_internal_server_error(self, get_channel_name: mock.Mock):
         url = django.urls.reverse("substrapp:data_sample-bulk-update")
         response = self.client.post(url, data={}, format="json")
 
