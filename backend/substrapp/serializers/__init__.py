@@ -1,5 +1,4 @@
 from .algo import AlgoSerializer
-from .computeplan import OrchestratorComputePlanSerializer
 from .computetask import OrchestratorAggregateTaskSerializer
 from .computetask import OrchestratorCompositeTrainTaskSerializer
 from .computetask import OrchestratorTestTaskSerializer
@@ -15,7 +14,6 @@ __all__ = [
     "AlgoSerializer",
     "OrchestratorTrainTaskSerializer",
     "OrchestratorTestTaskSerializer",
-    "OrchestratorComputePlanSerializer",
     "OrchestratorCompositeTrainTaskSerializer",
     "OrchestratorAggregateTaskSerializer",
 ]

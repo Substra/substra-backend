@@ -16,7 +16,6 @@ from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializ
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
-from substrapp.serializers import OrchestratorComputePlanSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.filters_utils import CustomSearchFilter
@@ -31,13 +30,17 @@ from substrapp.views.utils import validate_key
 logger = structlog.get_logger(__name__)
 
 
-def register_compute_plan_in_orchestrator(request, data):
-    serializer = OrchestratorComputePlanSerializer(data=data, context={"request": request})
-    try:
-        serializer.is_valid(raise_exception=True)
-    except Exception as e:
-        raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
-    return serializer.create(get_channel_name(request), serializer.validated_data)
+def register_compute_plan_in_orchestrator(data, channel_name):
+
+    orc_cp = {
+        "key": str(data.get("key")),
+        "tag": data.get("tag"),
+        "metadata": data.get("metadata"),
+        "delete_intermediary_models": data.get("delete_intermediary_models", False),
+    }
+
+    with get_orchestrator_client(channel_name) as client:
+        return client.register_compute_plan(orc_cp)
 
 
 def parse_traintuples(request, traintuples, compute_plan_key):
@@ -207,7 +210,7 @@ def create(request, get_success_headers):
         + list(validated_testtuples.values())
     )
 
-    localrep_data = register_compute_plan_in_orchestrator(request, data=compute_plan_data)
+    localrep_data = register_compute_plan_in_orchestrator(compute_plan_data, get_channel_name(request))
 
     if tasks:
         with get_orchestrator_client(get_channel_name(request)) as client:

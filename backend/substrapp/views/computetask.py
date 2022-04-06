@@ -95,7 +95,9 @@ def _register_in_orchestrator(request, basename):
 
     registered_cp_data = None
     if create_cp:
-        registered_cp_data = register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
+        registered_cp_data = register_compute_plan_in_orchestrator(
+            {"key": data["compute_plan_key"]}, get_channel_name(request)
+        )
 
     orchestrator_serializer_class = ORCHESTRATOR_SERIALIZER_CLASSES[basename]
     orchestrator_serializer = orchestrator_serializer_class(data=data, context={"request": request})

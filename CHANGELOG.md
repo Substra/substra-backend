@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove OrchestratorDataSampleSerializer and OrchestratorDataSampleUpdateSerializer and use orchestrator client directly (#911)
 - Remove OrchestratorMetricSerializer and use orchestrator client directly (#912)
 - Remove OrchestratorModelSerializer (#915)
+- Remove OrchestratorComputePlanSerializer and use orchestrator client directly (#916)
 
 ### Fixed
 - Compute CP dates after updating related tasks (#855)
