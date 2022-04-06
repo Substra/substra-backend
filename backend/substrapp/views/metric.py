@@ -1,4 +1,6 @@
 import structlog
+from django.conf import settings
+from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -10,8 +12,8 @@ from localrep.errors import AlreadyExistsError
 from localrep.models import Metric as MetricRep
 from localrep.serializers import MetricSerializer as MetricRepSerializer
 from substrapp.models import Metric
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import MetricSerializer
-from substrapp.serializers import OrchestratorMetricSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
@@ -21,6 +23,33 @@ from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
+
+
+def _register_in_orchestrator(request, instance):
+    """Register metric in orchestrator."""
+    current_site = settings.DEFAULT_DOMAIN
+    permissions = request.data.get("permissions", {})
+
+    orc_metric = {
+        "key": str(instance.key),
+        "name": request.data.get("name"),
+        "description": {
+            "checksum": get_hash(instance.description),
+            "storage_address": current_site + reverse("substrapp:metric-description", args=[instance.key]),
+        },
+        "address": {
+            "checksum": get_hash(instance.address),
+            "storage_address": current_site + reverse("substrapp:metric-metrics", args=[instance.key]),
+        },
+        "new_permissions": {
+            "public": permissions.get("public"),
+            "authorized_ids": permissions.get("authorized_ids"),
+        },
+        "metadata": request.data.get("metadata"),
+    }
+
+    with get_orchestrator_client(get_channel_name(request)) as client:
+        return client.register_metric(orc_metric)
 
 
 def create(request, get_success_headers):
@@ -52,19 +81,7 @@ def create(request, get_success_headers):
 
     # Step2: register asset in orchestrator
     try:
-        orchestrator_serializer = OrchestratorMetricSerializer(
-            data={
-                "name": request.data.get("name"),
-                "permissions": request.data.get("permissions"),
-                "metadata": request.data.get("metadata"),
-                "instance": instance,
-            },
-            context={"request": request},
-        )
-        orchestrator_serializer.is_valid(raise_exception=True)
-        localrep_data = orchestrator_serializer.create(
-            get_channel_name(request), orchestrator_serializer.validated_data
-        )
+        localrep_data = _register_in_orchestrator(request, instance)
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
         raise

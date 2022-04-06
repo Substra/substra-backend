@@ -7,14 +7,12 @@ from .computetask import OrchestratorTrainTaskSerializer
 from .datamanager import DataManagerSerializer
 from .datasample import DataSampleSerializer
 from .metric import MetricSerializer
-from .metric import OrchestratorMetricSerializer
 from .model import OrchestratorModelSerializer
 
 __all__ = [
     "DataSampleSerializer",
     "DataManagerSerializer",
     "MetricSerializer",
-    "OrchestratorMetricSerializer",
     "AlgoSerializer",
     "OrchestratorTrainTaskSerializer",
     "OrchestratorModelSerializer",

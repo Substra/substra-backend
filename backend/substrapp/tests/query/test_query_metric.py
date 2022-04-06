@@ -14,7 +14,6 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.models import DataManager
 from substrapp.models import Metric
-from substrapp.serializers import OrchestratorMetricSerializer
 from substrapp.tests import assets
 from substrapp.tests import factory
 
@@ -104,7 +103,7 @@ class MetricQueryTests(APITestCase):
         error.code = StatusCode.ALREADY_EXISTS
 
         # already exists
-        with mock.patch.object(OrchestratorMetricSerializer, "create", side_effect=error):
+        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=error):
             response = self.client.post(self.url, self.get_default_metric_data(), format="multipart", **extra)
             self.assertIn("OE0006", response.json()["message"])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
