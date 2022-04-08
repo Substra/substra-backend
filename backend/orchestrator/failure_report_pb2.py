@@ -4,6 +4,7 @@
 """Generated protocol buffer code."""
 from google.protobuf.internal import enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -16,51 +17,9 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='failure_report.proto',
-  package='orchestrator',
-  syntax='proto3',
-  serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x14\x66\x61ilure_report.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xc9\x01\n\rFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x31\n\rcreation_date\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\r\n\x05owner\x18\x05 \x01(\t\"\x8a\x01\n\x10NewFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\"1\n\x15GetFailureReportParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t*p\n\tErrorType\x12\x1a\n\x16\x45RROR_TYPE_UNSPECIFIED\x10\x00\x12\x14\n\x10\x45RROR_TYPE_BUILD\x10\x01\x12\x18\n\x14\x45RROR_TYPE_EXECUTION\x10\x02\x12\x17\n\x13\x45RROR_TYPE_INTERNAL\x10\x03\x32\xc2\x01\n\x14\x46\x61ilureReportService\x12T\n\x15RegisterFailureReport\x12\x1e.orchestrator.NewFailureReport\x1a\x1b.orchestrator.FailureReport\x12T\n\x10GetFailureReport\x12#.orchestrator.GetFailureReportParam\x1a\x1b.orchestrator.FailureReportB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
-  ,
-  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14\x66\x61ilure_report.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xc9\x01\n\rFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x31\n\rcreation_date\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\r\n\x05owner\x18\x05 \x01(\t\"\x8a\x01\n\x10NewFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\"1\n\x15GetFailureReportParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t*p\n\tErrorType\x12\x1a\n\x16\x45RROR_TYPE_UNSPECIFIED\x10\x00\x12\x14\n\x10\x45RROR_TYPE_BUILD\x10\x01\x12\x18\n\x14\x45RROR_TYPE_EXECUTION\x10\x02\x12\x17\n\x13\x45RROR_TYPE_INTERNAL\x10\x03\x32\xc2\x01\n\x14\x46\x61ilureReportService\x12T\n\x15RegisterFailureReport\x12\x1e.orchestrator.NewFailureReport\x1a\x1b.orchestrator.FailureReport\x12T\n\x10GetFailureReport\x12#.orchestrator.GetFailureReportParam\x1a\x1b.orchestrator.FailureReportB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
-_ERRORTYPE = _descriptor.EnumDescriptor(
-  name='ErrorType',
-  full_name='orchestrator.ErrorType',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='ERROR_TYPE_UNSPECIFIED', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ERROR_TYPE_BUILD', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ERROR_TYPE_EXECUTION', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ERROR_TYPE_INTERNAL', index=3, number=3,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=481,
-  serialized_end=593,
-)
-_sym_db.RegisterEnumDescriptor(_ERRORTYPE)
-
+_ERRORTYPE = DESCRIPTOR.enum_types_by_name['ErrorType']
 ErrorType = enum_type_wrapper.EnumTypeWrapper(_ERRORTYPE)
 ERROR_TYPE_UNSPECIFIED = 0
 ERROR_TYPE_BUILD = 1
@@ -68,155 +27,9 @@ ERROR_TYPE_EXECUTION = 2
 ERROR_TYPE_INTERNAL = 3
 
 
-
-_FAILUREREPORT = _descriptor.Descriptor(
-  name='FailureReport',
-  full_name='orchestrator.FailureReport',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='compute_task_key', full_name='orchestrator.FailureReport.compute_task_key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='error_type', full_name='orchestrator.FailureReport.error_type', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='logs_address', full_name='orchestrator.FailureReport.logs_address', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='creation_date', full_name='orchestrator.FailureReport.creation_date', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='owner', full_name='orchestrator.FailureReport.owner', index=4,
-      number=5, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=86,
-  serialized_end=287,
-)
-
-
-_NEWFAILUREREPORT = _descriptor.Descriptor(
-  name='NewFailureReport',
-  full_name='orchestrator.NewFailureReport',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='compute_task_key', full_name='orchestrator.NewFailureReport.compute_task_key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='error_type', full_name='orchestrator.NewFailureReport.error_type', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='logs_address', full_name='orchestrator.NewFailureReport.logs_address', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=290,
-  serialized_end=428,
-)
-
-
-_GETFAILUREREPORTPARAM = _descriptor.Descriptor(
-  name='GetFailureReportParam',
-  full_name='orchestrator.GetFailureReportParam',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='compute_task_key', full_name='orchestrator.GetFailureReportParam.compute_task_key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=430,
-  serialized_end=479,
-)
-
-_FAILUREREPORT.fields_by_name['error_type'].enum_type = _ERRORTYPE
-_FAILUREREPORT.fields_by_name['logs_address'].message_type = common__pb2._ADDRESSABLE
-_FAILUREREPORT.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_NEWFAILUREREPORT.fields_by_name['error_type'].enum_type = _ERRORTYPE
-_NEWFAILUREREPORT.fields_by_name['logs_address'].message_type = common__pb2._ADDRESSABLE
-DESCRIPTOR.message_types_by_name['FailureReport'] = _FAILUREREPORT
-DESCRIPTOR.message_types_by_name['NewFailureReport'] = _NEWFAILUREREPORT
-DESCRIPTOR.message_types_by_name['GetFailureReportParam'] = _GETFAILUREREPORTPARAM
-DESCRIPTOR.enum_types_by_name['ErrorType'] = _ERRORTYPE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_FAILUREREPORT = DESCRIPTOR.message_types_by_name['FailureReport']
+_NEWFAILUREREPORT = DESCRIPTOR.message_types_by_name['NewFailureReport']
+_GETFAILUREREPORTPARAM = DESCRIPTOR.message_types_by_name['GetFailureReportParam']
 FailureReport = _reflection.GeneratedProtocolMessageType('FailureReport', (_message.Message,), {
   'DESCRIPTOR' : _FAILUREREPORT,
   '__module__' : 'failure_report_pb2'
@@ -238,42 +51,19 @@ GetFailureReportParam = _reflection.GeneratedProtocolMessageType('GetFailureRepo
   })
 _sym_db.RegisterMessage(GetFailureReportParam)
 
+_FAILUREREPORTSERVICE = DESCRIPTOR.services_by_name['FailureReportService']
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-DESCRIPTOR._options = None
-
-_FAILUREREPORTSERVICE = _descriptor.ServiceDescriptor(
-  name='FailureReportService',
-  full_name='orchestrator.FailureReportService',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_start=596,
-  serialized_end=790,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='RegisterFailureReport',
-    full_name='orchestrator.FailureReportService.RegisterFailureReport',
-    index=0,
-    containing_service=None,
-    input_type=_NEWFAILUREREPORT,
-    output_type=_FAILUREREPORT,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='GetFailureReport',
-    full_name='orchestrator.FailureReportService.GetFailureReport',
-    index=1,
-    containing_service=None,
-    input_type=_GETFAILUREREPORTPARAM,
-    output_type=_FAILUREREPORT,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-])
-_sym_db.RegisterServiceDescriptor(_FAILUREREPORTSERVICE)
-
-DESCRIPTOR.services_by_name['FailureReportService'] = _FAILUREREPORTSERVICE
-
+  DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  _ERRORTYPE._serialized_start=481
+  _ERRORTYPE._serialized_end=593
+  _FAILUREREPORT._serialized_start=86
+  _FAILUREREPORT._serialized_end=287
+  _NEWFAILUREREPORT._serialized_start=290
+  _NEWFAILUREREPORT._serialized_end=428
+  _GETFAILUREREPORTPARAM._serialized_start=430
+  _GETFAILUREREPORTPARAM._serialized_end=479
+  _FAILUREREPORTSERVICE._serialized_start=596
+  _FAILUREREPORTSERVICE._serialized_end=790
 # @@protoc_insertion_point(module_scope)

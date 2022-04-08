@@ -3,6 +3,7 @@
 # source: datamanager.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -15,401 +16,17 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='datamanager.proto',
-  package='orchestrator',
-  syntax='proto3',
-  serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\x98\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
-  ,
-  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\x98\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 
 
-
-_DATAMANAGER_METADATAENTRY = _descriptor.Descriptor(
-  name='MetadataEntry',
-  full_name='orchestrator.DataManager.MetadataEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='orchestrator.DataManager.MetadataEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='orchestrator.DataManager.MetadataEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=454,
-  serialized_end=501,
-)
-
-_DATAMANAGER = _descriptor.Descriptor(
-  name='DataManager',
-  full_name='orchestrator.DataManager',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='orchestrator.DataManager.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='name', full_name='orchestrator.DataManager.name', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='owner', full_name='orchestrator.DataManager.owner', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='permissions', full_name='orchestrator.DataManager.permissions', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='description', full_name='orchestrator.DataManager.description', index=4,
-      number=6, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='opener', full_name='orchestrator.DataManager.opener', index=5,
-      number=7, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='type', full_name='orchestrator.DataManager.type', index=6,
-      number=8, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='creation_date', full_name='orchestrator.DataManager.creation_date', index=7,
-      number=9, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='logs_permission', full_name='orchestrator.DataManager.logs_permission', index=8,
-      number=10, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='metadata', full_name='orchestrator.DataManager.metadata', index=9,
-      number=16, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[_DATAMANAGER_METADATAENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=83,
-  serialized_end=501,
-)
-
-
-_NEWDATAMANAGER_METADATAENTRY = _descriptor.Descriptor(
-  name='MetadataEntry',
-  full_name='orchestrator.NewDataManager.MetadataEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='orchestrator.NewDataManager.MetadataEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='orchestrator.NewDataManager.MetadataEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=454,
-  serialized_end=501,
-)
-
-_NEWDATAMANAGER = _descriptor.Descriptor(
-  name='NewDataManager',
-  full_name='orchestrator.NewDataManager',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='orchestrator.NewDataManager.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='name', full_name='orchestrator.NewDataManager.name', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='new_permissions', full_name='orchestrator.NewDataManager.new_permissions', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='description', full_name='orchestrator.NewDataManager.description', index=3,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='opener', full_name='orchestrator.NewDataManager.opener', index=4,
-      number=6, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='type', full_name='orchestrator.NewDataManager.type', index=5,
-      number=7, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='logs_permission', full_name='orchestrator.NewDataManager.logs_permission', index=6,
-      number=8, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='metadata', full_name='orchestrator.NewDataManager.metadata', index=7,
-      number=16, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[_NEWDATAMANAGER_METADATAENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=504,
-  serialized_end=873,
-)
-
-
-_GETDATAMANAGERPARAM = _descriptor.Descriptor(
-  name='GetDataManagerParam',
-  full_name='orchestrator.GetDataManagerParam',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='orchestrator.GetDataManagerParam.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=875,
-  serialized_end=909,
-)
-
-
-_QUERYDATAMANAGERSPARAM = _descriptor.Descriptor(
-  name='QueryDataManagersParam',
-  full_name='orchestrator.QueryDataManagersParam',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='page_token', full_name='orchestrator.QueryDataManagersParam.page_token', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='page_size', full_name='orchestrator.QueryDataManagersParam.page_size', index=1,
-      number=2, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=911,
-  serialized_end=974,
-)
-
-
-_QUERYDATAMANAGERSRESPONSE = _descriptor.Descriptor(
-  name='QueryDataManagersResponse',
-  full_name='orchestrator.QueryDataManagersResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='data_managers', full_name='orchestrator.QueryDataManagersResponse.data_managers', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='next_page_token', full_name='orchestrator.QueryDataManagersResponse.next_page_token', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=976,
-  serialized_end=1078,
-)
-
-_DATAMANAGER_METADATAENTRY.containing_type = _DATAMANAGER
-_DATAMANAGER.fields_by_name['permissions'].message_type = common__pb2._PERMISSIONS
-_DATAMANAGER.fields_by_name['description'].message_type = common__pb2._ADDRESSABLE
-_DATAMANAGER.fields_by_name['opener'].message_type = common__pb2._ADDRESSABLE
-_DATAMANAGER.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_DATAMANAGER.fields_by_name['logs_permission'].message_type = common__pb2._PERMISSION
-_DATAMANAGER.fields_by_name['metadata'].message_type = _DATAMANAGER_METADATAENTRY
-_NEWDATAMANAGER_METADATAENTRY.containing_type = _NEWDATAMANAGER
-_NEWDATAMANAGER.fields_by_name['new_permissions'].message_type = common__pb2._NEWPERMISSIONS
-_NEWDATAMANAGER.fields_by_name['description'].message_type = common__pb2._ADDRESSABLE
-_NEWDATAMANAGER.fields_by_name['opener'].message_type = common__pb2._ADDRESSABLE
-_NEWDATAMANAGER.fields_by_name['logs_permission'].message_type = common__pb2._NEWPERMISSIONS
-_NEWDATAMANAGER.fields_by_name['metadata'].message_type = _NEWDATAMANAGER_METADATAENTRY
-_QUERYDATAMANAGERSRESPONSE.fields_by_name['data_managers'].message_type = _DATAMANAGER
-DESCRIPTOR.message_types_by_name['DataManager'] = _DATAMANAGER
-DESCRIPTOR.message_types_by_name['NewDataManager'] = _NEWDATAMANAGER
-DESCRIPTOR.message_types_by_name['GetDataManagerParam'] = _GETDATAMANAGERPARAM
-DESCRIPTOR.message_types_by_name['QueryDataManagersParam'] = _QUERYDATAMANAGERSPARAM
-DESCRIPTOR.message_types_by_name['QueryDataManagersResponse'] = _QUERYDATAMANAGERSRESPONSE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_DATAMANAGER = DESCRIPTOR.message_types_by_name['DataManager']
+_DATAMANAGER_METADATAENTRY = _DATAMANAGER.nested_types_by_name['MetadataEntry']
+_NEWDATAMANAGER = DESCRIPTOR.message_types_by_name['NewDataManager']
+_NEWDATAMANAGER_METADATAENTRY = _NEWDATAMANAGER.nested_types_by_name['MetadataEntry']
+_GETDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['GetDataManagerParam']
+_QUERYDATAMANAGERSPARAM = DESCRIPTOR.message_types_by_name['QueryDataManagersParam']
+_QUERYDATAMANAGERSRESPONSE = DESCRIPTOR.message_types_by_name['QueryDataManagersResponse']
 DataManager = _reflection.GeneratedProtocolMessageType('DataManager', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
@@ -461,54 +78,29 @@ QueryDataManagersResponse = _reflection.GeneratedProtocolMessageType('QueryDataM
   })
 _sym_db.RegisterMessage(QueryDataManagersResponse)
 
+_DATAMANAGERSERVICE = DESCRIPTOR.services_by_name['DataManagerService']
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-DESCRIPTOR._options = None
-_DATAMANAGER_METADATAENTRY._options = None
-_NEWDATAMANAGER_METADATAENTRY._options = None
-
-_DATAMANAGERSERVICE = _descriptor.ServiceDescriptor(
-  name='DataManagerService',
-  full_name='orchestrator.DataManagerService',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_start=1081,
-  serialized_end=1361,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='RegisterDataManager',
-    full_name='orchestrator.DataManagerService.RegisterDataManager',
-    index=0,
-    containing_service=None,
-    input_type=_NEWDATAMANAGER,
-    output_type=_DATAMANAGER,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='GetDataManager',
-    full_name='orchestrator.DataManagerService.GetDataManager',
-    index=1,
-    containing_service=None,
-    input_type=_GETDATAMANAGERPARAM,
-    output_type=_DATAMANAGER,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='QueryDataManagers',
-    full_name='orchestrator.DataManagerService.QueryDataManagers',
-    index=2,
-    containing_service=None,
-    input_type=_QUERYDATAMANAGERSPARAM,
-    output_type=_QUERYDATAMANAGERSRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-])
-_sym_db.RegisterServiceDescriptor(_DATAMANAGERSERVICE)
-
-DESCRIPTOR.services_by_name['DataManagerService'] = _DATAMANAGERSERVICE
-
+  DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  _DATAMANAGER_METADATAENTRY._options = None
+  _DATAMANAGER_METADATAENTRY._serialized_options = b'8\001'
+  _NEWDATAMANAGER_METADATAENTRY._options = None
+  _NEWDATAMANAGER_METADATAENTRY._serialized_options = b'8\001'
+  _DATAMANAGER._serialized_start=83
+  _DATAMANAGER._serialized_end=501
+  _DATAMANAGER_METADATAENTRY._serialized_start=454
+  _DATAMANAGER_METADATAENTRY._serialized_end=501
+  _NEWDATAMANAGER._serialized_start=504
+  _NEWDATAMANAGER._serialized_end=873
+  _NEWDATAMANAGER_METADATAENTRY._serialized_start=454
+  _NEWDATAMANAGER_METADATAENTRY._serialized_end=501
+  _GETDATAMANAGERPARAM._serialized_start=875
+  _GETDATAMANAGERPARAM._serialized_end=909
+  _QUERYDATAMANAGERSPARAM._serialized_start=911
+  _QUERYDATAMANAGERSPARAM._serialized_end=974
+  _QUERYDATAMANAGERSRESPONSE._serialized_start=976
+  _QUERYDATAMANAGERSRESPONSE._serialized_end=1078
+  _DATAMANAGERSERVICE._serialized_start=1081
+  _DATAMANAGERSERVICE._serialized_end=1361
 # @@protoc_insertion_point(module_scope)

@@ -3,6 +3,7 @@
 # source: info.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -13,85 +14,12 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='info.proto',
-  package='orchestrator',
-  syntax='proto3',
-  serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t\x12\x11\n\tchaincode\x18\x02 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t\x12\x11\n\tchaincode\x18\x02 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 
 
-
-_QUERYVERSIONPARAM = _descriptor.Descriptor(
-  name='QueryVersionParam',
-  full_name='orchestrator.QueryVersionParam',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=28,
-  serialized_end=47,
-)
-
-
-_QUERYVERSIONRESPONSE = _descriptor.Descriptor(
-  name='QueryVersionResponse',
-  full_name='orchestrator.QueryVersionResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='orchestrator', full_name='orchestrator.QueryVersionResponse.orchestrator', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='chaincode', full_name='orchestrator.QueryVersionResponse.chaincode', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=49,
-  serialized_end=112,
-)
-
-DESCRIPTOR.message_types_by_name['QueryVersionParam'] = _QUERYVERSIONPARAM
-DESCRIPTOR.message_types_by_name['QueryVersionResponse'] = _QUERYVERSIONRESPONSE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_QUERYVERSIONPARAM = DESCRIPTOR.message_types_by_name['QueryVersionParam']
+_QUERYVERSIONRESPONSE = DESCRIPTOR.message_types_by_name['QueryVersionResponse']
 QueryVersionParam = _reflection.GeneratedProtocolMessageType('QueryVersionParam', (_message.Message,), {
   'DESCRIPTOR' : _QUERYVERSIONPARAM,
   '__module__' : 'info_pb2'
@@ -106,32 +34,15 @@ QueryVersionResponse = _reflection.GeneratedProtocolMessageType('QueryVersionRes
   })
 _sym_db.RegisterMessage(QueryVersionResponse)
 
+_INFOSERVICE = DESCRIPTOR.services_by_name['InfoService']
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-DESCRIPTOR._options = None
-
-_INFOSERVICE = _descriptor.ServiceDescriptor(
-  name='InfoService',
-  full_name='orchestrator.InfoService',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_start=114,
-  serialized_end=212,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='QueryVersion',
-    full_name='orchestrator.InfoService.QueryVersion',
-    index=0,
-    containing_service=None,
-    input_type=_QUERYVERSIONPARAM,
-    output_type=_QUERYVERSIONRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-])
-_sym_db.RegisterServiceDescriptor(_INFOSERVICE)
-
-DESCRIPTOR.services_by_name['InfoService'] = _INFOSERVICE
-
+  DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  _QUERYVERSIONPARAM._serialized_start=28
+  _QUERYVERSIONPARAM._serialized_end=47
+  _QUERYVERSIONRESPONSE._serialized_start=49
+  _QUERYVERSIONRESPONSE._serialized_end=112
+  _INFOSERVICE._serialized_start=114
+  _INFOSERVICE._serialized_end=212
 # @@protoc_insertion_point(module_scope)

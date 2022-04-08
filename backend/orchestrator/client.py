@@ -253,12 +253,15 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_datasamples(self):
+    def query_datasamples(self, keys=None):
         res = []
         page_token = ""  # nosec
+        filter = datasample_pb2.DataSampleQueryFilter(
+            keys=keys,
+        )
         while True:
             data = self._datasample_client.QueryDataSamples(
-                datasample_pb2.QueryDataSamplesParam(page_token=page_token),
+                datasample_pb2.QueryDataSamplesParam(page_token=page_token, filter=filter),
                 metadata=self._metadata,
             )
             data = MessageToDict(data, **CONVERT_SETTINGS)

@@ -113,18 +113,35 @@ class UpdateDataSamplesResponse(google.protobuf.message.Message):
         ) -> None: ...
 global___UpdateDataSamplesResponse = UpdateDataSamplesResponse
 
+class DataSampleQueryFilter(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    KEYS_FIELD_NUMBER: builtins.int
+    @property
+    def keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
+    def __init__(self,
+        *,
+        keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keys",b"keys"]) -> None: ...
+global___DataSampleQueryFilter = DataSampleQueryFilter
+
 class QueryDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PAGE_TOKEN_FIELD_NUMBER: builtins.int
     PAGE_SIZE_FIELD_NUMBER: builtins.int
+    FILTER_FIELD_NUMBER: builtins.int
     page_token: typing.Text
     page_size: builtins.int
+    @property
+    def filter(self) -> global___DataSampleQueryFilter: ...
     def __init__(self,
         *,
         page_token: typing.Text = ...,
         page_size: builtins.int = ...,
+        filter: typing.Optional[global___DataSampleQueryFilter] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["page_size",b"page_size","page_token",b"page_token"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["filter",b"filter"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["filter",b"filter","page_size",b"page_size","page_token",b"page_token"]) -> None: ...
 global___QueryDataSamplesParam = QueryDataSamplesParam
 
 class QueryDataSamplesResponse(google.protobuf.message.Message):

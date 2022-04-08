@@ -4,6 +4,7 @@
 """Generated protocol buffer code."""
 from google.protobuf.internal import enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -14,116 +15,11 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='common.proto',
-  package='orchestrator',
-  syntax='proto3',
-  serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0c\x63ommon.proto\x12\x0corchestrator\"8\n\x0b\x41\x64\x64ressable\x12\x10\n\x08\x63hecksum\x18\x01 \x01(\t\x12\x17\n\x0fstorage_address\x18\x02 \x01(\t\"d\n\x0bPermissions\x12)\n\x07process\x18\x01 \x01(\x0b\x32\x18.orchestrator.Permission\x12*\n\x08\x64ownload\x18\x02 \x01(\x0b\x32\x18.orchestrator.Permission\"4\n\nPermission\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t\"8\n\x0eNewPermissions\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t*\xf1\x01\n\tAssetKind\x12\x11\n\rASSET_UNKNOWN\x10\x00\x12\x0e\n\nASSET_NODE\x10\x01\x12\x10\n\x0c\x41SSET_METRIC\x10\x02\x12\x15\n\x11\x41SSET_DATA_SAMPLE\x10\x03\x12\x16\n\x12\x41SSET_DATA_MANAGER\x10\x04\x12\x0e\n\nASSET_ALGO\x10\x05\x12\x16\n\x12\x41SSET_COMPUTE_TASK\x10\x06\x12\x16\n\x12\x41SSET_COMPUTE_PLAN\x10\x07\x12\x0f\n\x0b\x41SSET_MODEL\x10\x08\x12\x15\n\x11\x41SSET_PERFORMANCE\x10\t\x12\x18\n\x14\x41SSET_FAILURE_REPORT\x10\n*;\n\tSortOrder\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\r\n\tASCENDING\x10\x01\x12\x0e\n\nDESCENDING\x10\x02\x42)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x63ommon.proto\x12\x0corchestrator\"8\n\x0b\x41\x64\x64ressable\x12\x10\n\x08\x63hecksum\x18\x01 \x01(\t\x12\x17\n\x0fstorage_address\x18\x02 \x01(\t\"d\n\x0bPermissions\x12)\n\x07process\x18\x01 \x01(\x0b\x32\x18.orchestrator.Permission\x12*\n\x08\x64ownload\x18\x02 \x01(\x0b\x32\x18.orchestrator.Permission\"4\n\nPermission\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t\"8\n\x0eNewPermissions\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t*\xf1\x01\n\tAssetKind\x12\x11\n\rASSET_UNKNOWN\x10\x00\x12\x0e\n\nASSET_NODE\x10\x01\x12\x10\n\x0c\x41SSET_METRIC\x10\x02\x12\x15\n\x11\x41SSET_DATA_SAMPLE\x10\x03\x12\x16\n\x12\x41SSET_DATA_MANAGER\x10\x04\x12\x0e\n\nASSET_ALGO\x10\x05\x12\x16\n\x12\x41SSET_COMPUTE_TASK\x10\x06\x12\x16\n\x12\x41SSET_COMPUTE_PLAN\x10\x07\x12\x0f\n\x0b\x41SSET_MODEL\x10\x08\x12\x15\n\x11\x41SSET_PERFORMANCE\x10\t\x12\x18\n\x14\x41SSET_FAILURE_REPORT\x10\n*;\n\tSortOrder\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\r\n\tASCENDING\x10\x01\x12\x0e\n\nDESCENDING\x10\x02\x42)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
-_ASSETKIND = _descriptor.EnumDescriptor(
-  name='AssetKind',
-  full_name='orchestrator.AssetKind',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_UNKNOWN', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_NODE', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_METRIC', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_DATA_SAMPLE', index=3, number=3,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_DATA_MANAGER', index=4, number=4,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_ALGO', index=5, number=5,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_COMPUTE_TASK', index=6, number=6,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_COMPUTE_PLAN', index=7, number=7,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_MODEL', index=8, number=8,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_PERFORMANCE', index=9, number=9,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASSET_FAILURE_REPORT', index=10, number=10,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=303,
-  serialized_end=544,
-)
-_sym_db.RegisterEnumDescriptor(_ASSETKIND)
-
+_ASSETKIND = DESCRIPTOR.enum_types_by_name['AssetKind']
 AssetKind = enum_type_wrapper.EnumTypeWrapper(_ASSETKIND)
-_SORTORDER = _descriptor.EnumDescriptor(
-  name='SortOrder',
-  full_name='orchestrator.SortOrder',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='UNSPECIFIED', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ASCENDING', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='DESCENDING', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=546,
-  serialized_end=605,
-)
-_sym_db.RegisterEnumDescriptor(_SORTORDER)
-
+_SORTORDER = DESCRIPTOR.enum_types_by_name['SortOrder']
 SortOrder = enum_type_wrapper.EnumTypeWrapper(_SORTORDER)
 ASSET_UNKNOWN = 0
 ASSET_NODE = 1
@@ -141,172 +37,10 @@ ASCENDING = 1
 DESCENDING = 2
 
 
-
-_ADDRESSABLE = _descriptor.Descriptor(
-  name='Addressable',
-  full_name='orchestrator.Addressable',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='checksum', full_name='orchestrator.Addressable.checksum', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='storage_address', full_name='orchestrator.Addressable.storage_address', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=30,
-  serialized_end=86,
-)
-
-
-_PERMISSIONS = _descriptor.Descriptor(
-  name='Permissions',
-  full_name='orchestrator.Permissions',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='process', full_name='orchestrator.Permissions.process', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='download', full_name='orchestrator.Permissions.download', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=88,
-  serialized_end=188,
-)
-
-
-_PERMISSION = _descriptor.Descriptor(
-  name='Permission',
-  full_name='orchestrator.Permission',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='public', full_name='orchestrator.Permission.public', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='authorized_ids', full_name='orchestrator.Permission.authorized_ids', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=190,
-  serialized_end=242,
-)
-
-
-_NEWPERMISSIONS = _descriptor.Descriptor(
-  name='NewPermissions',
-  full_name='orchestrator.NewPermissions',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='public', full_name='orchestrator.NewPermissions.public', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='authorized_ids', full_name='orchestrator.NewPermissions.authorized_ids', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=244,
-  serialized_end=300,
-)
-
-_PERMISSIONS.fields_by_name['process'].message_type = _PERMISSION
-_PERMISSIONS.fields_by_name['download'].message_type = _PERMISSION
-DESCRIPTOR.message_types_by_name['Addressable'] = _ADDRESSABLE
-DESCRIPTOR.message_types_by_name['Permissions'] = _PERMISSIONS
-DESCRIPTOR.message_types_by_name['Permission'] = _PERMISSION
-DESCRIPTOR.message_types_by_name['NewPermissions'] = _NEWPERMISSIONS
-DESCRIPTOR.enum_types_by_name['AssetKind'] = _ASSETKIND
-DESCRIPTOR.enum_types_by_name['SortOrder'] = _SORTORDER
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_ADDRESSABLE = DESCRIPTOR.message_types_by_name['Addressable']
+_PERMISSIONS = DESCRIPTOR.message_types_by_name['Permissions']
+_PERMISSION = DESCRIPTOR.message_types_by_name['Permission']
+_NEWPERMISSIONS = DESCRIPTOR.message_types_by_name['NewPermissions']
 Addressable = _reflection.GeneratedProtocolMessageType('Addressable', (_message.Message,), {
   'DESCRIPTOR' : _ADDRESSABLE,
   '__module__' : 'common_pb2'
@@ -335,6 +69,20 @@ NewPermissions = _reflection.GeneratedProtocolMessageType('NewPermissions', (_me
   })
 _sym_db.RegisterMessage(NewPermissions)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-DESCRIPTOR._options = None
+  DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  _ASSETKIND._serialized_start=303
+  _ASSETKIND._serialized_end=544
+  _SORTORDER._serialized_start=546
+  _SORTORDER._serialized_end=605
+  _ADDRESSABLE._serialized_start=30
+  _ADDRESSABLE._serialized_end=86
+  _PERMISSIONS._serialized_start=88
+  _PERMISSIONS._serialized_end=188
+  _PERMISSION._serialized_start=190
+  _PERMISSION._serialized_end=242
+  _NEWPERMISSIONS._serialized_start=244
+  _NEWPERMISSIONS._serialized_end=300
 # @@protoc_insertion_point(module_scope)
