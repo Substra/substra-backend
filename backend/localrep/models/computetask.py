@@ -52,7 +52,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     model_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
 
     # specific fields for test tasks
-    metrics = models.ManyToManyField("Metric", null=True, related_name="compute_tasks")
+    metrics = models.ManyToManyField("Metric", related_name="compute_tasks")
 
     # specific fields for composite tasks
     head_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
