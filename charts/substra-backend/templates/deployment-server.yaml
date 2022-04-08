@@ -133,9 +133,16 @@ spec:
         args:
           - "-c"
           - "python /usr/src/app/metrics_exporter/server.py"
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-rabbitmq
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-rabbitmq
         env:
           - name: PROMETHEUS_MULTIPROC_DIR
             value: {{ $metricsPath }}
+          - name: CELERY_MONITORING_ENABLED
+            value: "True"
         ports:
           - name: metrics
             containerPort: 8001

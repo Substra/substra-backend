@@ -20,8 +20,22 @@ logger = structlog.get_logger()
 class MetricsNames(enum.Enum):
     """An enum of metrics names used in CeleryCollector"""
 
-    CELERY_WORKER_UP = 1
-    CELERY_TASKS_ACTIVE = 2
+    CELERY_WORKER_UP = enum.auto()
+    CELERY_TASKS_ACTIVE = enum.auto()
+    CELERY_TASKS_RECEIVED = enum.auto()
+    CELERY_TASKS_STARTED = enum.auto()
+    CELERY_TASKS_FAILED = enum.auto()
+    CELERY_TASKS_RETRIED = enum.auto()
+    CELERY_TASKS_SUCCEEDED = enum.auto()
+
+
+EVENT_TO_METRIC = {
+    "task-received": MetricsNames.CELERY_TASKS_RECEIVED,
+    "task-started": MetricsNames.CELERY_TASKS_STARTED,
+    "task-failed": MetricsNames.CELERY_TASKS_FAILED,
+    "task-retried": MetricsNames.CELERY_TASKS_RETRIED,
+    "task-succeeded": MetricsNames.CELERY_TASKS_SUCCEEDED,
+}
 
 
 class CeleryCollector:
@@ -42,6 +56,26 @@ class CeleryCollector:
 
         self._metrics[MetricsNames.CELERY_TASKS_ACTIVE] = metrics.Gauge(
             "celery_tasks_active", "Number of active tasks on the worker", ["hostname"]
+        )
+
+        self._metrics[MetricsNames.CELERY_TASKS_RECEIVED] = metrics.Counter(
+            "celery_tasks_received", "Number of Celery tasks received", ["hostname", "name"]
+        )
+
+        self._metrics[MetricsNames.CELERY_TASKS_STARTED] = metrics.Counter(
+            "celery_tasks_started", "Number of Celery tasks started", ["hostname", "name"]
+        )
+
+        self._metrics[MetricsNames.CELERY_TASKS_FAILED] = metrics.Counter(
+            "celery_tasks_failed", "Number of Celery tasks that failed to execute", ["hostname", "name"]
+        )
+
+        self._metrics[MetricsNames.CELERY_TASKS_RETRIED] = metrics.Counter(
+            "celery_tasks_retried", "Number of celery tasks that retried", ["hostname", "name"]
+        )
+
+        self._metrics[MetricsNames.CELERY_TASKS_SUCCEEDED] = metrics.Counter(
+            "celery_tasks_succeeded", "Number of celery tasks executed successfully", ["hostname", "name"]
         )
 
         self._celery_state = state
@@ -66,6 +100,21 @@ class CeleryCollector:
         # Here worker.active can be None for the first heartbeat
         self._metrics[MetricsNames.CELERY_TASKS_ACTIVE].labels(worker.hostname).set(worker.active or 0)
 
+    def task_event_handler(self, event) -> None:
+        self._celery_state.event(event)
+        _task = self._celery_state.tasks.get(event["uuid"])
+        if _task:
+            task: celery_state.Task = _task
+        else:
+            return
+        if task.worker:
+            worker: celery_state.Worker = task.worker
+        else:
+            return
+        logger.debug("received a task event", event_type=event["type"], task=task.as_dict())
+
+        self._metrics[EVENT_TO_METRIC[event["type"]]].labels(worker.hostname, task.name).inc(1)
+
     @property
     def handlers(self) -> Dict[str, Callable]:
         """returns a dict of Celery events handlers
@@ -76,10 +125,10 @@ class CeleryCollector:
         Returns:
             Dict[str, Callable]: a dict of event handlers
         """
-        return {
-            "*": self._celery_state.event,
-            "worker-heartbeat": self.heartbeat_handler,
-        }
+        handlers = {key: self.task_event_handler for key in EVENT_TO_METRIC.keys()}
+        handlers["*"] = self._celery_state.event
+        handlers["worker-heartbeat"] = self.heartbeat_handler
+        return handlers
 
     def collect(self) -> List[metrics_core.Metric]:
         """Collects all the Celery metrics
