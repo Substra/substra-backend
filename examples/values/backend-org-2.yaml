@@ -21,8 +21,8 @@ containerRegistry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: connect-314908/connect-tools:0.10.0-nvidiacuda11.6.0-base-ubuntu20.04-python3.9-minimal
-      dstImage: owkin/connect-tools:0.10.0-nvidiacuda11.6.0-base-ubuntu20.04-python3.9-minimal
+    - image: connect-314908/connect-tools:latest-minimal
+      dstImage: owkin/connect-tools:latest-minimal
       sourceRegistry: gcr.io
       dockerConfigSecretName: "docker-config"
 
@@ -50,7 +50,7 @@ kaniko:
   cache:
     warmer:
       cachedImages:
-        - gcr.io/connect-314908/connect-tools:0.10.0-nvidiacuda11.6.0-base-ubuntu20.04-python3.9-minimal
+        - gcr.io/connect-314908/connect-tools:latest-minimal
 
 addAccountOperator:
   incomingNodes:
@@ -111,4 +111,3 @@ orchestrator:
         model_export_enabled: true
         chaincode:
           name: yourcc
-
