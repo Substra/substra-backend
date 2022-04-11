@@ -1,6 +1,6 @@
 # Changelog
 
-## 17.0.1
+## 17.1.0
 
 ### Added
 - Exposition of metrics from Celery when metrics are enabled
