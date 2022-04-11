@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-
 - Set log level to DEBUG in dev (#952)
+
+### Fixed
+- Handle disabled model in resync by making address not mandatory (#948)
 
 ## [0.10.0] 2022-04-11
 
@@ -46,13 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dev conf uses latest connect-tools image (#943)
 
 ### Fixed
+- Disable model in localrep (#848)
 - Compute CP dates after updating related tasks (#855)
 - Compute task stays doing forever if saving the model raises an OSError (#880)
 - Compute CP dates before updating CP status (#883)
 - W340 null has no effect on ManyToManyField during migrations (#947)
 
-### Fixed
-- Disable model in localrep (#848)
 
 ## [0.9.0] 2022-03-01
 

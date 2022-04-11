@@ -24,7 +24,7 @@ class ModelSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
     )
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
-    address = make_addressable_serializer("model")(source="*")
+    address = make_addressable_serializer("model")(source="*", required=False)
     permissions = make_download_process_permission_serializer()(source="*")
 
     class Meta:
