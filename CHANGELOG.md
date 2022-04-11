@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Set log level to DEBUG in dev (#952)
+
 ## [0.10.0] 2022-04-11
 
 ### Added

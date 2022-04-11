@@ -6,6 +6,7 @@ config:
   ALLOWED_HOSTS: '[".node-1.com", ".org-1", ".org-1.svc.cluster.local"]'
   DEFAULT_THROTTLE_RATES: "120"
   TASK_CACHE_DOCKER_IMAGES: "False"
+  LOG_LEVEL: DEBUG
 organizationName: MyOrg1
 
 rabbitmq:
