@@ -23,6 +23,7 @@ class _AlgoCategoryEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._E
     ALGO_SIMPLE: _AlgoCategory.ValueType  # 1
     ALGO_AGGREGATE: _AlgoCategory.ValueType  # 2
     ALGO_COMPOSITE: _AlgoCategory.ValueType  # 3
+    ALGO_METRIC: _AlgoCategory.ValueType  # 4
 class AlgoCategory(_AlgoCategory, metaclass=_AlgoCategoryEnumTypeWrapper):
     pass
 
@@ -30,6 +31,7 @@ ALGO_UNKNOWN: AlgoCategory.ValueType  # 0
 ALGO_SIMPLE: AlgoCategory.ValueType  # 1
 ALGO_AGGREGATE: AlgoCategory.ValueType  # 2
 ALGO_COMPOSITE: AlgoCategory.ValueType  # 3
+ALGO_METRIC: AlgoCategory.ValueType  # 4
 global___AlgoCategory = AlgoCategory
 
 
@@ -168,16 +170,17 @@ global___QueryAlgosResponse = QueryAlgosResponse
 
 class AlgoQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    CATEGORY_FIELD_NUMBER: builtins.int
+    CATEGORIES_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
-    category: global___AlgoCategory.ValueType
+    @property
+    def categories(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[global___AlgoCategory.ValueType]: ...
     compute_plan_key: typing.Text
     def __init__(self,
         *,
-        category: global___AlgoCategory.ValueType = ...,
+        categories: typing.Optional[typing.Iterable[global___AlgoCategory.ValueType]] = ...,
         compute_plan_key: typing.Text = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["category",b"category","compute_plan_key",b"compute_plan_key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["categories",b"categories","compute_plan_key",b"compute_plan_key"]) -> None: ...
 global___AlgoQueryFilter = AlgoQueryFilter
 
 class QueryAlgosParam(google.protobuf.message.Message):

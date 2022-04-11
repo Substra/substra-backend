@@ -46,6 +46,7 @@ class ComputeTaskQueryTests(APITestCase):
 
         self.metrics = assets.get_metrics()
         for metric in self.metrics:
+            metric = MetricRepSerializer.normalize_metrics_data(metric)
             serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
             serializer.is_valid(raise_exception=True)
             serializer.save()

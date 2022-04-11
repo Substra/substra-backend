@@ -87,7 +87,7 @@ class MetricQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_metric", return_value=assets.get_metric()):
+        with mock.patch.object(OrchestratorClient, "register_algo", return_value=assets.get_metric()):
             response = self.client.post(self.url, data, format="multipart", **extra)
             self.assertIsNotNone(response.json()["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -103,7 +103,7 @@ class MetricQueryTests(APITestCase):
         error.code = StatusCode.ALREADY_EXISTS
 
         # already exists
-        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=error):
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=error):
             response = self.client.post(self.url, self.get_default_metric_data(), format="multipart", **extra)
             self.assertIn("OE0006", response.json()["message"])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)

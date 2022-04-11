@@ -10,14 +10,6 @@ from substrapp import exceptions
 logger = structlog.get_logger(__name__)
 
 
-FILTER_QUERIES = {
-    "dataset": "query_datamanagers",
-    "algo": "query_algos",
-    "metric": "query_metrics",
-    "model": "query_models",
-}
-
-
 def get_filters(query_params):
     """
     Transform user request search param in filters.

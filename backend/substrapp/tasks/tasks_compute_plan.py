@@ -1,6 +1,7 @@
 import structlog
 from django.conf import settings
 
+import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
@@ -49,7 +50,14 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
 
     compute_plan_key = compute_plan["key"]
     with get_orchestrator_client(channel_name) as client:
-        algos = client.query_algos(compute_plan_key=compute_plan_key)
+        algos = client.query_algos(
+            categories=[
+                algo_pb2.AlgoCategory.ALGO_SIMPLE,
+                algo_pb2.AlgoCategory.ALGO_COMPOSITE,
+                algo_pb2.AlgoCategory.ALGO_AGGREGATE,
+            ],
+            compute_plan_key=compute_plan_key,
+        )
         test_tasks = client.query_tasks(category=computetask_pb2.TASK_TEST, compute_plan_key=compute_plan_key)
     algo_keys = [x["key"] for x in algos]
     metric_keys = [key for task in test_tasks for key in task["test"]["metric_keys"]]

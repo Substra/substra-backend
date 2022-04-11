@@ -14,6 +14,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.algo_pb2 as algo_pb2
 from localrep.models import Metric as MetricRep
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -271,6 +272,7 @@ class MetricViewTests(APITestCase):
             return {
                 "key": data["key"],
                 "name": data["name"],
+                "category": algo_pb2.AlgoCategory.ALGO_METRIC,
                 "owner": data["new_permissions"]["authorized_ids"][0],
                 "permissions": {
                     "process": data["new_permissions"],
@@ -279,7 +281,7 @@ class MetricViewTests(APITestCase):
                 "metadata": {},
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "description": data["description"],
-                "address": data["address"],
+                "algorithm": data["algorithm"],
             }
 
         metric_path = os.path.join(FIXTURE_PATH, "metrics.zip")
@@ -298,7 +300,7 @@ class MetricViewTests(APITestCase):
             "description": open(description_path, "rb"),
         }
 
-        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=mock_orc_response):
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=mock_orc_response):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -355,7 +357,7 @@ class MetricViewTests(APITestCase):
             "description": open(description_path, "rb"),
         }
 
-        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=MockOrcError()):
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
         self.assertEqual(MetricRep.objects.count(), len(self.expected_results))

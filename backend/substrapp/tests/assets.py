@@ -17,6 +17,7 @@ def get_metrics():
         {
             "key": "580d04d4-8dae-45c7-9be9-5beb4b0037d7",
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_global - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -38,7 +39,7 @@ def get_metrics():
                 "checksum": "a77883e089f18b740805d866bd4170e198815e04320d5810f11c09d4aaec274d",
                 "storage_address": "http://testserver/metric/580d04d4-8dae-45c7-9be9-5beb4b0037d7/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/580d04d4-8dae-45c7-9be9-5beb4b0037d7/metrics/"
             }
@@ -46,6 +47,7 @@ def get_metrics():
         {
             "key": "85c572a8-0a23-4fea-8f47-0576df3ecedb",
             "name": "b0e7169a8d5148559371586d844ecf0c_global - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -67,7 +69,7 @@ def get_metrics():
                 "checksum": "e2acc0c8b9460a75847aa187e90955dd16d57ab07d9738c151def4b5b44aa3ec",
                 "storage_address": "http://testserver/metric/85c572a8-0a23-4fea-8f47-0576df3ecedb/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/85c572a8-0a23-4fea-8f47-0576df3ecedb/metrics/"
             }
@@ -75,6 +77,7 @@ def get_metrics():
         {
             "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
             "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -96,7 +99,7 @@ def get_metrics():
                 "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
                 "storage_address": "http://testserver/metric/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
                 "storage_address": "http://testserver/metric/b4490c5e-2ae8-420a-9895-55904873d27a/metrics/"
             }
@@ -104,6 +107,7 @@ def get_metrics():
         {
             "key": "1db4c911-732a-4ee2-9fee-2ad08730edc2",
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_global - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -125,7 +129,7 @@ def get_metrics():
                 "checksum": "8245d903d3e29ae3ef3efe12b4558ceab144c1fa920f22cd199585c479d1f203",
                 "storage_address": "http://testserver/metric/1db4c911-732a-4ee2-9fee-2ad08730edc2/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "47de8cdf59f84c322f69f9db073fbe9bfbc17f23749b9711916426b65777b75a",
                 "storage_address": "http://testserver/metric/1db4c911-732a-4ee2-9fee-2ad08730edc2/metrics/"
             }
@@ -133,6 +137,7 @@ def get_metrics():
         {
             "key": "b6ac7389-bc92-47ae-8c20-856d5d58995d",
             "name": "63fb55be83d54e41bb7360c1f53630d5_test_traintuple_data_samples_relative_order - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -154,7 +159,7 @@ def get_metrics():
                 "checksum": "9782cbb244775b4015b091f83116e2e189694766ab49e34702d8efa412095820",
                 "storage_address": "http://testserver/metric/b6ac7389-bc92-47ae-8c20-856d5d58995d/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "c2900cb6bb04e20640fa1e0720365c3c9b509b4d05a0672cd35f118c0b3156a8",
                 "storage_address": "http://testserver/metric/b6ac7389-bc92-47ae-8c20-856d5d58995d/metrics/"
             }
@@ -162,6 +167,7 @@ def get_metrics():
         {
             "key": "79a749ec-32fe-483f-a3fe-4385c6467842",
             "name": "b0e7169a8d5148559371586d844ecf0c_global - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -183,7 +189,7 @@ def get_metrics():
                 "checksum": "f1ae963cc9a18ae84d220912299c45842c874bacd4f2b0a5f523c9bcc3c9d25e",
                 "storage_address": "http://testserver/metric/79a749ec-32fe-483f-a3fe-4385c6467842/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "47de8cdf59f84c322f69f9db073fbe9bfbc17f23749b9711916426b65777b75a",
                 "storage_address": "http://testserver/metric/79a749ec-32fe-483f-a3fe-4385c6467842/metrics/"
             }
@@ -191,6 +197,7 @@ def get_metrics():
         {
             "key": "95869305-106e-4fbd-9c58-8889df4d64c9",
             "name": "7782b659d4644558909a6d1671636c11_global - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -212,7 +219,7 @@ def get_metrics():
                 "checksum": "0408c739620d9e5643d9a71a4a886d6344fc7345af776f75005758adc2459e4d",
                 "storage_address": "http://testserver/metric/95869305-106e-4fbd-9c58-8889df4d64c9/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/95869305-106e-4fbd-9c58-8889df4d64c9/metrics/"
             }
@@ -220,6 +227,7 @@ def get_metrics():
         {
             "key": "13b1aa4b-7967-41b5-94fe-7d2faa3b8a8c",
             "name": "7782b659d4644558909a6d1671636c11_global - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -241,7 +249,7 @@ def get_metrics():
                 "checksum": "2da5968b0f3ca9185b4a7c6367767718fedc0a8bf5f294b4cdf6ad0d442d21bd",
                 "storage_address": "http://testserver/metric/13b1aa4b-7967-41b5-94fe-7d2faa3b8a8c/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "47de8cdf59f84c322f69f9db073fbe9bfbc17f23749b9711916426b65777b75a",
                 "storage_address": "http://testserver/metric/13b1aa4b-7967-41b5-94fe-7d2faa3b8a8c/metrics/"
             }
@@ -249,6 +257,7 @@ def get_metrics():
         {
             "key": "6a9750f5-76d2-4e6b-839f-eabc0611427c",
             "name": "a0e8bf2ad9514539b5ff6290985f088a_global - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -270,7 +279,7 @@ def get_metrics():
                 "checksum": "08e24e439d68ab5f82da695600c798c9cdde57454731f3871692140f54fa0fbb",
                 "storage_address": "http://testserver/metric/6a9750f5-76d2-4e6b-839f-eabc0611427c/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/6a9750f5-76d2-4e6b-839f-eabc0611427c/metrics/"
             }
@@ -278,6 +287,7 @@ def get_metrics():
         {
             "key": "aa86e900-9268-481b-acdd-07dfe01f21d3",
             "name": "a0e8bf2ad9514539b5ff6290985f088a_global - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -299,7 +309,7 @@ def get_metrics():
                 "checksum": "d9b87dc7f27075c16264b76286cff509bb028432ca80e7e260b227e26db8b1f1",
                 "storage_address": "http://testserver/metric/aa86e900-9268-481b-acdd-07dfe01f21d3/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "47de8cdf59f84c322f69f9db073fbe9bfbc17f23749b9711916426b65777b75a",
                 "storage_address": "http://testserver/metric/aa86e900-9268-481b-acdd-07dfe01f21d3/metrics/"
             }
@@ -307,6 +317,7 @@ def get_metrics():
         {
             "key": "e3986b54-27d7-4e15-ad1f-30f08fc414ee",
             "name": "63fb55be83d54e41bb7360c1f53630d5_global - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -328,7 +339,7 @@ def get_metrics():
                 "checksum": "958d91b5511921bdca18934bb7c706d0dbd4ac794307dd7e49f1ed61ac8cb1d7",
                 "storage_address": "http://testserver/metric/e3986b54-27d7-4e15-ad1f-30f08fc414ee/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/e3986b54-27d7-4e15-ad1f-30f08fc414ee/metrics/"
             }
@@ -336,6 +347,7 @@ def get_metrics():
         {
             "key": "024cda63-7492-47fa-9dc4-1b6c7062f9d1",
             "name": "63fb55be83d54e41bb7360c1f53630d5_global - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -357,7 +369,7 @@ def get_metrics():
                 "checksum": "65e4858123af91f5693479853389d44df5ca6a66e595a2af7fc62b1d9c4139d1",
                 "storage_address": "http://testserver/metric/024cda63-7492-47fa-9dc4-1b6c7062f9d1/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "47de8cdf59f84c322f69f9db073fbe9bfbc17f23749b9711916426b65777b75a",
                 "storage_address": "http://testserver/metric/024cda63-7492-47fa-9dc4-1b6c7062f9d1/metrics/"
             }
@@ -365,6 +377,7 @@ def get_metrics():
         {
             "key": "c7f1c5d1-19fa-46d7-b381-f5f1a7b1645f",
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_add_metric - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -386,7 +399,7 @@ def get_metrics():
                 "checksum": "27517ac61a82dae6b373a20224d09c444119cd5a7b4a5f291f22dbdb6b743113",
                 "storage_address": "http://testserver/metric/c7f1c5d1-19fa-46d7-b381-f5f1a7b1645f/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/c7f1c5d1-19fa-46d7-b381-f5f1a7b1645f/metrics/"
             }
@@ -396,6 +409,7 @@ def get_metrics():
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_asset_with_metadata[metadata0-metadat...13d5042df7f24ecfa01c",
             "owner": "MyOrg1MSP",
             "metadata": {
+                "category": "ALGO_METRIC",
                 "foo": "bar"
             },
             "permissions": {
@@ -417,7 +431,7 @@ def get_metrics():
                 "checksum": "d6dfecefa762664a312334f48f9b9d92b786a09100231ef87ceac61c94f0aa0f",
                 "storage_address": "http://testserver/metric/df82fb26-1397-4883-b54b-7e2c7d691071/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/df82fb26-1397-4883-b54b-7e2c7d691071/metrics/"
             }
@@ -425,6 +439,7 @@ def get_metrics():
         {
             "key": "f3d26d7e-e957-4412-9b1c-581c13aa189f",
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_asset_with_metadata[None-metadata_out...13d5042df7f24ecfa01c",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -446,7 +461,7 @@ def get_metrics():
                 "checksum": "762c9219987930177703bc71e9b8c1ffcdb1a3ceab3a8f34bf050831667d39b1",
                 "storage_address": "http://testserver/metric/f3d26d7e-e957-4412-9b1c-581c13aa189f/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/f3d26d7e-e957-4412-9b1c-581c13aa189f/metrics/"
             }
@@ -454,6 +469,7 @@ def get_metrics():
         {
             "key": "6a7bcbb4-78f3-4d48-8b7d-2851983cf8f1",
             "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_asset_with_metadata[metadata2-metadat...13d5042df7f24ecfa01c",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -475,7 +491,7 @@ def get_metrics():
                 "checksum": "fcdc71ed32c412b9cc4d95bae063c1bddd72ba01b34681ee76cd0991531408d4",
                 "storage_address": "http://testserver/metric/6a7bcbb4-78f3-4d48-8b7d-2851983cf8f1/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "2873791633e70cb822a46c68a9611df34889fcf1cf317bdc05907e107c6f6c4f",
                 "storage_address": "http://testserver/metric/6a7bcbb4-78f3-4d48-8b7d-2851983cf8f1/metrics/"
             }
@@ -483,6 +499,7 @@ def get_metrics():
         {
             "key": "1710cd9c-d34f-4fbf-822e-58be9c0a92b2",
             "name": "7782b659d4644558909a6d1671636c11_test_execution_debug - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -504,7 +521,7 @@ def get_metrics():
                 "checksum": "77ef974020b39954f873a8cac8c938e3ecba3f8e1049e168ee5ab60ca47c2b43",
                 "storage_address": "http://testserver/metric/1710cd9c-d34f-4fbf-822e-58be9c0a92b2/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "ab2a45a85b2c25cb09ff85ce6899b826049e1da7cee31ae2033f5cabc2c37f11",
                 "storage_address": "http://testserver/metric/1710cd9c-d34f-4fbf-822e-58be9c0a92b2/metrics/"
             }
@@ -512,6 +529,7 @@ def get_metrics():
         {
             "key": "3fd33f3e-1071-4ac9-9551-0cca91695e77",
             "name": "7782b659d4644558909a6d1671636c11_test_debug_compute_plan_aggregate_composite - Metric 0",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg1MSP",
             "metadata": {},
             "permissions": {
@@ -533,7 +551,7 @@ def get_metrics():
                 "checksum": "13a57263d9c7eb41c83dc754d21ced689838dd0d5f4c5ec9a6f41ed91faa2a6f",
                 "storage_address": "http://testserver/metric/3fd33f3e-1071-4ac9-9551-0cca91695e77/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "ab2a45a85b2c25cb09ff85ce6899b826049e1da7cee31ae2033f5cabc2c37f11",
                 "storage_address": "http://testserver/metric/3fd33f3e-1071-4ac9-9551-0cca91695e77/metrics/"
             }
@@ -541,6 +559,7 @@ def get_metrics():
         {
             "key": "2d406537-6893-47af-99ac-be507a25413a",
             "name": "7782b659d4644558909a6d1671636c11_test_debug_compute_plan_aggregate_composite - Metric 1",
+            "category": "ALGO_METRIC",
             "owner": "MyOrg2MSP",
             "metadata": {},
             "permissions": {
@@ -562,7 +581,7 @@ def get_metrics():
                 "checksum": "1a3270a36637653029262671acd63bf645479011bac7680930e9a98375a20d80",
                 "storage_address": "http://testserver/metric/2d406537-6893-47af-99ac-be507a25413a/description/"
             },
-            "address": {
+            "algorithm": {
                 "checksum": "57e5fa23058671aa57df3e694bf67cfadd527ff16a1ab2cb1aebb3a3fc2c992d",
                 "storage_address": "http://testserver/metric/2d406537-6893-47af-99ac-be507a25413a/metrics/"
             }

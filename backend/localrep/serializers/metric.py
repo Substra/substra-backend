@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.urls import reverse
 from rest_framework import serializers
 
@@ -39,3 +41,10 @@ class MetricSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 reverse("substrapp:metric-metrics", args=[res["key"]])
             )
         return res
+
+    @staticmethod
+    def normalize_metrics_data(data: Dict) -> Dict:
+        # The orchestrator returns a "algorithm" field.
+        # Localrep expects an "address" field.
+        data["address"] = data.pop("algorithm")
+        return data

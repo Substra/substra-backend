@@ -16,7 +16,6 @@ import orchestrator.dataset_pb2 as dataset_pb2
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 import orchestrator.info_pb2 as info_pb2
-import orchestrator.metric_pb2 as metric_pb2
 import orchestrator.model_pb2 as model_pb2
 import orchestrator.node_pb2 as node_pb2
 import orchestrator.performance_pb2 as performance_pb2
@@ -30,7 +29,6 @@ from orchestrator.error import OrcError
 from orchestrator.event_pb2_grpc import EventServiceStub
 from orchestrator.failure_report_pb2_grpc import FailureReportServiceStub
 from orchestrator.info_pb2_grpc import InfoServiceStub
-from orchestrator.metric_pb2_grpc import MetricServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.node_pb2_grpc import NodeServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
@@ -150,7 +148,6 @@ class OrchestratorClient:
 
         self._node_client = NodeServiceStub(self._channel)
         self._algo_client = AlgoServiceStub(self._channel)
-        self._metric_client = MetricServiceStub(self._channel)
         self._datasample_client = DataSampleServiceStub(self._channel)
         self._datamanager_client = DataManagerServiceStub(self._channel)
         self._dataset_client = DatasetServiceStub(self._channel)
@@ -194,8 +191,8 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_algos(self, category=algo_pb2.ALGO_UNKNOWN, compute_plan_key=None):
-        algo_filter = algo_pb2.AlgoQueryFilter(category=category, compute_plan_key=compute_plan_key)
+    def query_algos(self, categories=None, compute_plan_key=None):
+        algo_filter = algo_pb2.AlgoQueryFilter(categories=categories, compute_plan_key=compute_plan_key)
         res = []
         page_token = ""  # nosec
         while True:
@@ -208,33 +205,6 @@ class OrchestratorClient:
             page_token = data.get("next_page_token")
             res.extend(algos)
             if page_token == "" or not algos:  # nosec
-                break
-        return res
-
-    @grpc_retry
-    def register_metric(self, args):
-        data = self._metric_client.RegisterMetric(metric_pb2.NewMetric(**args), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def query_metric(self, key):
-        data = self._metric_client.GetMetric(metric_pb2.GetMetricParam(key=key), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def query_metrics(self):
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._metric_client.QueryMetrics(
-                metric_pb2.QueryMetricsParam(page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            metrics = data.get("metrics", [])
-            page_token = data.get("next_page_token")
-            res.extend(metrics)
-            if page_token == "" or not metrics:  # nosec
                 break
         return res
 

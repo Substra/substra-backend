@@ -17,7 +17,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nalgo.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\x84\x03\n\x04\x41lgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12,\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x1a.orchestrator.AlgoCategory\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x08metadata\x18\x10 \x03(\x0b\x32 .orchestrator.Algo.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcf\x02\n\x07NewAlgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12,\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x1a.orchestrator.AlgoCategory\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x35\n\x08metadata\x18\x11 \x03(\x0b\x32#.orchestrator.NewAlgo.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1b\n\x0cGetAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"P\n\x12QueryAlgosResponse\x12!\n\x05\x41lgos\x18\x01 \x03(\x0b\x32\x12.orchestrator.Algo\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"Y\n\x0f\x41lgoQueryFilter\x12,\n\x08\x63\x61tegory\x18\x01 \x01(\x0e\x32\x1a.orchestrator.AlgoCategory\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"g\n\x0fQueryAlgosParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.AlgoQueryFilter*Y\n\x0c\x41lgoCategory\x12\x10\n\x0c\x41LGO_UNKNOWN\x10\x00\x12\x0f\n\x0b\x41LGO_SIMPLE\x10\x01\x12\x12\n\x0e\x41LGO_AGGREGATE\x10\x02\x12\x12\n\x0e\x41LGO_COMPOSITE\x10\x03\x32\xd2\x01\n\x0b\x41lgoService\x12\x39\n\x0cRegisterAlgo\x12\x15.orchestrator.NewAlgo\x1a\x12.orchestrator.Algo\x12\x39\n\x07GetAlgo\x12\x1a.orchestrator.GetAlgoParam\x1a\x12.orchestrator.Algo\x12M\n\nQueryAlgos\x12\x1d.orchestrator.QueryAlgosParam\x1a .orchestrator.QueryAlgosResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nalgo.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\x84\x03\n\x04\x41lgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12,\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x1a.orchestrator.AlgoCategory\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x08metadata\x18\x10 \x03(\x0b\x32 .orchestrator.Algo.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcf\x02\n\x07NewAlgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12,\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32\x1a.orchestrator.AlgoCategory\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x35\n\x08metadata\x18\x11 \x03(\x0b\x32#.orchestrator.NewAlgo.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1b\n\x0cGetAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"P\n\x12QueryAlgosResponse\x12!\n\x05\x41lgos\x18\x01 \x03(\x0b\x32\x12.orchestrator.Algo\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"[\n\x0f\x41lgoQueryFilter\x12.\n\ncategories\x18\x01 \x03(\x0e\x32\x1a.orchestrator.AlgoCategory\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"g\n\x0fQueryAlgosParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.AlgoQueryFilter*j\n\x0c\x41lgoCategory\x12\x10\n\x0c\x41LGO_UNKNOWN\x10\x00\x12\x0f\n\x0b\x41LGO_SIMPLE\x10\x01\x12\x12\n\x0e\x41LGO_AGGREGATE\x10\x02\x12\x12\n\x0e\x41LGO_COMPOSITE\x10\x03\x12\x0f\n\x0b\x41LGO_METRIC\x10\x04\x32\xd2\x01\n\x0b\x41lgoService\x12\x39\n\x0cRegisterAlgo\x12\x15.orchestrator.NewAlgo\x1a\x12.orchestrator.Algo\x12\x39\n\x07GetAlgo\x12\x1a.orchestrator.GetAlgoParam\x1a\x12.orchestrator.Algo\x12M\n\nQueryAlgos\x12\x1d.orchestrator.QueryAlgosParam\x1a .orchestrator.QueryAlgosResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 _ALGOCATEGORY = DESCRIPTOR.enum_types_by_name['AlgoCategory']
 AlgoCategory = enum_type_wrapper.EnumTypeWrapper(_ALGOCATEGORY)
@@ -25,6 +25,7 @@ ALGO_UNKNOWN = 0
 ALGO_SIMPLE = 1
 ALGO_AGGREGATE = 2
 ALGO_COMPOSITE = 3
+ALGO_METRIC = 4
 
 
 _ALGO = DESCRIPTOR.message_types_by_name['Algo']
@@ -102,8 +103,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _ALGO_METADATAENTRY._serialized_options = b'8\001'
   _NEWALGO_METADATAENTRY._options = None
   _NEWALGO_METADATAENTRY._serialized_options = b'8\001'
-  _ALGOCATEGORY._serialized_start=1111
-  _ALGOCATEGORY._serialized_end=1200
+  _ALGOCATEGORY._serialized_start=1113
+  _ALGOCATEGORY._serialized_end=1219
   _ALGO._serialized_start=76
   _ALGO._serialized_end=464
   _ALGO_METADATAENTRY._serialized_start=417
@@ -117,9 +118,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _QUERYALGOSRESPONSE._serialized_start=833
   _QUERYALGOSRESPONSE._serialized_end=913
   _ALGOQUERYFILTER._serialized_start=915
-  _ALGOQUERYFILTER._serialized_end=1004
-  _QUERYALGOSPARAM._serialized_start=1006
-  _QUERYALGOSPARAM._serialized_end=1109
-  _ALGOSERVICE._serialized_start=1203
-  _ALGOSERVICE._serialized_end=1413
+  _ALGOQUERYFILTER._serialized_end=1006
+  _QUERYALGOSPARAM._serialized_start=1008
+  _QUERYALGOSPARAM._serialized_end=1111
+  _ALGOSERVICE._serialized_start=1222
+  _ALGOSERVICE._serialized_end=1432
 # @@protoc_insertion_point(module_scope)

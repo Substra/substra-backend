@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
+import orchestrator.algo_pb2 as algo_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Metric as MetricRep
@@ -33,11 +34,12 @@ def _register_in_orchestrator(request, instance):
     orc_metric = {
         "key": str(instance.key),
         "name": request.data.get("name"),
+        "category": algo_pb2.AlgoCategory.ALGO_METRIC,
         "description": {
             "checksum": get_hash(instance.description),
             "storage_address": current_site + reverse("substrapp:metric-description", args=[instance.key]),
         },
-        "address": {
+        "algorithm": {
             "checksum": get_hash(instance.address),
             "storage_address": current_site + reverse("substrapp:metric-metrics", args=[instance.key]),
         },
@@ -49,7 +51,7 @@ def _register_in_orchestrator(request, instance):
     }
 
     with get_orchestrator_client(get_channel_name(request)) as client:
-        return client.register_metric(orc_metric)
+        return client.register_algo(orc_metric)
 
 
 def create(request, get_success_headers):
@@ -87,6 +89,7 @@ def create(request, get_success_headers):
         raise
 
     # Step3: save metadata in local database
+    localrep_data = MetricRepSerializer.normalize_metrics_data(localrep_data)
     localrep_data["channel"] = get_channel_name(request)
     localrep_serializer = MetricRepSerializer(data=localrep_data)
     try:

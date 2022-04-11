@@ -93,7 +93,7 @@ class Context:
             algo = client.query_algo(task["algo"]["key"])
 
             if task_category == computetask_pb2.TASK_TEST:
-                metrics = {metric_key: client.query_metric(metric_key) for metric_key in task_data["metric_keys"]}
+                metrics = {metric_key: client.query_algo(metric_key) for metric_key in task_data["metric_keys"]}
 
             if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])

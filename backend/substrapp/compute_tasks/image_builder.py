@@ -1,6 +1,7 @@
 import json
 import os
 from tempfile import TemporaryDirectory
+from typing import Dict
 from typing import List
 
 import kubernetes
@@ -41,35 +42,18 @@ MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
 
 def build_images(ctx: Context) -> None:
     # Algo
-    _build_image_if_missing(
-        ctx,
-        ctx.algo_image_tag,
-        ctx.algo_key,
-        ctx.algo["algorithm"]["storage_address"],
-        ctx.algo["owner"],
-        ctx.algo["algorithm"]["checksum"],
-    )
+    _build_image_if_missing(ctx, ctx.algo_image_tag, ctx.algo_key, ctx.algo)
 
     # Metrics
     if ctx.task_category == computetask_pb2.TASK_TEST:
         for metric_key, metric_image_tag in ctx.metrics_image_tags.items():
-            _build_image_if_missing(
-                ctx,
-                metric_image_tag,
-                metric_key,
-                ctx.metrics[metric_key]["address"]["storage_address"],
-                ctx.metrics[metric_key]["owner"],
-                ctx.metrics[metric_key]["address"]["checksum"],
-            )
+            _build_image_if_missing(ctx, metric_image_tag, metric_key, ctx.metrics[metric_key])
 
 
-def _build_image_if_missing(
-    ctx: Context, image_tag: str, asset_key: str, asset_storage_address: str, asset_owner: str, asset_checksum: str
-) -> None:
+def _build_image_if_missing(ctx: Context, image_tag: str, asset_key: str, algo: Dict) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
-
     with lock_resource("image-build", image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
         if container_image_exists(image_tag):
             logger.info("Reusing existing image", image=image_tag)
@@ -78,9 +62,9 @@ def _build_image_if_missing(
                 ctx,
                 image_tag,
                 asset_key,
-                asset_storage_address,
-                asset_owner,
-                asset_checksum,
+                algo["algorithm"]["storage_address"],
+                algo["owner"],
+                algo["algorithm"]["checksum"],
             )
 
 

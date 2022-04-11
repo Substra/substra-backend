@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 
+import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -43,7 +44,10 @@ def _on_create_algo_event(event: dict, client: orc_client.OrchestratorClient) ->
     logger.debug("Syncing algo create", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_algo(event["asset_key"])
-    _create_algo(event["channel"], data)
+    if algo_pb2.AlgoCategory.Value(data["category"]) == algo_pb2.AlgoCategory.ALGO_METRIC:
+        _create_metric(event["channel"], data)
+    else:
+        _create_algo(event["channel"], data)
 
 
 def _create_algo(channel: str, data: dict) -> bool:
@@ -249,17 +253,10 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
     data_sample.save()
 
 
-def _on_create_metric_event(event: dict, client: orc_client.OrchestratorClient) -> None:
-    """Process create metric event to update local database."""
-    logger.debug("Syncing metric create", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_metric(event["asset_key"])
-    _create_metric(event["channel"], data)
-
-
 def _create_metric(channel: str, data: dict) -> bool:
     from localrep.serializers import MetricSerializer
 
+    data = MetricSerializer.normalize_metrics_data(data)
     data["channel"] = channel
     serializer = MetricSerializer(data=data)
     try:
@@ -335,9 +332,6 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_datasample_event,
         event_pb2.EVENT_ASSET_UPDATED: _on_update_datasample_event,
     },
-    common_pb2.ASSET_METRIC: {
-        event_pb2.EVENT_ASSET_CREATED: _on_create_metric_event,
-    },
     common_pb2.ASSET_MODEL: {
         event_pb2.EVENT_ASSET_DISABLED: _on_disable_model_event,
     },
@@ -365,7 +359,13 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
 
 def resync_algos(client: orc_client.OrchestratorClient):
     logger.info("Resyncing algos")
-    algos = client.query_algos()  # TODO: Add filter on last_modification_date
+    algos = client.query_algos(
+        categories=[
+            algo_pb2.AlgoCategory.ALGO_SIMPLE,
+            algo_pb2.AlgoCategory.ALGO_COMPOSITE,
+            algo_pb2.AlgoCategory.ALGO_AGGREGATE,
+        ]
+    )  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
     nb_skipped_assets = 0
 
@@ -383,7 +383,8 @@ def resync_algos(client: orc_client.OrchestratorClient):
 
 def resync_metrics(client: orc_client.OrchestratorClient):
     logger.info("Resyncing metrics")
-    metrics = client.query_metrics()  # TODO: Add filter on last_modification_date
+    # TODO: Add filter on last_modification_date
+    metrics = client.query_algos(categories=[algo_pb2.AlgoCategory.ALGO_METRIC])
     nb_new_assets = 0
     nb_skipped_assets = 0
 

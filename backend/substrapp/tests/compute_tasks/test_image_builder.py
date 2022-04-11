@@ -77,12 +77,12 @@ class ImageBuilderTests(APITestCase):
                 metric1_key: {
                     "key": metric1_key,
                     "owner": metric1_owner,
-                    "address": {"storage_address": metric1_storage_address, "checksum": metric1_checksum},
+                    "algorithm": {"storage_address": metric1_storage_address, "checksum": metric1_checksum},
                 },
                 metric2_key: {
                     "key": metric1_key,
                     "owner": metric2_owner,
-                    "address": {"storage_address": metric2_storage_address, "checksum": metric2_checksum},
+                    "algorithm": {"storage_address": metric2_storage_address, "checksum": metric2_checksum},
                 },
             }
             metrics_image_tags = {
