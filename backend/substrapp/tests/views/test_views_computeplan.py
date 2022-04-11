@@ -17,7 +17,7 @@ import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import ComputePlan as ComputePlanRep
 from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
-from substrapp.views.computeplan import parse_composite_traintuple
+from substrapp.views.computeplan import extract_tasks_data
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -447,26 +447,27 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.post(url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_parse_composite_traintuples(self):
+    def test_extract_tasks_data(self):
         dummy_key = str(uuid.uuid4())
         dummy_key2 = str(uuid.uuid4())
 
-        composite = [
-            {
-                "composite_traintuple_id": dummy_key,
-                "in_head_model_id": dummy_key,
-                "in_trunk_model_id": dummy_key2,
-                "algo_key": dummy_key,
-                "metadata": {"simple_metadata": "data"},
-                "data_manager_key": dummy_key,
-                "train_data_sample_keys": [dummy_key, dummy_key],
-                "out_trunk_model_permissions": {"public": False, "authorized_ids": ["test-org"]},
-            }
-        ]
+        composite = {
+            "composite_traintuples": [
+                {
+                    "composite_traintuple_id": dummy_key,
+                    "in_head_model_id": dummy_key,
+                    "in_trunk_model_id": dummy_key2,
+                    "algo_key": dummy_key,
+                    "metadata": {"simple_metadata": "data"},
+                    "data_manager_key": dummy_key,
+                    "train_data_sample_keys": [dummy_key, dummy_key],
+                    "out_trunk_model_permissions": {"public": False, "authorized_ids": ["test-org"]},
+                }
+            ]
+        }
 
-        tasks = parse_composite_traintuple(None, composite, dummy_key)
-
-        self.assertEqual(len(tasks[dummy_key]["parent_task_keys"]), 2)
+        tasks = extract_tasks_data(composite, dummy_key)
+        self.assertEqual(len(tasks[0]["parent_task_keys"]), 2)
 
     @internal_server_error_on_exception()
     @mock.patch(

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Set log level to DEBUG in dev (#952)
+- Remove Orchestrator{Aggregate, CompositeTrain, Test, Train}TaskSerializer and use orchestrator client directly (#920)
 
 ### Fixed
 - Handle disabled model in resync by making address not mandatory (#948)

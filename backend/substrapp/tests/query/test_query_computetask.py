@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from django.test import override_settings
 from django.urls import reverse
+from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -17,6 +18,7 @@ from localrep.serializers import DataManagerSerializer as DataManagerRepSerializ
 from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 
 from .. import assets
 from ..common import AuthenticatedClient
@@ -114,6 +116,10 @@ class TrainTaskQueryTests(ComputeTaskQueryTests):
                     self.assertEqual(mregister_compute_plan.call_count, 1)
 
     def test_add_traintask_ko(self):
+        class MockOrcError(OrcError):
+            code = StatusCode.INVALID_ARGUMENT
+            details = "Failed"
+
         train_task = assets.get_train_task()
         train_task = self.clean_input_data(train_task)
 
@@ -122,10 +128,11 @@ class TrainTaskQueryTests(ComputeTaskQueryTests):
             "train_data_sample_keys": train_task["train"]["data_sample_keys"],
         }
 
-        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
-            response = self.client.post(self.url, data, format="json", **self.extra)
-            self.assertIn("This field may not be null.", response.json()["algo_key"])
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError):
+            with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
+                response = self.client.post(self.url, data, format="json", **self.extra)
+                self.assertEqual("Failed", response.json()["message"])
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 @override_settings(
@@ -222,6 +229,10 @@ class CompositeTaskQueryTests(ComputeTaskQueryTests):
                     self.assertEqual(mregister_compute_plan.call_count, 1)
 
     def test_add_compositetraintuple_ko(self):
+        class MockOrcError(OrcError):
+            code = StatusCode.INVALID_ARGUMENT
+            details = "Failed"
+
         composite_task = assets.get_composite_task()
         composite_task = self.clean_input_data(composite_task)
 
@@ -230,9 +241,8 @@ class CompositeTaskQueryTests(ComputeTaskQueryTests):
             "data_manager_key": composite_task["composite"]["data_manager_key"],
             "train_data_sample_keys": composite_task["composite"]["data_sample_keys"],
         }
-
-        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
-            response = self.client.post(self.url, data, format="multipart", **self.extra)
-            print(response.json())
-            self.assertIn("This field may not be null.", response.json()["algo_key"])
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError):
+            with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
+                response = self.client.post(self.url, data, format="multipart", **self.extra)
+                self.assertEqual("Failed", response.json()["message"])
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

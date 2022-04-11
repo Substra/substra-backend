@@ -14,17 +14,11 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.serializers import OrchestratorAggregateTaskSerializer
-from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
-from substrapp.serializers import OrchestratorTestTaskSerializer
-from substrapp.serializers import OrchestratorTrainTaskSerializer
+from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
-from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
-from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -43,135 +37,48 @@ def register_compute_plan_in_orchestrator(data, channel_name):
         return client.register_compute_plan(orc_cp)
 
 
-def parse_traintuples(request, traintuples, compute_plan_key):
-    tasks = {}
-    for traintuple in traintuples:
-        data = {
-            "key": traintuple.get("traintuple_id"),
-            "category": TASK_CATEGORY["traintuple"],
-            "algo_key": traintuple.get("algo_key"),
-            "compute_plan_key": compute_plan_key,
-            "metadata": traintuple.get("metadata"),
-            "parent_task_keys": traintuple.get("in_models_ids", []),
-            "tag": traintuple.get("tag", ""),
-            "data_manager_key": traintuple.get("data_manager_key"),
-            "data_sample_keys": traintuple.get("train_data_sample_keys"),
-        }
-        orchestrator_serializer = OrchestratorTrainTaskSerializer(data=data, context={"request": request})
+def extract_tasks_data(data, compute_plan_key):
 
-        try:
-            orchestrator_serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
+    task_pairs = [
+        ("traintuple", "traintuples"),
+        ("composite_traintuple", "composite_traintuples"),
+        ("aggregatetuple", "aggregatetuples"),
+        ("testtuple", "testtuples"),
+    ]
 
-        task_data = orchestrator_serializer.get_args(orchestrator_serializer.validated_data)
+    extracted_tasks = {
+        "traintuple": {},
+        "composite_traintuple": {},
+        "aggregatetuple": {},
+        "testtuple": {},
+    }
 
-        tasks[task_data["key"]] = task_data
-    return tasks
+    for task_type, task_data_attribute in task_pairs:
+        for task in data.get(task_data_attribute, []):
 
-
-def parse_composite_traintuple(request, composites, compute_plan_key):
-    tasks = {}
-    for composite in composites:
-        parent_task_keys = [composite.get("in_head_model_id"), composite.get("in_trunk_model_id")]
-        data = {
-            "key": composite.get("composite_traintuple_id"),
-            "category": TASK_CATEGORY["composite_traintuple"],
-            "algo_key": composite.get("algo_key"),
-            "compute_plan_key": compute_plan_key,
-            "metadata": composite.get("metadata"),
-            "parent_task_keys": [item for item in parent_task_keys if item],
-            "tag": composite.get("tag", ""),
-            "data_manager_key": composite.get("data_manager_key"),
-            "data_sample_keys": composite.get("train_data_sample_keys"),
-            "trunk_permissions": composite.get("out_trunk_model_permissions"),
-        }
-
-        orchestrator_serializer = OrchestratorCompositeTrainTaskSerializer(data=data, context={"request": request})
-
-        try:
-            orchestrator_serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
-
-        task_data = orchestrator_serializer.get_args(orchestrator_serializer.validated_data)
-        logger.debug(task_data)
-        tasks[task_data["key"]] = task_data
-    return tasks
-
-
-def parse_aggregate_traintuple(request, aggregates, compute_plan_key):
-    tasks = {}
-    for aggregate in aggregates:
-        data = {
-            "key": aggregate.get("aggregatetuple_id"),
-            "category": TASK_CATEGORY["aggregatetuple"],
-            "algo_key": aggregate.get("algo_key"),
-            "compute_plan_key": compute_plan_key,
-            "metadata": aggregate.get("metadata"),
-            "parent_task_keys": aggregate.get("in_models_ids", []),
-            "tag": aggregate.get("tag", ""),
-            "worker": aggregate.get("worker"),
-        }
-
-        orchestrator_serializer = OrchestratorAggregateTaskSerializer(data=data, context={"request": request})
-
-        try:
-            orchestrator_serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
-
-        task_data = orchestrator_serializer.get_args(orchestrator_serializer.validated_data)
-
-        tasks[task_data["key"]] = task_data
-    return tasks
-
-
-def parse_testtuple(request, testtuples, compute_plan_key, compute_tasks):
-    tasks = {}
-    for testtuple in testtuples:
-        data = {
-            "key": uuid.uuid4(),
-            "category": TASK_CATEGORY["testtuple"],
-            "compute_plan_key": compute_plan_key,
-            "metadata": testtuple.get("metadata"),
-            "tag": testtuple.get("tag", ""),
-            "metric_keys": testtuple.get("metric_keys"),
-            "data_manager_key": testtuple.get("data_manager_key"),
-            "data_sample_keys": testtuple.get("test_data_sample_keys"),
-            "parent_task_keys": [],
-        }
-
-        if testtuple.get("traintuple_id"):
-            # This conversion is required to accept hex UUID format for the traintuple_id
-            traintuple_id = to_string_uuid(testtuple.get("traintuple_id"))
-            data["parent_task_keys"].append(traintuple_id)
-            algo_key = compute_tasks.get(traintuple_id, {}).get("algo_key")
-            if algo_key:
-                data["algo_key"] = algo_key
+            if task_type == "testtuple":
+                tasks_cache = {
+                    **extracted_tasks["traintuple"],
+                    **extracted_tasks["composite_traintuple"],
+                    **extracted_tasks["aggregatetuple"],
+                }
             else:
-                # The training task might already be registered and not part of the current batch
-                with get_orchestrator_client(get_channel_name(request)) as client:
-                    task = client.query_task(traintuple_id)
-                    data["algo_key"] = task["algo"]["key"]
-        else:
-            raise ValidationExceptionError(
-                data=[{"traintuple_id": ["This field may not be null."]}],
-                key=data["key"],
-                st=status.HTTP_400_BAD_REQUEST,
+                tasks_cache = None
+
+            task_data = build_computetask_data(
+                {**task, **{"compute_plan_key": compute_plan_key}},
+                task_type,
+                tasks_cache=tasks_cache,
+                from_compute_plan=True,
             )
+            extracted_tasks[task_type][task_data["key"]] = task_data
 
-        orchestrator_serializer = OrchestratorTestTaskSerializer(data=data, context={"request": request})
-
-        try:
-            orchestrator_serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
-
-        task_data = orchestrator_serializer.get_args(orchestrator_serializer.validated_data)
-
-        tasks[task_data["key"]] = task_data
-    return tasks
+    return (
+        list(extracted_tasks["traintuple"].values())
+        + list(extracted_tasks["composite_traintuple"].values())
+        + list(extracted_tasks["aggregatetuple"].values())
+        + list(extracted_tasks["testtuple"].values())
+    )
 
 
 def create(request, get_success_headers):
@@ -188,27 +95,8 @@ def create(request, get_success_headers):
         "metadata": request.data.get("metadata"),
         "delete_intermediary_models": request.data.get("clean_models", False),
     }
-    # To handle later
-    traintuples = request.data.get("traintuples", [])
-    validated_traintuples = parse_traintuples(request, traintuples, compute_plan_data["key"])
-    composites = request.data.get("composite_traintuples", [])
-    validated_composites = parse_composite_traintuple(request, composites, compute_plan_data["key"])
-    aggregatetuples = request.data.get("aggregatetuples", [])
-    validated_aggregates = parse_aggregate_traintuple(request, aggregatetuples, compute_plan_data["key"])
-    testtuples = request.data.get("testtuples", [])
-    validated_testtuples = parse_testtuple(
-        request,
-        testtuples,
-        compute_plan_data["key"],
-        {**validated_traintuples, **validated_composites, **validated_aggregates},
-    )
 
-    tasks = (
-        list(validated_traintuples.values())
-        + list(validated_composites.values())
-        + list(validated_aggregates.values())
-        + list(validated_testtuples.values())
-    )
+    tasks = extract_tasks_data(request.data, str(compute_plan_data["key"]))
 
     localrep_data = register_compute_plan_in_orchestrator(compute_plan_data, get_channel_name(request))
 
@@ -300,26 +188,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         key = self.kwargs[lookup_url_kwarg]
         validated_key = validate_key(key)
 
-        traintuples = request.data.get("traintuples", [])
-        validated_traintuples = parse_traintuples(request, traintuples, validated_key)
-        composites = request.data.get("composite_traintuples", [])
-        validated_composites = parse_composite_traintuple(request, composites, validated_key)
-        aggregatetuples = request.data.get("aggregatetuples", [])
-        validated_aggregates = parse_aggregate_traintuple(request, aggregatetuples, validated_key)
-        testtuples = request.data.get("testtuples", [])
-        validated_testtuples = parse_testtuple(
-            request,
-            testtuples,
-            validated_key,
-            {**validated_traintuples, **validated_composites, **validated_aggregates},
-        )
-
-        tasks = (
-            list(validated_traintuples.values())
-            + list(validated_composites.values())
-            + list(validated_aggregates.values())
-            + list(validated_testtuples.values())
-        )
+        tasks = extract_tasks_data(request.data, str(validated_key))
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             registered_tasks_data = client.register_tasks({"tasks": tasks})

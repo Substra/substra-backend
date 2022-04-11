@@ -13,11 +13,7 @@ from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import ComputeTaskWithRelationshipsSerializer as ComputeTaskWithRelationshipsRepSerializer
-from substrapp.serializers import OrchestratorAggregateTaskSerializer
-from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
-from substrapp.serializers import OrchestratorTestTaskSerializer
-from substrapp.serializers import OrchestratorTrainTaskSerializer
-from substrapp.views.computeplan import register_compute_plan_in_orchestrator
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
@@ -31,80 +27,138 @@ from substrapp.views.utils import validate_key
 logger = structlog.get_logger(__name__)
 
 
-ORCHESTRATOR_SERIALIZER_CLASSES = {
-    "traintuple": OrchestratorTrainTaskSerializer,
-    "testtuple": OrchestratorTestTaskSerializer,
-    "aggregatetuple": OrchestratorAggregateTaskSerializer,
-    "composite_traintuple": OrchestratorCompositeTrainTaskSerializer,
+CP_TASK_KEY = {
+    "aggregatetuple": "aggregatetuple_id",
+    "composite_traintuple": "composite_traintuple_id",
+    "traintuple": "traintuple_id",
 }
+
+TASK_EXTRA_DATA_FIELD = {
+    "aggregatetuple": "aggregate",
+    "composite_traintuple": "composite",
+    "testtuple": "test",
+    "traintuple": "train",
+}
+
+
+def _add_task_extra_data(data, task_type, tasks_cache=None):
+    if task_type == "composite_traintuple":
+
+        return {
+            "data_manager_key": str(data.get("data_manager_key", "") or ""),
+            "data_sample_keys": [str(d) for d in (data.get("train_data_sample_keys", []) or [])],
+            "trunk_permissions": data.get("out_trunk_model_permissions", {}),
+        }
+
+    elif task_type == "testtuple":
+        return {
+            "metric_keys": data.get("metric_keys", []) or [],
+            "data_manager_key": str(data.get("data_manager_key", "") or ""),
+            "data_sample_keys": [str(d) for d in (data.get("test_data_sample_keys", []) or [])],
+        }
+
+    elif task_type == "aggregatetuple":
+        return {
+            "worker": data.get("worker", ""),
+        }
+
+    elif task_type == "traintuple":
+        return {
+            "data_manager_key": str(data.get("data_manager_key", "") or ""),
+            "data_sample_keys": [str(d) for d in (data.get("train_data_sample_keys", []) or [])],
+        }
+
+    else:
+        raise Exception(f'Task type "{task_type}" not handled')
+
+
+def build_computetask_data(data, task_type, tasks_cache=None, from_compute_plan=False):
+    # *in_models_ depends if we use this function from computetask view or compute plan view
+    field = "id" if from_compute_plan else "key"
+
+    if from_compute_plan and task_type != "testtuple":
+        # users never define testtuple key inside a computeplan request
+        # so we need to generate one
+        key = to_string_uuid(data.get(CP_TASK_KEY[task_type]))
+    else:
+        key = str(uuid.uuid4())
+
+    task_data = {
+        "key": key,
+        "category": TASK_CATEGORY[task_type],
+        "algo_key": data.get("algo_key") or "",
+        "compute_plan_key": data.get("compute_plan_key") or "",
+        "metadata": data.get("metadata") or {},
+    }
+
+    # Deduplicate parent tasks, but avoid using a set to preserve parents order
+    parent_task_keys = list(dict.fromkeys([str(key) for key in (data.get(f"in_models_{field}s", []) or [])]))
+
+    if task_type == "composite_traintuple":
+        # here we need to build a list from the head and trunk models sent by the user
+        parent_task_keys = [data.get(f"in_head_model_{field}"), data.get(f"in_trunk_model_{field}")]
+        parent_task_keys = [item for item in parent_task_keys if item]
+
+    if task_type == "testtuple":
+        if traintuple_id := data.get(f"traintuple_{field}"):
+            parent_task_keys.append(traintuple_id)
+        else:
+            raise ValidationExceptionError(
+                data=[{f"traintuple_{field}": ["This field may not be null."]}],
+                key=task_data["key"],
+                st=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if tasks_cache is not None:
+            task_data["algo_key"] = str(tasks_cache.get(to_string_uuid(parent_task_keys[0]), {}).get("algo_key", ""))
+            task_data["compute_plan_key"] = str(
+                tasks_cache.get(to_string_uuid(parent_task_keys[0]), {}).get("compute_plan_key", "")
+            )
+
+        if not (task_data["algo_key"] and task_data["compute_plan_key"]):
+            # The training task might already be registered and not part of the current cache or batch
+            parent_task = ComputeTaskRep.objects.get(key=to_string_uuid(parent_task_keys[0]))
+            task_data["algo_key"] = str(parent_task.algo.key)
+            task_data["compute_plan_key"] = str(parent_task.compute_plan.key)
+
+    task_data["parent_task_keys"] = parent_task_keys
+
+    if "__tag__" in task_data["metadata"]:
+        raise Exception('"__tag__" cannot be used as a metadata key')
+    else:
+        task_data["metadata"]["__tag__"] = data.get("tag", "") or ""
+
+    task_data[TASK_EXTRA_DATA_FIELD[task_type]] = _add_task_extra_data(data, task_type, tasks_cache)
+
+    return task_data
 
 
 def _register_in_orchestrator(request, basename):
     """Register computetask in orchestrator."""
-    data = {
-        "key": uuid.uuid4(),
-        "category": TASK_CATEGORY[basename],
-        "algo_key": request.data.get("algo_key"),
-        "compute_plan_key": request.data.get("compute_plan_key"),
-        "metadata": request.data.get("metadata"),
-        "parent_task_keys": request.data.get("in_models_keys", []),
-        "tag": request.data.get("tag", ""),
-    }
-
-    if basename == "composite_traintuple":
-        data["data_manager_key"] = request.data.get("data_manager_key")
-        data["data_sample_keys"] = request.data.get("train_data_sample_keys")
-        data["trunk_permissions"] = request.data.get("out_trunk_model_permissions")
-        # here we need to build a list from the head and trunk models sent by the user
-        parent_task_keys = [request.data.get("in_head_model_key"), request.data.get("in_trunk_model_key")]
-        data["parent_task_keys"] = [item for item in parent_task_keys if item]
-
-    elif basename == "testtuple":
-        data["metric_keys"] = request.data.get("metric_keys")
-        data["data_manager_key"] = request.data.get("data_manager_key")
-        data["data_sample_keys"] = request.data.get("test_data_sample_keys")
-
-        if request.data.get("traintuple_key"):
-            data["parent_task_keys"].append(request.data.get("traintuple_key"))
-        else:
-            raise ValidationExceptionError(
-                data=[{"traintuple_key": ["This field may not be null."]}],
-                key=data["key"],
-                st=status.HTTP_400_BAD_REQUEST,
-            )
-
-        first_parent_task_id = to_string_uuid(data["parent_task_keys"][0])
-        parent_task = ComputeTaskRep.objects.get(key=first_parent_task_id)
-        data["algo_key"] = parent_task.algo.key
-        data["compute_plan_key"] = parent_task.compute_plan.key
-
-    elif basename == "aggregatetuple":
-        data["worker"] = request.data.get("worker")
-
-    elif basename == "traintuple":
-        data["data_manager_key"] = request.data.get("data_manager_key")
-        data["data_sample_keys"] = request.data.get("train_data_sample_keys")
+    orc_task = build_computetask_data(dict(request.data), basename)
 
     create_cp = False
     if basename in ["composite_traintuple", "aggregatetuple", "traintuple"]:
-        if not data["compute_plan_key"]:
+        if not orc_task["compute_plan_key"]:
             # Auto-create compute plan if not provided
             # Is it still relevant ?
             create_cp = True
-            data["compute_plan_key"] = uuid.uuid4()
+            orc_task["compute_plan_key"] = str(uuid.uuid4())
 
     registered_cp_data = None
-    if create_cp:
-        registered_cp_data = register_compute_plan_in_orchestrator(
-            {"key": data["compute_plan_key"]}, get_channel_name(request)
-        )
+    with get_orchestrator_client(get_channel_name(request)) as client:
+        if create_cp:
+            registered_cp_data = client.register_compute_plan(
+                args={
+                    "key": orc_task["compute_plan_key"],
+                    "tag": "",
+                    "metadata": "",
+                    "delete_intermediary_models": False,
+                }
+            )
 
-    orchestrator_serializer_class = ORCHESTRATOR_SERIALIZER_CLASSES[basename]
-    orchestrator_serializer = orchestrator_serializer_class(data=data, context={"request": request})
-    orchestrator_serializer.is_valid(raise_exception=True)
-    registered_tasks_data = orchestrator_serializer.create(
-        get_channel_name(request), orchestrator_serializer.validated_data
-    )
+        registered_tasks_data = client.register_tasks({"tasks": [orc_task]})
+
     return registered_cp_data, registered_tasks_data[0]
 
 
