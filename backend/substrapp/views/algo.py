@@ -13,6 +13,7 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
+from substrapp import exceptions
 from substrapp.models import Algo
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
@@ -119,7 +120,10 @@ def create(request, get_success_headers):
 
 def map_category(key, values):
     if key == "category":
-        values = [algo_pb2.AlgoCategory.Value(value) for value in values]
+        try:
+            values = [algo_pb2.AlgoCategory.Value(value) for value in values]
+        except ValueError as e:
+            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 

@@ -421,17 +421,22 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             ("STATUS_DONE",),
             ("STATUS_CANCELED",),
             ("STATUS_FAILED",),
+            ("STATUS_XXX",),
         ]
     )
-    def test_traintask_list_filter_by_status(self, status):
+    def test_traintask_list_filter_by_status(self, t_status):
         """Filter traintask on status."""
-        filtered_train_tasks = [task for task in self.expected_results if task["status"] == status]
-        params = urlencode({"search": f"traintuple:status:{status}"})
+        filtered_train_tasks = [task for task in self.expected_results if task["status"] == t_status]
+        params = urlencode({"search": f"traintuple:status:{t_status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
-        )
+
+        if t_status != "STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_traintask_match(self):
         """Match traintask on part of the name."""
@@ -497,7 +502,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_traintask_retrieve(self):
         url = reverse("substrapp:traintuple-detail", args=[self.expected_results[0]["key"]])
@@ -789,17 +794,22 @@ class TestTaskViewTests(ComputeTaskViewTests):
             ("STATUS_DONE",),
             ("STATUS_CANCELED",),
             ("STATUS_FAILED",),
+            ("STATUS_XXX",),
         ]
     )
-    def test_testtask_list_filter_by_status(self, status):
+    def test_testtask_list_filter_by_status(self, tt__status):
         """Filter testtask on status."""
-        filtered_test_tasks = [task for task in self.expected_results if task["status"] == status]
-        params = urlencode({"search": f"testtuple:status:{status}"})
+        filtered_test_tasks = [task for task in self.expected_results if task["status"] == tt__status]
+        params = urlencode({"search": f"testtuple:status:{tt__status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
-        )
+        if tt__status != "STATUS_XXX":
+
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_testtask_match(self):
         """Match testtask on part of the name."""
@@ -856,7 +866,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_testtask_retrieve(self):
         url = reverse("substrapp:testtuple-detail", args=[self.expected_results[0]["key"]])
@@ -1263,22 +1273,27 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             ("STATUS_DONE",),
             ("STATUS_CANCELED",),
             ("STATUS_FAILED",),
+            ("STATUS_XXX",),
         ]
     )
-    def test_compositetask_list_filter_by_status(self, status):
+    def test_compositetask_list_filter_by_status(self, t_status):
         """Filter compositetask on status."""
-        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == status]
-        params = urlencode({"search": f"composite_traintuple:status:{status}"})
+        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == t_status]
+        params = urlencode({"search": f"composite_traintuple:status:{t_status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {
-                "count": len(filtered_composite_tasks),
-                "next": None,
-                "previous": None,
-                "results": filtered_composite_tasks,
-            },
-        )
+
+        if t_status != "STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_composite_tasks),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_composite_tasks,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetask_match(self):
         """Match compositetask on part of the name."""
@@ -1335,7 +1350,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_compositetask_retrieve(self):
         url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])

@@ -216,6 +216,7 @@ class ModelViewTests(APITestCase):
             ("MODEL_UNKNOWN",),
             ("MODEL_SIMPLE",),
             ("MODEL_HEAD",),
+            ("MODEL_XXX",),
         ]
     )
     def test_model_list_filter_by_category(self, category):
@@ -223,10 +224,13 @@ class ModelViewTests(APITestCase):
         filtered_models = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"search": f"model:category:{category}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
-        )
+        if category != "MODEL_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
@@ -250,7 +254,7 @@ class ModelViewTests(APITestCase):
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_model_retrieve(self):
         url = reverse("substrapp:model-detail", args=[self.expected_results[0]["key"]])

@@ -13,6 +13,7 @@ from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import ComputeTaskWithRelationshipsSerializer as ComputeTaskWithRelationshipsRepSerializer
+from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
@@ -201,7 +202,10 @@ def create(request, basename, get_success_headers):
 
 def map_status_and_cp_key(key, values):
     if key == "status":
-        values = [computetask_pb2.ComputeTaskStatus.Value(value) for value in values]
+        try:
+            values = [computetask_pb2.ComputeTaskStatus.Value(value) for value in values]
+        except ValueError as e:
+            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     elif key == "compute_plan_key":
         key = "compute_plan_id"
     return key, values

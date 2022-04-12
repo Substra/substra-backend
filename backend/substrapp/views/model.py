@@ -11,6 +11,7 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Model as ModelRep
 from localrep.serializers import ModelSerializer as ModelRepSerializer
 from node.authentication import NodeUser
+from substrapp import exceptions
 from substrapp.models import Model
 from substrapp.utils import get_owner
 from substrapp.views.filters_utils import CustomSearchFilter
@@ -24,7 +25,10 @@ logger = structlog.get_logger(__name__)
 
 def map_category(key, values):
     if key == "category":
-        values = [model_pb2.ModelCategory.Value(value) for value in values]
+        try:
+            values = [model_pb2.ModelCategory.Value(value) for value in values]
+        except ValueError as e:
+            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 

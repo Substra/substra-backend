@@ -225,6 +225,7 @@ class AlgoViewTests(APITestCase):
             ("ALGO_SIMPLE",),
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
+            ("ALGO_XXX",),
         ]
     )
     def test_algo_list_filter_by_category(self, category):
@@ -232,10 +233,14 @@ class AlgoViewTests(APITestCase):
         filtered_algos = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"search": f"algo:category:{category}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
-        )
+
+        if category != "ALGO_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_algo_match(self):
         """Match algo on part of the name."""

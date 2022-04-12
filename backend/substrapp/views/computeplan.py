@@ -13,6 +13,7 @@ from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
+from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
@@ -134,7 +135,10 @@ def create(request, get_success_headers):
 
 def map_status(key, values):
     if key == "status":
-        values = [computeplan_pb2.ComputePlanStatus.Value(value) for value in values]
+        try:
+            values = [computeplan_pb2.ComputePlanStatus.Value(value) for value in values]
+        except ValueError as e:
+            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 

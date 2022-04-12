@@ -391,18 +391,28 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             ("PLAN_STATUS_DONE",),
             ("PLAN_STATUS_CANCELED",),
             ("PLAN_STATUS_FAILED",),
+            ("PLAN_STATUS_XXX",),
         ]
     )
-    def test_computeplan_list_filter_by_status(self, status):
+    def test_computeplan_list_filter_by_status(self, p_status):
         """Filter computeplan on status."""
-        filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == status]
-        params = urlencode({"search": f"compute_plan:status:{status}"})
+        filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
+        params = urlencode({"search": f"compute_plan:status:{p_status}"})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_compute_plans), "next": None, "previous": None, "results": filtered_compute_plans},
-        )
+
+        if p_status != "PLAN_STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_compute_plans),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_compute_plans,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
