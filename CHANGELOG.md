@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Uuid substring collision made tests randomly fail (#941)
+
+
 ## [0.10.1] 2022-04-13
 
 ### Changed

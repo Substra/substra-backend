@@ -441,7 +441,10 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     def test_traintask_match(self):
         """Match traintask on part of the name."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        # we're using key[19:] because it returns something a string with one dash in the middle: XXXX-YYYYYYYYYYYY
+        # this will be handled as 2 tokens, so items matching both XXXX and YYYYYYYYYYYY will be returned
+        # this should be enough to guarantee that there will only be one matching task
+        params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -450,11 +453,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     def test_traintask_match_and_filter(self):
         """Match traintask with filter."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        params = urlencode({"match": key[19:]})
         params = urlencode(
             {
                 "search": "traintuple:status:STATUS_TODO",
-                "match": key[2:5],
+                "match": key[19:],
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -814,7 +817,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def test_testtask_match(self):
         """Match testtask on part of the name."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -823,11 +826,11 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def test_testtask_match_and_filter(self):
         """Match testtask with filter."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        params = urlencode({"match": key[19:]})
         params = urlencode(
             {
                 "search": "testtuple:status:STATUS_TODO",
-                "match": key[2:5],
+                "match": key[19:],
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -1298,7 +1301,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def test_compositetask_match(self):
         """Match compositetask on part of the name."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -1307,11 +1310,11 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def test_compositetask_match_and_filter(self):
         """Match compositetask with filter."""
         key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[2:5]})
+        params = urlencode({"match": key[19:]})
         params = urlencode(
             {
                 "search": "composite_traintuple:status:STATUS_TODO",
-                "match": key[2:5],
+                "match": key[19:],
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
