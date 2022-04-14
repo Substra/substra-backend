@@ -332,10 +332,6 @@ HTTP_CLIENT_TIMEOUT_SECONDS = int(os.environ.get("HTTP_CLIENT_TIMEOUT_SECONDS", 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 LOGGING_USE_COLORS = to_bool(os.environ.get("LOGGING_USE_COLORS", True))
 
-# With DEBUG_QUICK_IMAGE, container images are never deleted, and image names are based on the algo/metrics checksum
-# (instead of algo/metrics key, without the option). This allows reuse of images and significantly speeds up end-to-end
-# tests.
-DEBUG_QUICK_IMAGE = to_bool(os.environ.get("DEBUG_QUICK_IMAGE", False))
 DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get("DEBUG_KEEP_POD_AND_DIRS", False))
 
 PAGINATION_MAX_PAGE_SIZE = int(os.environ.get("PAGINATION_MAX_PAGE_SIZE", 10000))

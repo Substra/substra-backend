@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Dict
 from typing import List
 
@@ -28,7 +29,7 @@ class Context:
     """
 
     _channel_name: str = None
-    _task = None
+    _task: Dict[str, Any] = None
     _task_category: int = None
     _task_key: str = None
     _compute_plan_key: str = None
@@ -45,7 +46,7 @@ class Context:
     def __init__(
         self,
         channel_name: str,
-        task: Dict,
+        task: Dict[str, Any],
         task_category: int,
         task_key: str,
         compute_plan: Dict,
@@ -126,7 +127,7 @@ class Context:
         return self._channel_name
 
     @property
-    def task(self) -> None:
+    def task(self) -> Dict[str, Any]:
         return self._task
 
     @property
@@ -194,8 +195,7 @@ class Context:
     @property
     def algo_image_tag(self) -> str:
         algo_key = self.task["algo"]["key"]
-        algo_checksum = self.task["algo"]["algorithm"]["checksum"]
-        return get_image_tag(ALGO_IMAGE_PREFIX, algo_checksum if settings.DEBUG_QUICK_IMAGE else algo_key)
+        return get_image_tag(ALGO_IMAGE_PREFIX, algo_key)
 
     @property
     def task_data(self) -> Dict:
@@ -213,23 +213,18 @@ class Context:
         return self.task_data["data_sample_keys"]
 
     @property
-    def metrics_image_tags(self) -> List[str]:
+    def metrics_image_tags(self) -> Dict[str, str]:
         if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: metrics_docker_tag for {self.task_category}")
 
         metric_keys = self.task_data["metric_keys"]
 
-        if settings.DEBUG_QUICK_IMAGE:
-            slugs = [metric["address"]["checksum"] for metric in self.metrics.values()]
-        else:
-            slugs = metric_keys
-
-        return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in slugs}
+        return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in metric_keys}
 
     def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = None) -> ComputePod:
         return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else None)
 
 
-def get_image_tag(prefix, key):
+def get_image_tag(prefix, key) -> str:
     # tag must be lowercase for docker
     return f"{prefix}-{key[0:8]}".lower()

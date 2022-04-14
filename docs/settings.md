@@ -31,7 +31,6 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |
 | `DATA_UPLOAD_MAX_SIZE` | `1024 * 1024 * 1024` |
 | `DEBUG_KEEP_POD_AND_DIRS` | `False` |
-| `DEBUG_QUICK_IMAGE` | `False` |
 | `DJANGO_LOG_SQL_QUERIES` | `True` |
 | `ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS` | `False` |
 | `ENABLE_METRICS` | `False` |

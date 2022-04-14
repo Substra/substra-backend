@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Uuid substring collision made tests randomly fail (#941)
 
+### Removed
+- Drop support for `DEBUG_QUICK_IMAGE` (#957)
 
 ## [0.10.1] 2022-04-13
 

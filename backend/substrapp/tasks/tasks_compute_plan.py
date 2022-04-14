@@ -77,9 +77,8 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         dirs = Directories(compute_plan_key)
         teardown_compute_plan_dir(dirs)
 
-    if not settings.DEBUG_QUICK_IMAGE:
-        _remove_docker_images(ALGO_IMAGE_PREFIX, algo_keys)
-        _remove_docker_images(METRICS_IMAGE_PREFIX, metric_keys)
+    _remove_docker_images(ALGO_IMAGE_PREFIX, algo_keys)
+    _remove_docker_images(METRICS_IMAGE_PREFIX, metric_keys)
 
 
 def _remove_docker_images(image_prefix, keys):
