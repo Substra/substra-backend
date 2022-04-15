@@ -64,7 +64,7 @@ def execute_compute_task(ctx: Context) -> None:
 
 
 @timeit
-def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = None, metric_key: str = None) -> None:
+def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = None, metric_key: str = "") -> None:
 
     channel_name = ctx.channel_name
     dirs = ctx.directories

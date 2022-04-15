@@ -28,26 +28,26 @@ class Context:
     whole lifetime of a compute task: channel name, task key, category, compute plan key, etc...
     """
 
-    _channel_name: str = None
-    _task: Dict[str, Any] = None
-    _task_category: int = None
-    _task_key: str = None
-    _compute_plan_key: str = None
-    _compute_plan_tag: str = None
-    _compute_plan: Dict = None
-    _in_models: List[Dict] = None
-    _algo: Dict = None
-    _metrics: Dict = None
-    _data_manager: Dict = None
-    _directories: Directories = None
-    _attempt: int = None  # The attempt number, eg; the number of retries + 1
-    _has_chainkeys: bool = None
+    _channel_name: str
+    _task: Dict[str, Any]
+    _task_category: computetask_pb2.ComputeTaskCategory.ValueType
+    _task_key: str
+    _compute_plan_key: str
+    _compute_plan_tag: str
+    _compute_plan: Dict
+    _in_models: List[Dict]
+    _algo: Dict
+    _metrics: Dict
+    _data_manager: Dict
+    _directories: Directories
+    _attempt: int  # The attempt number, eg; the number of retries + 1
+    _has_chainkeys: bool
 
     def __init__(
         self,
         channel_name: str,
         task: Dict[str, Any],
-        task_category: int,
+        task_category: computetask_pb2.ComputeTaskCategory.ValueType,
         task_key: str,
         compute_plan: Dict,
         compute_plan_key: str,
@@ -78,9 +78,7 @@ class Context:
     @classmethod
     def from_task(cls, channel_name: str, task: Dict, attempt: int):
         task_key = task["key"]
-        compute_plan_key = None
-        compute_plan_tag = None
-        compute_plan_key = task.get("compute_plan_key")
+        compute_plan_key = task["compute_plan_key"]
         metrics = None
         data_manager = None
 
@@ -99,11 +97,11 @@ class Context:
             if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])
 
-        compute_plan_tag = compute_plan.get("tag") or None  # convert "" to None
-
         directories = Directories(compute_plan_key)
 
-        has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and compute_plan_tag
+        compute_plan_tag = compute_plan["tag"]
+        cp_is_tagged = True if compute_plan_tag else False
+        has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and cp_is_tagged
 
         return cls(
             channel_name,
@@ -131,7 +129,7 @@ class Context:
         return self._task
 
     @property
-    def task_category(self) -> int:
+    def task_category(self) -> computetask_pb2.ComputeTaskCategory.ValueType:
         return self._task_category
 
     @property
@@ -147,7 +145,7 @@ class Context:
         return self._compute_plan_key
 
     @property
-    def compute_plan_tag(self) -> None:
+    def compute_plan_tag(self) -> str:
         return self._compute_plan_tag
 
     @property
@@ -209,7 +207,7 @@ class Context:
             computetask_pb2.TASK_TRAIN,
             computetask_pb2.TASK_TEST,
         ]:
-            return None
+            return []
         return self.task_data["data_sample_keys"]
 
     @property
@@ -221,8 +219,8 @@ class Context:
 
         return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in metric_keys}
 
-    def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = None) -> ComputePod:
-        return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else None)
+    def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = "") -> ComputePod:
+        return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else "")
 
 
 def get_image_tag(prefix, key) -> str:

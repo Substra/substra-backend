@@ -44,7 +44,7 @@ class ComputePod:
 
     @property
     def is_testtuple_eval(self) -> bool:
-        return self.metric_key is not None
+        return True if self.metric_key else False
 
     @property
     def name(self) -> str:

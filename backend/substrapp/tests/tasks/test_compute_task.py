@@ -73,7 +73,7 @@ class ComputeTaskTests(APITestCase):
         ) as mregister_performance, mock.patch(
             "substrapp.compute_tasks.compute_task.raise_if_task_not_runnable"
         ) as mraise_if_task_not_runnable, mock.patch.object(
-            OrchestratorClient, "query_compute_plan", return_value={}
+            OrchestratorClient, "query_compute_plan", return_value={"tag": ""}
         ), mock.patch.object(
             OrchestratorClient, "get_computetask_input_models"
         ), mock.patch.object(

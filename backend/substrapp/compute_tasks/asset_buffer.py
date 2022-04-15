@@ -120,10 +120,9 @@ def add_task_assets_to_buffer(ctx: Context) -> None:
     """
 
     # Data samples
-    if ctx.data_sample_keys:
-        for data_sample_key in ctx.data_sample_keys:
-            with lock_resource("data_sample", data_sample_key, ttl=LOCK_FETCH_ASSET_TTL):
-                _add_datasample_to_buffer(data_sample_key)
+    for data_sample_key in ctx.data_sample_keys:
+        with lock_resource("data_sample", data_sample_key, ttl=LOCK_FETCH_ASSET_TTL):
+            _add_datasample_to_buffer(data_sample_key)
 
     # Openers
     if ctx.data_manager:
@@ -151,8 +150,7 @@ def add_assets_to_taskdir(ctx: Context) -> None:
 
     dirs = ctx.directories
 
-    if ctx.data_sample_keys:
-        _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, ctx.data_sample_keys)
+    _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, ctx.data_sample_keys)
 
     if ctx.data_manager:
         _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [ctx.data_manager["key"]])
