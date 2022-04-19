@@ -7,6 +7,8 @@ from django.urls import reverse
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
+from localrep.errors import AlreadyExistsError
+from localrep.serializers import ModelSerializer as ModelRepSerializer
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
@@ -57,11 +59,19 @@ def save_models(ctx: Context) -> None:
 
     try:
         with get_orchestrator_client(ctx.channel_name) as client:
-            client.register_models({"models": models})
+            localrep_data_models = client.register_models({"models": models})
     except Exception as exc:
         for model in models:
             _delete_model(model["key"])
         raise exc
+
+    for localrep_data in localrep_data_models:
+        localrep_data["channel"] = ctx.channel_name
+        localrep_serializer = ModelRepSerializer(data=localrep_data)
+        try:
+            localrep_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            pass
 
     add_model_from_path(model_path, str(simple_model["key"]))
     if task_category == computetask_pb2.TASK_COMPOSITE:
