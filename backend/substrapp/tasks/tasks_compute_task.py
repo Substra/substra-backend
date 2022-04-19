@@ -142,13 +142,17 @@ class ComputeTask(Task):
 def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     try:
         return _run(self, channel_name, task, compute_plan_key)
-    except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError):
+    except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
+        logger.exception(exception)
         raise celery.exceptions.Ignore
-    except compute_task_errors.CeleryNoRetryError:
+    except compute_task_errors.CeleryNoRetryError as exception:
+        logger.exception(exception)
         raise
-    except compute_task_errors.CeleryRetryError:
+    except compute_task_errors.CeleryRetryError as exception:
+        logger.exception(exception)
         raise
     except Exception as exception:
+        logger.exception(exception)
         raise compute_task_errors.CeleryRetryError() from exception
 
 

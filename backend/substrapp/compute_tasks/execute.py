@@ -26,9 +26,7 @@ from substrapp.compute_tasks.environment import get_environment
 from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import get_container_image_name
-from substrapp.exceptions import PodError
 from substrapp.exceptions import PodReadinessTimeoutError
-from substrapp.exceptions import PodTimeoutError
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
@@ -64,7 +62,7 @@ def execute_compute_task(ctx: Context) -> None:
 
 
 @timeit
-def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = None, metric_key: str = "") -> None:
+def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = "", metric_key: str = "") -> None:
 
     channel_name = ctx.channel_name
     dirs = ctx.directories
@@ -79,44 +77,34 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
 
     k8s_client = _get_k8s_client()
 
-    try:
-        should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
+    should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
 
-        if should_create_pod:
+    if should_create_pod:
 
-            volume_mounts, volumes = get_volumes(dirs, is_testtuple_eval)
+        volume_mounts, volumes = get_volumes(dirs, is_testtuple_eval)
 
-            with get_orchestrator_client(channel_name) as client:
-                # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
-                # We use allow_doing=True to allow celery retries.
-                task_utils.abort_task_if_not_runnable(ctx.task_key, client, allow_doing=True)
+        with get_orchestrator_client(channel_name) as client:
+            # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
+            # We use allow_doing=True to allow celery retries.
+            task_utils.abort_task_if_not_runnable(ctx.task_key, client, allow_doing=True)
 
-            create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
+        create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
+        try:
             wait_for_pod_readiness(
                 k8s_client, f"{Label.PodName}={pod_name}", settings.TASK["COMPUTE_POD_STARTUP_TIMEOUT_SECONDS"]
             )
-        else:
-            logger.info("Reusing pod", pod=pod_name)
+        except PodReadinessTimeoutError:
+            delete_pod(k8s_client, pod_name)
+            raise
+    else:
+        logger.info("Reusing pod", pod=pod_name)
 
-        # This a sanity check that the compute pod uses the subtuple of the present worker
-        # Does not concern the WORKER_PVC_IS_HOSTPATH case because this case is for a single worker set up.
-        if not settings.WORKER_PVC_IS_HOSTPATH:
-            _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
+    # This a sanity check that the compute pod uses the subtuple of the present worker
+    # Does not concern the WORKER_PVC_IS_HOSTPATH case because this case is for a single worker set up.
+    if not settings.WORKER_PVC_IS_HOSTPATH:
+        _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-        _exec(k8s_client, compute_pod, exec_command)
-
-    except (PodError, PodTimeoutError) as e:
-        logger.exception("failed to execute task", e=e)
-        raise
-
-    except PodReadinessTimeoutError as e:
-        logger.exception(e)
-        delete_pod(k8s_client, pod_name)
-        raise
-
-    except Exception as e:
-        logger.exception(e)
-        raise
+    _exec(k8s_client, compute_pod, exec_command)
 
 
 def _get_k8s_client():
