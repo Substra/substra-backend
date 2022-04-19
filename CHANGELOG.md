@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set log level to DEBUG in dev (#952)
 - Remove Orchestrator{Aggregate, CompositeTrain, Test, Train}TaskSerializer and use orchestrator client directly (#920)
 - Handle error values in mapping functions (#945)
+- Remove `single-snapshot` in kaniko build option (#897)
 
 ### Fixed
 - Handle disabled model in resync by making address not mandatory (#948)

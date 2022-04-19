@@ -159,7 +159,6 @@ def _build_container_image(path: str, tag: str, ctx: Context) -> None:  # noqa: 
         "--snapshotMode=redo",
         "--push-retry=3",
         "--cache-copy-layers",
-        "--single-snapshot",
         "--log-format=text",
         f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
     ]
