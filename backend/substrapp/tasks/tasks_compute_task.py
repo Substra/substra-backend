@@ -168,7 +168,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     # In case of retries: only execute the compute task if it is not in a final state
 
     task_key = task["key"]
-    logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key)
+    logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt)
 
     with get_orchestrator_client(channel_name) as client:
         # Set allow_doing=True to allow celery retries.
@@ -209,7 +209,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     with lock_resource("compute-plan", compute_plan_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
         try:
             # Create context
-            ctx = Context.from_task(channel_name, task, self.attempt)
+            ctx = Context.from_task(channel_name, task)
             dirs = ctx.directories
 
             # Setup

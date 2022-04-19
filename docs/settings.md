@@ -36,6 +36,7 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 | `ENABLE_METRICS` | `False` |
 | `EXPIRY_TOKEN_LIFETIME` | `24 * 60` |
 | `GZIP_MODELS` | `False` |
+| `HOSTNAME` | `nil` |
 | `HOST_IP` | `nil` |
 | `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |
 | `ISOLATED` | `nil` |

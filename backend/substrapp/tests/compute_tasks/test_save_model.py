@@ -51,7 +51,6 @@ class SaveModelTests(APITestCase):
             metrics=None,
             data_manager=None,
             directories=FakeDirectories(data_dir),
-            attempt=0,
             has_chainkeys=False,
         )
         model_dir = os.path.join(data_dir, TaskDirName.OutModels)

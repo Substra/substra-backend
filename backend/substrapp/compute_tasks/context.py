@@ -40,7 +40,6 @@ class Context:
     _metrics: Dict
     _data_manager: Dict
     _directories: Directories
-    _attempt: int  # The attempt number, eg; the number of retries + 1
     _has_chainkeys: bool
 
     def __init__(
@@ -57,7 +56,6 @@ class Context:
         metrics: Dict,
         data_manager: Dict,
         directories: Directories,
-        attempt: int,
         has_chainkeys: bool,
     ):
         self._channel_name = channel_name
@@ -72,11 +70,10 @@ class Context:
         self._metrics = metrics
         self._data_manager = data_manager
         self._directories = directories
-        self._attempt = attempt
         self._has_chainkeys = has_chainkeys
 
     @classmethod
-    def from_task(cls, channel_name: str, task: Dict, attempt: int):
+    def from_task(cls, channel_name: str, task: Dict):
         task_key = task["key"]
         compute_plan_key = task["compute_plan_key"]
         metrics = None
@@ -116,7 +113,6 @@ class Context:
             metrics,
             data_manager,
             directories,
-            attempt,
             has_chainkeys,
         )
 
@@ -151,10 +147,6 @@ class Context:
     @property
     def directories(self) -> Directories:
         return self._directories
-
-    @property
-    def attempt(self) -> int:
-        return self._attempt
 
     @property
     def has_chainkeys(self) -> bool:

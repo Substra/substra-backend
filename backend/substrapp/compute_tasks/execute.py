@@ -103,7 +103,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
         if not settings.WORKER_PVC_IS_HOSTPATH:
             _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-        _exec(k8s_client, ctx, compute_pod, exec_command)
+        _exec(k8s_client, compute_pod, exec_command)
 
     except (PodError, PodTimeoutError) as e:
         logger.exception("failed to execute task", e=e)
@@ -145,9 +145,9 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]):
+def _exec(k8s_client, compute_pod: ComputePod, exec_command: List[str]):
     """Execute a command on a compute pod"""
-    logger.debug("Running command", command=exec_command, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
+    logger.debug("Running command", command=exec_command, eval=compute_pod.is_testtuple_eval)
 
     resp = stream(
         k8s_client.connect_get_namespaced_pod_exec,
@@ -166,7 +166,7 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
 
     def print_log(lines):
         for line in filter(None, lines.split("\n")):
-            logger.info(line, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
+            logger.info(line, eval=compute_pod.is_testtuple_eval)
 
     container_logs = io.BytesIO()
 
