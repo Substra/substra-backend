@@ -8,7 +8,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
-from libs.pagination import DefaultPageNumberPagination
+from libs.pagination import SmallPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
@@ -161,7 +161,7 @@ class MetadataOrderingFilter(OrderingFilter):
 
 class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = ComputePlanRepSerializer
-    pagination_class = DefaultPageNumberPagination
+    pagination_class = SmallPageNumberPagination
     filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter)
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
     custom_search_object_type = "compute_plan"

@@ -3,7 +3,7 @@ from rest_framework import mixins
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-from libs.pagination import DefaultPageNumberPagination
+from libs.pagination import LargePageNumberPagination
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import CPPerformanceSerializer as CPPerformanceRepSerializer
 from substrapp.views.utils import get_channel_name
@@ -16,7 +16,7 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     filter_backends = [OrderingFilter]
     ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__epoch", "compute_task__round_idx"]
     ordering = ["compute_task__rank", "compute_task__worker"]
-    pagination_class = DefaultPageNumberPagination
+    pagination_class = LargePageNumberPagination
 
     def get_queryset(self):
         return (

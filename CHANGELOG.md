@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Set default pagination page size and max page size (#950)
+
 ### Fixed
 - Create ModelRep DB instance when registering model in the orchestrator (#965)
 
