@@ -8,7 +8,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      substra.ai/pod-type: substra-compute-task
+      substra.ai/pod-type: compute-task
   policyTypes:
   - Ingress
   - Egress

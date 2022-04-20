@@ -1,5 +1,9 @@
 # Changelog
 
+## 17.1.2
+
+### Fixed
+- Incorrect pod selector in compute pods `NetworkPolicy`
 
 ## 17.1.1
 
