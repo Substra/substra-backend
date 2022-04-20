@@ -108,7 +108,14 @@ class ComputePlan(models.Model):
                 self.start_date = first_started_task.start_date
 
         ongoing_tasks = self.compute_tasks.filter(end_date__isnull=True).exists()
-        if ongoing_tasks:
+        failed_or_canceled_tasks = self.compute_tasks.filter(
+            status__in=(
+                computeplan_pb2.PLAN_STATUS_FAILED,
+                computeplan_pb2.PLAN_STATUS_CANCELED,
+            )
+        ).exists()
+        # some tasks could remain in waiting status without end date
+        if ongoing_tasks and not failed_or_canceled_tasks:
             self.end_date = None  # end date could be reset when cp is updated with new tasks
         else:
             last_ended_task = self.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
