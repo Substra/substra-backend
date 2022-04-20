@@ -35,6 +35,7 @@ NAMESPACE = settings.NAMESPACE
 KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
+KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
 CELERY_WORKER_CONCURRENCY = settings.CELERY_WORKER_CONCURRENCY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
@@ -233,7 +234,7 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
 
     if KANIKO_DOCKER_CONFIG_SECRET_NAME:
         docker_config = kubernetes.client.V1Volume(
-            name="docker_config",
+            name=KANIKO_DOCKER_CONFIG_VOLUME_NAME,
             secret=kubernetes.client.V1SecretVolumeSource(
                 secret_name=KANIKO_DOCKER_CONFIG_SECRET_NAME,
                 items=[kubernetes.client.V1KeyToPath(key=".dockerconfigjson", path="config.json")],
@@ -281,7 +282,9 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
     volume_mounts = [dockerfile, cache]
 
     if KANIKO_DOCKER_CONFIG_SECRET_NAME:
-        docker_config = kubernetes.client.V1VolumeMount(name="docker-config", mount_path="/kaniko/.docker")
+        docker_config = kubernetes.client.V1VolumeMount(
+            name=KANIKO_DOCKER_CONFIG_VOLUME_NAME, mount_path="/kaniko/.docker"
+        )
         volume_mounts.append(docker_config)
 
     return kubernetes.client.V1Container(
