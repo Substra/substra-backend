@@ -180,7 +180,7 @@ def _get_container_state(container_status: kubernetes.client.V1ContainerStatus) 
     # Here we need to check if we are in a failed state first since kubernetes will retry
     # we can end up running after a failure
     if container_status.state.terminated:
-        if container_status.state.exit_code != 0:
+        if container_status.state.terminated.exit_code != 0:
             return ObjectState.FAILED
         else:
             return ObjectState.COMPLETED
