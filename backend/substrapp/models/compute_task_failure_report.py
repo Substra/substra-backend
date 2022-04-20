@@ -32,5 +32,5 @@ class ComputeTaskFailureReport(models.Model):
 
     @property
     def logs_address(self) -> str:
-        logs_path = f"{LOGS_BASE_PATH}/{self.compute_task_key}/{LOGS_FILE_PATH}"
+        logs_path = f"{LOGS_BASE_PATH}/{self.compute_task_key}/{LOGS_FILE_PATH}/"
         return urllib.parse.urljoin(settings.DEFAULT_DOMAIN, logs_path)

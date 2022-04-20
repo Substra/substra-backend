@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Create ModelRep DB instance when registering model in the orchestrator (#965)
 - End date for failed CP (#961)
+- Prevent 301 redirects when downloading failure reports (#975)
 
 ## [0.11.0] 2022-04-19
 
