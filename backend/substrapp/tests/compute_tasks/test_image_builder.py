@@ -71,6 +71,8 @@ class ImageBuilderTests(APITestCase):
         metric2_storage_address = "metric2 storage_address"
         metric2_checksum = "metric2 checksum"
 
+        channel_name_ = "mychannel"
+
         class FakeContext:
             task_category = task_category_
             metrics = {
@@ -96,6 +98,7 @@ class ImageBuilderTests(APITestCase):
                 "algorithm": {"storage_address": algo_storage_address, "checksum": algo_checksum},
             }
             algo_image_tag = algo_image_tag_
+            channel_name = channel_name_
 
         ctx = FakeContext()
 
@@ -116,13 +119,23 @@ class ImageBuilderTests(APITestCase):
 
                 self.assertEqual(m_build_asset_image.call_count, 3)
                 m_build_asset_image.assert_any_call(
-                    ctx, algo_image_tag_, algo_key_, algo_storage_address, algo_owner, algo_checksum
+                    channel_name_, algo_image_tag_, algo_key_, algo_storage_address, algo_owner, algo_checksum
                 )
                 m_build_asset_image.assert_any_call(
-                    ctx, metric1_image_tag, metric1_key, metric1_storage_address, metric1_owner, metric1_checksum
+                    channel_name_,
+                    metric1_image_tag,
+                    metric1_key,
+                    metric1_storage_address,
+                    metric1_owner,
+                    metric1_checksum,
                 )
                 m_build_asset_image.assert_any_call(
-                    ctx, metric2_image_tag, metric2_key, metric2_storage_address, metric2_owner, metric2_checksum
+                    channel_name_,
+                    metric2_image_tag,
+                    metric2_key,
+                    metric2_storage_address,
+                    metric2_owner,
+                    metric2_checksum,
                 )
 
             else:
@@ -131,18 +144,13 @@ class ImageBuilderTests(APITestCase):
 
                 self.assertEqual(m_build_asset_image.call_count, 1)
                 m_build_asset_image.assert_any_call(
-                    ctx, algo_image_tag_, algo_key_, algo_storage_address, algo_owner, algo_checksum
+                    channel_name_, algo_image_tag_, algo_key_, algo_storage_address, algo_owner, algo_checksum
                 )
 
     @override_settings(SUBTUPLE_TMP_DIR=tempfile.mkdtemp())
     def test_build_asset_image(self):
 
-        channel_name_ = "mychannel"
-
-        class FakeContext:
-            channel_name = channel_name_
-
-        ctx = FakeContext()
+        channel_name = "mychannel"
         tmp_dir = {"tmp directory": ""}
         asset_key = "asset key"
         asset_content = b"zipped content"
@@ -167,9 +175,9 @@ class ImageBuilderTests(APITestCase):
             m_get_asset_content.return_value = asset_content
             m_get_entrypoint_from_dockerfile.return_value = entrypoint
 
-            _build_asset_image(ctx, image_tag, asset_key, storage_address, owner, checksum)
+            _build_asset_image(channel_name, image_tag, asset_key, storage_address, owner, checksum)
 
-            m_get_asset_content.assert_called_once_with(channel_name_, owner, storage_address, checksum)
+            m_get_asset_content.assert_called_once_with(channel_name, owner, storage_address, checksum)
             muncompress_content.assert_called_once_with(asset_content, tmp_dir)
             m_get_entrypoint_from_dockerfile.assert_called_once_with(tmp_dir)
             m_build_container_image.assert_called_once_with(tmp_dir, image_tag)

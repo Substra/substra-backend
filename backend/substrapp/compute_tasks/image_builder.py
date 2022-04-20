@@ -45,15 +45,15 @@ HOSTNAME = settings.HOSTNAME
 
 def build_images(ctx: Context) -> None:
     # Algo
-    _build_image_if_missing(ctx, ctx.algo_image_tag, ctx.algo_key, ctx.algo)
+    _build_image_if_missing(ctx.channel_name, ctx.algo_image_tag, ctx.algo_key, ctx.algo)
 
     # Metrics
     if ctx.task_category == computetask_pb2.TASK_TEST:
         for metric_key, metric_image_tag in ctx.metrics_image_tags.items():
-            _build_image_if_missing(ctx, metric_image_tag, metric_key, ctx.metrics[metric_key])
+            _build_image_if_missing(ctx.channel_name, metric_image_tag, metric_key, ctx.metrics[metric_key])
 
 
-def _build_image_if_missing(ctx: Context, image_tag: str, asset_key: str, algo: Dict) -> None:
+def _build_image_if_missing(channel_name: str, image_tag: str, asset_key: str, algo: Dict) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
@@ -62,7 +62,7 @@ def _build_image_if_missing(ctx: Context, image_tag: str, asset_key: str, algo: 
             logger.info("Reusing existing image", image=image_tag)
         else:
             _build_asset_image(
-                ctx,
+                channel_name,
                 image_tag,
                 asset_key,
                 algo["algorithm"]["storage_address"],
@@ -72,7 +72,7 @@ def _build_image_if_missing(ctx: Context, image_tag: str, asset_key: str, algo: 
 
 
 def _build_asset_image(
-    ctx: Context,
+    channel_name: str,
     image_tag: str,
     asset_key: str,
     asset_storage_address: str,
@@ -92,7 +92,7 @@ def _build_asset_image(
 
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         # Download source
-        content = node_client.get(ctx.channel_name, asset_owner, asset_storage_address, asset_checksum)
+        content = node_client.get(channel_name, asset_owner, asset_storage_address, asset_checksum)
         uncompress_content(content, tmp_dir)
 
         # Extract ENTRYPOINT from Dockerfile
