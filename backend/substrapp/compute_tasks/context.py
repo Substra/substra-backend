@@ -30,7 +30,7 @@ class Context:
 
     _channel_name: str
     _task: Dict[str, Any]
-    _task_category: computetask_pb2.ComputeTaskCategory.ValueType
+    _task_category: "computetask_pb2.ComputeTaskCategory.ValueType"
     _task_key: str
     _compute_plan_key: str
     _compute_plan_tag: str
@@ -46,7 +46,7 @@ class Context:
         self,
         channel_name: str,
         task: Dict[str, Any],
-        task_category: computetask_pb2.ComputeTaskCategory.ValueType,
+        task_category: "computetask_pb2.ComputeTaskCategory.ValueType",
         task_key: str,
         compute_plan: Dict,
         compute_plan_key: str,
@@ -125,7 +125,7 @@ class Context:
         return self._task
 
     @property
-    def task_category(self) -> computetask_pb2.ComputeTaskCategory.ValueType:
+    def task_category(self) -> "computetask_pb2.ComputeTaskCategory.ValueType":
         return self._task_category
 
     @property
