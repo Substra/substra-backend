@@ -4,18 +4,30 @@ import urllib
 from http.cookies import SimpleCookie
 from io import BytesIO
 from io import StringIO
+from typing import Dict
 from typing import List
+from typing import Optional
 from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.test import APIClient
 
+from orchestrator import computetask_pb2 as computetask_pb2
+from orchestrator import model_pb2 as model_pb2
+
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
 from users.serializers import CustomTokenObtainPairSerializer
 
 from . import assets
+
+_TASK_CATEGORY_NAME_TRAIN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
+_TASK_CATETGORY_NAME_COMPOSITE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_COMPOSITE)
+_TASK_CATEGORY_NAME_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_AGGREGATE)
+
+_MODEL_CATEGORY_NAME_SIMPLE = model_pb2.ModelCategory.Name(model_pb2.MODEL_SIMPLE)
+_MODEL_CATEGORY_NAME_HEAD = model_pb2.ModelCategory.Name(model_pb2.MODEL_HEAD)
 
 
 def generate_basic_auth_header(username, password):
@@ -303,7 +315,43 @@ def get_all_tasks() -> List:
     return assets.get_train_tasks() + assets.get_composite_tasks() + assets.get_test_tasks()
 
 
-def get_task_events(task_key: str) -> List:
+def get_algo(key: str) -> Optional[Dict]:
+    for algo in assets.get_algos():
+        if algo["key"] == key:
+            return algo
+
+
+def get_compute_plan(key: str) -> Optional[Dict]:
+    for cp in assets.get_compute_plans():
+        if cp["key"] == key:
+            return cp
+
+
+def get_task(key: str) -> Optional[Dict]:
+    for task in get_all_tasks():
+        if task["key"] == key:
+            return task
+
+
+def get_data_manager(key: str) -> Optional[Dict]:
+    for dm in assets.get_data_managers():
+        if dm["key"] == key:
+            return dm
+
+
+def get_metric(key: str) -> Optional[Dict]:
+    for metric in assets.get_metrics():
+        if metric["key"] == key:
+            return metric
+
+
+def get_model(key: str) -> Optional[Dict]:
+    for model in assets.get_models():
+        if model["key"] == key:
+            return model
+
+
+def get_task_events(task_key: str) -> Optional[List]:
     for task in get_all_tasks():
         if task["key"] == task_key:
             return [
@@ -318,13 +366,13 @@ def get_task_events(task_key: str) -> List:
             ]
 
 
-def get_task_output_models(task_key: str) -> List:
+def get_task_output_models(task_key: str) -> Optional[List]:
     for task in get_all_tasks():
         if task["key"] == task_key:
             return task.get("train", task.get("composite", {})).get("models")
 
 
-def get_task_performances(task_key: str) -> List:
+def get_task_performances(task_key: str) -> Optional[List]:
     for task in get_all_tasks():
         if task["key"] == task_key and task["test"]["perfs"]:
             return [
@@ -333,16 +381,65 @@ def get_task_performances(task_key: str) -> List:
             ]
 
 
-def query_task(task_key: str) -> List:
-    for task in get_all_tasks():
-        if task["key"] == task_key:
-            return task
+def get_test_task_input_models(task: Dict) -> List:
+    # This logic is copied from the orchestrator
+
+    res = []
+
+    for parent_task_key in task["parent_task_keys"]:
+        parent_task = get_task(parent_task_key)
+
+        if parent_task["category"] == _TASK_CATEGORY_NAME_TRAIN:
+            res += [m for m in parent_task["train"]["models"] if m["category"] == _MODEL_CATEGORY_NAME_SIMPLE]
+
+        elif parent_task["category"] == _TASK_CATETGORY_NAME_COMPOSITE:
+
+            models = parent_task["composite"]["models"]
+
+            # For this function the order of assets is important we should always have the HEAD MODEL first in the list
+            # Otherwise we end up feeding the head and trunk from the previous composite, ignoring the aggregate
+            head_models = [m for m in models if m["category"] == _MODEL_CATEGORY_NAME_HEAD]
+            if head_models:
+                head_model = head_models[0]
+                models.remove(head_model)
+                models = [head_model] + models
+
+            # True if the parent has contributed an input to the composite task
+            parent_contributed = False
+
+            for m in models:
+                # Head model should always come from the first parent possible
+                if m["category"] == _MODEL_CATEGORY_NAME_HEAD and not [
+                    m2 for m2 in res if m2["category"] == _MODEL_CATEGORY_NAME_HEAD
+                ]:
+                    res.append(m)
+                    parent_contributed = True
+
+                single_parent = len(task["parent_task_keys"]) == 1
+                complete_inputs = len(res) < 2
+
+                # Add trunk from parent if it's a single parent or if we still miss an input and the parent has not
+                # contributed a model yet.
+                # Current parent should contribute the trunk model if:
+                # - it's a single parent
+                # - it has not contributed yet but not all inputs are set
+                should_contribute_trunk = single_parent or (not parent_contributed and complete_inputs)
+
+                if m["category"] == _MODEL_CATEGORY_NAME_SIMPLE and should_contribute_trunk:
+                    res.append(m)
+                    parent_contributed = True
+
+        elif parent_task["category"] == _TASK_CATEGORY_NAME_AGGREGATE:
+            res += parent_task["aggregate"]["models"]
+
+    return res
 
 
-def query_data_manager(data_manager_key: str):
-    for data_manager in assets.get_data_managers():
-        if data_manager["key"] == data_manager_key:
-            return data_manager
+def get_task_metrics(task: Dict) -> List:
+    res = []
+    for metric_key in task["test"]["metric_keys"]:
+        res.append(get_metric(metric_key))
+    return res
 
 
 def internal_server_error_on_exception():

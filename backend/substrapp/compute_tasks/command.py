@@ -16,6 +16,18 @@ from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
 
+# These constants are shared with connect-tools.
+# These constants will disappear once the inputs/outputs are exposed by the orchestrator.
+TASK_IO_PREDICTIONS = "predictions"
+TASK_IO_OPENER = "opener"
+TASK_IO_LOCALFOLDER = "localfolder"
+TASK_IO_CHAINKEYS = "chainkeys"
+TASK_IO_DATASAMPLES = "datasamples"
+TRAIN_IO_MODELS = "models"
+TRAIN_IO_MODEL = "model"
+COMPOSITE_IO_SHARED = "shared"
+COMPOSITE_IO_LOCAL = "local"
+
 
 class Filenames:
     OutModel = "out-model"
@@ -51,11 +63,19 @@ def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = No
     return env + command + args
 
 
+class TaskResource(dict):
+
+    # By inheriting from dict, we get JSON serialization for free
+    def __init__(self, id: str, value: str):
+        dict.__init__(self, id=id, value=value)
+
+
 # TODO: '_get_args' is too complex, consider refactoring
 def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task_category
     task_data = ctx.task_data
+    algo_cat = algo_pb2.AlgoCategory.Value(ctx.algo["category"])
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
@@ -64,6 +84,9 @@ def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> 
     pred_path = os.path.join(SANDBOX_DIR, TaskDirName.Pred, Filenames.Predictions)
     local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
+
+    inputs = []
+    outputs = []
 
     if is_testtuple_eval:
         perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance]))
@@ -85,71 +108,98 @@ def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> 
     if task_category == computetask_pb2.TASK_TRAIN:
 
         if ctx.in_models:
-            command += [os.path.join(in_models_dir, model["key"]) for model in ctx.in_models]
+            inputs.extend(
+                [
+                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, model["key"]))
+                    for model in ctx.in_models
+                ]
+            )
 
-        if rank:
-            command += ["--rank", rank]
-
-        command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
-        command += ["--data-sample-paths"] + [
-            os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
-        ]
-        command += ["--output-model-path", os.path.join(out_models_dir, Filenames.OutModel)]
-        command += ["--compute-plan-path", local_folder]
+        inputs.append(
+            TaskResource(
+                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
+            )
+        )
+        for key in task_data["data_sample_keys"]:
+            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
+        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
+        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_COMPOSITE:
 
         for input_model in ctx.in_models:
             cat = model_pb2.ModelCategory.Value(input_model["category"])
             if cat == model_pb2.MODEL_HEAD:
-                command += ["--input-head-model-filename", os.path.join(in_models_dir, input_model["key"])]
+                inputs.append(
+                    TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(in_models_dir, input_model["key"]))
+                )
             elif cat == model_pb2.MODEL_SIMPLE:
-                command += ["--input-trunk-model-filename", os.path.join(in_models_dir, input_model["key"])]
+                inputs.append(
+                    TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(in_models_dir, input_model["key"]))
+                )
 
-        if rank:
-            command += ["--rank", rank]
-
-        command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
-        command += ["--data-sample-paths"] + [
-            os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
-        ]
-        command += ["--output-models-path", out_models_dir]
-        command += ["--output-head-model-filename", Filenames.OutHeadModel]
-        command += ["--output-trunk-model-filename", Filenames.OutModel]
-        command += ["--compute-plan-path", local_folder]
+        inputs.append(
+            TaskResource(
+                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
+            )
+        )
+        for key in task_data["data_sample_keys"]:
+            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
+        outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
+        outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
+        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_AGGREGATE:
-
         if ctx.in_models:
-            command += [os.path.join(in_models_dir, model["key"]) for model in ctx.in_models]
+            inputs.extend(
+                [
+                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, model["key"]))
+                    for model in ctx.in_models
+                ]
+            )
 
-        if rank:
-            command += ["--rank", rank]
-
-        command += ["--output-model-path", os.path.join(out_models_dir, Filenames.OutModel)]
-        command += ["--compute-plan-path", local_folder]
+        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
+        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_TEST:
 
-        for input_model in ctx.in_models:
-            model_cat = model_pb2.ModelCategory.Value(input_model["category"])
-            algo_cat = algo_pb2.AlgoCategory.Value(ctx.algo["category"])
-            if model_cat == model_pb2.MODEL_HEAD:
-                command += ["--input-head-model-filename", os.path.join(in_models_dir, input_model["key"])]
-            elif model_cat == model_pb2.MODEL_SIMPLE and algo_cat == algo_pb2.ALGO_COMPOSITE:
-                command += ["--input-trunk-model-filename", os.path.join(in_models_dir, input_model["key"])]
-            else:
-                command += [os.path.join(in_models_dir, input_model["key"])]
+        if algo_cat == algo_pb2.ALGO_COMPOSITE:
+            for input_model in ctx.in_models:
+                model_cat = model_pb2.ModelCategory.Value(input_model["category"])
 
-        command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
-        command += ["--data-sample-paths"] + [
-            os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
-        ]
-        command += ["--output-predictions-path", pred_path]
-        command += ["--compute-plan-path", local_folder]
+                if model_cat == model_pb2.MODEL_HEAD:
+                    inputs.append(
+                        TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(in_models_dir, input_model["key"]))
+                    )
+                elif model_cat == model_pb2.MODEL_SIMPLE:
+                    inputs.append(
+                        TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(in_models_dir, input_model["key"]))
+                    )
+        else:
+            inputs.extend(
+                [
+                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, input_model["key"]))
+                    for input_model in ctx.in_models
+                ]
+            )
 
+        inputs.append(
+            TaskResource(
+                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
+            )
+        )
+        for key in task_data["data_sample_keys"]:
+            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
+        outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=pred_path))
+        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
+
+    if rank and task_category != computetask_pb2.TASK_TEST:
+        command += ["--rank", rank]
     if ctx.has_chainkeys:
-        command += ["--chainkeys-path", chainkeys_folder]
+        inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
+
+    command += ["--inputs", f"'{json.dumps(inputs)}'"]
+    command += ["--outputs", f"'{json.dumps(outputs)}'"]
 
     logger.debug("Generated task command", command=command)
 
