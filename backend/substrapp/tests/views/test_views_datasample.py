@@ -101,6 +101,24 @@ class DataSampleViewTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
 
+    def test_datasample_retrieve(self):
+        url = reverse("substrapp:data_sample-detail", args=[self.expected_results[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.json(), self.expected_results[0])
+
+    def test_datasample_retrieve_wrong_channel(self):
+        url = reverse("substrapp:data_sample-detail", args=[self.expected_results[0]["key"]])
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(url, **extra)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.datasample.DataSampleViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    def test_datasample_retrieve_fail(self, _):
+        url = reverse("substrapp:data_sample-detail", args=[self.expected_results[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def test_datasample_list_empty(self):
         DataSampleRep.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
@@ -179,6 +197,15 @@ class DataSampleViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
+    def test_datasample_list_ordering(self):
+        params = urlencode({"ordering": "creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"ordering": "-creation_date"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+
     @parameterized.expand(
         [
             ("page_size_1_page_3", 1, 3),
@@ -209,7 +236,7 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(
             OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None):
+        ), mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -238,7 +265,7 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(
             OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None):
+        ), mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -267,7 +294,7 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(
             OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None):
+        ), mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -296,7 +323,7 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(
             OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None):
+        ), mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -322,7 +349,7 @@ class DataSampleViewTests(APITestCase):
             ),
         }
 
-        with mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None):
+        with mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -346,7 +373,7 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=MockOrcError()), mock.patch(
-            "substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None
+            "substrapp.views.datasample.check_datamanagers", return_value=None
         ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db

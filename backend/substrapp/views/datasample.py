@@ -16,6 +16,7 @@ from rest_framework import mixins
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -26,229 +27,187 @@ from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager
-from substrapp.models import DataSample
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataSampleSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
-from substrapp.views.filters_utils import filter_queryset
+from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
 
 
-class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
-    queryset = DataSample.objects.all()
-    serializer_class = DataSampleSerializer
-    pagination_class = DefaultPageNumberPagination
+def create(request, get_success_headers):
+    try:
+        data = _create(request)
+    # FIXME: `serializers.ValidationError` are automatically handled by DRF and should
+    #  not be caught to return a response. The following code only exists to preserve
+    #  a previously established API contract.
+    except serializers.ValidationError as e:
+        return ApiResponse({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def create(self, request, *args, **kwargs):
+    headers = get_success_headers(data)
+    return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+def _create(request):
+    """Create new datasamples.
+
+    The workflow is composed of several steps:
+    - Save files in local database to get the addresses.
+    - Register assets in the orchestrator.
+    - Save metadata in local database.
+    """
+    # Step1: save files in local database
+    data_manager_keys = request.data.get("data_manager_keys") or []
+    check_datamanagers(data_manager_keys)
+
+    # incrementally save in db
+    instances = {}
+    for file_data in _get_files(request):
+        instance = _db_create(file_data)
+        instances[str(instance.key)] = instance
+
+    # Step2: register asset in orchestrator
+    try:
+        orc_response = _register_in_orchestrator(request, instances.values())
+    except Exception:
+        for instance in instances.values():
+            instance.delete()  # warning: post delete signals are not executed by django rollback
+        raise
+
+    # Step3: save metadata in local database
+    return _localrep_create(request, instances, orc_response)
+
+
+def _register_in_orchestrator(request, instances):
+    """Register datasamples in orchestrator."""
+    data_manager_keys = request.data.get("data_manager_keys") or []
+
+    orc_ds = {
+        "samples": [
+            {
+                "key": str(i.key),
+                "data_manager_keys": [str(key) for key in data_manager_keys],
+                "test_only": request.data.get("test_only", False),
+                "checksum": i.checksum,
+            }
+            for i in instances
+        ]
+    }
+    with get_orchestrator_client(get_channel_name(request)) as client:
+        return client.register_datasamples(orc_ds)
+
+
+def _localrep_create(request, instances, orc_response):
+    results = []
+    for localrep_data in orc_response:
+        localrep_data["channel"] = get_channel_name(request)
+        localrep_serializer = DataSampleRepSerializer(data=localrep_data)
         try:
-            data = self._create(request)
-        # FIXME: `serializers.ValidationError` are automatically handled by DRF and should
-        #  not be caught to return a response. The following code only exists to preserve
-        #  a previously established API contract.
-        except serializers.ValidationError as e:
-            return ApiResponse({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        headers = self.get_success_headers(data)
-        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def _create(self, request):
-        """Create new datasamples.
-
-        The workflow is composed of several steps:
-        - Save files in local database to get the addresses.
-        - Register assets in the orchestrator.
-        - Save metadata in local database.
-        """
-        # Step1: save files in local database
-        data_manager_keys = request.data.get("data_manager_keys") or []
-        self.check_datamanagers(data_manager_keys)
-
-        # incrementally save in db
-        instances = {}
-        for file_data in self._get_files(request):
-            instance = self._db_create(file_data)
-            instances[str(instance.key)] = instance
-
-        # Step2: register asset in orchestrator
-        try:
-            orc_response = self._register_in_orchestrator(request, instances.values())
+            localrep_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            data_sample = DataSampleRep.objects.get(key=localrep_data["key"])
+            data = DataSampleRepSerializer(data_sample).data
         except Exception:
             for instance in instances.values():
                 instance.delete()  # warning: post delete signals are not executed by django rollback
             raise
+        else:
+            data = localrep_serializer.data
+        result = DataSampleSerializer(instances[data["key"]]).data
+        result.update(data)
+        results.append(result)
+    return results
 
-        # Step3: save metadata in local database
-        return self._localrep_create(request, instances, orc_response)
 
-    def _register_in_orchestrator(self, request, instances):
-        """Register datasamples in orchestrator."""
-        data_manager_keys = request.data.get("data_manager_keys") or []
+def _db_create(data):
+    serializer = DataSampleSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
 
-        orc_ds = {
-            "samples": [
-                {
-                    "key": str(i.key),
-                    "data_manager_keys": [str(key) for key in data_manager_keys],
-                    "test_only": request.data.get("test_only", False),
-                    "checksum": i.checksum,
-                }
-                for i in instances
-            ]
-        }
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            return client.register_datasamples(orc_ds)
+    # FIXME: This try/except block is only here to ensure
+    #  a previously established API contract is respected.
+    try:
+        return serializer.save()
+    except Exception as e:
+        raise exceptions.BadRequestError(str(e))
 
-    def _localrep_create(self, request, instances, orc_response):
-        results = []
-        for localrep_data in orc_response:
-            localrep_data["channel"] = get_channel_name(request)
-            localrep_serializer = DataSampleRepSerializer(data=localrep_data)
-            try:
-                localrep_serializer.save_if_not_exists()
-            except AlreadyExistsError:
-                data_sample = DataSampleRep.objects.get(key=localrep_data["key"])
-                data = DataSampleRepSerializer(data_sample).data
-            except Exception:
-                for instance in instances.values():
-                    instance.delete()  # warning: post delete signals are not executed by django rollback
-                raise
-            else:
-                data = localrep_serializer.data
-            result = self.get_serializer(instances[data["key"]]).data
-            result.update(data)
-            results.append(result)
-        return results
 
-    def _db_create(self, data):
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
+def check_datamanagers(data_manager_keys):
+    if not data_manager_keys:
+        raise exceptions.BadRequestError("missing or empty field 'data_manager_keys'")
+    datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
+    if datamanager_count != len(data_manager_keys):
+        raise exceptions.BadRequestError(
+            "One or more datamanager keys provided do not exist in local database. "
+            f"Please create them before. DataManager keys: {data_manager_keys}"
+        )
 
-        # FIXME: This try/except block is only here to ensure
-        #  a previously established API contract is respected.
+
+def _get_files(request):
+    return _get_files_from_http_upload(request) if request.FILES else _get_files_from_servermedias(request)
+
+
+def _get_files_from_http_upload(request):
+    """
+    Yield files uploaded via HTTP.
+
+    The yielded dictionaries have a "file" key and a "checksum" key.
+    """
+    for f in request.FILES.values():
         try:
-            return serializer.save()
-        except Exception as e:
-            raise exceptions.BadRequestError(str(e))
+            f.seek(0)
+        except Exception:
+            raise serializers.ValidationError("Cannot handle this file object")
+        else:
+            archive = None
 
-    @staticmethod
-    def check_datamanagers(data_manager_keys):
-        if not data_manager_keys:
-            raise exceptions.BadRequestError("missing or empty field 'data_manager_keys'")
-        datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
-        if datamanager_count != len(data_manager_keys):
-            raise exceptions.BadRequestError(
-                "One or more datamanager keys provided do not exist in local database. "
-                f"Please create them before. DataManager keys: {data_manager_keys}"
-            )
-
-    def _get_files(self, request):
-        return (
-            self._get_files_from_http_upload(request) if request.FILES else self._get_files_from_servermedias(request)
-        )
-
-    @staticmethod
-    def _get_files_from_http_upload(request):
-        """
-        Yield files uploaded via HTTP.
-
-        The yielded dictionaries have a "file" key and a "checksum" key.
-        """
-        for f in request.FILES.values():
             try:
-                f.seek(0)
-            except Exception:
-                raise serializers.ValidationError("Cannot handle this file object")
+                archive = _get_archive(f)
+            except Exception as e:
+                logger.exception("failed to get archive", e=e)
+                raise e
             else:
-                archive = None
+                with tempfile.TemporaryDirectory() as tmp_path:
+                    archive.extractall(path=tmp_path)
+                    checksum = get_dir_hash(tmp_path)
+                f.seek(0)
+                yield {"file": f, "checksum": checksum}
+            finally:
+                if archive:
+                    archive.close()
 
-                try:
-                    archive = _get_archive(f)
-                except Exception as e:
-                    logger.exception("failed to get archive", e=e)
-                    raise e
-                else:
-                    with tempfile.TemporaryDirectory() as tmp_path:
-                        archive.extractall(path=tmp_path)
-                        checksum = get_dir_hash(tmp_path)
-                    f.seek(0)
-                    yield {"file": f, "checksum": checksum}
-                finally:
-                    if archive:
-                        archive.close()
 
-    @staticmethod
-    def _get_files_from_servermedias(request):
-        """
-        Yield files from servermedias, based on the HTTP POST request's "path" and "paths" keys.
+def _get_files_from_servermedias(request):
+    """
+    Yield files from servermedias, based on the HTTP POST request's "path" and "paths" keys.
 
-        The yielded dictionaries have a "path" key and a "checksum" key.
-        """
-        path = request.data.get("path")
-        paths = request.data.get("paths") or []
-        if path and paths:
-            raise Exception("Cannot use path and paths together.")
-        if path is not None:
-            paths = [path]
+    The yielded dictionaries have a "path" key and a "checksum" key.
+    """
+    path = request.data.get("path")
+    paths = request.data.get("paths") or []
+    if path and paths:
+        raise Exception("Cannot use path and paths together.")
+    if path is not None:
+        paths = [path]
 
-        if request.data.get("multiple") in (True, "true"):
-            paths = _get_servermedias_subpaths(paths, raise_no_subdir=True)
+    if request.data.get("multiple") in (True, "true"):
+        paths = _get_servermedias_subpaths(paths, raise_no_subdir=True)
 
-        for path in paths:
-            _validate_servermedias_path(path)
+    for path in paths:
+        _validate_servermedias_path(path)
 
-            checksum = get_dir_hash(path)
+        checksum = get_dir_hash(path)
 
-            if settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:  # save path
-                yield {"path": path, "checksum": checksum}
+        if settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:  # save path
+            yield {"path": path, "checksum": checksum}
 
-            else:  # upload to MinIO
-                with tempfile.TemporaryDirectory() as archive_tmp_path:
-                    archive = shutil.make_archive(archive_tmp_path, "tar", root_dir=path)
-                yield {"file": File(open(archive, "rb")), "checksum": checksum}
-
-    def list(self, request, *args, **kwargs):
-        queryset = (
-            DataSampleRep.objects.filter(channel=get_channel_name(request))
-            .prefetch_related("data_managers")
-            .order_by("creation_date", "key")
-        )
-
-        query_params = request.query_params.get("search")
-        if query_params is not None:
-            queryset = filter_queryset("datasample", queryset, query_params)
-        queryset = self.paginate_queryset(queryset)
-
-        data = DataSampleRepSerializer(queryset, many=True).data
-        return self.get_paginated_response(data)
-
-    @action(methods=["post"], detail=False)
-    def bulk_update(self, request):
-        # convert QueryDict request.data into dict
-        # using QueryDict.getlist does not seem to work for all cases
-        data_manager_keys = [str(key) for key in (dict(request.data).get("data_manager_keys") or [])]
-        data_sample_keys = [str(key) for key in (dict(request.data).get("data_sample_keys") or [])]
-
-        orc_ds = {
-            "keys": data_sample_keys,
-            "data_manager_keys": data_manager_keys,
-        }
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.update_datasample(orc_ds)
-
-        # Update relations directly in local db to ensure consistency
-        data_managers = DataManagerRep.objects.filter(key__in=data_manager_keys)
-        data_samples = DataSampleRep.objects.filter(key__in=data_sample_keys)
-        for data_sample in data_samples:
-            # WARNING: bulk update is only for adding new links, not for removing ones
-            data_sample.data_managers.add(*data_managers)
-            data_sample.save()
-
-        return ApiResponse(data, status=status.HTTP_200_OK)
+        else:  # upload to MinIO
+            with tempfile.TemporaryDirectory() as archive_tmp_path:
+                archive = shutil.make_archive(archive_tmp_path, "tar", root_dir=path)
+            yield {"file": File(open(archive, "rb")), "checksum": checksum}
 
 
 def _get_servermedias_subpaths(paths, raise_no_subdir=False):
@@ -311,3 +270,42 @@ def _get_archive_and_files(f: BinaryIO) -> Tuple[Union[ZipFile, TarFile], List[s
         return archive, archive.getnames()
     except tarfile.TarError:
         raise serializers.ValidationError("Archive must be zip or tar")
+
+
+class DataSampleViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
+    serializer_class = DataSampleRepSerializer
+    filter_backends = (OrderingFilter, CustomSearchFilter)
+    ordering_fields = ["creation_date", "key", "owner"]
+    ordering = ["creation_date", "key"]
+    pagination_class = DefaultPageNumberPagination
+    custom_search_object_type = "datasample"
+
+    def get_queryset(self):
+        return DataSampleRep.objects.filter(channel=get_channel_name(self.request)).prefetch_related("data_managers")
+
+    def create(self, request, *args, **kwargs):
+        return create(request, lambda data: self.get_success_headers(data))
+
+    @action(methods=["post"], detail=False)
+    def bulk_update(self, request):
+        # convert QueryDict request.data into dict
+        # using QueryDict.getlist does not seem to work for all cases
+        data_manager_keys = [str(key) for key in (dict(request.data).get("data_manager_keys") or [])]
+        data_sample_keys = [str(key) for key in (dict(request.data).get("data_sample_keys") or [])]
+
+        orc_ds = {
+            "keys": data_sample_keys,
+            "data_manager_keys": data_manager_keys,
+        }
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.update_datasample(orc_ds)
+
+        # Update relations directly in local db to ensure consistency
+        data_managers = DataManagerRep.objects.filter(key__in=data_manager_keys)
+        data_samples = DataSampleRep.objects.filter(key__in=data_sample_keys)
+        for data_sample in data_samples:
+            # WARNING: bulk update is only for adding new links, not for removing ones
+            data_sample.data_managers.add(*data_managers)
+            data_sample.save()
+
+        return ApiResponse(data, status=status.HTTP_200_OK)

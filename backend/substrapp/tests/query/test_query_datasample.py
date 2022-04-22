@@ -20,7 +20,6 @@ from orchestrator.error import OrcError
 from substrapp.models import DataSample
 from substrapp.serializers import DataSampleSerializer
 from substrapp.tests import assets
-from substrapp.views import DataSampleViewSet
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_script
@@ -49,7 +48,7 @@ def mock_register_datasamples(orc_request):
 
 
 @mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples)
-@mock.patch("substrapp.views.datasample.DataSampleViewSet.check_datamanagers", return_value=None)
+@mock.patch("substrapp.views.datasample.check_datamanagers", return_value=None)
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
@@ -438,8 +437,8 @@ class DataSampleQueryTests(APITestCase):
         mocked_serializer = MagicMock(DataSampleSerializer)
         mocked_serializer.is_valid.return_value = True
         mocked_serializer.save.side_effect = Exception("Failed")
-        with mock.patch.object(zipfile, "is_zipfile", return_value=True), mock.patch.object(
-            DataSampleViewSet, "get_serializer", return_value=mocked_serializer
+        with mock.patch.object(zipfile, "is_zipfile", return_value=True), mock.patch(
+            "substrapp.views.datasample.DataSampleSerializer", return_value=mocked_serializer
         ):
             response = self.client.post(self.url, data, format="multipart", **self.extra)
             self.assertEqual(response.json()["message"], "Failed")
