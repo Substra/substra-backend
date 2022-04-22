@@ -6,110 +6,112 @@ This file document all the settings of the connect application
 These settings are configured through env variables.
 They can be set in the [chart](../charts/substra-backend/README) through the `config` value.
 
+Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `True`, `true`, `Y`, `y`, `YES`, `yes`; anything else is falsey.
+
 ## Global settings
 
-| Setting | Default value |
-| ---     | ---           |
-| `ALLOWED_HOSTS` | `[]` |
-| `BACKEND_VERSION` | `nil` |
-| `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `24 * 3600` |
-| `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `7 * 24 * 3600` |
-| `CELERYBEAT_SCHEDULE_TASK_PERIOD` | `3 * 3600` |
-| `CELERY_BROKER_HOST` | `localhost` |
-| `CELERY_BROKER_PASSWORD` | `nil` |
-| `CELERY_BROKER_PORT` | `5672` |
-| `CELERY_BROKER_USER` | `nil` |
-| `CELERY_TASK_MAX_RETRIES` | `7` |
-| `CELERY_TASK_RETRY_BACKOFF` | `60` |
-| `CELERY_TASK_RETRY_BACKOFF_MAX` | `64 * 60` |
-| `CELERY_WORKER_CONCURRENCY` | `1` |
-| `COMMON_HOST_DOMAIN` | `nil` |
-| `COMPUTE_POD_FS_GROUP` | `nil` |
-| `COMPUTE_POD_GKE_GPUS_LIMITS` | `0` |
-| `COMPUTE_POD_RUN_AS_GROUP` | `nil` |
-| `COMPUTE_POD_RUN_AS_USER` | `nil` |
-| `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |
-| `DATA_UPLOAD_MAX_SIZE` | `1024 * 1024 * 1024` |
-| `DEBUG_KEEP_POD_AND_DIRS` | `False` |
-| `DJANGO_LOG_SQL_QUERIES` | `True` |
-| `ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS` | `False` |
-| `ENABLE_METRICS` | `False` |
-| `EXPIRY_TOKEN_LIFETIME` | `24 * 60` |
-| `GZIP_MODELS` | `False` |
-| `HOSTNAME` | `nil` |
-| `HOST_IP` | `nil` |
-| `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |
-| `ISOLATED` | `nil` |
-| `K8S_SECRET_NAMESPACE` | `default` |
-| `KANIKO_DOCKER_CONFIG_SECRET_NAME` | `nil` |
-| `KANIKO_IMAGE` | `nil` |
-| `KANIKO_MIRROR` | `False` |
-| `LOCALREP_RESYNC_EVENTS_PAGE_SIZE` | `1000` |
-| `LOGGING_USE_COLORS` | `True` |
-| `LOG_LEVEL` | `INFO` |
-| `NAMESPACE` | `nil` |
-| `OBJECTSTORE_ACCESSKEY` | `nil` |
-| `OBJECTSTORE_SECRETKEY` | `nil` |
-| `OBJECTSTORE_URL` | `nil` |
-| `PAGINATION_MAX_PAGE_SIZE` | `10000` |
-| `POD_IP` | `nil` |
-| `REGISTRY` | `nil` |
-| `REGISTRY_IS_LOCAL` | `nil` |
-| `REGISTRY_PULL_DOMAIN` | `nil` |
-| `REGISTRY_SCHEME` | `nil` |
-| `REGISTRY_SERVICE_NAME` | `nil` |
-| `SUBPATH` | `nil` |
-| `TASK_CACHE_DOCKER_IMAGES` | `False` |
-| `TASK_CHAINKEYS_ENABLED` | `False` |
-| `TASK_LIST_WORKSPACE` | `True` |
-| `TOKEN_STRATEGY` | `unique` |
-| `WORKER_PVC_DOCKER_CACHE` | `nil` |
-| `WORKER_PVC_IS_HOSTPATH` | `nil` |
-| `WORKER_PVC_SUBTUPLE` | `nil` |
-| `WORKER_REPLICA_SET_NAME` | `nil` |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| json | `ALLOWED_HOSTS` | `[]` |  |
+| string | `BACKEND_VERSION` | nil |  |
+| string | `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `86400` (`24 * 3600`) |  |
+| string | `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `604800` (`7 * 24 * 3600`) |  |
+| string | `CELERYBEAT_SCHEDULE_TASK_PERIOD` | `10800` (`3 * 3600`) |  |
+| string | `CELERY_BROKER_HOST` | `localhost` |  |
+| string | `CELERY_BROKER_PASSWORD` | nil |  |
+| string | `CELERY_BROKER_PORT` | `5672` |  |
+| string | `CELERY_BROKER_USER` | nil |  |
+| int | `CELERY_TASK_MAX_RETRIES` | `7` |  |
+| int | `CELERY_TASK_RETRY_BACKOFF` | `60` | time in seconds |
+| int | `CELERY_TASK_RETRY_BACKOFF_MAX` | `3840` (`64 * 60`) |  |
+| int | `CELERY_WORKER_CONCURRENCY` | `1` |  |
+| string | `COMMON_HOST_DOMAIN` | nil |  |
+| string | `COMPUTE_POD_FS_GROUP` | nil |  |
+| int | `COMPUTE_POD_GKE_GPUS_LIMITS` | `0` |  |
+| string | `COMPUTE_POD_RUN_AS_GROUP` | nil |  |
+| string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
+| int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
+| int | `DATA_UPLOAD_MAX_SIZE` | `1073741824` (`1024 * 1024 * 1024`) | bytes |
+| bool | `DEBUG_KEEP_POD_AND_DIRS` | `False` |  |
+| bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
+| bool | `ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS` | `False` |  |
+| bool | `ENABLE_METRICS` | `False` |  |
+| int | `EXPIRY_TOKEN_LIFETIME` | `1440` (`24 * 60`) | minutes |
+| bool | `GZIP_MODELS` | `False` |  |
+| string | `HOSTNAME` | nil |  |
+| string | `HOST_IP` | nil |  |
+| int | `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |  |
+| bool | `ISOLATED` | nil |  |
+| string | `K8S_SECRET_NAMESPACE` | `default` |  |
+| string | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | nil |  |
+| string | `KANIKO_IMAGE` | nil |  |
+| bool | `KANIKO_MIRROR` | `False` |  |
+| int | `LOCALREP_RESYNC_EVENTS_PAGE_SIZE` | `1000` |  |
+| bool | `LOGGING_USE_COLORS` | `True` |  |
+| string | `LOG_LEVEL` | `INFO` |  |
+| string | `NAMESPACE` | nil |  |
+| string | `OBJECTSTORE_ACCESSKEY` | nil |  |
+| string | `OBJECTSTORE_SECRETKEY` | nil |  |
+| string | `OBJECTSTORE_URL` | nil |  |
+| int | `PAGINATION_MAX_PAGE_SIZE` | `10000` |  |
+| string | `POD_IP` | nil |  |
+| string | `REGISTRY` | nil |  |
+| bool | `REGISTRY_IS_LOCAL` | nil |  |
+| string | `REGISTRY_PULL_DOMAIN` | nil |  |
+| string | `REGISTRY_SCHEME` | nil |  |
+| string | `REGISTRY_SERVICE_NAME` | nil |  |
+| string | `SUBPATH` | nil |  |
+| bool | `TASK_CACHE_DOCKER_IMAGES` | `False` |  |
+| bool | `TASK_CHAINKEYS_ENABLED` | `False` |  |
+| bool | `TASK_LIST_WORKSPACE` | `True` |  |
+| string | `TOKEN_STRATEGY` | `unique` |  |
+| string | `WORKER_PVC_DOCKER_CACHE` | nil |  |
+| bool | `WORKER_PVC_IS_HOSTPATH` | nil |  |
+| string | `WORKER_PVC_SUBTUPLE` | nil |  |
+| string | `WORKER_REPLICA_SET_NAME` | nil |  |
 
 ## Orchestrator settings
 
-| Setting | Default value |
-| ---     | ---           |
-| `ORCHESTRATOR_HOST` | `nil` |
-| `ORCHESTRATOR_MTLS_ENABLED` | `nil` |
-| `ORCHESTRATOR_PORT` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_AUTH_USER` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_HOST` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_PORT` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH` | `nil` |
-| `ORCHESTRATOR_RABBITMQ_TLS_ENABLED` | `nil` |
-| `ORCHESTRATOR_TLS_CLIENT_CERT_PATH` | `nil` |
-| `ORCHESTRATOR_TLS_CLIENT_KEY_PATH` | `nil` |
-| `ORCHESTRATOR_TLS_ENABLED` | `nil` |
-| `ORCHESTRATOR_TLS_SERVER_CACERT_PATH` | `nil` |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| string | `ORCHESTRATOR_HOST` | nil |  |
+| bool | `ORCHESTRATOR_MTLS_ENABLED` | nil |  |
+| string | `ORCHESTRATOR_PORT` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_AUTH_USER` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_HOST` | nil |  |
+| int | `ORCHESTRATOR_RABBITMQ_PORT` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH` | nil |  |
+| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH` | nil |  |
+| bool | `ORCHESTRATOR_RABBITMQ_TLS_ENABLED` | nil |  |
+| string | `ORCHESTRATOR_TLS_CLIENT_CERT_PATH` | nil |  |
+| string | `ORCHESTRATOR_TLS_CLIENT_KEY_PATH` | nil |  |
+| bool | `ORCHESTRATOR_TLS_ENABLED` | nil |  |
+| string | `ORCHESTRATOR_TLS_SERVER_CACERT_PATH` | nil |  |
 
 ## Org settings
 
-| Setting | Default value |
-| ---     | ---           |
-| `BACKEND_DEFAULT_PORT` | `8000` |
-| `ORG_NAME` | `nil` |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| string | `BACKEND_DEFAULT_PORT` | `8000` |  |
+| string | `ORG_NAME` | nil |  |
 
 ## CORS settings
 
-| Setting | Default value |
-| ---     | ---           |
-| `CORS_ALLOW_CREDENTIALS` | `False` |
-| `CORS_ORIGIN_WHITELIST` | `[]` |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| bool | `CORS_ALLOW_CREDENTIALS` | `False` |  |
+| json | `CORS_ORIGIN_WHITELIST` | `[]` |  |
 
 ## Ledger settings
 
-| Setting | Default value |
-| ---     | ---           |
-| `LEDGER_CHANNELS` | `nil` |
-| `LEDGER_MSP_ID` | `nil` |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| json | `LEDGER_CHANNELS` | nil |  |
+| string | `LEDGER_MSP_ID` | nil |  |
 
 ## Event app settings
 
-| Setting | Default value |
-| ---     | ---           |
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|

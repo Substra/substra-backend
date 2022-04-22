@@ -321,9 +321,9 @@ if ENABLE_METRICS:
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 # Uploaded file max size, in bytes
-DATA_UPLOAD_MAX_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_SIZE", 1024 * 1024 * 1024))
+DATA_UPLOAD_MAX_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_SIZE", 1024 * 1024 * 1024))  # bytes
 
-EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get("EXPIRY_TOKEN_LIFETIME", 24 * 60)))
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get("EXPIRY_TOKEN_LIFETIME", 24 * 60)))  # minutes
 TOKEN_STRATEGY = os.environ.get("TOKEN_STRATEGY", "unique")
 
 GZIP_MODELS = to_bool(os.environ.get("GZIP_MODELS", False))
