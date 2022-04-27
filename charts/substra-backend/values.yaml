@@ -545,7 +545,7 @@ kaniko:
   image:
     registry: gcr.io
     repository: kaniko-project/executor
-    tag: v1.8.1
+    tag: v1.6.0
   ## @param kaniko.mirror If set to `true` pull base images from the local registry.
   ##
   mirror: false
@@ -561,7 +561,7 @@ kaniko:
       image:
         registry: gcr.io
         repository: kaniko-project/warmer
-        tag: v1.8.1
+        tag: v1.6.0
       ## @param kaniko.cache.warmer.cachedImages A list of docker images to warmup the Kaniko cache
       ## e.g:
       ## - gcr.io/connect-314908/connect-tools:0.9.0-minimal

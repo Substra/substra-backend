@@ -1,5 +1,11 @@
 # Changelog
 
+## 17.1.3
+
+### Fixed
+
+- `kaniko` image is now `gcr.io/kaniko-project/executor:v1.6.0` (#980)
+
 ## 17.1.2
 
 ### Fixed
@@ -395,7 +401,7 @@ See [UPGRADE.md](./UPGRADE.md#9.0.0)
 - `persistence.volumes` is now an object instead of an array
 - `persistence.volumes[].name` is now the key of the volume object
 
-## 1.7.0
+## 1.6.0
 
 ### Changed
 - Refactor of the kubernetes objects labels
