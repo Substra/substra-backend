@@ -47,6 +47,9 @@ class NewsFeedViewTests(APITestCase):
         failed_cp.failed_task_category = 0
         failed_cp.save()
         done_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
+        algo = factory.create_algo()
+        datamanager = factory.create_datamanager()
+        metric = factory.create_metric()
 
         # we expect items to be sorted from the latest to the earliest
         expected_results = [
@@ -111,6 +114,33 @@ class NewsFeedViewTests(APITestCase):
                 "name": str(doing_cp.metadata.get("name", doing_cp.tag)),
                 "status": "STATUS_DOING",
                 "timestamp": doing_cp.start_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            # METRIC
+            {
+                "asset_kind": "ASSET_METRIC",
+                "asset_key": str(metric.key),
+                "name": str(metric.name),
+                "status": "STATUS_CREATED",
+                "timestamp": metric.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            # DATAMANAGER
+            {
+                "asset_kind": "ASSET_DATA_MANAGER",
+                "asset_key": str(datamanager.key),
+                "name": str(datamanager.name),
+                "status": "STATUS_CREATED",
+                "timestamp": datamanager.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            # ALGO
+            {
+                "asset_kind": "ASSET_ALGO",
+                "asset_key": str(algo.key),
+                "name": str(algo.name),
+                "status": "STATUS_CREATED",
+                "timestamp": algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             # PLAN_STATUS_CREATED

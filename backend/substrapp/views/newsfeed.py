@@ -4,7 +4,10 @@ from rest_framework.viewsets import GenericViewSet
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import DefaultPageNumberPagination
+from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
+from localrep.models import DataManager as DataManagerRep
+from localrep.models import Metric as MetricRep
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -39,9 +42,10 @@ class NewsFeedViewSet(GenericViewSet):
                 - STATUS_DOING with computeplan start_date
                 - STATUS_DONE/FAILED/CANCELED with computeplan end_date
         """
-
         items = []
-        for compute_plan in ComputePlanRep.objects.filter(channel=get_channel_name(request)):
+        channel = get_channel_name(request)
+
+        for compute_plan in ComputePlanRep.objects.filter(channel=channel):
             status = PLAN_STATUS_CREATED
             items.append(
                 cp_item(
@@ -76,6 +80,42 @@ class NewsFeedViewSet(GenericViewSet):
                         detail,
                     )
                 )
+
+        for algo in AlgoRep.objects.filter(channel=channel):
+            items.append(
+                {
+                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO),
+                    "asset_key": algo.key,
+                    "name": algo.name,
+                    "status": "STATUS_CREATED",
+                    "timestamp": algo.creation_date,
+                    "detail": {},
+                }
+            )
+
+        for datamanager in DataManagerRep.objects.filter(channel=channel):
+            items.append(
+                {
+                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER),
+                    "asset_key": datamanager.key,
+                    "name": datamanager.name,
+                    "status": "STATUS_CREATED",
+                    "timestamp": datamanager.creation_date,
+                    "detail": {},
+                }
+            )
+
+        for metric in MetricRep.objects.filter(channel=channel):
+            items.append(
+                {
+                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_METRIC),
+                    "asset_key": metric.key,
+                    "name": metric.name,
+                    "status": "STATUS_CREATED",
+                    "timestamp": metric.creation_date,
+                    "detail": {},
+                }
+            )
 
         items.sort(key=lambda x: x["timestamp"], reverse=True)
         items = self.paginate_queryset(items)

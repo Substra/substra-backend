@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Pass named inputs/outputs to algos (#877)
 - Set default pagination page size and max page size (#950)
 - Use standard ModelViewSet to handle DataSample list and retrieve calls (#972)
+- Newsfeed now returns items for metric, algo and datamanager creation (#954)
 
 ### Fixed
 - Create ModelRep DB instance when registering model in the orchestrator (#965)
