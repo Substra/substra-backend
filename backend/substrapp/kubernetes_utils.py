@@ -333,3 +333,23 @@ def get_service_node_port(service: str) -> int:
         )
 
     return port.node_port
+
+
+def execute(pod_name: str, command: list[str]):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    return kubernetes.stream.stream(
+        k8s_client.connect_get_namespaced_pod_exec,
+        pod_name,
+        NAMESPACE,
+        # use shell + redirection to ensure stdout/stderr are retrieved in order. Without this,
+        # if the program outputs to both stdout and stderr at around the same time,
+        # we lose the order of messages.
+        command=["/bin/sh", "-c", " ".join(command + ["2>&1"])],
+        stderr=True,
+        stdin=False,
+        stdout=True,
+        tty=False,
+        _preload_content=False,
+    )

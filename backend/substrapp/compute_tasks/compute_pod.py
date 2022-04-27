@@ -19,7 +19,6 @@ class Label:
     PodName = "substra.ai/pod-name"
     ComputePlanKey = "substra.ai/compute-plan-key"
     AlgoKey = "substra.ai/algo-key"
-    MetricKey = "substra.ai/testtuple-eval-metric-key"
     RandomToken = "substra.ai/random-token"
 
     # Values
@@ -28,30 +27,17 @@ class Label:
 
 
 class ComputePod:
-    compute_plan_key: str = None
-    algo_key: str = None
-    metric_key: str = None  # only if this is a testtuple eval pod
-
     def __init__(
         self,
         compute_plan_key: str,
         algo_key: str,
-        metric_key: str,
     ):
         self.compute_plan_key = compute_plan_key
         self.algo_key = algo_key
-        self.metric_key = metric_key
-
-    @property
-    def is_testtuple_eval(self) -> bool:
-        return True if self.metric_key else False
 
     @property
     def name(self) -> str:
-        if self.is_testtuple_eval:
-            return f"substra-{self.compute_plan_key[:8]}-eval-{self.metric_key[:8]}"
-        else:
-            return f"substra-{self.compute_plan_key[:8]}-compute-{self.algo_key[:8]}"
+        return f"substra-{self.compute_plan_key[:8]}-compute-{self.algo_key[:8]}"
 
     @staticmethod
     def get_compute_plan_label_selector(compute_plan_key: str) -> str:
@@ -64,17 +50,16 @@ class ComputePod:
 
     @property
     def label_selector(self) -> str:
-        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.AlgoKey, Label.MetricKey]})
+        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.AlgoKey]})
 
     @property
-    def labels(self) -> object:
+    def labels(self) -> dict:
         return {
             Label.PodName: self.name,
             Label.PodType: Label.PodType_ComputeTask,
             Label.Component: Label.Component_Compute,
             Label.ComputePlanKey: self.compute_plan_key,
-            Label.AlgoKey: self.algo_key or "",
-            Label.MetricKey: self.metric_key or "",
+            Label.AlgoKey: self.algo_key,
         }
 
 

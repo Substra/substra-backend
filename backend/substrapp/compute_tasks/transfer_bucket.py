@@ -2,6 +2,7 @@ import json
 import os
 import tarfile
 import tempfile
+from typing import Any
 
 import boto3
 import structlog
@@ -42,12 +43,7 @@ def transfer_to_bucket(ctx: Context) -> None:
         (os.path.join(ctx.directories.task_dir, TaskDirName.Export), TaskDirName.Export),
     ]
 
-    export_metadata = {
-        "task": ctx.task,
-        "compute_plan": ctx.compute_plan,
-        "dataset_name": ctx.data_manager["name"],
-        "metrics": ctx.metrics,
-    }
+    export_metadata = _generate_metadata(ctx)
 
     # Here we take only the basename of the string provided.
     # This avoids a potential path traversal attack in the final archive
@@ -99,3 +95,12 @@ def transfer_to_bucket(ctx: Context) -> None:
         )
 
         s3.upload_file(tar_path, BUCKET_NAME, f"{S3_PREFIX}/{tar_filename}" if S3_PREFIX else tar_filename)
+
+
+def _generate_metadata(ctx: Context) -> dict[str, Any]:
+    return {
+        "task": ctx.task,
+        "compute_plan": ctx.compute_plan,
+        "dataset_name": ctx.data_manager["name"],
+        "metrics": {metric.key: vars(metric) for metric in ctx.metrics},
+    }

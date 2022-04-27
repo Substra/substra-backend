@@ -4,10 +4,8 @@ from django.conf import settings
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
+from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
-from substrapp.compute_tasks.context import ALGO_IMAGE_PREFIX
-from substrapp.compute_tasks.context import METRICS_IMAGE_PREFIX
-from substrapp.compute_tasks.context import get_image_tag
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
 from substrapp.compute_tasks.lock import get_compute_plan_lock
@@ -77,11 +75,11 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         dirs = Directories(compute_plan_key)
         teardown_compute_plan_dir(dirs)
 
-    _remove_docker_images(ALGO_IMAGE_PREFIX, algo_keys)
-    _remove_docker_images(METRICS_IMAGE_PREFIX, metric_keys)
+    _remove_docker_images(algo_keys)
+    _remove_docker_images(metric_keys)
 
 
-def _remove_docker_images(image_prefix, keys):
+def _remove_docker_images(keys: list[str]):
     for key in keys:
-        image_tag = get_image_tag(image_prefix, key)
+        image_tag = Algo.image_tag(key)
         delete_container_image_safe(image_tag)

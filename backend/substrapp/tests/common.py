@@ -435,10 +435,10 @@ def get_test_task_input_models(task: Dict) -> List:
     return res
 
 
-def get_task_metrics(task: Dict) -> List:
-    res = []
+def get_task_metrics(task: Dict) -> dict:
+    res = {}
     for metric_key in task["test"]["metric_keys"]:
-        res.append(get_metric(metric_key))
+        res[metric_key] = get_metric(metric_key)
     return res
 
 

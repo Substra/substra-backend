@@ -32,7 +32,7 @@ def test_get_args_train_task():
         compute_plan_tag=None,
         in_models=in_models,
         algo=task["algo"],
-        metrics=None,
+        metrics={},
         data_manager=dm,
         directories={},
         has_chainkeys=False,
@@ -52,7 +52,7 @@ def test_get_args_train_task():
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, False, "")
+    actual = _get_args(ctx, ctx.algo.key, False)
     assert actual == [
         "train",
         "--rank",
@@ -80,7 +80,7 @@ def test_get_args_composite_task():
         compute_plan_tag=None,
         in_models=in_models,
         algo=task["algo"],
-        metrics=None,
+        metrics={},
         data_manager=dm,
         directories={},
         has_chainkeys=False,
@@ -105,7 +105,7 @@ def test_get_args_composite_task():
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, False)
+    actual = _get_args(ctx, ctx.algo.key, False)
     assert actual == [
         "train",
         "--rank",
@@ -138,7 +138,7 @@ def test_get_args_predict_train():
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, False)
+    actual = _get_args(ctx, ctx.algo.key, False)
     assert actual == ["predict", "--inputs", f"'{json.dumps(inputs)}'", "--outputs", f"'{json.dumps(outputs)}'"]
 
 
@@ -160,7 +160,7 @@ def test_get_args_eval_train():
 
     cmd += ["--output-perf-path", f"/substra_internal/perf/{task['test']['metric_keys'][0]}-perf.json"]
 
-    actual = _get_args(ctx, True, metric_key)
+    actual = _get_args(ctx, metric_key, True)
     assert actual == cmd
 
 
@@ -186,7 +186,7 @@ def test_get_args_predict_composite():
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, False)
+    actual = _get_args(ctx, ctx.algo.key, False)
     assert actual == ["predict", "--inputs", f"'{json.dumps(inputs)}'", "--outputs", f"'{json.dumps(outputs)}'"]
 
 
@@ -208,7 +208,7 @@ def test_get_args_eval_composite():
 
     cmd += ["--output-perf-path", f"/substra_internal/perf/{task['test']['metric_keys'][0]}-perf.json"]
 
-    actual = _get_args(ctx, True, metric_key)
+    actual = _get_args(ctx, metric_key, True)
     assert actual == cmd
 
 

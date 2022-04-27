@@ -232,7 +232,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
 
-            build_images(ctx)
+            build_images(ctx.all_algos)
 
             # Command execution
             execute_compute_task(ctx)
@@ -240,8 +240,8 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
             # Collect results
             if task_category == computetask_pb2.TASK_TEST:
                 result["result"] = {"performances": {}}
-                for metric_key in ctx.metric_keys:
-                    result["result"]["performances"][metric_key] = _get_perf(dirs, metric_key)
+                for metric in ctx.metrics:
+                    result["result"]["performances"][metric.key] = _get_perf(dirs, metric.key)
 
                 _transfer_model_to_bucket(ctx)
             else:

@@ -5,6 +5,7 @@ from typing import List
 from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import Directories
 from substrapp.orchestrator import get_orchestrator_client
@@ -15,9 +16,6 @@ TASK_DATA_FIELD = {
     computetask_pb2.TASK_AGGREGATE: "aggregate",
     computetask_pb2.TASK_COMPOSITE: "composite",
 }
-
-METRICS_IMAGE_PREFIX = "metrics"
-ALGO_IMAGE_PREFIX = "algo"
 
 
 class Context:
@@ -36,10 +34,10 @@ class Context:
     _compute_plan_tag: str
     _compute_plan: Dict
     _in_models: List[Dict]
-    _algo: Dict
-    _metrics: Dict
     _data_manager: Dict
     _directories: Directories
+    _algo: Algo
+    _metrics: list[Algo]
     _has_chainkeys: bool
 
     def __init__(
@@ -52,8 +50,8 @@ class Context:
         compute_plan_key: str,
         compute_plan_tag: str,
         in_models: List[Dict],
-        algo: Dict,
-        metrics: Dict,
+        algo: dict[str, Any],
+        metrics: list[dict[str, Any]],
         data_manager: Dict,
         directories: Directories,
         has_chainkeys: bool,
@@ -66,17 +64,17 @@ class Context:
         self._compute_plan_key = compute_plan_key
         self._compute_plan_tag = compute_plan_tag
         self._in_models = in_models
-        self._algo = algo
-        self._metrics = metrics
+        self._metrics = [Algo(self._channel_name, metric) for metric in metrics]
         self._data_manager = data_manager
         self._directories = directories
         self._has_chainkeys = has_chainkeys
+        self._algo = Algo(self._channel_name, algo)
 
     @classmethod
     def from_task(cls, channel_name: str, task: Dict):
         task_key = task["key"]
         compute_plan_key = task["compute_plan_key"]
-        metrics = None
+        metrics = []
         data_manager = None
 
         task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
@@ -89,7 +87,7 @@ class Context:
             algo = client.query_algo(task["algo"]["key"])
 
             if task_category == computetask_pb2.TASK_TEST:
-                metrics = {metric_key: client.query_algo(metric_key) for metric_key in task_data["metric_keys"]}
+                metrics = [client.query_algo(metric_key) for metric_key in task_data["metric_keys"]]
 
             if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])
@@ -153,21 +151,11 @@ class Context:
         return self._has_chainkeys
 
     @property
-    def algo_key(self) -> str:
-        return self.task["algo"]["key"]
-
-    @property
-    def metric_keys(self) -> List[str]:
-        if self.task_category != computetask_pb2.TASK_TEST:
-            raise Exception(f"Invalid operation: metric_keys for {self.task_category}")
-        return self.task_data["metric_keys"]
-
-    @property
     def in_models(self) -> List[Dict]:
         return self._in_models
 
     @property
-    def algo(self) -> Dict:
+    def algo(self) -> Algo:
         return self._algo
 
     @property
@@ -175,17 +163,12 @@ class Context:
         return self._compute_plan
 
     @property
-    def metrics(self) -> Dict:
+    def metrics(self) -> list[Algo]:
         return self._metrics
 
     @property
     def data_manager(self) -> Dict:
         return self._data_manager
-
-    @property
-    def algo_image_tag(self) -> str:
-        algo_key = self.task["algo"]["key"]
-        return get_image_tag(ALGO_IMAGE_PREFIX, algo_key)
 
     @property
     def task_data(self) -> Dict:
@@ -202,19 +185,11 @@ class Context:
             return []
         return self.task_data["data_sample_keys"]
 
+    def get_compute_pod(self, algo_key: str) -> ComputePod:
+        return ComputePod(self.compute_plan_key, algo_key)
+
     @property
-    def metrics_image_tags(self) -> Dict[str, str]:
-        if self.task_category != computetask_pb2.TASK_TEST:
-            raise Exception(f"Invalid operation: metrics_docker_tag for {self.task_category}")
-
-        metric_keys = self.task_data["metric_keys"]
-
-        return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in metric_keys}
-
-    def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = "") -> ComputePod:
-        return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else "")
-
-
-def get_image_tag(prefix, key) -> str:
-    # tag must be lowercase for docker
-    return f"{prefix}-{key[0:8]}".lower()
+    def all_algos(self) -> list[Algo]:
+        all_algos = [self._algo]
+        all_algos.extend(self._metrics)
+        return all_algos

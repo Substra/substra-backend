@@ -12,11 +12,11 @@ from typing import List
 import kubernetes
 import structlog
 from django.conf import settings
-from kubernetes.stream import stream
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
@@ -28,6 +28,7 @@ from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import get_container_image_name
 from substrapp.exceptions import PodReadinessTimeoutError
 from substrapp.kubernetes_utils import delete_pod
+from substrapp.kubernetes_utils import execute
 from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
@@ -36,13 +37,11 @@ from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
 
-NAMESPACE = settings.NAMESPACE
-
 
 @timeit
 def execute_compute_task(ctx: Context) -> None:
 
-    _execute_compute_task(ctx, is_testtuple_eval=False)
+    _execute_compute_task(ctx, ctx.algo, is_testtuple_eval=False)
 
     # Testtuple evaluation
     #
@@ -57,23 +56,21 @@ def execute_compute_task(ctx: Context) -> None:
     # - The "evaluate" step uses the metrics container image. It uses the prediction file as an input, and outputs
     #   a performance score. The "evaluate" step doesn't have access to data samples
     if ctx.task_category == computetask_pb2.TASK_TEST:
-        for metric_key, metrics_image_tag in ctx.metrics_image_tags.items():
-            _execute_compute_task(ctx, is_testtuple_eval=True, image_tag=metrics_image_tag, metric_key=metric_key)
+        for metric in ctx.metrics:
+            _execute_compute_task(ctx, metric, is_testtuple_eval=True)
 
 
 @timeit
-def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = "", metric_key: str = "") -> None:
-
+def _execute_compute_task(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> None:
     channel_name = ctx.channel_name
     dirs = ctx.directories
-    image_tag = image_tag if is_testtuple_eval else ctx.algo_image_tag
 
-    compute_pod = ctx.get_compute_pod(is_testtuple_eval, metric_key)
+    compute_pod = ctx.get_compute_pod(algo.key)
     pod_name = compute_pod.name
 
     env = get_environment(ctx)
-    image = get_container_image_name(image_tag)
-    exec_command = get_exec_command(ctx, is_testtuple_eval, metric_key)
+    image = get_container_image_name(algo.container_image_tag)
+    exec_command = get_exec_command(ctx, algo.key, is_testtuple_eval)
 
     k8s_client = _get_k8s_client()
 
@@ -104,7 +101,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
     if not settings.WORKER_PVC_IS_HOSTPATH:
         _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-    _exec(k8s_client, compute_pod, exec_command)
+    _exec(compute_pod, exec_command, is_testtuple_eval)
 
 
 def _get_k8s_client():
@@ -133,28 +130,15 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(k8s_client, compute_pod: ComputePod, exec_command: List[str]):
+def _exec(compute_pod: ComputePod, exec_command: List[str], is_testtuple_eval: bool):
     """Execute a command on a compute pod"""
-    logger.debug("Running command", command=exec_command, eval=compute_pod.is_testtuple_eval)
+    logger.debug("Running command", command=exec_command)
 
-    resp = stream(
-        k8s_client.connect_get_namespaced_pod_exec,
-        compute_pod.name,
-        NAMESPACE,
-        # use shell + redirection to ensure stdout/stderr are retrieved in order. Without this,
-        # if the program outputs to both stdout and stderr at around the same time,
-        # we lose the order of messages.
-        command=["/bin/sh", "-c", " ".join(exec_command + ["2>&1"])],
-        stderr=True,
-        stdin=False,
-        stdout=True,
-        tty=False,
-        _preload_content=False,
-    )
+    resp = execute(compute_pod.name, exec_command)
 
     def print_log(lines):
         for line in filter(None, lines.split("\n")):
-            logger.info(line, eval=compute_pod.is_testtuple_eval)
+            logger.info(line, eval=is_testtuple_eval)
 
     container_logs = io.BytesIO()
 

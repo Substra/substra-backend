@@ -46,6 +46,7 @@ class LocalFolderTests(APITestCase):
             compute_plan_key = "some compute plan key"
             task_category = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
             has_chainkeys = False
+            all_algos = []
 
         ctx = FakeContext()
 
@@ -68,8 +69,6 @@ class LocalFolderTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
-        ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.build_images"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.execute_compute_task"
         ) as mexecute_compute_task, mock.patch(

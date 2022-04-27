@@ -1,18 +1,15 @@
 import json
 import os
 from tempfile import TemporaryDirectory
-from typing import Dict
 from typing import List
 
 import kubernetes
 import structlog
 from django.conf import settings
 
-import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.clients import node as node_client
 from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import Label
-from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
@@ -43,42 +40,23 @@ KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
 
-def build_images(ctx: Context) -> None:
-    # Algo
-    _build_image_if_missing(ctx.channel_name, ctx.algo_image_tag, ctx.algo_key, ctx.algo)
-
-    # Metrics
-    if ctx.task_category == computetask_pb2.TASK_TEST:
-        for metric_key, metric_image_tag in ctx.metrics_image_tags.items():
-            _build_image_if_missing(ctx.channel_name, metric_image_tag, metric_key, ctx.metrics[metric_key])
+def build_images(algos: list[Algo]) -> None:
+    for algo in algos:
+        _build_image_if_missing(algo)
 
 
-def _build_image_if_missing(channel_name: str, image_tag: str, asset_key: str, algo: Dict) -> None:
+def _build_image_if_missing(algo: Algo) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
-    with lock_resource("image-build", image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
-        if container_image_exists(image_tag):
-            logger.info("Reusing existing image", image=image_tag)
+    with lock_resource("image-build", algo.container_image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
+        if container_image_exists(algo.container_image_tag):
+            logger.info("Reusing existing image", image=algo.container_image_tag)
         else:
-            _build_asset_image(
-                channel_name,
-                image_tag,
-                asset_key,
-                algo["algorithm"]["storage_address"],
-                algo["owner"],
-                algo["algorithm"]["checksum"],
-            )
+            _build_asset_image(algo)
 
 
-def _build_asset_image(
-    channel_name: str,
-    image_tag: str,
-    asset_key: str,
-    asset_storage_address: str,
-    asset_owner: str,
-    asset_checksum: str,
-) -> None:
+def _build_asset_image(algo: Algo) -> None:
     """
     Build an asset's container image. Perform multiple steps:
     1. Download the asset (algo or metric) using the provided asset storage_address/owner. Verify its checksum and
@@ -92,17 +70,16 @@ def _build_asset_image(
 
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         # Download source
-        content = node_client.get(channel_name, asset_owner, asset_storage_address, asset_checksum)
-        uncompress_content(content, tmp_dir)
+        uncompress_content(algo.archive, tmp_dir)
 
         # Extract ENTRYPOINT from Dockerfile
         entrypoint = _get_entrypoint_from_dockerfile(tmp_dir)
 
         # Build image
-        _build_container_image(tmp_dir, image_tag)
+        _build_container_image(tmp_dir, algo.container_image_tag)
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(asset_key=asset_key, entrypoint_json=entrypoint)
+        ImageEntrypoint.objects.get_or_create(asset_key=algo.key, entrypoint_json=entrypoint)
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:

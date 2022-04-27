@@ -4,7 +4,6 @@ from typing import List
 
 import structlog
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
 from substrapp.compute_tasks.context import Context
@@ -45,12 +44,8 @@ TASK_COMMANDS = {
 }
 
 
-def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:
-
-    if is_testtuple_eval:
-        entrypoint = ImageEntrypoint.objects.get(asset_key=metric_key)
-    else:
-        entrypoint = ImageEntrypoint.objects.get(asset_key=ctx.algo_key)
+def get_exec_command(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]:
+    entrypoint = ImageEntrypoint.objects.get(asset_key=algo_key)
 
     command = entrypoint.entrypoint_json
 
@@ -58,7 +53,7 @@ def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = No
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
     env = _get_env(ctx, is_testtuple_eval)
-    args = _get_args(ctx, is_testtuple_eval, metric_key)
+    args = _get_args(ctx, algo_key, is_testtuple_eval)
 
     return env + command + args
 
@@ -71,11 +66,10 @@ class TaskResource(dict):
 
 
 # TODO: '_get_args' is too complex, consider refactoring
-def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:  # noqa: C901
+def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task_category
     task_data = ctx.task_data
-    algo_cat = algo_pb2.AlgoCategory.Value(ctx.algo["category"])
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
@@ -89,7 +83,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> 
     outputs = []
 
     if is_testtuple_eval:
-        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance]))
+        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, "-".join([algo_key, Filenames.Performance]))
         command = ["--input-predictions-path", pred_path]
         command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [
@@ -163,7 +157,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> 
 
     elif task_category == computetask_pb2.TASK_TEST:
 
-        if algo_cat == algo_pb2.ALGO_COMPOSITE:
+        if ctx.algo.is_composite():
             for input_model in ctx.in_models:
                 model_cat = model_pb2.ModelCategory.Value(input_model["category"])
 
