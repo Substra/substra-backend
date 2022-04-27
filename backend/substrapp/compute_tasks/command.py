@@ -52,7 +52,7 @@ def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = No
     else:
         entrypoint = ImageEntrypoint.objects.get(asset_key=ctx.algo_key)
 
-    command = json.loads(entrypoint.entrypoint_json)
+    command = entrypoint.entrypoint_json
 
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.

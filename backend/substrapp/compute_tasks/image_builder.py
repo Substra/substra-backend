@@ -102,7 +102,7 @@ def _build_asset_image(
         _build_container_image(tmp_dir, image_tag)
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(asset_key=asset_key, entrypoint_json=json.dumps(entrypoint))
+        ImageEntrypoint.objects.get_or_create(asset_key=asset_key, entrypoint_json=entrypoint)
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:

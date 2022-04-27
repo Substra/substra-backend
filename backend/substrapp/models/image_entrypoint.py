@@ -5,5 +5,5 @@ class ImageEntrypoint(models.Model):
     """The container image entrypoint of an Algo or a Metric"""
 
     asset_key = models.UUIDField(primary_key=True, editable=False)
-    entrypoint_json = models.TextField()
+    entrypoint_json = models.JSONField()
     creation_date = models.DateTimeField(auto_now_add=True)

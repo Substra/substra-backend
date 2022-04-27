@@ -1,4 +1,3 @@
-import json
 import pathlib
 import tempfile
 import unittest
@@ -181,4 +180,4 @@ class ImageBuilderTests(APITestCase):
             muncompress_content.assert_called_once_with(asset_content, tmp_dir)
             m_get_entrypoint_from_dockerfile.assert_called_once_with(tmp_dir)
             m_build_container_image.assert_called_once_with(tmp_dir, image_tag)
-            mget_or_create.assert_called_once_with(asset_key=asset_key, entrypoint_json=json.dumps(entrypoint))
+            mget_or_create.assert_called_once_with(asset_key=asset_key, entrypoint_json=entrypoint)
