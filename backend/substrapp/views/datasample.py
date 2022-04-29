@@ -196,9 +196,13 @@ def _get_files_from_servermedias(request):
     if request.data.get("multiple") in (True, "true"):
         paths = _get_servermedias_subpaths(paths, raise_no_subdir=True)
 
+    logger.debug("Adding datasamples from servermedias", paths=paths)
+
     for path in paths:
         _validate_servermedias_path(path)
 
+        # Here an issue could arise since we compute the checksum before archiving the data.
+        # the data inside the directory could change before it is archived and uploaded to the storage backend (MinIO).
         checksum = get_dir_hash(path)
 
         if settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:  # save path
