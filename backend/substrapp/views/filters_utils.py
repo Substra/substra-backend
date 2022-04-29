@@ -1,3 +1,5 @@
+import json
+from collections import defaultdict
 from urllib.parse import unquote
 
 import structlog
@@ -21,7 +23,7 @@ def get_filters(query_params):
     [
         {
             "algo": {
-                "name": "algo1",
+                "name": ["algo1"],
             },
         },
     ]
@@ -30,8 +32,8 @@ def get_filters(query_params):
     [
         {
             "algo": {
-                "name": "algo1",
-                "owner": "owner1",
+                "name": ["algo1"],
+                "owner": ["owner1"],
             },
         },
     ]
@@ -49,49 +51,27 @@ def get_filters(query_params):
     [
         {
             "algo": {
-                "name": "algo1",
+                "name": ["algo1"],
             },
         },
         {
             "algo": {
-                "owner": "owner1",
+                "owner": ["owner1"],
             },
         },
     ]
 
     """
     filters = []
-    groups = query_params.split("-OR-")
-
-    for idx, group in enumerate(groups):
-
-        # init
-        filters.append({})
-
-        # get number of subfilters and decode them
-        subfilters = [unquote(x) for x in group.split(",")]
-
-        for subfilter in subfilters:
-            el = subfilter.split(":")
-            # get parent
-            parent = el[0]
-            subparent = el[1]
-            value = el[2]
-
-            filter = {subparent: [unquote(value)]}
-
-            if not len(filters[idx]):  # create and add it
-                filters[idx] = {parent: filter}
-            else:  # add it
-                if parent in filters[idx]:  # add
-                    if el[1] in filters[idx][parent]:  # concat in subparent
-                        filters[idx][parent][subparent].extend([value])
-                    else:  # add new subparent
-                        filters[idx][parent].update(filter)
-                else:  # create
-                    filters[idx].update({parent: filter})
-
-    return filters
+    for or_params in query_params.split("-OR-"):
+        or_filters = {}
+        for and_params in or_params.split(","):
+            asset, field, value = unquote(and_params).split(":")
+            if asset not in or_filters:
+                or_filters[asset] = defaultdict(list)
+            or_filters[asset][field].append(value)
+        filters.append(or_filters)
+    return json.loads(json.dumps(filters))  # convert default dict to dict
 
 
 def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
