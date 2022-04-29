@@ -186,7 +186,7 @@ class DataManagerViewTests(APITestCase):
             for field in ("description", "opener"):
                 self.assertEqual(result[field]["storage_address"], data_manager[field]["storage_address"])
 
-    def test_datamanager_list_filter(self):
+    def test_datamanager_list_search_filter(self):
         """Filter datamanager on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"dataset:key:{key}"})
@@ -195,7 +195,16 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_datamanager_list_filter_and(self):
+    def test_datamanager_list_filter(self):
+        """Filter datamanager on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datamanager_list_search_filter_and(self):
         """Filter datamanager on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"dataset:key:{key},dataset:owner:{owner}"})
@@ -204,7 +213,16 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_datamanager_list_filter_in(self):
+    def test_datamanager_list_filter_and(self):
+        """Filter datamanager on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datamanager_list_search_filter_in(self):
         """Filter datamanager in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -214,7 +232,17 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_datamanager_list_filter_or(self):
+    def test_datamanager_list_filter_in(self):
+        """Filter datamanager in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_datamanager_list_search_filter_or(self):
         """Filter datamanager on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -224,7 +252,7 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_datamanager_list_filter_or_and(self):
+    def test_datamanager_list_search_filter_or_and(self):
         """Filter datamanager on (key_0 and owner_0) or (key_1 and owner_1)."""
         key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
@@ -248,11 +276,24 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_datamanager_match_and_filter(self):
+    def test_datamanager_match_and_search_filter(self):
         """Match datamanager with filter."""
         params = urlencode(
             {
                 "search": f"dataset:key:{self.expected_results[0]['key']}",
+                "match": "manager fo",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datamanager_match_and_filter(self):
+        """Match datamanager with filter."""
+        params = urlencode(
+            {
+                "key": self.expected_results[0]["key"],
                 "match": "manager fo",
             }
         )

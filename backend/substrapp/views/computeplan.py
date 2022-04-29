@@ -1,6 +1,10 @@
 import uuid
 
 import structlog
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -159,14 +163,34 @@ class MetadataOrderingFilter(OrderingFilter):
         return [term for term in fields if term_valid(term)]
 
 
+class ComputePlanRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+    start_date = DateTimeFromToRangeFilter()
+    end_date = DateTimeFromToRangeFilter()
+    status = TypedMultipleChoiceFilter(
+        field_name="status",
+        choices=[(key, key) for key in computeplan_pb2.ComputePlanStatus.keys()],
+        coerce=lambda x: computeplan_pb2.ComputePlanStatus.Value(x),
+    )
+
+    class Meta:
+        model = ComputePlanRep
+        fields = {
+            "owner": ["exact", "in"],
+            "key": ["exact", "in"],
+            "tag": ["exact", "in"],
+        }
+
+
 class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = ComputePlanRepSerializer
     pagination_class = SmallPageNumberPagination
-    filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter)
+    filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
     custom_search_object_type = "compute_plan"
     custom_search_mapping_callback = map_status
     search_fields = ("key", "metadata__name")
+    filterset_class = ComputePlanRepFilter
 
     def get_queryset(self):
         return ComputePlanRep.objects.filter(channel=get_channel_name(self.request))

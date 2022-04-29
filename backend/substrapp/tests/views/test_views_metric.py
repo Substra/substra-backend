@@ -180,7 +180,7 @@ class MetricViewTests(APITestCase):
             for field in ("description", "address"):
                 self.assertEqual(result[field]["storage_address"], metric[field]["storage_address"])
 
-    def test_metric_list_filter_and(self):
+    def test_metric_list_search_filter_and(self):
         """Filter metric on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"metric:key:{key},metric:owner:{owner}"})
@@ -189,11 +189,30 @@ class MetricViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_metric_list_filter_in(self):
+    def test_metric_list_filter_and(self):
+        """Filter metric on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_metric_list_search_filter_in(self):
         """Filter metric in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"metric:key:{key_0},metric:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_metric_list_filter_in(self):
+        """Filter metric in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key__in": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
@@ -229,11 +248,24 @@ class MetricViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_metric_match_and_filter(self):
+    def test_metric_match_and_search_filter(self):
         """Match metric with filter."""
         params = urlencode(
             {
                 "search": f"metric:key:{self.expected_results[0]['key']}",
+                "match": "met fo",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_metric_match_and_filter(self):
+        """Match metric with filter."""
+        params = urlencode(
+            {
+                "key": self.expected_results[0]["key"],
                 "match": "met fo",
             }
         )

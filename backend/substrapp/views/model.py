@@ -1,6 +1,10 @@
 import structlog
 from django.conf import settings
 from django.views.decorators import gzip
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -32,14 +36,32 @@ def map_category(key, values):
     return key, values
 
 
+class ModelRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+    category = TypedMultipleChoiceFilter(
+        field_name="category",
+        choices=[(key, key) for key in model_pb2.ModelCategory.keys()],
+        coerce=lambda x: model_pb2.ModelCategory.Value(x),
+    )
+
+    class Meta:
+        model = ModelRep
+        fields = {
+            "owner": ["exact", "in"],
+            "key": ["exact", "in"],
+            "compute_task": ["exact", "in"],
+        }
+
+
 class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
-    filter_backends = (OrderingFilter, CustomSearchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, DjangoFilterBackend)
     pagination_class = DefaultPageNumberPagination
     serializer_class = ModelRepSerializer
     ordering_fields = ["creation_date", "key"]
     ordering = ["creation_date", "key"]
     custom_search_object_type = "model"
     custom_search_mapping_callback = map_category
+    filterset_class = ModelRepFilter
 
     def get_queryset(self):
         return ModelRep.objects.filter(channel=get_channel_name(self.request))

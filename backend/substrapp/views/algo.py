@@ -1,6 +1,10 @@
 import structlog
 from django.conf import settings
 from django.urls import reverse
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -127,14 +131,32 @@ def map_category(key, values):
     return key, values
 
 
+class AlgoRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+    category = TypedMultipleChoiceFilter(
+        field_name="category",
+        choices=[(key, key) for key in algo_pb2.AlgoCategory.keys()],
+        coerce=lambda x: algo_pb2.AlgoCategory.Value(x),
+    )
+
+    class Meta:
+        model = AlgoRep
+        fields = {
+            "owner": ["exact", "in"],
+            "key": ["exact", "in"],
+            "name": ["exact", "in"],
+        }
+
+
 class AlgoViewSetConfig:
     serializer_class = AlgoRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "key", "name", "owner", "category"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     custom_search_object_type = "algo"
     custom_search_mapping_callback = map_category
+    filterset_class = AlgoRepFilter
 
     def get_queryset(self):
         return AlgoRep.objects.filter(channel=get_channel_name(self.request))

@@ -1,6 +1,10 @@
 import uuid
 
 import structlog
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.filters import OrderingFilter
@@ -219,9 +223,36 @@ class ComputePlanKeyOrderingFilter(OrderingFilter):
         return [v.replace("compute_plan_key", "compute_plan_id") for v in ordering]
 
 
+class ComputeTaskRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+    start_date = DateTimeFromToRangeFilter()
+    end_date = DateTimeFromToRangeFilter()
+    status = TypedMultipleChoiceFilter(
+        field_name="status",
+        choices=[(key, key) for key in computetask_pb2.ComputeTaskStatus.keys()],
+        coerce=lambda x: computetask_pb2.ComputeTaskStatus.Value(x),
+    )
+    category = TypedMultipleChoiceFilter(
+        field_name="category",
+        choices=[(key, key) for key in computetask_pb2.ComputeTaskCategory.keys()],
+        coerce=lambda x: computetask_pb2.ComputeTaskCategory.Value(x),
+    )
+
+    class Meta:
+        model = ComputeTaskRep
+        fields = {
+            "key": ["exact", "in"],
+            "owner": ["exact", "in"],
+            "rank": ["exact", "in"],
+            "worker": ["exact", "in"],
+            "tag": ["exact", "in"],
+            "compute_plan__key": ["exact", "in"],
+        }
+
+
 class ComputeTaskViewSetConfig:
     serializer_class = ComputeTaskRepSerializer
-    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter, MatchFilter)
+    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = [
         "creation_date",
         "start_date",
@@ -239,6 +270,7 @@ class ComputeTaskViewSetConfig:
     pagination_class = DefaultPageNumberPagination
     custom_search_mapping_callback = map_status_and_cp_key
     search_fields = ("key",)
+    filterset_class = ComputeTaskRepFilter
 
     @property
     def short_basename(self):

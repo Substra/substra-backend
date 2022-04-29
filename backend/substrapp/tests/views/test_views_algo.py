@@ -38,7 +38,7 @@ class AlgoViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
+        self.maxDiff = None
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
@@ -169,7 +169,7 @@ class AlgoViewTests(APITestCase):
             for field in ("description", "algorithm"):
                 self.assertEqual(result[field]["storage_address"], algo[field]["storage_address"])
 
-    def test_algo_list_filter(self):
+    def test_algo_list_search_filter(self):
         """Filter algo on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"algo:key:{key}"})
@@ -178,7 +178,16 @@ class AlgoViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_algo_list_filter_and(self):
+    def test_algo_list_filter(self):
+        """Filter algo on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_algo_list_search_filter_and(self):
         """Filter algo on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"algo:key:{key},algo:owner:{owner}"})
@@ -187,7 +196,16 @@ class AlgoViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_algo_list_filter_in(self):
+    def test_algo_list_filter_and(self):
+        """Filter algo on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_algo_list_search_filter_in(self):
         """Filter algo in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -197,7 +215,17 @@ class AlgoViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_algo_list_filter_or(self):
+    def test_algo_list_filter_in(self):
+        """Filter algo in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_algo_list_search_filter_or(self):
         """Filter algo on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -207,7 +235,7 @@ class AlgoViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_algo_list_filter_or_and(self):
+    def test_algo_list_search_filter_or_and(self):
         """Filter algo on (key_0 and owner_0) or (key_1 and owner_1)."""
         key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
@@ -228,7 +256,7 @@ class AlgoViewTests(APITestCase):
             ("ALGO_XXX",),
         ]
     )
-    def test_algo_list_filter_by_category(self, category):
+    def test_algo_list_search_filter_by_category(self, category):
         """Filter algo on category."""
         filtered_algos = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"search": f"algo:category:{category}"})
@@ -242,9 +270,40 @@ class AlgoViewTests(APITestCase):
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @parameterized.expand(
+        [
+            ("ALGO_UNKNOWN",),
+            ("ALGO_SIMPLE",),
+            ("ALGO_AGGREGATE",),
+            ("ALGO_COMPOSITE",),
+        ]
+    )
+    def test_algo_list_filter_by_category(self, category):
+        """Filter algo on category."""
+        filtered_algos = [task for task in self.expected_results if task["category"] == category]
+        params = urlencode({"category": category})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+        )
+
     def test_algo_match(self):
         """Match algo on part of the name."""
         params = urlencode({"match": "le al"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_algo_match_and_search_filter(self):
+        """Match algo with filter."""
+        params = urlencode(
+            {
+                "search": f"algo:key:{self.expected_results[0]['key']}",
+                "match": "le al",
+            }
+        )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -254,7 +313,7 @@ class AlgoViewTests(APITestCase):
         """Match algo with filter."""
         params = urlencode(
             {
-                "search": f"algo:key:{self.expected_results[0]['key']}",
+                "key": self.expected_results[0]["key"],
                 "match": "le al",
             }
         )

@@ -1,6 +1,9 @@
 import structlog
 from django.conf import settings
 from django.urls import reverse
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -121,12 +124,25 @@ def create(request, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+class DataManagerRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+
+    class Meta:
+        model = DataManagerRep
+        fields = {
+            "key": ["exact", "in"],
+            "name": ["exact", "in"],
+            "owner": ["exact", "in"],
+        }
+
+
 class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
-    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     custom_search_object_type = "dataset"
+    filterset_class = DataManagerRepFilter
 
     def get_queryset(self):
         return DataManagerRep.objects.filter(channel=get_channel_name(self.request))

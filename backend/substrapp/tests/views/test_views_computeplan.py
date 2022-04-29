@@ -60,6 +60,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
+        self.maxDiff = None
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.url = reverse("substrapp:compute_plan-list")
@@ -273,7 +274,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_computeplan_list_filter(self):
+    def test_computeplan_list_search_filter(self):
         """Filter compute_plan on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"compute_plan:key:{key}"})
@@ -283,7 +284,17 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_computeplan_list_filter_and(self):
+    def test_compute_plan_list_filter(self):
+        """Filter compute_plan on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_computeplan_list_search_filter_and(self):
         """Filter compute_plan on key and tag."""
         key, tag = self.expected_results[0]["key"], self.expected_results[0]["tag"]
         params = urlencode({"search": f"compute_plan:key:{key},compute_plan:tag:{tag}"})
@@ -293,7 +304,17 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_computeplan_list_filter_in(self):
+    def test_compute_plan_list_filter_and(self):
+        """Filter compute_plan on key and tag."""
+        key, tag = self.expected_results[0]["key"], self.expected_results[0]["tag"]
+        params = urlencode({"key": key, "tag": tag})
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_computeplan_list_search_filter_in(self):
         """Filter compute_plan in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -304,7 +325,18 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_computeplan_list_filter_or(self):
+    def test_compute_plan_list_filter_in(self):
+        """Filter compute_plan in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_computeplan_list_search_filter_or(self):
         """Filter compute_plan on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -315,7 +347,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_computeplan_list_filter_or_and(self):
+    def test_computeplan_list_search_filter_or_and(self):
         """Filter compute_plan on (key_0 and tag_0) or (key_1 and tag_1)."""
         key_0, tag_0 = self.expected_results[0]["key"], self.expected_results[0]["tag"]
         key_1, tag_1 = self.expected_results[1]["key"], self.expected_results[1]["tag"]
@@ -363,7 +395,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_computeplan_match_and_filter(self):
+    def test_computeplan_match_and_search_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
         name = "cp156-MP-classification-PH1"
@@ -374,6 +406,26 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         params = urlencode(
             {
                 "search": f"compute_plan:key:{key}",
+                "match": "cp156 PH1",
+            }
+        )
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_computeplan_match_and_filter(self):
+        """Match compute_plan with filter."""
+        key = self.expected_results[0]["key"]
+        name = "cp156-MP-classification-PH1"
+        self.expected_results[0]["metadata"]["name"] = name
+        instance = ComputePlanRep.objects.get(key=key)
+        instance.metadata["name"] = name
+        instance.save()
+        params = urlencode(
+            {
+                "key": key,
                 "match": "cp156 PH1",
             }
         )
@@ -394,10 +446,41 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             ("PLAN_STATUS_XXX",),
         ]
     )
-    def test_computeplan_list_filter_by_status(self, p_status):
+    def test_computeplan_list_search_filter_by_status(self, p_status):
         """Filter computeplan on status."""
         filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
         params = urlencode({"search": f"compute_plan:status:{p_status}"})
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if p_status != "PLAN_STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_compute_plans),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_compute_plans,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            ("PLAN_STATUS_WAITING",),
+            ("PLAN_STATUS_TODO",),
+            ("PLAN_STATUS_DOING",),
+            ("PLAN_STATUS_DONE",),
+            ("PLAN_STATUS_CANCELED",),
+            ("PLAN_STATUS_FAILED",),
+            ("PLAN_STATUS_XXX",),
+        ]
+    )
+    def test_computeplan_list_filter_by_status(self, p_status):
+        """Filter computeplan on status."""
+        filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
+        params = urlencode({"status": p_status})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
 

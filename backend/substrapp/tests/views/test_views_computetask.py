@@ -357,7 +357,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_traintask_list_filter(self):
+    def test_traintask_list_search_filter(self):
         """Filter traintask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"traintuple:key:{key}"})
@@ -366,7 +366,16 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_traintask_list_filter_and(self):
+    def test_traintask_list_filter(self):
+        """Filter traintask on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_traintask_list_search_filter_and(self):
         """Filter traintask on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"traintuple:key:{key},traintuple:owner:{owner}"})
@@ -375,7 +384,16 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_traintask_list_filter_in(self):
+    def test_traintask_list_filter_and(self):
+        """Filter traintask on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_traintask_list_search_filter_in(self):
         """Filter traintask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -385,7 +403,17 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_traintask_list_filter_or(self):
+    def test_traintask_list_filter_in(self):
+        """Filter traintask in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_traintask_list_search_filter_or(self):
         """Filter traintask on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -395,7 +423,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_traintask_list_filter_or_and(self):
+    def test_traintask_list_search_filter_or_and(self):
         """Filter traintask on (key_0 and owner_0) or (key_1 and owner_1)."""
         key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
@@ -424,10 +452,36 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             ("STATUS_XXX",),
         ]
     )
-    def test_traintask_list_filter_by_status(self, t_status):
+    def test_traintask_list_search_filter_by_status(self, t_status):
         """Filter traintask on status."""
         filtered_train_tasks = [task for task in self.expected_results if task["status"] == t_status]
         params = urlencode({"search": f"traintuple:status:{t_status}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if t_status != "STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            ("STATUS_UNKNOWN",),
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+            ("STATUS_XXX",),
+        ]
+    )
+    def test_traintask_list_filter_by_status(self, t_status):
+        """Filter traintask on status."""
+        filtered_train_tasks = [task for task in self.expected_results if task["status"] == t_status]
+        params = urlencode({"status": t_status})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
@@ -450,13 +504,28 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_traintask_match_and_filter(self):
+    def test_traintask_match_and_search_filter(self):
         """Match traintask with filter."""
         key = self.expected_results[0]["key"]
         params = urlencode({"match": key[19:]})
         params = urlencode(
             {
                 "search": "traintuple:status:STATUS_TODO",
+                "match": key[19:],
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_traintask_match_and_filter(self):
+        """Match traintask with filter."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[19:]})
+        params = urlencode(
+            {
+                "status": "STATUS_TODO",
                 "match": key[19:],
             }
         )
@@ -489,9 +558,18 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
-    def test_traintask_list_filter_cp_key(self):
+    def test_traintask_list_search_filter_cp_key(self):
         """Filter traintask on key."""
         params = urlencode({"search": f"traintuple:compute_plan_key:{self.compute_plan.key}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
+        )
+
+    def test_traintask_list_filter_cp_key(self):
+        """Filter traintask on key."""
+        params = urlencode({"compute_plan__key": self.compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
