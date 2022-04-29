@@ -1,5 +1,11 @@
 # Changelog
 
+## 17.1.4
+
+### Changed
+- `kaniko` image updated to `gcr.io/kaniko-project/executor:v1.8.1`
+
+
 ## 17.1.3
 
 ### Fixed

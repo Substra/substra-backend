@@ -247,7 +247,10 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
     # kaniko build can be launched without privilege but
     # it needs some capabilities and to be root
     # https://github.com/GoogleContainerTools/kaniko/issues/778
-    capabilities = ["CHOWN", "SETUID", "SETGID", "FOWNER", "DAC_OVERRIDE"]
+    # https://github.com/GoogleContainerTools/kaniko/issues/778#issuecomment-619112417
+    # https://github.com/moby/moby/blob/master/oci/caps/defaults.go
+    # https://man7.org/linux/man-pages/man7/capabilities.7.html
+    capabilities = ["CHOWN", "SETUID", "SETGID", "FOWNER", "DAC_OVERRIDE", "SETFCAP"]
     container_security_context = get_security_context(root=True, capabilities=capabilities)
     args = _build_container_args(dockerfile_mount_path, image_tag)
     dockerfile_mount_subpath = dockerfile_mount_path.split("/subtuple/")[-1]
