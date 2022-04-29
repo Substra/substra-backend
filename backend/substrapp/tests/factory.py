@@ -24,7 +24,7 @@ Basic example:
 ...     algo,
 ...     metrics=[metric],
 ...     data_manager=data_manager,
-...     data_samples=[data_sample.key],
+...     data_samples=[data_sample],
 ...     parent_tasks=[train_task.key],
 ...     category=computetask_pb2.TASK_TEST,
 ...     status=computetask_pb2.STATUS_DONE,
@@ -62,6 +62,7 @@ from localrep.models import DataSample
 from localrep.models import Metric
 from localrep.models import Model
 from localrep.models import Performance
+from localrep.models.computetask import TaskDataSamples
 
 DEFAULT_OWNER = "MyOrg1MSP"
 DEFAULT_CHANNEL = "mychannel"
@@ -307,7 +308,6 @@ def create_computetask(
         algo=algo,
         parent_tasks=parent_tasks or [],
         data_manager=data_manager,
-        data_samples=data_samples,
         key=key,
         category=category,
         status=status,
@@ -330,6 +330,11 @@ def create_computetask(
     if metrics:
         compute_task.metrics.set(metrics)
         compute_task.save()
+    if data_samples:
+        for order, data_sample in enumerate(data_samples):
+            TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)
+        compute_task.refresh_from_db()
+
     return compute_task
 
 

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers
 
@@ -7,7 +8,9 @@ from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
 from localrep.models import DataManager
+from localrep.models import DataSample
 from localrep.models import Metric
+from localrep.models.computetask import TaskDataSamples
 from localrep.serializers.algo import AlgoSerializer
 from localrep.serializers.datamanager import DataManagerSerializer
 from localrep.serializers.metric import MetricSerializer
@@ -73,7 +76,13 @@ class TestTaskSerializer(serializers.Serializer):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    data_sample_keys = serializers.ListField(source="data_samples", child=serializers.CharField(), required=False)
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        queryset=DataSample.objects.all(),
+        source="data_samples",
+        many=True,
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
     metric_keys = serializers.PrimaryKeyRelatedField(
         queryset=Metric.objects.all(),
         many=True,
@@ -99,7 +108,13 @@ class TrainTaskSerializer(serializers.Serializer):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    data_sample_keys = serializers.ListField(source="data_samples", child=serializers.CharField(), required=False)
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        queryset=DataSample.objects.all(),
+        source="data_samples",
+        many=True,
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
     model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
     models = ModelSerializer(many=True, read_only=True)
 
@@ -132,7 +147,14 @@ class CompositeTaskSerializer(serializers.Serializer):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    data_sample_keys = serializers.ListField(source="data_samples", child=serializers.CharField(), required=False)
+
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        queryset=DataSample.objects.all(),
+        source="data_samples",
+        many=True,
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
     models = ModelSerializer(many=True, read_only=True)
     head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
     trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
@@ -165,7 +187,14 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    data_sample_keys = serializers.ListField(source="data_samples", child=serializers.CharField(), required=False)
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        queryset=DataSample.objects.all(),
+        source="data_samples",
+        many=True,
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
+
     model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
     head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
     trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
@@ -174,6 +203,19 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     train = TrainTaskSerializer(required=False, source="*")
     aggregate = AggregateTaskSerializer(required=False, source="*")
     composite = CompositeTaskSerializer(required=False, source="*")
+
+    @transaction.atomic
+    def create(self, validated_data):
+        if "data_samples" not in validated_data:
+            # aggregate task do not have data samples
+            return super().create(validated_data)
+
+        data_samples = validated_data.pop("data_samples")
+        compute_task = super().create(validated_data)
+        for order, data_sample in enumerate(data_samples):
+            TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
+        compute_task.refresh_from_db()
+        return compute_task
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

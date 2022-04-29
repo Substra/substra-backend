@@ -3,6 +3,7 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+from localrep.models.datasample import DataSample
 from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 from localrep.models.utils import get_enum_choices
@@ -43,7 +44,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     data_manager = models.ForeignKey(
         "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
     )
-    data_samples = ArrayField(models.UUIDField(), null=True)
+    data_samples = models.ManyToManyField(DataSample, through="TaskDataSamples", related_name="compute_tasks")
 
     # specific fields for train and aggregate tasks
     model_permissions_process_public = models.BooleanField(null=True)
@@ -76,3 +77,11 @@ class ComputeTask(models.Model, AssetPermissionMixin):
 
     def get_owner(self):
         return self.logs_owner
+
+
+class TaskDataSamples(models.Model):
+    """preserve datasamples order in this relation"""
+
+    compute_task = models.ForeignKey(ComputeTask, on_delete=models.CASCADE, related_name="compute_task_data_sample")
+    data_sample = models.ForeignKey(DataSample, on_delete=models.CASCADE, related_name="data_sample_task")
+    order = models.IntegerField(default=0)
