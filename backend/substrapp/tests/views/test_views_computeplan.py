@@ -531,7 +531,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             OrchestratorClient, "query_compute_plan", return_value=self.expected_results[0]
         ):
             response = self.client.post(url, **self.extra)
-        self.assertEqual(response.json(), self.expected_results[0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.cancel", side_effect=Exception("Unexpected error"))

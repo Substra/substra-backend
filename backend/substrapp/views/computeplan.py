@@ -202,13 +202,10 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     def cancel(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
-        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             client.cancel_compute_plan(key)
-            compute_plan = client.query_compute_plan(validated_key)
-
-        return ApiResponse(compute_plan, status=status.HTTP_200_OK)
+        return ApiResponse(status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=True)
     def update_ledger(self, request, *args, **kwargs):
