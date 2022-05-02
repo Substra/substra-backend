@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: azure/setup-helm@v1
+      - uses: azure/setup-helm@v2.1
         with:
           version: "v3.5.0"
         id: install
@@ -79,7 +79,7 @@ jobs:
       - generate-chart-readme
     steps:
       - uses: actions/checkout@v3
-      - uses: azure/setup-helm@v1
+      - uses: azure/setup-helm@v2.1
         with:
           version: "v3.5.0"
         id: install
