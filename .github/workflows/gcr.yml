@@ -3,12 +3,12 @@ name: Build connect backend image
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - '*'
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - 'docker/connect-backend/*'
       - 'backend/**'
@@ -21,7 +21,7 @@ jobs:
 
     - name: Set env variables
       run: |
-        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
           echo "LATEST=true" >> $GITHUB_ENV
           echo "LATEST is set to true"
           echo "BACKEND_VERSION=latest+`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
