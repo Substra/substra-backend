@@ -105,10 +105,11 @@ class NewsFeedViewSet(GenericViewSet):
                 }
             )
 
+        # This block will be removed once metrics are merged into algos in localrep
         for metric in MetricRep.objects.filter(channel=channel):
             items.append(
                 {
-                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_METRIC),
+                    "asset_kind": "ASSET_METRIC",
                     "asset_key": metric.key,
                     "name": metric.name,
                     "status": "STATUS_CREATED",

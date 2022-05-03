@@ -19,7 +19,6 @@ class _AssetKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enum
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     ASSET_UNKNOWN: _AssetKind.ValueType  # 0
     ASSET_NODE: _AssetKind.ValueType  # 1
-    ASSET_METRIC: _AssetKind.ValueType  # 2
     ASSET_DATA_SAMPLE: _AssetKind.ValueType  # 3
     ASSET_DATA_MANAGER: _AssetKind.ValueType  # 4
     ASSET_ALGO: _AssetKind.ValueType  # 5
@@ -33,7 +32,6 @@ class AssetKind(_AssetKind, metaclass=_AssetKindEnumTypeWrapper):
 
 ASSET_UNKNOWN: AssetKind.ValueType  # 0
 ASSET_NODE: AssetKind.ValueType  # 1
-ASSET_METRIC: AssetKind.ValueType  # 2
 ASSET_DATA_SAMPLE: AssetKind.ValueType  # 3
 ASSET_DATA_MANAGER: AssetKind.ValueType  # 4
 ASSET_ALGO: AssetKind.ValueType  # 5
