@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] 2022-05-03
+
 ### Changed
 - (BREAKING) Pass named inputs/outputs to algos (#877)
 - Set default pagination page size and max page size (#950)
