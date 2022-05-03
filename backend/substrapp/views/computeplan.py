@@ -189,7 +189,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
     custom_search_object_type = "compute_plan"
     custom_search_mapping_callback = map_status
-    search_fields = ("key", "metadata__name")
+    search_fields = ("key", "tag")
     filterset_class = ComputePlanRepFilter
 
     def get_queryset(self):

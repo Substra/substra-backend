@@ -366,12 +366,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         )
 
     def test_computeplan_match(self):
-        """Match compute_plan on part of the name."""
+        """Match compute_plan on part of the tag."""
         key = self.expected_results[0]["key"]
-        name = "cp156-MP-classification-PH1"
-        self.expected_results[0]["metadata"]["name"] = name
+        tag = "cp156-MP-classification-PH1"
+        self.expected_results[0]["tag"] = tag
         instance = ComputePlanRep.objects.get(key=key)
-        instance.metadata["name"] = name
+        instance.tag = tag
         instance.save()
         params = urlencode({"match": "cp156"})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
@@ -383,10 +383,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_match_multiple_parts(self):
         """Match compute_plan on multiple parts of the name."""
         key = self.expected_results[0]["key"]
-        name = "cp156-MP-classification-PH1"
-        self.expected_results[0]["metadata"]["name"] = name
+        tag = "cp156-MP-classification-PH1"
+        self.expected_results[0]["tag"] = tag
         instance = ComputePlanRep.objects.get(key=key)
-        instance.metadata["name"] = name
+        instance.tag = tag
         instance.save()
         params = urlencode({"match": "cp156 PH1"})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
@@ -398,10 +398,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_match_and_search_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
-        name = "cp156-MP-classification-PH1"
-        self.expected_results[0]["metadata"]["name"] = name
+        tag = "cp156-MP-classification-PH1"
+        self.expected_results[0]["tag"] = tag
         instance = ComputePlanRep.objects.get(key=key)
-        instance.metadata["name"] = name
+        instance.tag = tag
         instance.save()
         params = urlencode(
             {
@@ -418,10 +418,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_match_and_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
-        name = "cp156-MP-classification-PH1"
-        self.expected_results[0]["metadata"]["name"] = name
+        tag = "cp156-MP-classification-PH1"
+        self.expected_results[0]["tag"] = tag
         instance = ComputePlanRep.objects.get(key=key)
-        instance.metadata["name"] = name
+        instance.tag = tag
         instance.save()
         params = urlencode(
             {

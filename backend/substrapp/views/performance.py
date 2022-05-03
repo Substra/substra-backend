@@ -14,7 +14,7 @@ logger = structlog.get_logger(__name__)
 class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = CPPerformanceRepSerializer
     filter_backends = [OrderingFilter]
-    ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__epoch", "compute_task__round_idx"]
+    ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__round_idx"]
     ordering = ["compute_task__rank", "compute_task__worker"]
     pagination_class = LargePageNumberPagination
 

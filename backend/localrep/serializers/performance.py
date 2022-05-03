@@ -43,7 +43,6 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
 
     data_manager_key = serializers.UUIDField(format="hex_verbose", source="data_manager_id")
     algo_key = serializers.UUIDField(format="hex_verbose", source="algo_id")
-    epoch = serializers.SerializerMethodField()
     round_idx = serializers.SerializerMethodField()
 
     class Meta:
@@ -53,14 +52,10 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
             "data_manager_key",
             "algo_key",
             "rank",
-            "epoch",
             "round_idx",
             "data_samples",
             "worker",
         ]
-
-    def get_epoch(self, instance):
-        return instance.metadata.get("epoch")
 
     def get_round_idx(self, instance):
         return instance.metadata.get("round_idx")
