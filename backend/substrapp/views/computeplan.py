@@ -205,7 +205,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             client.cancel_compute_plan(key)
-        return ApiResponse(status=status.HTTP_200_OK)
+        return ApiResponse({}, status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=True)
     def update_ledger(self, request, *args, **kwargs):

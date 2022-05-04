@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevent 301 redirects when downloading failure reports (#975)
 - Add SETFCAP capability to kaniko image builder to avoid build issue on security.capability (#995)
 - (BREAKING) Fix cancelled CP inconsistencies (#894)
+- Cancel CP should return json (#1020)
 
 ## [0.11.0] 2022-04-19
 
