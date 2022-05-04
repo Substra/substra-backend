@@ -1,5 +1,11 @@
 # Changelog
 
+## 17.1.5
+
+### Changed
+- `google-container/pause` image updated to `gcr.io/google-containers/pause:3.2`, fixes incompatibilities on arm64 architecture
+
+
 ## 17.1.4
 
 ### Changed

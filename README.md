@@ -210,3 +210,32 @@ The Substra platform is built from several components (see the [architecture](ht
 ## License
 
 This project is developed under the Apache License, Version 2.0 (Apache-2.0), located in the [LICENSE](./LICENSE) file.
+
+
+### Running the backend on arm64 architecture (apple chip)
+
+
+Tested with:
+    * python 3.9.4
+    * pip 22.0.4
+
+
+1. uwsgi
+
+When using pyenv-virtualenv, the python library might not be linked correctly into the python directory. Adding a manual link `sudo ln -s` to the expected folder will solve the issue:
+```
+sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9.4/lib/python3.9/config-3.9-darwin <INSERT YOUR NOT-FOUND-PATH HERE WITHOUT libpython3.8.a FILENAME>
+```
+
+2. Deploy with `skaffold run -p arm64`
+
+3. Connect backend rabbitmq user:
+
+update the password rabbitmq user
+
+```kubectl exec $(kubectl get -n org-1 pod -l app.kubernetes.io/name=rabbitmq,app.kubernetes.io/instance=backend-org-1 -o name) -n org-1 -- rabbitmqctl add_user rabbitmq rabbitmq
+kubectl exec $(kubectl get -n org-1 pod -l app.kubernetes.io/name=rabbitmq,app.kubernetes.io/instance=backend-org-1 -o name) -n org-1 -- rabbitmqctl set_permissions -p "/" "rabbitmq" ".*" ".*" ".*"
+```
+
+the celery app initialization needs to be executed again after updating the password, restart the backend worker:
+`kubectl delete $(kubectl get -n org-1 pod -l app.kubernetes.io/component=substra-worker -o name) -n org-1`
