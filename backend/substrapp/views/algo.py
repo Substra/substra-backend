@@ -27,6 +27,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
+from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import PermissionMixin
@@ -82,12 +83,27 @@ ALGO_OUTPUTS_PER_CATEGORY = {
 }
 
 
-def _register_in_orchestrator(request, instance):
+ALGO_CATEGORIES = {
+    "algo": [
+        algo_pb2.AlgoCategory.ALGO_UNKNOWN,
+        algo_pb2.AlgoCategory.ALGO_SIMPLE,
+        algo_pb2.AlgoCategory.ALGO_AGGREGATE,
+        algo_pb2.AlgoCategory.ALGO_COMPOSITE,
+    ],
+    "metric": [algo_pb2.AlgoCategory.ALGO_METRIC],
+}
+
+
+def _register_in_orchestrator(request, basename, instance):
     """Register algo in orchestrator."""
-    try:
-        category = algo_pb2.AlgoCategory.Value(request.data.get("category"))
-    except ValueError:
-        raise ValidationError({"category": "Invalid category"})
+
+    if basename == "metric":
+        category = algo_pb2.AlgoCategory.ALGO_METRIC
+    else:
+        try:
+            category = algo_pb2.AlgoCategory.Value(request.data.get("category"))
+        except ValueError:
+            raise ValidationError({"category": "Invalid category"})
 
     current_site = settings.DEFAULT_DOMAIN
     permissions = request.data.get("permissions", {})
@@ -117,7 +133,7 @@ def _register_in_orchestrator(request, instance):
         return client.register_algo(orc_algo)
 
 
-def create(request, get_success_headers):
+def create(request, basename, get_success_headers):
     """Create a new algo.
 
     The workflow is composed of several steps:
@@ -145,7 +161,7 @@ def create(request, get_success_headers):
 
     # Step2: register asset in orchestrator
     try:
-        localrep_data = _register_in_orchestrator(request, instance)
+        localrep_data = _register_in_orchestrator(request, basename, instance)
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
         raise
@@ -209,15 +225,19 @@ class AlgoViewSetConfig:
     custom_search_mapping_callback = map_category
     filterset_class = AlgoRepFilter
 
+    @property
+    def categories(self):
+        return ALGO_CATEGORIES[self.basename.removeprefix(CP_BASENAME_PREFIX)]
+
     def get_queryset(self):
-        return AlgoRep.objects.filter(channel=get_channel_name(self.request))
+        return AlgoRep.objects.filter(channel=get_channel_name(self.request), category__in=self.categories)
 
 
 class AlgoViewSet(
     AlgoViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet
 ):
     def create(self, request, *args, **kwargs):
-        return create(request, lambda data: self.get_success_headers(data))
+        return create(request, self.basename, lambda data: self.get_success_headers(data))
 
 
 class CPAlgoViewSet(AlgoViewSetConfig, mixins.ListModelMixin, GenericViewSet):

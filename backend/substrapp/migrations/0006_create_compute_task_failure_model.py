@@ -5,7 +5,6 @@ from django.db import migrations
 from django.db import models
 
 import substrapp.models.algo
-import substrapp.models.metric
 
 
 class Migration(migrations.Migration):

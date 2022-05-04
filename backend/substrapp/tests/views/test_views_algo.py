@@ -44,12 +44,15 @@ class AlgoViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:algo-list")
+        self.metric_url = reverse("substrapp:metric-list")
 
         simple_algo = factory.create_algo(category=algo_pb2.ALGO_SIMPLE, name="simple algo")
         aggregate_algo = factory.create_algo(category=algo_pb2.ALGO_AGGREGATE)
         composite_algo = factory.create_algo(category=algo_pb2.ALGO_COMPOSITE)
+        metric_algo = factory.create_metric()
+
         self.algos = [simple_algo, aggregate_algo, composite_algo]
-        self.expected_results = [
+        self.expected_algos = [
             {
                 "key": str(simple_algo.key),
                 "name": "simple algo",
@@ -130,6 +133,37 @@ class AlgoViewTests(APITestCase):
             },
         ]
 
+        self.expected_metrics = [
+            {
+                "key": str(metric_algo.key),
+                "name": "metric",
+                "owner": "MyOrg1MSP",
+                "category": "ALGO_METRIC",
+                "metadata": {},
+                "permissions": {
+                    "process": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "creation_date": metric_algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{metric_algo.key}/description/",
+                },
+                "algorithm": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{metric_algo.key}/file/",
+                },
+            },
+        ]
+
+        self.expected_results = self.expected_algos + self.expected_metrics
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
@@ -143,7 +177,12 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
+            {
+                "count": len(self.expected_algos),
+                "next": None,
+                "previous": None,
+                "results": self.expected_algos,
+            },
         )
 
     def test_algo_list_wrong_channel(self):
@@ -164,8 +203,8 @@ class AlgoViewTests(APITestCase):
             algo.save()
 
         response = self.client.get(self.url, **self.extra)
-        self.assertEqual(response.data["count"], len(self.expected_results))
-        for result, algo in zip(response.data["results"], self.expected_results):
+        self.assertEqual(response.data["count"], len(self.expected_algos))
+        for result, algo in zip(response.data["results"], self.expected_algos):
             for field in ("description", "algorithm"):
                 self.assertEqual(result[field]["storage_address"], algo[field]["storage_address"])
 
@@ -253,6 +292,7 @@ class AlgoViewTests(APITestCase):
             ("ALGO_SIMPLE",),
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
+            ("ALGO_METRIC",),
             ("ALGO_XXX",),
         ]
     )
@@ -260,7 +300,8 @@ class AlgoViewTests(APITestCase):
         """Filter algo on category."""
         filtered_algos = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"search": f"algo:category:{category}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        url = self.metric_url if category == "ALGO_METRIC" else self.url
+        response = self.client.get(f"{url}?{params}", **self.extra)
 
         if category != "ALGO_XXX":
             self.assertEqual(
@@ -276,13 +317,15 @@ class AlgoViewTests(APITestCase):
             ("ALGO_SIMPLE",),
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
+            ("ALGO_METRIC",),
         ]
     )
     def test_algo_list_filter_by_category(self, category):
         """Filter algo on category."""
         filtered_algos = [task for task in self.expected_results if task["category"] == category]
         params = urlencode({"category": category})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        url = self.metric_url if category == "ALGO_METRIC" else self.url
+        response = self.client.get(f"{url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
@@ -325,11 +368,11 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results),
+        self.assertEqual(response.json().get("results"), self.expected_algos),
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_algos[::-1]),
 
     @parameterized.expand(
         [
@@ -342,9 +385,9 @@ class AlgoViewTests(APITestCase):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertEqual(r["count"], len(self.expected_results))
+        self.assertEqual(r["count"], len(self.expected_algos))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
+        self.assertEqual(r["results"], self.expected_algos[offset : offset + page_size])
 
     def test_algo_cp_list_success(self):
         """List algos for a specific compute plan (CPAlgoViewSet)."""

@@ -8,12 +8,10 @@ from django.test import override_settings
 from substrapp.models import Algo
 from substrapp.models import DataManager
 from substrapp.models import DataSample
-from substrapp.models import Metric
 from substrapp.models import Model
 from substrapp.utils import get_hash
 
 from .common import get_sample_datamanager
-from .common import get_sample_metric
 from .common import get_sample_model
 from .common import get_sample_script
 from .common import get_sample_zip_data_sample
@@ -27,12 +25,6 @@ class ModelTests(TestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
-    def test_create_metric(self):
-        description, _, metrics, _ = get_sample_metric()
-        metric = Metric.objects.create(description=description, address=metrics)
-
-        self.assertEqual(metric.checksum, get_hash(description))
 
     def test_create_datamanager(self):
         description, _, data_opener, _ = get_sample_datamanager()

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
+from localrep.models import Algo
 from localrep.models import ComputeTask
-from localrep.models import Metric
 from localrep.models import Performance
 from localrep.serializers.utils import SafeSerializerMixin
 
@@ -18,7 +18,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     )
 
     metric_key = serializers.PrimaryKeyRelatedField(
-        queryset=Metric.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
+        queryset=Algo.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
     performance_value = serializers.FloatField(source="value")
 
@@ -35,7 +35,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 class _PerformanceMetricSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Metric
+        model = Algo
         fields = ["key", "name"]
 
 

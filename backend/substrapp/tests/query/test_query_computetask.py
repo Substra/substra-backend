@@ -16,7 +16,6 @@ from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializ
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
-from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 
@@ -46,8 +45,7 @@ class ComputeTaskQueryTests(APITestCase):
 
         self.metrics = assets.get_metrics()
         for metric in self.metrics:
-            metric = MetricRepSerializer.normalize_metrics_data(metric)
-            serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
+            serializer = AlgoRepSerializer(data={"channel": "mychannel", **metric})
             serializer.is_valid(raise_exception=True)
             serializer.save()
 

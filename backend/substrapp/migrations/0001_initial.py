@@ -7,8 +7,11 @@ from django.db import models
 
 import substrapp.models.algo
 import substrapp.models.datamanager
-import substrapp.models.metric
 import substrapp.models.model
+
+
+def metric_upload_to(instance, filename) -> str:
+    return f"metrics/{instance.key}/{filename}"
 
 
 class Migration(migrations.Migration):
@@ -66,15 +69,11 @@ class Migration(migrations.Migration):
                 ("validated", models.BooleanField(blank=True, default=False)),
                 (
                     "description",
-                    models.FileField(
-                        blank=True, max_length=500, null=True, upload_to=substrapp.models.metric.upload_to
-                    ),
+                    models.FileField(blank=True, max_length=500, null=True, upload_to=metric_upload_to),
                 ),
                 (
                     "address",
-                    models.FileField(
-                        blank=True, max_length=500, null=True, upload_to=substrapp.models.metric.upload_to
-                    ),
+                    models.FileField(blank=True, max_length=500, null=True, upload_to=metric_upload_to),
                 ),
                 ("checksum", models.CharField(blank=True, max_length=64)),
             ],

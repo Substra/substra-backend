@@ -1,13 +1,13 @@
 import structlog
 from rest_framework.viewsets import GenericViewSet
 
+import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import DataManager as DataManagerRep
-from localrep.models import Metric as MetricRep
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -82,9 +82,16 @@ class NewsFeedViewSet(GenericViewSet):
                 )
 
         for algo in AlgoRep.objects.filter(channel=channel):
+
+            # This block will be removed once metric concept is fully merged into algo
+            if algo.category == algo_pb2.AlgoCategory.ALGO_METRIC:
+                asset_kind = "ASSET_METRIC"
+            else:
+                asset_kind = common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO)
+
             items.append(
                 {
-                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO),
+                    "asset_kind": asset_kind,
                     "asset_key": algo.key,
                     "name": algo.name,
                     "status": "STATUS_CREATED",
@@ -101,19 +108,6 @@ class NewsFeedViewSet(GenericViewSet):
                     "name": datamanager.name,
                     "status": "STATUS_CREATED",
                     "timestamp": datamanager.creation_date,
-                    "detail": {},
-                }
-            )
-
-        # This block will be removed once metrics are merged into algos in localrep
-        for metric in MetricRep.objects.filter(channel=channel):
-            items.append(
-                {
-                    "asset_kind": "ASSET_METRIC",
-                    "asset_key": metric.key,
-                    "name": metric.name,
-                    "status": "STATUS_CREATED",
-                    "timestamp": metric.creation_date,
                     "detail": {},
                 }
             )

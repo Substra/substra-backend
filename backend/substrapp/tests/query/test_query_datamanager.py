@@ -13,8 +13,8 @@ from rest_framework.test import APITestCase
 
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from substrapp.models import Algo
 from substrapp.models import DataManager
-from substrapp.models import Metric
 from substrapp.tests import assets
 from substrapp.tests import factory
 
@@ -76,7 +76,7 @@ class DataManagerQueryTests(APITestCase):
         return {"json": json.dumps(json_), "description": self.data_description, "data_opener": self.data_data_opener}
 
     def add_default_metric(self):
-        metric = Metric.objects.create(description=self.metric_description, address=self.metric_metrics)
+        metric = Algo.objects.create(description=self.metric_description, file=self.metric_metrics)
 
         self.metric_key = str(metric.key)
 

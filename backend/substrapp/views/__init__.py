@@ -8,8 +8,6 @@ from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
 from .datasample import DataSampleViewSet
-from .metric import MetricPermissionViewSet
-from .metric import MetricViewSet
 from .model import ModelPermissionViewSet
 from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
@@ -19,8 +17,6 @@ __all__ = [
     "DataSampleViewSet",
     "DataManagerViewSet",
     "DataManagerPermissionViewSet",
-    "MetricViewSet",
-    "MetricPermissionViewSet",
     "ModelViewSet",
     "ModelPermissionViewSet",
     "AlgoViewSet",

@@ -5,7 +5,6 @@ from .computetask import ComputeTaskWithRelationshipsSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
-from .metric import MetricSerializer
 from .model import ModelSerializer
 from .node import ChannelNodeSerializer
 from .performance import CPPerformanceSerializer
@@ -19,7 +18,6 @@ __all__ = [
     "DataManagerSerializer",
     "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
-    "MetricSerializer",
     "ModelSerializer",
     "ChannelNodeSerializer",
     "PerformanceSerializer",

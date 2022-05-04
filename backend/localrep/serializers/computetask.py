@@ -9,11 +9,9 @@ from localrep.models import ComputePlan
 from localrep.models import ComputeTask
 from localrep.models import DataManager
 from localrep.models import DataSample
-from localrep.models import Metric
 from localrep.models.computetask import TaskDataSamples
 from localrep.serializers.algo import AlgoSerializer
 from localrep.serializers.datamanager import DataManagerSerializer
-from localrep.serializers.metric import MetricSerializer
 from localrep.serializers.model import ModelSerializer
 from localrep.serializers.performance import PerformanceSerializer
 from localrep.serializers.utils import SafeSerializerMixin
@@ -84,7 +82,7 @@ class TestTaskSerializer(serializers.Serializer):
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
     metric_keys = serializers.PrimaryKeyRelatedField(
-        queryset=Metric.objects.all(),
+        queryset=Algo.objects.all(),
         many=True,
         source="metrics",
         required=False,
@@ -281,10 +279,10 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
         for metric in task_details.get("metrics", []):
             metric["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:metric-description", args=[metric["key"]])
+                reverse("substrapp:algo-description", args=[metric["key"]])
             )
-            metric["address"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:metric-metrics", args=[metric["key"]])
+            metric["algorithm"]["storage_address"] = request.build_absolute_uri(
+                reverse("substrapp:algo-algorithm", args=[metric["key"]])
             )
 
     class Meta:
@@ -340,11 +338,11 @@ class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
             data[TASK_FIELD[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
 
         if instance.category == computetask_pb2.TASK_TEST:
-            metrics = Metric.objects.filter(
+            metrics = Algo.objects.filter(
                 key__in=data[TASK_FIELD[instance.category]]["metric_keys"],
                 channel=instance.channel,
             ).order_by("creation_date", "key")
-            data[TASK_FIELD[instance.category]]["metrics"] = MetricSerializer(metrics, many=True).data
+            data[TASK_FIELD[instance.category]]["metrics"] = AlgoSerializer(metrics, many=True).data
 
         # parent_tasks
         parent_tasks = ComputeTask.objects.filter(

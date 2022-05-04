@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Merge Metric and Algo view and model (#976), see UPGRADE.md for migration
+
 ## [0.12.0] 2022-05-03
 
 ### Changed

@@ -19,7 +19,6 @@ from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
-from localrep.serializers import MetricSerializer as MetricRepSerializer
 from localrep.serializers import ModelSerializer as ModelRepSerializer
 from substrapp.tests import factory
 
@@ -89,7 +88,7 @@ class ComputeTaskViewTests(APITestCase):
 
         # we don't explicit serialized relationships as this test module is focused on computetask
         self.algo_data = AlgoRepSerializer(instance=self.algo).data
-        self.metric_data = MetricRepSerializer(instance=self.metric).data
+        self.metric_data = AlgoRepSerializer(instance=self.metric).data
         self.data_manager_data = DataManagerRepSerializer(instance=self.data_manager).data
         self.simple_model_data = ModelRepSerializer(instance=self.simple_model).data
         self.head_model_data = ModelRepSerializer(instance=self.head_model).data

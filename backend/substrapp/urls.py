@@ -14,8 +14,6 @@ from substrapp.views.utils import CP_BASENAME_PREFIX
 # Create a router and register our viewsets with it.
 
 router = DefaultRouter()
-router.register(r"metric", views.MetricViewSet, basename="metric")
-router.register(r"metric", views.MetricPermissionViewSet, basename="metric")
 router.register(r"model", views.ModelViewSet, basename="model")
 router.register(r"model", views.ModelPermissionViewSet, basename="model")
 router.register(r"data_sample", views.DataSampleViewSet, basename="data_sample")
@@ -23,6 +21,8 @@ router.register(r"data_manager", views.DataManagerViewSet, basename="data_manage
 router.register(r"data_manager", views.DataManagerPermissionViewSet, basename="data_manager")
 router.register(r"algo", views.AlgoViewSet, basename="algo")
 router.register(r"algo", views.AlgoPermissionViewSet, basename="algo")
+router.register(r"metric", views.AlgoViewSet, basename="metric")
+router.register(r"metric", views.AlgoPermissionViewSet, basename="metric")
 router.register(r"traintuple", views.ComputeTaskViewSet, basename="traintuple")
 router.register(r"testtuple", views.ComputeTaskViewSet, basename="testtuple")
 router.register(r"aggregatetuple", views.ComputeTaskViewSet, basename="aggregatetuple")

@@ -46,9 +46,6 @@ SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", f"/substra/servermedias/
 ALGO_BUCKET_NAME = "substra-algo"
 ALGO_STORAGE = MinioStorage(ALGO_BUCKET_NAME)
 
-METRICS_BUCKET_NAME = "substra-metrics"
-METRICS_STORAGE = MinioStorage(METRICS_BUCKET_NAME)
-
 DATAMANAGER_BUCKET_NAME = "substra-datamanager"
 DATAMANAGER_STORAGE = MinioStorage(DATAMANAGER_BUCKET_NAME)
 

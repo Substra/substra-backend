@@ -6,7 +6,10 @@ from django.db import models
 
 import substrapp.models.algo
 import substrapp.models.datamanager
-import substrapp.models.metric
+
+
+def metric_upload_to(instance, filename) -> str:
+    return f"metrics/{instance.key}/{filename}"
 
 
 class Migration(migrations.Migration):
@@ -65,7 +68,7 @@ class Migration(migrations.Migration):
                 max_length=500,
                 null=True,
                 storage=django.core.files.storage.FileSystemStorage(),
-                upload_to=substrapp.models.metric.upload_to,
+                upload_to=metric_upload_to,
             ),
         ),
         migrations.AlterField(
@@ -76,7 +79,7 @@ class Migration(migrations.Migration):
                 max_length=500,
                 null=True,
                 storage=django.core.files.storage.FileSystemStorage(),
-                upload_to=substrapp.models.metric.upload_to,
+                upload_to=metric_upload_to,
             ),
         ),
     ]

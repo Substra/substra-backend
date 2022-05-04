@@ -44,10 +44,7 @@ def _on_create_algo_event(event: dict, client: orc_client.OrchestratorClient) ->
     logger.debug("Syncing algo create", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_algo(event["asset_key"])
-    if algo_pb2.AlgoCategory.Value(data["category"]) == algo_pb2.AlgoCategory.ALGO_METRIC:
-        _create_metric(event["channel"], data)
-    else:
-        _create_algo(event["channel"], data)
+    _create_algo(event["channel"], data)
 
 
 def _create_algo(channel: str, data: dict) -> bool:
@@ -253,21 +250,6 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
     data_sample.save()
 
 
-def _create_metric(channel: str, data: dict) -> bool:
-    from localrep.serializers import MetricSerializer
-
-    data = MetricSerializer.normalize_metrics_data(data)
-    data["channel"] = channel
-    serializer = MetricSerializer(data=data)
-    try:
-        serializer.save_if_not_exists()
-    except AlreadyExistsError:
-        logger.debug("Metric already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
-
-
 def _create_performance(channel: str, data: dict) -> bool:
     from localrep.serializers import PerformanceSerializer
 
@@ -379,25 +361,6 @@ def resync_algos(client: orc_client.OrchestratorClient):
             nb_skipped_assets += 1
 
     logger.info("Done resync algos", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
-
-
-def resync_metrics(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing metrics")
-    # TODO: Add filter on last_modification_date
-    metrics = client.query_algos(categories=[algo_pb2.AlgoCategory.ALGO_METRIC])
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in metrics:
-        is_created = _create_metric(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new metric", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped metric", asset_key=data["key"])
-            nb_skipped_assets += 1
-
-    logger.info("Done resync metrics", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
 def resync_datamanagers(client: orc_client.OrchestratorClient):
@@ -583,7 +546,6 @@ def resync() -> None:
         with get_orchestrator_client(channel_name) as client:
             resync_nodes(client)
             resync_algos(client)
-            resync_metrics(client)
             resync_datamanagers(client)
             resync_datasamples(client)
             resync_computeplans(client)

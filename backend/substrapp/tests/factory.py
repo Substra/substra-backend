@@ -59,7 +59,6 @@ from localrep.models import ComputePlan
 from localrep.models import ComputeTask
 from localrep.models import DataManager
 from localrep.models import DataSample
-from localrep.models import Metric
 from localrep.models import Model
 from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
@@ -182,15 +181,16 @@ def create_metric(
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
     public: bool = True,
-) -> Metric:
+) -> Algo:
     if key is None:
         key = uuid.uuid4()
-    return Metric.objects.create(
+    return Algo.objects.create(
         key=key,
         name=name,
+        category=algo_pb2.AlgoCategory.ALGO_METRIC,
         metadata=metadata or {},
-        metric_address=get_storage_address("metric", key, "metrics"),
-        metric_checksum=DUMMY_CHECKSUM,
+        algorithm_address=get_storage_address("metric", key, "metrics"),
+        algorithm_checksum=DUMMY_CHECKSUM,
         description_address=get_storage_address("metric", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
         owner=owner,
@@ -286,7 +286,7 @@ def create_computetask(
     parent_tasks: list[uuid.UUID] = None,
     data_manager: DataManager = None,
     data_samples: list[uuid.UUID] = None,
-    metrics: list[Metric] = None,
+    metrics: list[Algo] = None,
     key: uuid.UUID = None,
     category: int = computetask_pb2.TASK_TRAIN,
     status: int = computetask_pb2.STATUS_TODO,
@@ -363,7 +363,7 @@ def create_model(
 
 def create_performance(
     compute_task: ComputeTask,
-    metric: Metric,
+    metric: Algo,
     value: float = 1.0,
     channel: str = DEFAULT_CHANNEL,
 ) -> Performance:
