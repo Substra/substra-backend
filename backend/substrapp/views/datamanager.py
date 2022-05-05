@@ -1,6 +1,8 @@
 import structlog
 from django.conf import settings
+from django.db import models
 from django.urls import reverse
+from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -130,9 +132,23 @@ class DataManagerRepFilter(FilterSet):
     class Meta:
         model = DataManagerRep
         fields = {
-            "key": ["exact", "in"],
-            "name": ["exact", "in"],
-            "owner": ["exact", "in"],
+            "key": ["exact"],
+            "name": ["exact"],
+            "owner": ["exact"],
+        }
+        filter_overrides = {
+            models.CharField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.UUIDField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
         }
 
 

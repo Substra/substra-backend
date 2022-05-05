@@ -406,7 +406,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """Filter traintask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
-        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
@@ -484,6 +484,27 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            (["STATUS_UNKNOWN", "STATUS_WAITING", "STATUS_TODO"],),
+            (["STATUS_DOING", "STATUS_DONE"],),
+            (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
+        ]
+    )
+    def test_traintask_list_filter_by_status_in(self, t_statuses):
+        """Filter traintask on status."""
+        filtered_train_tasks = [task for task in self.expected_results if task["status"] in t_statuses]
+        params = urlencode({"status": ",".join(t_statuses)})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if "STATUS_XXX" not in t_statuses:
             self.assertEqual(
                 response.json(),
                 {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},

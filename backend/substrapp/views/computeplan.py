@@ -1,10 +1,11 @@
 import uuid
 
 import structlog
+from django.db import models
+from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -23,6 +24,7 @@ from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
+from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import validate_key
 
@@ -167,7 +169,7 @@ class ComputePlanRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
-    status = TypedMultipleChoiceFilter(
+    status = TypedChoiceInFilter(
         field_name="status",
         choices=[(key, key) for key in computeplan_pb2.ComputePlanStatus.keys()],
         coerce=lambda x: computeplan_pb2.ComputePlanStatus.Value(x),
@@ -176,9 +178,23 @@ class ComputePlanRepFilter(FilterSet):
     class Meta:
         model = ComputePlanRep
         fields = {
-            "owner": ["exact", "in"],
-            "key": ["exact", "in"],
-            "tag": ["exact", "in"],
+            "owner": ["exact"],
+            "key": ["exact"],
+            "tag": ["exact"],
+        }
+        filter_overrides = {
+            models.CharField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.UUIDField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
         }
 
 

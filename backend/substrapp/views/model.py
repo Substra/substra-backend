@@ -1,10 +1,11 @@
 import structlog
 from django.conf import settings
+from django.db import models
 from django.views.decorators import gzip
+from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -21,6 +22,7 @@ from substrapp.utils import get_owner
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
+from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import if_true
 
@@ -38,7 +40,7 @@ def map_category(key, values):
 
 class ModelRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    category = TypedMultipleChoiceFilter(
+    category = TypedChoiceInFilter(
         field_name="category",
         choices=[(key, key) for key in model_pb2.ModelCategory.keys()],
         coerce=lambda x: model_pb2.ModelCategory.Value(x),
@@ -47,9 +49,23 @@ class ModelRepFilter(FilterSet):
     class Meta:
         model = ModelRep
         fields = {
-            "owner": ["exact", "in"],
-            "key": ["exact", "in"],
-            "compute_task": ["exact", "in"],
+            "owner": ["exact"],
+            "key": ["exact"],
+            "compute_task": ["exact"],
+        }
+        filter_overrides = {
+            models.CharField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.UUIDField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
         }
 
 

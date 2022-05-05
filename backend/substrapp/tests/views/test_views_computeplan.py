@@ -326,10 +326,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         )
 
     def test_compute_plan_list_filter_in(self):
-        """Filter compute_plan in key_0, key_1."""
+        """Filter compute_plan in key_0, key_1"""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
-        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        params = urlencode({"key": ",".join([key_0, key_1])})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -485,6 +485,33 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if p_status != "PLAN_STATUS_XXX":
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_compute_plans),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_compute_plans,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            (["PLAN_STATUS_WAITING", "PLAN_STATUS_TODO"],),
+            (["PLAN_STATUS_DOING", "PLAN_STATUS_XXX"],),
+            (["PLAN_STATUS_DONE", "PLAN_STATUS_CANCELED", "PLAN_STATUS_FAILED"],),
+        ]
+    )
+    def test_computeplan_list_filter_by_status_in(self, p_statuses):
+        """Filter computeplan on several statuses."""
+        filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] in p_statuses]
+        params = urlencode({"status": ",".join(p_statuses)})
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if "PLAN_STATUS_XXX" not in p_statuses:
             self.assertEqual(
                 response.json(),
                 {

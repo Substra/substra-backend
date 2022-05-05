@@ -12,6 +12,11 @@ from typing import Union
 import structlog
 from django.conf import settings
 from django.core.files import File
+from django.db import models
+from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import DateTimeFromToRangeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
 from rest_framework import serializers
 from rest_framework import status
@@ -276,13 +281,39 @@ def _get_archive_and_files(f: BinaryIO) -> Tuple[Union[ZipFile, TarFile], List[s
         raise serializers.ValidationError("Archive must be zip or tar")
 
 
+class DataSampleRepFilter(FilterSet):
+    creation_date = DateTimeFromToRangeFilter()
+
+    class Meta:
+        model = DataSampleRep
+        fields = {
+            "owner": ["exact"],
+            "key": ["exact"],
+        }
+        filter_overrides = {
+            models.CharField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.UUIDField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+        }
+
+
 class DataSampleViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = DataSampleRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter)
+    filter_backends = (OrderingFilter, CustomSearchFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "key", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     custom_search_object_type = "datasample"
+    filterset_class = DataSampleRepFilter
 
     def get_queryset(self):
         return DataSampleRep.objects.filter(channel=get_channel_name(self.request)).prefetch_related("data_managers")

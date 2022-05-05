@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Newsfeed now returns items for metric, algo and datamanager creation (#954)
 - DataSamples for Localrep ComputeTask are foreign keys (#944)
 - Removed MELLODDY-specific code (#998)
+- Add django-filters on datasample view and define custom IN lookup filters for all views (#1017)
 
 ### Added
 - Filtering using django-filters (#946)

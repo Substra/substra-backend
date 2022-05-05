@@ -142,7 +142,7 @@ class DataSampleViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_datasample_list_filter(self):
+    def test_datasample_list_search_filter(self):
         """Filter datasample on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"datasample:key:{key}"})
@@ -151,7 +151,16 @@ class DataSampleViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_datasample_list_filter_and(self):
+    def test_datasample_list_filter(self):
+        """Filter datasample on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datasample_list_search_filter_and(self):
         """Filter datasample on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"datasample:key:{key},datasample:owner:{owner}"})
@@ -160,11 +169,30 @@ class DataSampleViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_datasample_list_filter_in(self):
+    def test_datasample_list_filter_and(self):
+        """Filter datasample on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_datasample_list_search_filter_in(self):
         """Filter datasample in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"datasample:key:{key_0},datasample:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_datasample_list_filter_in(self):
+        """Filter datasample in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}

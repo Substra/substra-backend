@@ -236,7 +236,7 @@ class DataManagerViewTests(APITestCase):
         """Filter datamanager in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
-        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}

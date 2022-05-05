@@ -1,10 +1,11 @@
 import uuid
 
 import structlog
+from django.db import models
+from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import TypedMultipleChoiceFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.filters import OrderingFilter
@@ -24,6 +25,7 @@ from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
+from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
@@ -227,12 +229,12 @@ class ComputeTaskRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
-    status = TypedMultipleChoiceFilter(
+    status = TypedChoiceInFilter(
         field_name="status",
         choices=[(key, key) for key in computetask_pb2.ComputeTaskStatus.keys()],
         coerce=lambda x: computetask_pb2.ComputeTaskStatus.Value(x),
     )
-    category = TypedMultipleChoiceFilter(
+    category = TypedChoiceInFilter(
         field_name="category",
         choices=[(key, key) for key in computetask_pb2.ComputeTaskCategory.keys()],
         coerce=lambda x: computetask_pb2.ComputeTaskCategory.Value(x),
@@ -241,12 +243,32 @@ class ComputeTaskRepFilter(FilterSet):
     class Meta:
         model = ComputeTaskRep
         fields = {
-            "key": ["exact", "in"],
-            "owner": ["exact", "in"],
-            "rank": ["exact", "in"],
-            "worker": ["exact", "in"],
-            "tag": ["exact", "in"],
-            "compute_plan__key": ["exact", "in"],
+            "key": ["exact"],
+            "owner": ["exact"],
+            "rank": ["exact"],
+            "worker": ["exact"],
+            "tag": ["exact"],
+            "compute_plan__key": ["exact"],
+        }
+        filter_overrides = {
+            models.CharField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.IntegerField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
+            models.UUIDField: {
+                "filter_class": BaseInFilter,
+                "extra": lambda f: {
+                    "lookup_expr": "in",
+                },
+            },
         }
 
 

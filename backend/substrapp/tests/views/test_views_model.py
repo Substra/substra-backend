@@ -211,7 +211,7 @@ class ModelViewTests(APITestCase):
         """Filter model in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
-        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
@@ -274,6 +274,25 @@ class ModelViewTests(APITestCase):
         params = urlencode({"category": category})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         if category != "MODEL_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            (["MODEL_UNKNOWN", "MODEL_SIMPLE"],),
+            (["MODEL_HEAD", "MODEL_XXX"],),
+        ]
+    )
+    def test_model_list_filter_by_category_in(self, categories):
+        """Filter model on several categories."""
+        filtered_models = [task for task in self.expected_results if task["category"] in categories]
+        params = urlencode({"category": ",".join(categories)})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        if "MODEL_XXX" not in categories:
             self.assertEqual(
                 response.json(),
                 {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},

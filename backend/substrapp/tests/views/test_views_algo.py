@@ -258,7 +258,7 @@ class AlgoViewTests(APITestCase):
         """Filter algo in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
-        params = urlencode({"key__in": ",".join([key_0, key_1])})
+        params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
@@ -326,6 +326,22 @@ class AlgoViewTests(APITestCase):
         params = urlencode({"category": category})
         url = self.metric_url if category == "ALGO_METRIC" else self.url
         response = self.client.get(f"{url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+        )
+
+    @parameterized.expand(
+        [
+            (["ALGO_UNKNOWN", "ALGO_SIMPLE"],),
+            (["ALGO_AGGREGATE", "ALGO_COMPOSITE"],),
+        ]
+    )
+    def test_algo_list_filter_by_category_in(self, categories):
+        """Filter algo on several categories."""
+        filtered_algos = [task for task in self.expected_results if task["category"] in categories]
+        params = urlencode({"category": ",".join(categories)})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
