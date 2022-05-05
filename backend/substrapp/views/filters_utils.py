@@ -160,3 +160,44 @@ class CustomSearchFilter(BaseFilterBackend):
         if query_params is not None:
             queryset = filter_queryset(object_type, queryset, query_params, mapping_callback)
         return queryset
+
+
+class PermissionFilter(BaseFilterBackend):
+    """Filter assets who can be used by a given set of nodes"""
+
+    def get_param(self):
+        try:
+            return self.param
+        except AttributeError:
+            raise NotImplementedError("Missing param definition")
+
+    def get_field(self):
+        try:
+            return self.field
+        except AttributeError:
+            raise NotImplementedError("Missing field definition")
+
+    def get_node_ids(self, request):
+        params = request.query_params.get(self.get_param())
+        if params:
+            node_ids = [param.strip() for param in params.split(",")]
+            return node_ids
+        return []
+
+    def filter_queryset(self, request, queryset, view):
+        node_ids = self.get_node_ids(request)
+        if node_ids:
+            is_public = Q(**{f"{self.get_field()}_public": True})
+            is_authorized = Q(**{f"{self.get_field()}_authorized_ids__contains": node_ids})
+            queryset = queryset.filter(is_public | is_authorized)
+        return queryset
+
+
+class ProcessPermissionFilter(PermissionFilter):
+    param = "can_process"
+    field = "permissions_process"
+
+
+class LogsPermissionFilter(PermissionFilter):
+    param = "can_access_logs"
+    field = "logs_permission"

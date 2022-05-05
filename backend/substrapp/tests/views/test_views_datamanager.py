@@ -326,6 +326,60 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
 
+    def test_datamanager_list_can_process(self):
+        public_dm = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
+        public_dm.permissions_process_public = True
+        public_dm.save()
+        self.expected_results[0]["permissions"]["process"]["public"] = True
+
+        shared_dm = DataManagerRep.objects.get(key=self.expected_results[1]["key"])
+        shared_dm.permissions_process_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
+        shared_dm.save()
+        self.expected_results[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
+
+        params = urlencode({"can_process": "MyOrg1MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"can_process": "MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+
+        params = urlencode({"can_process": "MyOrg3MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [self.expected_results[0]]),
+
+        params = urlencode({"can_process": "MyOrg1MSP,MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+
+    def test_datamanager_list_can_access_logs(self):
+        public_dm = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
+        public_dm.logs_permission_public = True
+        public_dm.save()
+        self.expected_results[0]["logs_permission"]["public"] = True
+
+        shared_dm = DataManagerRep.objects.get(key=self.expected_results[1]["key"])
+        shared_dm.logs_permission_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
+        shared_dm.save()
+        self.expected_results[1]["logs_permission"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
+
+        params = urlencode({"can_access_logs": "MyOrg1MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results),
+
+        params = urlencode({"can_access_logs": "MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+
+        params = urlencode({"can_access_logs": "MyOrg3MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [self.expected_results[0]]),
+
+        params = urlencode({"can_access_logs": "MyOrg1MSP,MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+
     def test_datamanager_create(self):
         def mock_orc_response(data):
             """Build orchestrator register response from request data."""

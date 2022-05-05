@@ -59,11 +59,11 @@ class AlgoViewTests(APITestCase):
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                     "download": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
@@ -85,11 +85,11 @@ class AlgoViewTests(APITestCase):
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                     "download": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
@@ -111,11 +111,11 @@ class AlgoViewTests(APITestCase):
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                     "download": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
@@ -142,11 +142,11 @@ class AlgoViewTests(APITestCase):
                 "metadata": {},
                 "permissions": {
                     "process": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                     "download": {
-                        "public": True,
+                        "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
@@ -423,6 +423,33 @@ class AlgoViewTests(APITestCase):
                 "results": self.expected_results[:2],
             },
         )
+
+    def test_algo_list_can_process(self):
+        public_algo = AlgoRep.objects.get(key=self.expected_algos[0]["key"])
+        public_algo.permissions_process_public = True
+        public_algo.save()
+        self.expected_results[0]["permissions"]["process"]["public"] = True
+
+        shared_algo = AlgoRep.objects.get(key=self.expected_algos[1]["key"])
+        shared_algo.permissions_process_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
+        shared_algo.save()
+        self.expected_results[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
+
+        params = urlencode({"can_process": "MyOrg1MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_algos),
+
+        params = urlencode({"can_process": "MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_algos[:2]),
+
+        params = urlencode({"can_process": "MyOrg3MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [self.expected_algos[0]]),
+
+        params = urlencode({"can_process": "MyOrg1MSP,MyOrg2MSP"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_algos[:2]),
 
     def test_algo_create(self):
         def mock_orc_response(data):

@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merge Metric and Algo view and model (#976), see UPGRADE.md for migration
 - (BREAKING) feat!: Get compute plan key from the request data (#999)
 
+### Added
+- Filtering on permissions for algos and datamanagers (#1018)
+
 ## [0.12.0] 2022-05-03
 
 ### Changed

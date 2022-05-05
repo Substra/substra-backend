@@ -154,7 +154,7 @@ def create_algo(
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
-    public: bool = True,
+    public: bool = False,
 ) -> Algo:
     if key is None:
         key = uuid.uuid4()
@@ -180,7 +180,7 @@ def create_metric(
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
-    public: bool = True,
+    public: bool = False,
 ) -> Algo:
     if key is None:
         key = uuid.uuid4()

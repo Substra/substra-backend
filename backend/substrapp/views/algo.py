@@ -28,6 +28,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CustomSearchFilter
+from substrapp.views.filters_utils import ProcessPermissionFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
@@ -233,7 +234,7 @@ class AlgoRepFilter(FilterSet):
 
 class AlgoViewSetConfig:
     serializer_class = AlgoRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend, ProcessPermissionFilter)
     ordering_fields = ["creation_date", "key", "name", "owner", "category"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
