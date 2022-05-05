@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -7,11 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+
 - Merge Metric and Algo view and model (#976), see UPGRADE.md for migration
+- (BREAKING) feat!: Get compute plan key from the request data (#999)
 
 ## [0.12.0] 2022-05-03
 
 ### Changed
+
 - (BREAKING) Pass named inputs/outputs to algos (#877)
 - Set default pagination page size and max page size (#950)
 - Use standard ModelViewSet to handle DataSample list and retrieve calls (#972)
@@ -21,9 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add django-filters on datasample view and define custom IN lookup filters for all views (#1017)
 
 ### Added
+
 - Filtering using django-filters (#946)
 
 ### Fixed
+
 - Create ModelRep DB instance when registering model in the orchestrator (#965)
 - End date for failed CP (#961)
 - Prevent 301 redirects when downloading failure reports (#975)
@@ -34,25 +40,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.11.0] 2022-04-19
 
 ### Fixed
+
 - Uuid substring collision made tests randomly fail (#941)
 
 ### Removed
+
 - Drop support for `DEBUG_QUICK_IMAGE` (#957)
 
 ## [0.10.1] 2022-04-13
 
 ### Changed
+
 - Set log level to DEBUG in dev (#952)
 - Remove Orchestrator{Aggregate, CompositeTrain, Test, Train}TaskSerializer and use orchestrator client directly (#920)
 - Handle error values in mapping functions (#945)
 - Remove `single-snapshot` in kaniko build option (#897)
 
 ### Fixed
+
 - Handle disabled model in resync by making address not mandatory (#948)
 
 ## [0.10.0] 2022-04-11
 
 ### Added
+
 - Store computetasks logs address and owner in localrep (#801)
 - Optimize computetask list queryset (#810)
 - Full-text search in CP name (#823)
@@ -63,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full text search in all assets names and keys (#931)
 
 ### Changed
+
 - Make possible to start the backend-server without orchestrator connection available (#811)
 - Use the connect-tools image 0.10.0 in the example yaml files (#850)
 - Return 410 error for all attempts at file download in isolated mode (#849)
@@ -86,16 +98,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dev conf uses latest connect-tools image (#943)
 
 ### Fixed
+
 - Disable model in localrep (#848)
 - Compute CP dates after updating related tasks (#855)
 - Compute task stays doing forever if saving the model raises an OSError (#880)
 - Compute CP dates before updating CP status (#883)
 - W340 null has no effect on ManyToManyField during migrations (#947)
 
-
 ## [0.9.0] 2022-03-01
 
 ### Added
+
 - Clear the asset buffer When the disk is full (#472)
 - Add API endpoint to serve failed compute task logs (#579)
 - In the API, allow filtering events by timestamp (#649)
@@ -117,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use localrep data in newsfeed view (#795)
 
 ### Changed
+
 - When resyncing the local representation, only fetch the latest events (#656)
 - Accept datamanager events with missing logs_permissions in localsync (#678)
 - Update datasamples protobuf. `register_datasamples` return now the datasamples list registered (#665)
@@ -128,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cancel a compute task when its compute plan is not runnable (#796)
 
 ### Fixed
+
 - Handle incomplete medata in newsfeed (#652)
 - Fix container image build lock, to prevent ImageEntrypoint concurrency issues (#671)
 - Fix filters on datamanager list view (#681)
@@ -145,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.8.0] 2022-01-16
 
 ### Added
+
 - The datamanager asset now has a `logs_permission` field (#581)
 - Local representation of algo assets (#473)
   - `localrep` app with `Event` and `Algo`: migration, model and serializer
@@ -155,15 +171,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a news feed endpoint to watch compute task event update (#541)
 
 ### Changed
+
 - Update `substrapp` algo viewset:
   - For `list` and `retrieve`, replace orchestrator query by `localrep` models queryset.
   - For `create`, create `localrep` algo before synchronization to be able to instantly (locally) query a newly created algo.
 
 ### Fixed
+
 - News feed now handles incomplete event metadata (#652)
 
 ## [0.7.0] 2022-01-05
+
 ### Fixed
+
 - Preserve order of parent tasks when registering a new task (#583)
 - Memory leak in MinIO client
 - Zombie compute pods (pods which are never deleted) in edge cases
@@ -171,6 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed task failure due to concurrent download of input assets (#571)
 
 ### Changed
+
 - When executing compute tasks, store Algos and Metrics in temporary folders instead of the Asset Buffer
 - On compute task failure, send the type of the error that occurred to the orchestrator
 - Remove validated field on Datasample, Algo, Metrics, Model and Datamanager models (#544)
@@ -180,6 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] 2021-12-01
 
 ### Added
+
 - Metrics support for the Django app behind the flag `ENABLE_METRICS`
 - Limit file size upload to `DATA_UPLOAD_MAX_SIZE` (#450)
 - Setting to run in "isolated" mode (when there is no backend data, only orchestrator data) (#392)
@@ -188,6 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add cp start date, end date and duration (#402)
 
 ### Changed
+
 - Datasample upload by path is possible only from the servermedias volumes
 - algo, metrics and datamanager are stored in Minio instead of the medias volume
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
@@ -198,15 +221,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switch log format to JSON
 
 ### Removed
+
 - `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE` (#350)
 
 ### Fixed
+
 - Properly prevent path traversal in archives and don't allow symbolic links (#465)
 - Inject task extra information even if there are no query params (#536)
 
 ## [0.5.0] 2021-11-02
 
 ### Added
+
 - Support for filters on compute plan sub routes
 - `COMMON_HOST_DOMAIN` variable env now required to set domain property of JWT cookies
 - Models and Datasamples are now stored in MinIO (they were previously stored on the filesystem)
@@ -216,6 +242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - serve API behind subpath with `SUBPATH` env var (#386)
 
 ### Changed
+
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`
 - (BREAKING) Replace objective by metric (#313)
 - (BREAKING) Multiple metrics and performances per test task (#320)
@@ -223,32 +250,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate orchestrator connection on readiness and liveness api checks
 
 ### Fixed
+
 - Set the local folder dynamically instead of leaving it to connect-tools default
 - Fix trailing comma that turned versions at /info into lists
 - Accept `UUID.hex` UUID as asset keys
 - Trying to download a disabled model will now result in a consistent http 410 error code instead of an http 500 or http 404 error code
 
-
 ## [0.4.0] 2021-10-04
 
 ### Added
+
 - Models exported to bucket are prefixed with their compute plan's ID
 - Backend version build in docker image and exposed in `/info`
 - Orchestrator and chaincode version in `/info`
 
 ### Changed
+
 - Unified all 3 categories of algos in a single endpoint.
-  * all algos are now served through `/algo` and `/algo/:key`
-  * when creating a new algo, you must give a `category` property which value is one of `ALGO_SIMPLE`, `ALGO_COMPOSITE` or `ALGO_AGGREGATE`
+  - all algos are now served through `/algo` and `/algo/:key`
+  - when creating a new algo, you must give a `category` property which value is one of `ALGO_SIMPLE`, `ALGO_COMPOSITE` or `ALGO_AGGREGATE`
 - Search objective by metrics with `/objective?search=objective:metrics_name:[METRIC_NAME]` instead of `/objective?search=objective:metrics:[METRIC_NAME]`
 - Switched to structured logging
 - Made `/info` semi-public: returns some information for anonymous users and some more for authenticated ones
 
 ### Removed
+
 - Routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
 - Asset filters on attributes from different assets
-exemple : ` GET /objective?search=traintuple:key:foo`
+exemple : `GET /objective?search=traintuple:key:foo`
 The composed filter that are removed are:
+
 ```
     /dataset?search=model:field_key:value
     /dataset?search=objective:field_key:value
@@ -263,55 +294,72 @@ The composed filter that are removed are:
 ## [0.3.1] - 2021-08-25
 
 ### Added
+
 - Add routes to get a compute plan's compute tasks by type (#204)
 
 ### Fixed
+
 - Compute-plan-less compute tasks all using the same lock key (#205)
 - Asset buffer skipping some data samples (#228)
 
 ## [0.3.0] - 2021-08-17
+
 ### Added
+
 - API: Added Pagination for lists of asset (#123)
 
 ### Fixed
+
 - Fix kaniko local directory cache for base images (#190)
 - The backend is compatible with FL worflow again (#194)
 - lock_resource was raising a FileNotFound exception in high concurrency scenarios (#187)
 
 ### Changed
+
 - Refactor views/datasamples.py (#189)
 - The opener is now downloaded instead of being copied from disk (#193)
 - Better use of shutil.copytree (#182)
 
 ## [0.2.0] - 2021-08-04
+
 ### Added
+
 - Add docker config secret name for kaniko builder (#99).
 - Add registry cleaning tasks.
 
 ### Changed
+
 - Use a single compute pod for all the tasks of a compute plan (#17).
 - Add two missing `__init__` files (#89).
 - Update python dependencies.
 
 ## [0.1.12] - 2021-04-13
+
 ### Added
+
 - Export models (#395).
 
 ### Fixed
+
 - Binding to service.port instead of 8000.
 - Datasample order for metrics.
 - Auto-allocate docker-registry node port (#391).
 
 ### Changed
+
 - Bump django from 2.2.19 to 2.2.20 in /backend.
 - Update cryptography to its latest release.
 
 ## [0.1.11] - 2021-03-12
+
 ### Changed
+
 - Update django and django-celery-results.
 
 ## [0.1.10] - 2021-03-09
+
 ### Changed
+
 - docker-registry default service value to nodePort
 - Update grpcio
 - Change local peer hostname to prevent issue from grpc client

@@ -204,6 +204,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         dummy_key = str(uuid.uuid4())
 
         data = {
+            "key": dummy_key,
             "tag": "foo",
             "traintuples": [
                 {
@@ -232,7 +233,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(ComputePlanRep.objects.count(), len(self.expected_results) + 1)
 
     def test_create_without_tasks(self):
-        data = {"tag": "foo"}
+        key = str(uuid.uuid4())
+        data = {"key": key, "tag": "foo"}
 
         with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
             response = self.client.post(self.url, data=data, format="json", **self.extra)

@@ -1,5 +1,3 @@
-import uuid
-
 import structlog
 from django.db import models
 from django_filters.rest_framework import BaseInFilter
@@ -26,6 +24,7 @@ from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import get_channel_name
+from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -97,7 +96,7 @@ def create(request, get_success_headers):
     """
     # Step1: register asset in orchestrator
     compute_plan_data = {
-        "key": uuid.uuid4(),
+        "key": to_string_uuid(request.data.get("key")),
         "tag": request.data.get("tag"),
         "metadata": request.data.get("metadata"),
         "delete_intermediary_models": request.data.get("clean_models", False),
