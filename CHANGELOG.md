@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] 2022-05-09
+
 ### Changed
 
 - Merge Metric and Algo view and model (#976), see UPGRADE.md for migration
 - (BREAKING) feat!: Get compute plan key from the request data (#999)
+- Add django-filters on datasample view and define custom IN lookup filters for all views (#1017)
 
 ### Added
 - Filtering on permissions for algos and datamanagers (#1018)
@@ -25,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Newsfeed now returns items for metric, algo and datamanager creation (#954)
 - DataSamples for Localrep ComputeTask are foreign keys (#944)
 - Removed MELLODDY-specific code (#998)
-- Add django-filters on datasample view and define custom IN lookup filters for all views (#1017)
 
 ### Added
 
