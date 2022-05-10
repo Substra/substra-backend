@@ -229,13 +229,4 @@ sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framew
 
 2. Deploy with `skaffold run -p arm64`
 
-3. Connect backend rabbitmq user:
-
-update the password rabbitmq user
-
-```kubectl exec $(kubectl get -n org-1 pod -l app.kubernetes.io/name=rabbitmq,app.kubernetes.io/instance=backend-org-1 -o name) -n org-1 -- rabbitmqctl add_user rabbitmq rabbitmq
-kubectl exec $(kubectl get -n org-1 pod -l app.kubernetes.io/name=rabbitmq,app.kubernetes.io/instance=backend-org-1 -o name) -n org-1 -- rabbitmqctl set_permissions -p "/" "rabbitmq" ".*" ".*" ".*"
-```
-
-the celery app initialization needs to be executed again after updating the password, restart the backend worker:
-`kubectl delete $(kubectl get -n org-1 pod -l app.kubernetes.io/component=substra-worker -o name) -n org-1`
+3. Run patch `./examples/tools/patch-rabbitmq-arm64.sh`
