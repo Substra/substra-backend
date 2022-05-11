@@ -1,7 +1,6 @@
 import structlog
 from rest_framework.viewsets import GenericViewSet
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import DefaultPageNumberPagination
@@ -84,7 +83,7 @@ class NewsFeedViewSet(GenericViewSet):
         for algo in AlgoRep.objects.filter(channel=channel):
 
             # This block will be removed once metric concept is fully merged into algo
-            if algo.category == algo_pb2.AlgoCategory.ALGO_METRIC:
+            if algo.category == AlgoRep.Category.ALGO_METRIC:
                 asset_kind = "ASSET_METRIC"
             else:
                 asset_kind = common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO)

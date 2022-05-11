@@ -5,8 +5,10 @@ from wsgiref.util import is_hop_by_hop
 
 import django.http
 from django.conf import settings
+from django.forms import ChoiceField
 from django.forms import TypedChoiceField
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import ChoiceFilter
 from django_filters.rest_framework import TypedChoiceFilter
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
@@ -254,6 +256,12 @@ class MatchFilter(SearchFilter):
 
     def get_search_fields(self, view, request):
         return getattr(view, "search_fields", self.default_search_fields)
+
+
+class ChoiceInFilter(BaseInFilter, ChoiceFilter):
+    """Allow choice field to be filtered with IN lookup passing comma separated values list"""
+
+    field_class = ChoiceField
 
 
 class TypedChoiceInFilter(BaseInFilter, TypedChoiceFilter):

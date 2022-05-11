@@ -3,7 +3,7 @@ Utility module to create fixtures.
 
 Basic example:
 
->>> algo = create_algo(category=algo_pb2.ALGO_SIMPLE)
+>>> algo = create_algo(category=Algo.Category.ALGO_SIMPLE)
 >>> data_manager = create_datamanager()
 >>> data_sample = create_datasample([data_manager])
 >>> compute_plan = create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
@@ -37,7 +37,7 @@ Customized example:
 >>> algo = create_algo(
 ...     key=algo_file.key,
 ...     name="Random forest",
-...     category=algo_pb2.ALGO_SIMPLE,
+...     category=Algo.Category.ALGO_SIMPLE,
 ...     metadata={"foo": "bar"},
 ...     owner="MyOrg2MSP",
 ...     channel="yourchannel",
@@ -50,7 +50,6 @@ import uuid
 
 from django.utils import timezone
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
@@ -150,7 +149,7 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
 def create_algo(
     key: uuid.UUID = None,
     name: str = "algo",
-    category: int = algo_pb2.ALGO_SIMPLE,
+    category: int = Algo.Category.ALGO_SIMPLE,
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -187,7 +186,7 @@ def create_metric(
     return Algo.objects.create(
         key=key,
         name=name,
-        category=algo_pb2.AlgoCategory.ALGO_METRIC,
+        category=Algo.Category.ALGO_METRIC,
         metadata=metadata or {},
         algorithm_address=get_storage_address("metric", key, "metrics"),
         algorithm_checksum=DUMMY_CHECKSUM,

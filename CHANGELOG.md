@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ComputePlanMetadataViewSet to list all existing complute plans metadata (#1042)
 
+### Changed
+
+- (BREAKING) Store enum values as string (impact ordering) - Algo (#1040)
+
 ## [0.13.0] 2022-05-09
 
 ### Changed
@@ -20,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add django-filters on datasample view and define custom IN lookup filters for all views (#1017)
 
 ### Added
+
 - Filtering on permissions for algos and datamanagers (#1018)
 
 ## [0.12.0] 2022-05-03

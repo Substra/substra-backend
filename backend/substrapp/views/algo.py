@@ -13,12 +13,10 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-import orchestrator.algo_pb2 as algo_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
-from orchestrator.algo_pb2 import AlgoCategory
 from orchestrator.algo_pb2 import AlgoInput
 from orchestrator.algo_pb2 import AlgoOutput
 from orchestrator.common_pb2 import AssetKind
@@ -31,9 +29,9 @@ from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.filters_utils import ProcessPermissionFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import PermissionMixin
-from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import validate_key
@@ -42,21 +40,21 @@ logger = structlog.get_logger(__name__)
 
 # This mapping will be deleted once the algo inputs are provided by the client
 ALGO_INPUTS_PER_CATEGORY = {
-    AlgoCategory.ALGO_SIMPLE: {
+    AlgoRep.Category.ALGO_SIMPLE: {
         "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
         "datasamples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
         "model": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
     },
-    AlgoCategory.ALGO_COMPOSITE: {
+    AlgoRep.Category.ALGO_COMPOSITE: {
         "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
         "data-samples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
         "shared": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
         "local": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
     },
-    AlgoCategory.ALGO_AGGREGATE: {
+    AlgoRep.Category.ALGO_AGGREGATE: {
         "model": AlgoInput(kind=AssetKind.ASSET_MODEL, multiple=True),
     },
-    AlgoCategory.ALGO_METRIC: {  # evaluation step
+    AlgoRep.Category.ALGO_METRIC: {  # evaluation step
         "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
         "data-samples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
         # we don't have a "predictions" asset kind yet, so we use the "model" kind
@@ -68,17 +66,17 @@ ALGO_INPUTS_PER_CATEGORY = {
 
 # This mapping will be deleted once the algo outputs are provided by the client
 ALGO_OUTPUTS_PER_CATEGORY = {
-    AlgoCategory.ALGO_SIMPLE: {
+    AlgoRep.Category.ALGO_SIMPLE: {
         "model": AlgoOutput(kind=AssetKind.ASSET_MODEL),
     },
-    AlgoCategory.ALGO_COMPOSITE: {
+    AlgoRep.Category.ALGO_COMPOSITE: {
         "shared": AlgoOutput(kind=AssetKind.ASSET_MODEL),
         "local": AlgoOutput(kind=AssetKind.ASSET_MODEL),
     },
-    AlgoCategory.ALGO_AGGREGATE: {
+    AlgoRep.Category.ALGO_AGGREGATE: {
         "model": AlgoOutput(kind=AssetKind.ASSET_MODEL),
     },
-    AlgoCategory.ALGO_METRIC: {  # evaluation step
+    AlgoRep.Category.ALGO_METRIC: {  # evaluation step
         "performance": AlgoOutput(kind=AssetKind.ASSET_PERFORMANCE),
     },
     # Note: algo of category "prediction" is missing. This will becomes irrelevant once we get rid of algo categories
@@ -88,25 +86,22 @@ ALGO_OUTPUTS_PER_CATEGORY = {
 
 ALGO_CATEGORIES = {
     "algo": [
-        algo_pb2.AlgoCategory.ALGO_UNKNOWN,
-        algo_pb2.AlgoCategory.ALGO_SIMPLE,
-        algo_pb2.AlgoCategory.ALGO_AGGREGATE,
-        algo_pb2.AlgoCategory.ALGO_COMPOSITE,
+        AlgoRep.Category.ALGO_SIMPLE,
+        AlgoRep.Category.ALGO_AGGREGATE,
+        AlgoRep.Category.ALGO_COMPOSITE,
     ],
-    "metric": [algo_pb2.AlgoCategory.ALGO_METRIC],
+    "metric": [AlgoRep.Category.ALGO_METRIC],
 }
 
 
 def _register_in_orchestrator(request, basename, instance):
     """Register algo in orchestrator."""
 
-    if basename == "metric":
-        category = algo_pb2.AlgoCategory.ALGO_METRIC
-    else:
-        try:
-            category = algo_pb2.AlgoCategory.Value(request.data.get("category"))
-        except ValueError:
-            raise ValidationError({"category": "Invalid category"})
+    category = AlgoRep.Category.ALGO_METRIC if basename == "metric" else request.data["category"]
+    try:
+        getattr(AlgoRep.Category, category)  # validate category
+    except AttributeError:
+        raise ValidationError({"category": "Invalid category"})
 
     current_site = settings.DEFAULT_DOMAIN
     permissions = request.data.get("permissions", {})
@@ -192,21 +187,21 @@ def create(request, basename, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-def map_category(key, values):
+def validate_category(key, values):
     if key == "category":
         try:
-            values = [algo_pb2.AlgoCategory.Value(value) for value in values]
-        except ValueError as e:
+            for value in values:
+                getattr(AlgoRep.Category, value)
+        except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 
 class AlgoRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    category = TypedChoiceInFilter(
+    category = ChoiceInFilter(
         field_name="category",
-        choices=[(key, key) for key in algo_pb2.AlgoCategory.keys()],
-        coerce=lambda x: algo_pb2.AlgoCategory.Value(x),
+        choices=AlgoRep.Category.choices,
     )
 
     class Meta:
@@ -238,8 +233,8 @@ class AlgoViewSetConfig:
     ordering_fields = ["creation_date", "key", "name", "owner", "category"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    custom_search_object_type = "algo"
-    custom_search_mapping_callback = map_category
+    custom_search_object_type = "algo"  # deprecated
+    custom_search_mapping_callback = validate_category  # deprecated
     filterset_class = AlgoRepFilter
 
     @property

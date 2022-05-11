@@ -12,7 +12,6 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.algo_pb2 as algo_pb2
 from localrep.models import Algo as AlgoRep
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -46,9 +45,9 @@ class AlgoViewTests(APITestCase):
         self.url = reverse("substrapp:algo-list")
         self.metric_url = reverse("substrapp:metric-list")
 
-        simple_algo = factory.create_algo(category=algo_pb2.ALGO_SIMPLE, name="simple algo")
-        aggregate_algo = factory.create_algo(category=algo_pb2.ALGO_AGGREGATE)
-        composite_algo = factory.create_algo(category=algo_pb2.ALGO_COMPOSITE)
+        simple_algo = factory.create_algo(category=AlgoRep.Category.ALGO_SIMPLE, name="simple algo")
+        aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE)
+        composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE)
         metric_algo = factory.create_metric()
 
         self.algos = [simple_algo, aggregate_algo, composite_algo]
@@ -288,12 +287,11 @@ class AlgoViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("ALGO_UNKNOWN",),
             ("ALGO_SIMPLE",),
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
             ("ALGO_METRIC",),
-            ("ALGO_XXX",),
+            ("ALGO_XXX",),  # invalid
         ]
     )
     def test_algo_list_search_filter_by_category(self, category):
@@ -313,11 +311,11 @@ class AlgoViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("ALGO_UNKNOWN",),
             ("ALGO_SIMPLE",),
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
             ("ALGO_METRIC",),
+            ("ALGO_XXX",),  # invalid
         ]
     )
     def test_algo_list_filter_by_category(self, category):
@@ -326,15 +324,19 @@ class AlgoViewTests(APITestCase):
         params = urlencode({"category": category})
         url = self.metric_url if category == "ALGO_METRIC" else self.url
         response = self.client.get(f"{url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
-        )
+
+        if category != "ALGO_XXX":
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
-            (["ALGO_UNKNOWN", "ALGO_SIMPLE"],),
-            (["ALGO_AGGREGATE", "ALGO_COMPOSITE"],),
+            (["ALGO_SIMPLE", "ALGO_AGGREGATE"],),
+            (["ALGO_SIMPLE", "ALGO_COMPOSITE"],),
         ]
     )
     def test_algo_list_filter_by_category_in(self, categories):
@@ -451,7 +453,16 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_algos[:2]),
 
-    def test_algo_create(self):
+    @parameterized.expand(
+        [
+            ("ALGO_SIMPLE",),
+            ("ALGO_AGGREGATE",),
+            ("ALGO_COMPOSITE",),
+            ("ALGO_METRIC",),
+            ("ALGO_XXX",),  # invalid
+        ]
+    )
+    def test_algo_create(self, category):
         def mock_orc_response(data):
             """Build orchestrator register response from request data."""
             return {
@@ -463,7 +474,7 @@ class AlgoViewTests(APITestCase):
                     "download": data["new_permissions"],
                 },
                 "metadata": {},
-                "category": algo_pb2.AlgoCategory.Name(data["category"]),
+                "category": data["category"],
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "description": data["description"],
                 "algorithm": data["algorithm"],
@@ -476,7 +487,7 @@ class AlgoViewTests(APITestCase):
                 {
                     "name": "Logistic regression",
                     "metric_key": "some key",
-                    "category": "ALGO_SIMPLE",
+                    "category": category,
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
@@ -489,10 +500,13 @@ class AlgoViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_algo", side_effect=mock_orc_response):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        self.assertIsNotNone(response.data["key"])
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # asset created in local db
-        self.assertEqual(AlgoRep.objects.count(), len(self.expected_results) + 1)
+        if category != "ALGO_XXX":
+            self.assertIsNotNone(response.data["key"])
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            # asset created in local db
+            self.assertEqual(AlgoRep.objects.count(), len(self.expected_results) + 1)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data["file"].close()
         data["description"].close()
