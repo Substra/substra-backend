@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ComputePlanMetadataViewSet to list all existing complute plans metadata (#1042)
+
 ## [0.13.0] 2022-05-09
 
 ### Changed

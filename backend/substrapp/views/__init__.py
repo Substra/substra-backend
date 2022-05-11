@@ -8,6 +8,7 @@ from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
 from .datasample import DataSampleViewSet
+from .metadata import ComputePlanMetadataViewSet
 from .model import ModelPermissionViewSet
 from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
@@ -28,4 +29,5 @@ __all__ = [
     "NewsFeedViewSet",
     "ComputeTaskLogsViewSet",
     "CPPerformanceViewSet",
+    "ComputePlanMetadataViewSet",
 ]

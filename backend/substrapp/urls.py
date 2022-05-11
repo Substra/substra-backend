@@ -28,6 +28,7 @@ router.register(r"testtuple", views.ComputeTaskViewSet, basename="testtuple")
 router.register(r"aggregatetuple", views.ComputeTaskViewSet, basename="aggregatetuple")
 router.register(r"composite_traintuple", views.ComputeTaskViewSet, basename="composite_traintuple")
 router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_plan")
+router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, basename="compute_plan_metadata")
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
 router.register(compute_task_failure_report.LOGS_BASE_PATH, views.ComputeTaskLogsViewSet, basename="logs")
 
