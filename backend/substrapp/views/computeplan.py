@@ -35,6 +35,7 @@ def register_compute_plan_in_orchestrator(data, channel_name):
     orc_cp = {
         "key": str(data.get("key")),
         "tag": data.get("tag"),
+        "name": data.get("name"),
         "metadata": data.get("metadata"),
         "delete_intermediary_models": data.get("delete_intermediary_models", False),
     }
@@ -98,6 +99,7 @@ def create(request, get_success_headers):
     compute_plan_data = {
         "key": to_string_uuid(request.data.get("key")),
         "tag": request.data.get("tag"),
+        "name": request.data.get("name"),
         "metadata": request.data.get("metadata"),
         "delete_intermediary_models": request.data.get("clean_models", False),
     }
@@ -180,6 +182,7 @@ class ComputePlanRepFilter(FilterSet):
             "owner": ["exact"],
             "key": ["exact"],
             "tag": ["exact"],
+            "name": ["exact"],
         }
         filter_overrides = {
             models.CharField: {
@@ -201,10 +204,10 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     serializer_class = ComputePlanRepSerializer
     pagination_class = SmallPageNumberPagination
     filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
-    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag"]
+    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name"]
     custom_search_object_type = "compute_plan"
     custom_search_mapping_callback = map_status
-    search_fields = ("key", "tag")
+    search_fields = ("key", "name")
     filterset_class = ComputePlanRepFilter
 
     def get_queryset(self):

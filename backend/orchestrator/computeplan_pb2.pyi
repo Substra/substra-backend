@@ -81,6 +81,7 @@ class ComputePlan(google.protobuf.message.Message):
     DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     TAG_FIELD_NUMBER: builtins.int
+    NAME_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     key: typing.Text
     owner: typing.Text
@@ -112,6 +113,7 @@ class ComputePlan(google.protobuf.message.Message):
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     tag: typing.Text
+    name: typing.Text
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, typing.Text]: ...
     def __init__(self,
@@ -129,10 +131,11 @@ class ComputePlan(google.protobuf.message.Message):
         delete_intermediary_models: builtins.bool = ...,
         creation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
         tag: typing.Text = ...,
+        name: typing.Text = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date",b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["canceled_count",b"canceled_count","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","doing_count",b"doing_count","done_count",b"done_count","failed_count",b"failed_count","key",b"key","metadata",b"metadata","owner",b"owner","status",b"status","tag",b"tag","task_count",b"task_count","todo_count",b"todo_count","waiting_count",b"waiting_count"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["canceled_count",b"canceled_count","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","doing_count",b"doing_count","done_count",b"done_count","failed_count",b"failed_count","key",b"key","metadata",b"metadata","name",b"name","owner",b"owner","status",b"status","tag",b"tag","task_count",b"task_count","todo_count",b"todo_count","waiting_count",b"waiting_count"]) -> None: ...
 global___ComputePlan = ComputePlan
 
 class NewComputePlan(google.protobuf.message.Message):
@@ -152,10 +155,12 @@ class NewComputePlan(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     TAG_FIELD_NUMBER: builtins.int
+    NAME_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     key: typing.Text
     tag: typing.Text
+    name: typing.Text
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, typing.Text]: ...
     delete_intermediary_models: builtins.bool
@@ -163,10 +168,11 @@ class NewComputePlan(google.protobuf.message.Message):
         *,
         key: typing.Text = ...,
         tag: typing.Text = ...,
+        name: typing.Text = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
         delete_intermediary_models: builtins.bool = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["delete_intermediary_models",b"delete_intermediary_models","key",b"key","metadata",b"metadata","tag",b"tag"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["delete_intermediary_models",b"delete_intermediary_models","key",b"key","metadata",b"metadata","name",b"name","tag",b"tag"]) -> None: ...
 global___NewComputePlan = NewComputePlan
 
 class GetComputePlanParam(google.protobuf.message.Message):

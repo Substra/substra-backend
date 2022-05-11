@@ -159,6 +159,7 @@ def _register_in_orchestrator(request, basename):
                 args={
                     "key": orc_task["compute_plan_key"],
                     "tag": "",
+                    "name": orc_task["compute_plan_key"],
                     "metadata": "",
                     "delete_intermediary_models": False,
                 }

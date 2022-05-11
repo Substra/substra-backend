@@ -97,6 +97,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "owner",
             "delete_intermediary_models",
             "tag",
+            "name",
             "creation_date",
             "start_date",
             "end_date",

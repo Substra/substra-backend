@@ -22,6 +22,7 @@ class ComputePlan(models.Model):
     delete_intermediary_models = models.BooleanField(null=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=computeplan_pb2.ComputePlanStatus.PLAN_STATUS_UNKNOWN)
     tag = models.CharField(max_length=100, blank=True)
+    name = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)

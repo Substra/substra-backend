@@ -12814,6 +12814,7 @@ def get_compute_plans():
     return [
         {
             "key": "1f35691c-854f-422c-a7cb-f18d5775cc64",
+            "name": "1f35691c-854f-422c-a7cb-f18d5775cc64",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12835,6 +12836,7 @@ def get_compute_plans():
         },
         {
             "key": "71371325-9875-488d-aedf-032f60089b23",
+            "name": "71371325-9875-488d-aedf-032f60089b23",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12856,6 +12858,7 @@ def get_compute_plans():
         },
         {
             "key": "84461dd3-000c-4f97-9f99-4a440da9f08a",
+            "name": "84461dd3-000c-4f97-9f99-4a440da9f08a",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12877,6 +12880,7 @@ def get_compute_plans():
         },
         {
             "key": "3142b30d-de52-4e72-bbd6-d13264fc8db8",
+            "name": "3142b30d-de52-4e72-bbd6-d13264fc8db8",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12898,6 +12902,7 @@ def get_compute_plans():
         },
         {
             "key": "ceb8430e-3f6e-4a8a-ba1d-a7a653ba24de",
+            "name": "ceb8430e-3f6e-4a8a-ba1d-a7a653ba24de",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12919,6 +12924,7 @@ def get_compute_plans():
         },
         {
             "key": "67f726e4-5817-4fdf-9963-20798531022e",
+            "name": "67f726e4-5817-4fdf-9963-20798531022e",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12940,6 +12946,7 @@ def get_compute_plans():
         },
         {
             "key": "da9f9c17-3fe8-4c6e-bb17-63ca7d56e61b",
+            "name": "da9f9c17-3fe8-4c6e-bb17-63ca7d56e61b",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12961,6 +12968,7 @@ def get_compute_plans():
         },
         {
             "key": "5809b1e6-bf50-49e2-baa1-84bf197e9925",
+            "name": "5809b1e6-bf50-49e2-baa1-84bf197e9925",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -12982,6 +12990,7 @@ def get_compute_plans():
         },
         {
             "key": "e555e1c2-fd12-4b33-93a5-c758459d4cbe",
+            "name": "e555e1c2-fd12-4b33-93a5-c758459d4cbe",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13003,6 +13012,7 @@ def get_compute_plans():
         },
         {
             "key": "88c72227-4c21-4079-8068-8663951aa303",
+            "name": "88c72227-4c21-4079-8068-8663951aa303",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13024,6 +13034,7 @@ def get_compute_plans():
         },
         {
             "key": "0efc60cb-fa53-4473-a426-6ab83ae30a4d",
+            "name": "0efc60cb-fa53-4473-a426-6ab83ae30a4d",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13045,6 +13056,7 @@ def get_compute_plans():
         },
         {
             "key": "a0de7bc3-a619-4f16-b09e-a0bc0b25eb1d",
+            "name": "a0de7bc3-a619-4f16-b09e-a0bc0b25eb1d",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13066,6 +13078,7 @@ def get_compute_plans():
         },
         {
             "key": "0153ea55-8ad1-4075-9977-50e2460aa5e1",
+            "name": "0153ea55-8ad1-4075-9977-50e2460aa5e1",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13087,6 +13100,7 @@ def get_compute_plans():
         },
         {
             "key": "df8da9a5-bec8-413d-a6f2-b72a292947c0",
+            "name": "df8da9a5-bec8-413d-a6f2-b72a292947c0",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13108,6 +13122,7 @@ def get_compute_plans():
         },
         {
             "key": "ca4d93cb-abb7-442a-94f4-9b2b7e893bdb",
+            "name": "ca4d93cb-abb7-442a-94f4-9b2b7e893bdb",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13129,6 +13144,7 @@ def get_compute_plans():
         },
         {
             "key": "43294541-3c5e-453e-84a8-4fde23060a9b",
+            "name": "43294541-3c5e-453e-84a8-4fde23060a9b",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13150,6 +13166,7 @@ def get_compute_plans():
         },
         {
             "key": "026eb1c3-8d8b-4a72-a11a-a909cc058592",
+            "name": "026eb1c3-8d8b-4a72-a11a-a909cc058592",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13171,6 +13188,7 @@ def get_compute_plans():
         },
         {
             "key": "c72789ef-e52e-459b-a138-b988c460ed51",
+            "name": "c72789ef-e52e-459b-a138-b988c460ed51",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13192,6 +13210,7 @@ def get_compute_plans():
         },
         {
             "key": "826acdb2-2452-4e76-b220-5c147f63dd34",
+            "name": "826acdb2-2452-4e76-b220-5c147f63dd34",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13213,6 +13232,7 @@ def get_compute_plans():
         },
         {
             "key": "07c7a8ee-5078-43fb-93de-f3140be0743b",
+            "name": "07c7a8ee-5078-43fb-93de-f3140be0743b",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13234,6 +13254,7 @@ def get_compute_plans():
         },
         {
             "key": "807f9112-68ab-4709-b755-d540334ad4a5",
+            "name": "807f9112-68ab-4709-b755-d540334ad4a5",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13255,6 +13276,7 @@ def get_compute_plans():
         },
         {
             "key": "db1d0f0e-fb1d-4f0a-8729-4e25cef5e1e0",
+            "name": "db1d0f0e-fb1d-4f0a-8729-4e25cef5e1e0",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13276,6 +13298,7 @@ def get_compute_plans():
         },
         {
             "key": "3da686ac-418e-4acf-a351-bac6ec8e0f8f",
+            "name": "3da686ac-418e-4acf-a351-bac6ec8e0f8f",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13297,6 +13320,7 @@ def get_compute_plans():
         },
         {
             "key": "34e1adc4-af97-4022-b9e5-28d8f9a4ad11",
+            "name": "34e1adc4-af97-4022-b9e5-28d8f9a4ad11",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13318,6 +13342,7 @@ def get_compute_plans():
         },
         {
             "key": "1e232a31-5910-4b38-ba0e-656928acec04",
+            "name": "1e232a31-5910-4b38-ba0e-656928acec04",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13339,6 +13364,7 @@ def get_compute_plans():
         },
         {
             "key": "f90f3301-4924-4d91-ba73-841366796d42",
+            "name": "f90f3301-4924-4d91-ba73-841366796d42",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13360,6 +13386,7 @@ def get_compute_plans():
         },
         {
             "key": "d7d6309f-f6c4-4326-9e2e-344dd87e577d",
+            "name": "d7d6309f-f6c4-4326-9e2e-344dd87e577d",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13381,6 +13408,7 @@ def get_compute_plans():
         },
         {
             "key": "394185e2-73d8-4198-849b-bac6ff5d5cce",
+            "name": "394185e2-73d8-4198-849b-bac6ff5d5cce",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13402,6 +13430,7 @@ def get_compute_plans():
         },
         {
             "key": "0bb56c60-a05b-4696-8eae-4319071338f5",
+            "name": "0bb56c60-a05b-4696-8eae-4319071338f5",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13423,6 +13452,7 @@ def get_compute_plans():
         },
         {
             "key": "6de44fdd-7eab-47f9-bcdb-18ae0b642b2a",
+            "name": "6de44fdd-7eab-47f9-bcdb-18ae0b642b2a",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13444,6 +13474,7 @@ def get_compute_plans():
         },
         {
             "key": "75f147bf-d0bb-423c-9889-a7be81cf017a",
+            "name": "75f147bf-d0bb-423c-9889-a7be81cf017a",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13465,6 +13496,7 @@ def get_compute_plans():
         },
         {
             "key": "e61a0ed8-2e03-40ca-af64-efd76ae22114",
+            "name": "e61a0ed8-2e03-40ca-af64-efd76ae22114",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13486,6 +13518,7 @@ def get_compute_plans():
         },
         {
             "key": "ff02b0be-a535-42e0-a950-fc99beae349c",
+            "name": "ff02b0be-a535-42e0-a950-fc99beae349c",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13507,6 +13540,7 @@ def get_compute_plans():
         },
         {
             "key": "12df647c-2932-498a-81b3-c844e76a4af9",
+            "name": "12df647c-2932-498a-81b3-c844e76a4af9",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13528,6 +13562,7 @@ def get_compute_plans():
         },
         {
             "key": "b4793fad-c557-4aec-90c0-df3c5efb516b",
+            "name": "b4793fad-c557-4aec-90c0-df3c5efb516b",
             "tag": "foo",
             "owner": "MyOrg1MSP",
             "metadata": {
@@ -13551,6 +13586,7 @@ def get_compute_plans():
         },
         {
             "key": "34ecad2b-fb40-47c9-9fe0-03c3583997f0",
+            "name": "34ecad2b-fb40-47c9-9fe0-03c3583997f0",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13572,6 +13608,7 @@ def get_compute_plans():
         },
         {
             "key": "f528b0e3-1ae3-4217-bb6c-e4865f491fc8",
+            "name": "f528b0e3-1ae3-4217-bb6c-e4865f491fc8",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13593,6 +13630,7 @@ def get_compute_plans():
         },
         {
             "key": "aa9c0c79-f74b-4161-9938-8cc3f21cb37b",
+            "name": "aa9c0c79-f74b-4161-9938-8cc3f21cb37b",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13614,6 +13652,7 @@ def get_compute_plans():
         },
         {
             "key": "2a33778e-0674-4eec-989c-2c66f15dd0c3",
+            "name": "2a33778e-0674-4eec-989c-2c66f15dd0c3",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13635,6 +13674,7 @@ def get_compute_plans():
         },
         {
             "key": "c44cf878-963b-40b8-b281-7528e6c9a89f",
+            "name": "c44cf878-963b-40b8-b281-7528e6c9a89f",
             "tag": "",
             "owner": "MyOrg2MSP",
             "metadata": {},
@@ -13656,6 +13696,7 @@ def get_compute_plans():
         },
         {
             "key": "d0b08b83-9fda-4249-b0f3-6e0342e88ac6",
+            "name": "d0b08b83-9fda-4249-b0f3-6e0342e88ac6",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13677,6 +13718,7 @@ def get_compute_plans():
         },
         {
             "key": "b289128b-88f3-4ef1-8613-ff92e33e17b0",
+            "name": "b289128b-88f3-4ef1-8613-ff92e33e17b0",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13698,6 +13740,7 @@ def get_compute_plans():
         },
         {
             "key": "b7ad728b-f219-44f8-a43a-e11b2736ade1",
+            "name": "b7ad728b-f219-44f8-a43a-e11b2736ade1",
             "tag": "",
             "owner": "MyOrg2MSP",
             "metadata": {},
@@ -13719,6 +13762,7 @@ def get_compute_plans():
         },
         {
             "key": "de83707b-e6b4-414a-a759-c0d27400c771",
+            "name": "de83707b-e6b4-414a-a759-c0d27400c771",
             "tag": "",
             "owner": "MyOrg2MSP",
             "metadata": {},
@@ -13740,6 +13784,7 @@ def get_compute_plans():
         },
         {
             "key": "a5f4c59e-6df9-432b-a9ae-ecc5ec9c2268",
+            "name": "a5f4c59e-6df9-432b-a9ae-ecc5ec9c2268",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13761,6 +13806,7 @@ def get_compute_plans():
         },
         {
             "key": "9b2d36ed-058b-4c2b-8e74-9148c91fdd51",
+            "name": "9b2d36ed-058b-4c2b-8e74-9148c91fdd51",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13782,6 +13828,7 @@ def get_compute_plans():
         },
         {
             "key": "0b8d67e3-3c2b-464f-b468-64ad13d3724d",
+            "name": "0b8d67e3-3c2b-464f-b468-64ad13d3724d",
             "tag": "",
             "owner": "MyOrg2MSP",
             "metadata": {},
@@ -13803,6 +13850,7 @@ def get_compute_plans():
         },
         {
             "key": "ee3d2ef7-1d28-4318-abbe-b17bfff244a5",
+            "name": "ee3d2ef7-1d28-4318-abbe-b17bfff244a5",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
@@ -13824,6 +13872,7 @@ def get_compute_plans():
         },
         {
             "key": "81de97ee-40a4-41f8-a7fb-9477ccedd28f",
+            "name": "81de97ee-40a4-41f8-a7fb-9477ccedd28f",
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},

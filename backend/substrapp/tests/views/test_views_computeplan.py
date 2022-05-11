@@ -30,6 +30,7 @@ def mock_register_compute_plan(data):
     return {
         "key": data["key"],
         "tag": data["tag"],
+        "name": data["name"],
         "metadata": data["metadata"],
         "delete_intermediary_models": data["delete_intermediary_models"],
         "status": computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO),
@@ -67,17 +68,17 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         algo = factory.create_algo()
 
-        todo_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_TODO)
+        todo_cp = factory.create_computeplan(name="To do", status=computeplan_pb2.PLAN_STATUS_TODO)
         factory.create_computetask(todo_cp, algo, status=computetask_pb2.STATUS_TODO)
 
-        doing_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DOING)
+        doing_cp = factory.create_computeplan(name="Doing", status=computeplan_pb2.PLAN_STATUS_DOING)
         factory.create_computetask(doing_cp, algo, status=computetask_pb2.STATUS_DOING)
         self.now = doing_cp.start_date + datetime.timedelta(hours=1)
 
-        done_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
+        done_cp = factory.create_computeplan(name="Done", status=computeplan_pb2.PLAN_STATUS_DONE)
         factory.create_computetask(done_cp, algo, status=computetask_pb2.STATUS_DONE)
 
-        failed_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_FAILED)
+        failed_cp = factory.create_computeplan(name="Failed", status=computeplan_pb2.PLAN_STATUS_FAILED)
         failed_task = factory.create_computetask(
             failed_cp, algo, category=computetask_pb2.TASK_TRAIN, status=computetask_pb2.STATUS_FAILED
         )
@@ -85,13 +86,14 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         failed_cp.failed_task_category = failed_task.category
         failed_cp.save()
 
-        canceled_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_CANCELED)
+        canceled_cp = factory.create_computeplan(name="Canceled", status=computeplan_pb2.PLAN_STATUS_CANCELED)
         factory.create_computetask(canceled_cp, algo, status=computetask_pb2.STATUS_CANCELED)
 
         self.expected_results = [
             {
                 "key": str(todo_cp.key),
                 "tag": "",
+                "name": "To do",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -112,6 +114,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             {
                 "key": str(doing_cp.key),
                 "tag": "",
+                "name": "Doing",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -132,6 +135,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             {
                 "key": str(done_cp.key),
                 "tag": "",
+                "name": "Done",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -153,6 +157,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             {
                 "key": str(failed_cp.key),
                 "tag": "",
+                "name": "Failed",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -177,6 +182,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             {
                 "key": str(canceled_cp.key),
                 "tag": "",
+                "name": "Canceled",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -206,6 +212,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         data = {
             "key": dummy_key,
             "tag": "foo",
+            "name": "Bar",
             "traintuples": [
                 {
                     "algo_key": dummy_key,
@@ -234,7 +241,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_create_without_tasks(self):
         key = str(uuid.uuid4())
-        data = {"key": key, "tag": "foo"}
+        data = {"key": key, "tag": "foo", "name": "Bar"}
 
         with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
@@ -368,12 +375,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         )
 
     def test_computeplan_match(self):
-        """Match compute_plan on part of the tag."""
+        """Match compute_plan on part of the name."""
         key = self.expected_results[0]["key"]
-        tag = "cp156-MP-classification-PH1"
-        self.expected_results[0]["tag"] = tag
+        name = "cp156-MP-classification-PH1"
+        self.expected_results[0]["name"] = name
         instance = ComputePlanRep.objects.get(key=key)
-        instance.tag = tag
+        instance.name = name
         instance.save()
         params = urlencode({"match": "cp156"})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
@@ -381,15 +388,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
-
-    def test_computeplan_match_multiple_parts(self):
-        """Match compute_plan on multiple parts of the name."""
-        key = self.expected_results[0]["key"]
-        tag = "cp156-MP-classification-PH1"
-        self.expected_results[0]["tag"] = tag
-        instance = ComputePlanRep.objects.get(key=key)
-        instance.tag = tag
-        instance.save()
         params = urlencode({"match": "cp156 PH1"})
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -400,10 +398,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_match_and_search_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
-        tag = "cp156-MP-classification-PH1"
-        self.expected_results[0]["tag"] = tag
+        name = "cp156-MP-classification-PH1"
+        self.expected_results[0]["name"] = name
         instance = ComputePlanRep.objects.get(key=key)
-        instance.tag = tag
+        instance.name = name
         instance.save()
         params = urlencode(
             {
@@ -420,10 +418,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_match_and_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
-        tag = "cp156-MP-classification-PH1"
-        self.expected_results[0]["tag"] = tag
+        name = "cp156-MP-classification-PH1"
+        self.expected_results[0]["name"] = name
         instance = ComputePlanRep.objects.get(key=key)
-        instance.tag = tag
+        instance.name = name
         instance.save()
         params = urlencode(
             {
