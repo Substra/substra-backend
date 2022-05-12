@@ -5,11 +5,15 @@ from wsgiref.util import is_hop_by_hop
 
 import django.http
 from django.conf import settings
+from django.forms import CharField
 from django.forms import ChoiceField
 from django.forms import TypedChoiceField
+from django.forms import UUIDField
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import ChoiceFilter
 from django_filters.rest_framework import TypedChoiceFilter
+from django_filters.rest_framework import UUIDFilter
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.filters import SearchFilter
@@ -268,3 +272,15 @@ class TypedChoiceInFilter(BaseInFilter, TypedChoiceFilter):
     """Allow typed choice field to be filtered with IN lookup passing comma separated values list"""
 
     field_class = TypedChoiceField
+
+
+class CharInFilter(BaseInFilter, CharFilter):
+    """Allow char field to be filtered with IN lookup passing comma separated values list"""
+
+    field_class = CharField
+
+
+class UUIDInFilter(BaseInFilter, UUIDFilter):
+    """Allow uuid field to be filtered with IN lookup passing comma separated values list"""
+
+    field_class = UUIDField

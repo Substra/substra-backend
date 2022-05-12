@@ -30,6 +30,7 @@ router.register(r"composite_traintuple", views.ComputeTaskViewSet, basename="com
 router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_plan")
 router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, basename="compute_plan_metadata")
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
+router.register(r"performance", views.PerformanceViewSet, basename="performance")
 router.register(compute_task_failure_report.LOGS_BASE_PATH, views.ComputeTaskLogsViewSet, basename="logs")
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")

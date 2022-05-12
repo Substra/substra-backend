@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ComputePlanMetadataViewSet to list all existing compute plans metadata (#1042)
 - Filtering on timestamp for newsfeed (#1028)
+- View to export performances as csv file download (#1031)
 
 ### Changed
 

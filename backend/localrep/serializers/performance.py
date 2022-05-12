@@ -4,6 +4,7 @@ from localrep.models import Algo
 from localrep.models import ComputeTask
 from localrep.models import Performance
 from localrep.serializers.utils import SafeSerializerMixin
+from orchestrator import computeplan_pb2
 
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -40,7 +41,6 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
 
 
 class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
-
     data_manager_key = serializers.UUIDField(format="hex_verbose", source="data_manager_id")
     algo_key = serializers.UUIDField(format="hex_verbose", source="algo_id")
     round_idx = serializers.SerializerMethodField()
@@ -72,4 +72,41 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
             "compute_task",
             "metric",
             "perf",
+        ]
+
+
+class CPStatusField(serializers.Field):
+    def to_representation(self, instance):
+        return computeplan_pb2.ComputePlanStatus.Name(instance)
+
+
+class ExportPerformanceSerializer(serializers.ModelSerializer):
+    compute_plan_key = serializers.UUIDField()
+    compute_plan_name = serializers.CharField()
+    compute_plan_tag = serializers.CharField()
+    compute_plan_status = CPStatusField()
+    compute_plan_start_date = serializers.DateTimeField()
+    compute_plan_end_date = serializers.DateTimeField()
+    compute_plan_metadata = serializers.JSONField()
+    metric_name = serializers.CharField()
+    worker = serializers.CharField()
+    test_task_rank = serializers.IntegerField()
+    test_task_round = serializers.IntegerField()
+    performance = serializers.FloatField()
+
+    class Meta:
+        model = Performance
+        fields = [
+            "compute_plan_key",
+            "compute_plan_name",
+            "compute_plan_tag",
+            "compute_plan_status",
+            "compute_plan_start_date",
+            "compute_plan_end_date",
+            "compute_plan_metadata",
+            "metric_name",
+            "worker",
+            "test_task_rank",
+            "test_task_round",
+            "performance",
         ]

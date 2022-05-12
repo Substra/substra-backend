@@ -8,6 +8,7 @@ from .datasample import DataSampleSerializer
 from .model import ModelSerializer
 from .node import ChannelNodeSerializer
 from .performance import CPPerformanceSerializer
+from .performance import ExportPerformanceSerializer
 from .performance import PerformanceSerializer
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "ChannelNodeSerializer",
     "PerformanceSerializer",
     "CPPerformanceSerializer",
+    "ExportPerformanceSerializer",
 ]
