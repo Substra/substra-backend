@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- ComputePlanMetadataViewSet to list all existing complute plans metadata (#1042)
+- ComputePlanMetadataViewSet to list all existing compute plans metadata (#1042)
+- Filtering on timestamp for newsfeed (#1028)
 
 ### Changed
 

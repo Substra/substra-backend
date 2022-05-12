@@ -1,13 +1,18 @@
 import os
 import shutil
 import tempfile
+import uuid
+from datetime import timedelta
 from uuid import uuid4
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
+from localrep.models import ComputePlan
 from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
@@ -190,4 +195,151 @@ class NewsFeedViewTests(APITestCase):
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
+        )
+
+    def test_newsfeed_filter_creation_date(self):
+        cp = factory.create_computeplan()
+        algo = factory.create_algo()
+        datamanager = factory.create_datamanager()
+        metric = factory.create_metric()
+
+        expected_results = [
+            {
+                "asset_kind": "ASSET_METRIC",
+                "asset_key": str(metric.key),
+                "name": str(metric.name),
+                "status": "STATUS_CREATED",
+                "timestamp": metric.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            {
+                "asset_kind": "ASSET_DATA_MANAGER",
+                "asset_key": str(datamanager.key),
+                "name": str(datamanager.name),
+                "status": "STATUS_CREATED",
+                "timestamp": datamanager.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            {
+                "asset_kind": "ASSET_ALGO",
+                "asset_key": str(algo.key),
+                "name": str(algo.name),
+                "status": "STATUS_CREATED",
+                "timestamp": algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            {
+                "asset_kind": "ASSET_COMPUTE_PLAN",
+                "asset_key": str(cp.key),
+                "name": str(cp.metadata.get("name", cp.tag)),
+                "status": "STATUS_CREATED",
+                "timestamp": cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+        ]
+
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
+        )
+
+        params = urlencode({"timestamp_after": expected_results[2]["timestamp"]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 3, "next": None, "previous": None, "results": expected_results[:3]},
+        )
+
+        params = urlencode({"timestamp_before": expected_results[1]["timestamp"]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 2, "next": None, "previous": None, "results": expected_results[2:]},
+        )
+
+        params = urlencode(
+            {"timestamp_before": expected_results[1]["timestamp"], "timestamp_after": expected_results[2]["timestamp"]}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 1, "next": None, "previous": None, "results": [expected_results[2]]},
+        )
+
+    def test_newsfeed_filter_start_end_date(self):
+        creation_date = timezone.now()
+        start_date = creation_date + timedelta(minutes=1)
+        end_date = creation_date + timedelta(minutes=2)
+
+        cp = ComputePlan.objects.create(
+            key=uuid.uuid4(),
+            status=computeplan_pb2.PLAN_STATUS_DONE,
+            tag="",
+            delete_intermediary_models=False,
+            start_date=start_date,
+            end_date=end_date,
+            failed_task_key=None,
+            failed_task_category=None,
+            metadata={},
+            creation_date=creation_date,
+            owner=factory.DEFAULT_OWNER,
+            channel=factory.DEFAULT_CHANNEL,
+        )
+        cp.save()
+
+        expected_results = [
+            {
+                "asset_kind": "ASSET_COMPUTE_PLAN",
+                "asset_key": str(cp.key),
+                "name": "",
+                "status": "STATUS_DONE",
+                "timestamp": cp.end_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            {
+                "asset_kind": "ASSET_COMPUTE_PLAN",
+                "asset_key": str(cp.key),
+                "name": "",
+                "status": "STATUS_DOING",
+                "timestamp": cp.start_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+            {
+                "asset_kind": "ASSET_COMPUTE_PLAN",
+                "asset_key": str(cp.key),
+                "name": "",
+                "status": "STATUS_CREATED",
+                "timestamp": cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "detail": {},
+            },
+        ]
+
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
+        )
+
+        params = urlencode({"timestamp_after": expected_results[1]["timestamp"]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 2, "next": None, "previous": None, "results": expected_results[:2]},
+        )
+
+        params = urlencode({"timestamp_before": expected_results[0]["timestamp"]})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 2, "next": None, "previous": None, "results": expected_results[1:]},
+        )
+
+        params = urlencode(
+            {"timestamp_before": expected_results[0]["timestamp"], "timestamp_after": expected_results[1]["timestamp"]}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": 1, "next": None, "previous": None, "results": [expected_results[1]]},
         )

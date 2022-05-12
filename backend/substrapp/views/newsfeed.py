@@ -33,18 +33,20 @@ class NewsFeedViewSet(GenericViewSet):
     def get_queryset(self):
         return []
 
-    def list(self, request):
-        """
-        Newsfeed items include:
-            - ASSET_COMPUTE_PLAN:
-                - STATUS_CREATED with computeplan creation_date
-                - STATUS_DOING with computeplan start_date
-                - STATUS_DONE/FAILED/CANCELED with computeplan end_date
-        """
-        items = []
-        channel = get_channel_name(request)
+    def date_filters(self, field):
+        timestamp_after = self.request.query_params.get("timestamp_after")
+        timestamp_before = self.request.query_params.get("timestamp_before")
+        filters = {}
+        if timestamp_after:
+            filters[f"{field}__gte"] = timestamp_after
+        if timestamp_before:
+            filters[f"{field}__lt"] = timestamp_before
+        return filters
 
-        for compute_plan in ComputePlanRep.objects.filter(channel=channel):
+    def get_compute_plan_items(self):
+        items = []
+        channel = get_channel_name(self.request)
+        for compute_plan in ComputePlanRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
             status = PLAN_STATUS_CREATED
             items.append(
                 cp_item(
@@ -54,33 +56,44 @@ class NewsFeedViewSet(GenericViewSet):
                     compute_plan.creation_date,
                 )
             )
-            if compute_plan.start_date:
-                status = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
-                items.append(
-                    cp_item(
-                        compute_plan.key,
-                        compute_plan.metadata.get("name", compute_plan.tag),
-                        status,
-                        compute_plan.start_date,
-                    )
+        for compute_plan in ComputePlanRep.objects.filter(
+            channel=channel, start_date__isnull=False, **self.date_filters("start_date")
+        ):
+            status = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
+            items.append(
+                cp_item(
+                    compute_plan.key,
+                    compute_plan.metadata.get("name", compute_plan.tag),
+                    status,
+                    compute_plan.start_date,
                 )
-            if compute_plan.end_date:
-                status = computeplan_pb2.ComputePlanStatus.Name(compute_plan.status)
-                detail = {}
-                if compute_plan.failed_task_key:
-                    detail["first_failed_task_key"] = compute_plan.failed_task_key
-                    detail["task_category"] = compute_plan.failed_task_category
-                items.append(
-                    cp_item(
-                        compute_plan.key,
-                        compute_plan.metadata.get("name", compute_plan.tag),
-                        status,
-                        compute_plan.end_date,
-                        detail,
-                    )
-                )
+            )
 
-        for algo in AlgoRep.objects.filter(channel=channel):
+        for compute_plan in ComputePlanRep.objects.filter(
+            channel=channel, end_date__isnull=False, **self.date_filters("end_date")
+        ):
+            status = computeplan_pb2.ComputePlanStatus.Name(compute_plan.status)
+            detail = {}
+            if compute_plan.failed_task_key:
+                detail["first_failed_task_key"] = compute_plan.failed_task_key
+                detail["task_category"] = compute_plan.failed_task_category
+            items.append(
+                cp_item(
+                    compute_plan.key,
+                    compute_plan.metadata.get("name", compute_plan.tag),
+                    status,
+                    compute_plan.end_date,
+                    detail,
+                )
+            )
+
+        return items
+
+    def get_algo_items(self):
+        items = []
+        channel = get_channel_name(self.request)
+
+        for algo in AlgoRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
 
             # This block will be removed once metric concept is fully merged into algo
             if algo.category == AlgoRep.Category.ALGO_METRIC:
@@ -98,8 +111,13 @@ class NewsFeedViewSet(GenericViewSet):
                     "detail": {},
                 }
             )
+        return items
 
-        for datamanager in DataManagerRep.objects.filter(channel=channel):
+    def get_datamanager_items(self):
+        items = []
+        channel = get_channel_name(self.request)
+
+        for datamanager in DataManagerRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
             items.append(
                 {
                     "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER),
@@ -110,7 +128,17 @@ class NewsFeedViewSet(GenericViewSet):
                     "detail": {},
                 }
             )
+        return items
 
+    def list(self, request):
+        """
+        Newsfeed items include:
+            - ASSET_COMPUTE_PLAN:
+                - STATUS_CREATED with computeplan creation_date
+                - STATUS_DOING with computeplan start_date
+                - STATUS_DONE/FAILED/CANCELED with computeplan end_date
+        """
+        items = self.get_compute_plan_items() + self.get_algo_items() + self.get_datamanager_items()
         items.sort(key=lambda x: x["timestamp"], reverse=True)
         items = self.paginate_queryset(items)
         return self.get_paginated_response(items)
