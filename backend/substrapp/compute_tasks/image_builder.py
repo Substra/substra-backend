@@ -79,7 +79,7 @@ def _build_asset_image(algo: Algo) -> None:
         _build_container_image(tmp_dir, algo.container_image_tag)
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(asset_key=algo.key, entrypoint_json=entrypoint)
+        ImageEntrypoint.objects.get_or_create(algo_checksum=algo.checksum, entrypoint_json=entrypoint)
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:

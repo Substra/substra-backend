@@ -24,7 +24,10 @@ def algo() -> Algo:
         "category": 1,
         "owner": "Org1MSP",
         "description": {"checksum": "", "storage_address": ""},
-        "algorithm": {"checksum": "", "storage_address": ""},
+        "algorithm": {
+            "checksum": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+            "storage_address": "",
+        },
         "permissions": {
             "process": {"public": True, "authorized_ids": []},
             "download": {"public": True, "authorized_ids": []},

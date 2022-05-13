@@ -70,7 +70,7 @@ def _execute_compute_task(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> 
 
     env = get_environment(ctx)
     image = get_container_image_name(algo.container_image_tag)
-    exec_command = get_exec_command(ctx, algo.key, is_testtuple_eval)
+    exec_command = get_exec_command(ctx, algo, is_testtuple_eval)
 
     k8s_client = _get_k8s_client()
 

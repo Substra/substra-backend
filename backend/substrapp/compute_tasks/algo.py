@@ -18,7 +18,7 @@ class Algo:
         return self._algo["algorithm"]["storage_address"]
 
     @property
-    def _checksum(self) -> str:
+    def checksum(self) -> str:
         return self._algo["algorithm"]["checksum"]
 
     @property
@@ -27,7 +27,7 @@ class Algo:
 
     @property
     def container_image_tag(self) -> str:
-        return Algo.image_tag(self.key)
+        return f"algo-{self.checksum[:16]}"
 
     @property
     def __dict__(self) -> dict[str, Any]:
@@ -35,11 +35,7 @@ class Algo:
 
     @property
     def archive(self) -> bytes:
-        return node_client.get(self._channel, self._owner, self._storage_address, self._checksum)
+        return node_client.get(self._channel, self._owner, self._storage_address, self.checksum)
 
     def is_composite(self) -> bool:
         return algo_pb2.AlgoCategory.Value(self._algo["category"]) == algo_pb2.ALGO_COMPOSITE
-
-    @staticmethod
-    def image_tag(algo_key: str) -> str:
-        return f"algo-{algo_key[0:8]}".lower()

@@ -51,22 +51,22 @@ class TestImageBuilder:
     def test_build_images(self, _, task_category):
 
         algo_key = str(uuid.uuid4())
-        algo_image_tag = f"algo-{algo_key[0:8]}"
         algo_owner = "algo owner"
         algo_storage_address = "algo storage_address"
         algo_checksum = "algo checksum"
+        algo_image_tag = f"algo-{algo_checksum}"
 
         metric1_key = str(uuid.uuid4())
-        metric1_image_tag = f"algo-{metric1_key[0:8]}"
         metric1_owner = "metric1 owner"
         metric1_storage_address = "metric1 storage_address"
         metric1_checksum = "metric1 checksum"
+        metric1_image_tag = f"algo-{metric1_checksum}"
 
         metric2_key = str(uuid.uuid4())
-        metric2_image_tag = f"algo-{metric2_key[0:8]}"
         metric2_owner = "metric2 owner"
         metric2_storage_address = "metric2 storage_address"
         metric2_checksum = "metric2 checksum"
+        metric2_image_tag = f"algo-{metric2_checksum}"
 
         channel_name = "mychannel"
 

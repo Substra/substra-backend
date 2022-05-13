@@ -6,6 +6,7 @@ import structlog
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
+from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
@@ -44,8 +45,8 @@ TASK_COMMANDS = {
 }
 
 
-def get_exec_command(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]:
-    entrypoint = ImageEntrypoint.objects.get(asset_key=algo_key)
+def get_exec_command(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> List[str]:
+    entrypoint = ImageEntrypoint.objects.get(algo_checksum=algo.checksum)
 
     command = entrypoint.entrypoint_json
 
@@ -53,7 +54,7 @@ def get_exec_command(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> Li
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
     env = _get_env(ctx, is_testtuple_eval)
-    args = _get_args(ctx, algo_key, is_testtuple_eval)
+    args = _get_args(ctx, algo.key, is_testtuple_eval)
 
     return env + command + args
 
