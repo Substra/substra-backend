@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Store enum values as string (impact ordering) - Algo (#1040)
 - (BREAKING) Add mandatory name field to compute plan (#1027)
 
+### Fixed
+- completed pod state in `kubernetes_utils.watch_pod()` (#1046)
+
 ## [0.13.0] 2022-05-09
 
 ### Changed

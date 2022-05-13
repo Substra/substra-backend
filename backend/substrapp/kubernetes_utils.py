@@ -165,8 +165,9 @@ def _get_pod_state(pod_status: kubernetes.client.V1PodStatus) -> PodState:
             completed_containers += 1
 
     if completed_containers == len(container_statuses):
-        pod_state = PodState(container_state)
-        pod_state.set_reason(container.state)
+        return PodState(ObjectState.COMPLETED, "", "pod successfully completed")
+
+    logger.debug("pod status", pod_status=pod_status)
     return PodState(ObjectState.UNKNOWN, "", "Could not deduce the pod state from container statuses")
 
 
