@@ -3,7 +3,7 @@ from substrapp.lock_local import lock_resource
 MAX_TASK_DURATION = 24 * 60 * 60  # 1 day
 
 
-def get_compute_plan_lock(compute_plan_key: str) -> None:
+def acquire_compute_plan_lock(compute_plan_key: str) -> None:
     """
     This lock serves multiple purposes:
 

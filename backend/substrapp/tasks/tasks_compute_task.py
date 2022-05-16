@@ -48,6 +48,8 @@ from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.image_builder import build_images
+from substrapp.compute_tasks.lock import MAX_TASK_DURATION
+from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.save_models import save_models
 from substrapp.compute_tasks.transfer_bucket import TAG_VALUE_FOR_TRANSFER_BUCKET
 from substrapp.compute_tasks.transfer_bucket import transfer_to_bucket
@@ -56,8 +58,6 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
-
-MAX_TASK_DURATION = 24 * 60 * 60  # 1 day
 
 
 class ComputeTask(Task):
@@ -169,11 +169,10 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
     result = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
 
-    # In case of retries: only execute the compute task if it is not in a final state
-
     task_key = task["key"]
     logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt)
 
+    # In case of retries: only execute the compute task if it is not in a final state
     with get_orchestrator_client(channel_name) as client:
         # Set allow_doing=True to allow celery retries.
         task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
@@ -186,53 +185,38 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     ctx = None
     dirs = None
 
-    # This lock serves multiple purposes:
-    #
-    # - *Prevent concurrent pod creation*
-    #   Ensure concurrent compute tasks don't try to create the same pod at the same time
-    #
-    # - *Prevent resource starvation*.
-    #   Prevent resource starvation: if two compute tasks from the same compute plan ran at the same time, they would
-    #   compete for GPU/CPU/memory resources, and potentially fail.
-    #
-    # - *Adapt to task dir constraints*.
-    #   The compute pod contains only one "task directory", which contains the working data for the current compute
-    #   task. Running two compute tasks as part of the same compute plan concurrently would mean that the "task
-    #   directory" would be used by two consumers. However, the "task directory" is designed to be used by a single
-    #   consumer. For instance, out-models are stored in the "task directory": if 2 compute tasks belonging to the
-    #   same compute plan run concurrently, one would overwrite the other's out-model.
-    #
-    # - *Make testtuple predictions available to the evaluation step*
-    #   This is related to the previous point. Ensure that the "predict" and "evaluate" steps of a testtuple are run
-    #   immediately one after the other. This is necessary because the "evaluate" step needs the pred.json file
-    #   computed by the "predict" step. This file is stored in a shared folder (task_dir). Executing another compute
-    #   task in between the two steps would result in the shared folder (task_dir) being altered, and `pred.json`
-    #   potentially be lost or overwritten. The function `execute_compute_task` takes care of running both the
-    #   "predict" and "evaluate" steps of the testtuple.
+    try:
+        # Create context
+        ctx = Context.from_task(channel_name, task)
+        dirs = ctx.directories
 
-    with lock_resource("compute-plan", compute_plan_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
-        try:
-            # Create context
-            ctx = Context.from_task(channel_name, task)
-            dirs = ctx.directories
+        # Setup
+        init_asset_buffer()
+        init_compute_plan_dirs(dirs)
+        init_task_dirs(dirs)
 
-            # Setup
-            init_asset_buffer()
-            init_compute_plan_dirs(dirs)
-            init_task_dirs(dirs)
+        build_images(ctx.all_algos)
+
+        with acquire_compute_plan_lock(compute_plan_key):
+
+            # Check the task/cp status again, as the task/cp may not be in a runnable state anymore
+            with get_orchestrator_client(channel_name) as client:
+                # Set allow_doing=True to allow celery retries.
+                task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
 
             with lock_resource("asset-buffer", "global", timeout=MAX_TASK_DURATION):
                 add_task_assets_to_buffer(ctx)
+
             add_assets_to_taskdir(ctx)
+
             if task_category != computetask_pb2.TASK_TEST:
                 if ctx.has_chainkeys:
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
+
             restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
 
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
-
-            build_images(ctx.all_algos)
 
             # Command execution
             execute_compute_task(ctx)
@@ -250,20 +234,21 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
                 if ctx.has_chainkeys:
                     commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
-        except OSError as e:
-            if e.errno == errno.ENOSPC:
-                # "No space left on device"
-                # clear asset buffer and retry the task
-                logger.info(
-                    "No space left on device, clearing up the asset buffer and retrying the task", task_key=task["key"]
-                )
-                with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
-                    clear_assets_buffer()
-            raise
 
-        finally:
-            # Teardown
-            teardown_task_dirs(dirs)
+    except OSError as e:
+        if e.errno == errno.ENOSPC:
+            # "No space left on device"
+            # clear asset buffer and retry the task
+            logger.info(
+                "No space left on device, clearing up the asset buffer and retrying the task", task_key=task["key"]
+            )
+            with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
+                clear_assets_buffer()
+        raise
+
+    finally:
+        # Teardown
+        teardown_task_dirs(dirs)
 
     logger.info("Compute task finished")
     return result

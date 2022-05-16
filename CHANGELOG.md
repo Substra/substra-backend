@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - (BREAKING) Store enum values as string (impact ordering) - Model (#1044)
+- Within a CP, allow image builds to occur concurrently with another task's execution (#996)
 
 ## [0.14.0] 2022-05-16
 

@@ -94,7 +94,7 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(msave_models.call_count, 1)
             self.assertEqual(mcommit_dir.call_count, 1)
             self.assertEqual(mteardown_task_dirs.call_count, 1)
-            self.assertEqual(mraise_if_task_not_runnable.call_count, 1)
+            self.assertEqual(mraise_if_task_not_runnable.call_count, 2)
 
             # test RPC error
             error = RpcError()

@@ -8,7 +8,7 @@ from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
-from substrapp.compute_tasks.lock import get_compute_plan_lock
+from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.docker_registry import delete_container_image_safe
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import release_worker
@@ -69,7 +69,7 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
                     metrics[key] = Algo(channel_name, client.query_algo(key))
 
     # See lock function PyDoc for explanation as to why this lock is necessary
-    with get_compute_plan_lock(compute_plan_key):
+    with acquire_compute_plan_lock(compute_plan_key):
 
         # Check the CP is still ready for teardown
         with get_orchestrator_client(channel_name) as client:
