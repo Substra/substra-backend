@@ -1,7 +1,6 @@
 from django.urls import reverse
 from rest_framework import serializers
 
-import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask
 from localrep.models import Model
 from localrep.serializers.utils import SafeSerializerMixin
@@ -10,16 +9,7 @@ from localrep.serializers.utils import make_addressable_serializer
 from localrep.serializers.utils import make_download_process_permission_serializer
 
 
-class CategoryField(serializers.Field):
-    def to_representation(self, value):
-        return model_pb2.ModelCategory.Name(value)
-
-    def to_internal_value(self, value):
-        return model_pb2.ModelCategory.Value(value)
-
-
 class ModelSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-    category = CategoryField()
     compute_task_key = serializers.PrimaryKeyRelatedField(
         queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
     )

@@ -16,7 +16,7 @@ Basic example:
 ...     category=computetask_pb2.TASK_TRAIN,
 ...     status=computetask_pb2.STATUS_DONE,
 ... )
->>> model = create_model(train_task, category=model_pb2.MODEL_SIMPLE)
+>>> model = create_model(train_task, category=Model.Category.MODEL_SIMPLE)
 
 >>> metric = create_metric()
 >>> test_task = create_computetask(
@@ -52,7 +52,6 @@ from django.utils import timezone
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.model_pb2 as model_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
@@ -342,7 +341,7 @@ def create_computetask(
 def create_model(
     compute_task: ComputeTask,
     key: uuid.UUID = None,
-    category: int = model_pb2.MODEL_SIMPLE,
+    category: int = Model.Category.MODEL_SIMPLE,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
     public: bool = False,

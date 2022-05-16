@@ -13,7 +13,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.model_pb2 as model_pb2
 from localrep.models import Model as ModelRep
 from node.authentication import NodeUser
 from substrapp.tests import factory
@@ -52,11 +51,11 @@ class ModelViewTests(APITestCase):
         compute_plan = factory.create_computeplan()
 
         self.train_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_TRAIN)
-        simple_model_1 = factory.create_model(self.train_task, category=model_pb2.MODEL_SIMPLE)
-        simple_model_2 = factory.create_model(self.train_task, category=model_pb2.MODEL_SIMPLE)
+        simple_model_1 = factory.create_model(self.train_task, category=ModelRep.Category.MODEL_SIMPLE)
+        simple_model_2 = factory.create_model(self.train_task, category=ModelRep.Category.MODEL_SIMPLE)
 
         composite_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_COMPOSITE)
-        head_model = factory.create_model(composite_task, category=model_pb2.MODEL_HEAD)
+        head_model = factory.create_model(composite_task, category=ModelRep.Category.MODEL_HEAD)
 
         self.expected_results = [
             {
@@ -241,10 +240,9 @@ class ModelViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("MODEL_UNKNOWN",),
             ("MODEL_SIMPLE",),
             ("MODEL_HEAD",),
-            ("MODEL_XXX",),
+            ("MODEL_XXX",),  # INVALID
         ]
     )
     def test_model_list_search_filter_by_category(self, category):
@@ -262,10 +260,9 @@ class ModelViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("MODEL_UNKNOWN",),
             ("MODEL_SIMPLE",),
             ("MODEL_HEAD",),
-            ("MODEL_XXX",),
+            ("MODEL_XXX",),  # INVALID
         ]
     )
     def test_model_list_filter_by_category(self, category):
@@ -283,8 +280,7 @@ class ModelViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            (["MODEL_UNKNOWN", "MODEL_SIMPLE"],),
-            (["MODEL_HEAD", "MODEL_XXX"],),
+            (["MODEL_SIMPLE", "MODEL_HEAD"],),
         ]
     )
     def test_model_list_filter_by_category_in(self, categories):

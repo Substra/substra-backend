@@ -13,7 +13,6 @@ from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
-import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
@@ -78,10 +77,10 @@ class ComputeTaskViewTests(APITestCase):
                 )
 
         done_train_task = self.compute_tasks[computetask_pb2.TASK_TRAIN][computetask_pb2.STATUS_DONE]
-        self.simple_model = factory.create_model(done_train_task, category=model_pb2.MODEL_SIMPLE)
+        self.simple_model = factory.create_model(done_train_task, category=ModelRep.Category.MODEL_SIMPLE)
 
         done_composite_task = self.compute_tasks[computetask_pb2.TASK_COMPOSITE][computetask_pb2.STATUS_DONE]
-        self.head_model = factory.create_model(done_composite_task, category=model_pb2.MODEL_HEAD)
+        self.head_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
 
         done_failed_task = self.compute_tasks[computetask_pb2.TASK_TEST][computetask_pb2.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.metric)

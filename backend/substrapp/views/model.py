@@ -11,7 +11,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-import orchestrator.model_pb2 as model_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Model as ModelRep
 from localrep.serializers import ModelSerializer as ModelRepSerializer
@@ -21,29 +20,29 @@ from substrapp.models import Model
 from substrapp.utils import get_owner
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import AssetPermissionError
+from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import PermissionMixin
-from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import if_true
 
 logger = structlog.get_logger(__name__)
 
 
-def map_category(key, values):
+def validate_category(key, values):
     if key == "category":
         try:
-            values = [model_pb2.ModelCategory.Value(value) for value in values]
-        except ValueError as e:
+            for value in values:
+                getattr(ModelRep.Category, value)
+        except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 
 class ModelRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    category = TypedChoiceInFilter(
+    category = ChoiceInFilter(
         field_name="category",
-        choices=[(key, key) for key in model_pb2.ModelCategory.keys()],
-        coerce=lambda x: model_pb2.ModelCategory.Value(x),
+        choices=ModelRep.Category.choices,
     )
 
     class Meta:
@@ -75,8 +74,8 @@ class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
     serializer_class = ModelRepSerializer
     ordering_fields = ["creation_date", "key"]
     ordering = ["creation_date", "key"]
-    custom_search_object_type = "model"
-    custom_search_mapping_callback = map_category
+    custom_search_object_type = "model"  # deprecated
+    custom_search_mapping_callback = validate_category  # deprecated
     filterset_class = ModelRepFilter
 
     def get_queryset(self):
