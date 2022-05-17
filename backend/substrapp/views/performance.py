@@ -13,12 +13,13 @@ from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import LargePageNumberPagination
+from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import CPPerformanceSerializer as CPPerformanceRepSerializer
 from localrep.serializers import ExportPerformanceSerializer as ExportPerformanceRepSerializer
 from substrapp.views.utils import CharInFilter
+from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
-from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import UUIDInFilter
 from substrapp.views.utils import get_channel_name
 
@@ -45,10 +46,9 @@ class PerformanceRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__creation_date")
     start_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__start_date")
     end_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__end_date")
-    status = TypedChoiceInFilter(
+    status = ChoiceInFilter(
         field_name="compute_task__compute_plan__status",
-        choices=[(key, key) for key in computeplan_pb2.ComputePlanStatus.keys()],
-        coerce=lambda x: computeplan_pb2.ComputePlanStatus.Value(x),
+        choices=ComputePlanRep.Status.choices,
     )
     key = UUIDInFilter(field_name="compute_task__compute_plan__key")
     owner = CharInFilter(field_name="compute_task__compute_plan__owner")
@@ -77,13 +77,7 @@ def _build_csv_headers(request) -> list:
 def _build_row(obj, headers) -> list:
     row = []
     for field in headers:
-        if obj.get(field):
-            if field == "compute_plan_status":
-                row.append(map_compute_plan_status(obj.get(field)))
-            else:
-                row.append(obj.get(field))
-            continue
-        row.append("")
+        row.append(obj.get(field, ""))
     return row
 
 

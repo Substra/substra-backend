@@ -10,7 +10,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import SmallPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
@@ -21,8 +20,8 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
-from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
@@ -140,11 +139,12 @@ def create(request, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-def map_status(key, values):
+def validate_status(key, values):
     if key == "status":
         try:
-            values = [computeplan_pb2.ComputePlanStatus.Value(value) for value in values]
-        except ValueError as e:
+            for value in values:
+                getattr(ComputePlanRep.Status, value)
+        except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
@@ -170,10 +170,9 @@ class ComputePlanRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
-    status = TypedChoiceInFilter(
+    status = ChoiceInFilter(
         field_name="status",
-        choices=[(key, key) for key in computeplan_pb2.ComputePlanStatus.keys()],
-        coerce=lambda x: computeplan_pb2.ComputePlanStatus.Value(x),
+        choices=ComputePlanRep.Status.choices,
     )
 
     class Meta:
@@ -205,8 +204,8 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     pagination_class = SmallPageNumberPagination
     filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name"]
-    custom_search_object_type = "compute_plan"
-    custom_search_mapping_callback = map_status
+    custom_search_object_type = "compute_plan"  # deprecated
+    custom_search_mapping_callback = validate_status  # deprecated
     search_fields = ("key", "name")
     filterset_class = ComputePlanRepFilter
 

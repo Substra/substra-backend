@@ -2,7 +2,6 @@ import re
 
 from django.core.validators import URLValidator
 from django.core.validators import _lazy_re_compile
-from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 
 class URLValidatorWithOptionalTLD(URLValidator):
@@ -23,13 +22,6 @@ class URLValidatorWithOptionalTLD(URLValidator):
         r"\Z",
         re.IGNORECASE,
     )
-
-
-def get_enum_choices(proto_enum: EnumTypeWrapper) -> list[tuple[str, int]]:
-    """
-    Get model choices from protobuf enum.
-    """
-    return [(name, value) for (value, name) in proto_enum.items()]
 
 
 class AssetPermissionMixin:

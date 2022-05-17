@@ -6,30 +6,44 @@ import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models.datasample import DataSample
 from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
-from localrep.models.utils import get_enum_choices
-
-CATEGORY_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskCategory)
-STATUS_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskStatus)
-ERROR_TYPE_CHOICES = get_enum_choices(failure_report_pb2.ErrorType)
 
 
 class ComputeTask(models.Model, AssetPermissionMixin):
     """ComputeTask represent a computetask and its associated metadata"""
 
+    class Category(models.TextChoices):
+        TASK_TRAIN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
+        TASK_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_AGGREGATE)
+        TASK_COMPOSITE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_COMPOSITE)
+        TASK_TEST = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST)
+
+    class Status(models.TextChoices):
+        STATUS_WAITING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_WAITING)
+        STATUS_TODO = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_TODO)
+        STATUS_DOING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING)
+        STATUS_DONE = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE)
+        STATUS_CANCELED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_CANCELED)
+        STATUS_FAILED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED)
+
+    class ErrorType(models.TextChoices):
+        ERROR_TYPE_BUILD = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_BUILD)
+        ERROR_TYPE_EXECUTION = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_EXECUTION)
+        ERROR_TYPE_INTERNAL = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_INTERNAL)
+
     key = models.UUIDField(primary_key=True)
-    category = models.IntegerField(choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=64, choices=Category.choices)
     algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
     # patch waiting for a solution to insert parent task in hierarchical order
     parent_tasks = ArrayField(models.UUIDField(), null=True)
     rank = models.IntegerField()
-    status = models.IntegerField(choices=STATUS_CHOICES)
+    status = models.CharField(max_length=64, choices=Status.choices)
     worker = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
-    error_type = models.IntegerField(choices=ERROR_TYPE_CHOICES, null=True)
+    error_type = models.CharField(max_length=64, choices=ErrorType.choices, null=True)
     tag = models.CharField(max_length=100, null=True, blank=True)
     logs_permission_public = models.BooleanField()
     logs_permission_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)

@@ -11,8 +11,6 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
@@ -47,23 +45,23 @@ class ComputeTaskViewTests(APITestCase):
 
         self.compute_tasks = {}
         for category in (
-            computetask_pb2.TASK_TRAIN,
-            computetask_pb2.TASK_TEST,
-            computetask_pb2.TASK_COMPOSITE,
+            ComputeTaskRep.Category.TASK_TRAIN,
+            ComputeTaskRep.Category.TASK_TEST,
+            ComputeTaskRep.Category.TASK_COMPOSITE,
         ):
             self.compute_tasks[category] = {}
             for _status in (
-                computetask_pb2.STATUS_TODO,
-                computetask_pb2.STATUS_WAITING,
-                computetask_pb2.STATUS_DOING,
-                computetask_pb2.STATUS_DONE,
-                computetask_pb2.STATUS_FAILED,
-                computetask_pb2.STATUS_CANCELED,
+                ComputeTaskRep.Status.STATUS_TODO,
+                ComputeTaskRep.Status.STATUS_WAITING,
+                ComputeTaskRep.Status.STATUS_DOING,
+                ComputeTaskRep.Status.STATUS_DONE,
+                ComputeTaskRep.Status.STATUS_FAILED,
+                ComputeTaskRep.Status.STATUS_CANCELED,
             ):
                 metrics = error_type = None
-                if _status == computetask_pb2.STATUS_FAILED:
-                    error_type = failure_report_pb2.ERROR_TYPE_EXECUTION
-                if category == computetask_pb2.TASK_TEST:
+                if _status == ComputeTaskRep.Status.STATUS_FAILED:
+                    error_type = ComputeTaskRep.ErrorType.ERROR_TYPE_EXECUTION
+                if category == ComputeTaskRep.Category.TASK_TEST:
                     metrics = [self.metric]
                 self.compute_tasks[category][_status] = factory.create_computetask(
                     self.compute_plan,
@@ -76,13 +74,15 @@ class ComputeTaskViewTests(APITestCase):
                     error_type=error_type,
                 )
 
-        done_train_task = self.compute_tasks[computetask_pb2.TASK_TRAIN][computetask_pb2.STATUS_DONE]
+        done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
         self.simple_model = factory.create_model(done_train_task, category=ModelRep.Category.MODEL_SIMPLE)
 
-        done_composite_task = self.compute_tasks[computetask_pb2.TASK_COMPOSITE][computetask_pb2.STATUS_DONE]
+        done_composite_task = self.compute_tasks[ComputeTaskRep.Category.TASK_COMPOSITE][
+            ComputeTaskRep.Status.STATUS_DONE
+        ]
         self.head_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
 
-        done_failed_task = self.compute_tasks[computetask_pb2.TASK_TEST][computetask_pb2.STATUS_DONE]
+        done_failed_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST][ComputeTaskRep.Status.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.metric)
 
         # we don't explicit serialized relationships as this test module is focused on computetask
@@ -105,13 +105,13 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:traintuple-list")
-        train_tasks = self.compute_tasks[computetask_pb2.TASK_TRAIN]
-        todo_train_task = train_tasks[computetask_pb2.STATUS_TODO]
-        waiting_train_task = train_tasks[computetask_pb2.STATUS_WAITING]
-        doing_train_task = train_tasks[computetask_pb2.STATUS_DOING]
-        done_train_task = train_tasks[computetask_pb2.STATUS_DONE]
-        failed_train_task = train_tasks[computetask_pb2.STATUS_FAILED]
-        canceled_train_task = train_tasks[computetask_pb2.STATUS_CANCELED]
+        train_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN]
+        todo_train_task = train_tasks[ComputeTaskRep.Status.STATUS_TODO]
+        waiting_train_task = train_tasks[ComputeTaskRep.Status.STATUS_WAITING]
+        doing_train_task = train_tasks[ComputeTaskRep.Status.STATUS_DOING]
+        done_train_task = train_tasks[ComputeTaskRep.Status.STATUS_DONE]
+        failed_train_task = train_tasks[ComputeTaskRep.Status.STATUS_FAILED]
+        canceled_train_task = train_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_train_task.key),
@@ -332,8 +332,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_traintask_list_empty(self):
-        ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_TRAIN).delete()
-        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_TRAIN).delete()
+        ModelRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_TRAIN).delete()
+        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_TRAIN).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -440,7 +440,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("STATUS_UNKNOWN",),
             ("STATUS_WAITING",),
             ("STATUS_TODO",),
             ("STATUS_DOING",),
@@ -466,7 +465,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("STATUS_UNKNOWN",),
             ("STATUS_WAITING",),
             ("STATUS_TODO",),
             ("STATUS_DOING",),
@@ -492,7 +490,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            (["STATUS_UNKNOWN", "STATUS_WAITING", "STATUS_TODO"],),
+            (["STATUS_WAITING", "STATUS_TODO"],),
             (["STATUS_DOING", "STATUS_DONE"],),
             (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
         ]
@@ -634,13 +632,13 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:testtuple-list")
-        test_tasks = self.compute_tasks[computetask_pb2.TASK_TEST]
-        todo_test_task = test_tasks[computetask_pb2.STATUS_TODO]
-        waiting_test_task = test_tasks[computetask_pb2.STATUS_WAITING]
-        doing_test_task = test_tasks[computetask_pb2.STATUS_DOING]
-        done_test_task = test_tasks[computetask_pb2.STATUS_DONE]
-        failed_test_task = test_tasks[computetask_pb2.STATUS_FAILED]
-        canceled_test_task = test_tasks[computetask_pb2.STATUS_CANCELED]
+        test_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST]
+        todo_test_task = test_tasks[ComputeTaskRep.Status.STATUS_TODO]
+        waiting_test_task = test_tasks[ComputeTaskRep.Status.STATUS_WAITING]
+        doing_test_task = test_tasks[ComputeTaskRep.Status.STATUS_DOING]
+        done_test_task = test_tasks[ComputeTaskRep.Status.STATUS_DONE]
+        failed_test_task = test_tasks[ComputeTaskRep.Status.STATUS_FAILED]
+        canceled_test_task = test_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_test_task.key),
@@ -807,8 +805,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_testtask_list_empty(self):
-        PerformanceRep.objects.filter(compute_task__category=computetask_pb2.TASK_TEST).delete()
-        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_TEST).delete()
+        PerformanceRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_TEST).delete()
+        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_TEST).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -887,7 +885,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("STATUS_UNKNOWN",),
             ("STATUS_WAITING",),
             ("STATUS_TODO",),
             ("STATUS_DOING",),
@@ -999,13 +996,13 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("substrapp:composite_traintuple-list")
-        composite_tasks = self.compute_tasks[computetask_pb2.TASK_COMPOSITE]
-        todo_composite_task = composite_tasks[computetask_pb2.STATUS_TODO]
-        waiting_composite_task = composite_tasks[computetask_pb2.STATUS_WAITING]
-        doing_composite_task = composite_tasks[computetask_pb2.STATUS_DOING]
-        done_composite_task = composite_tasks[computetask_pb2.STATUS_DONE]
-        failed_composite_task = composite_tasks[computetask_pb2.STATUS_FAILED]
-        canceled_composite_task = composite_tasks[computetask_pb2.STATUS_CANCELED]
+        composite_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_COMPOSITE]
+        todo_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_TODO]
+        waiting_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_WAITING]
+        doing_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_DOING]
+        done_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_DONE]
+        failed_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_FAILED]
+        canceled_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_composite_task.key),
@@ -1286,8 +1283,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_compositetask_list_empty(self):
-        ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_COMPOSITE).delete()
-        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_COMPOSITE).delete()
+        ModelRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_COMPOSITE).delete()
+        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_COMPOSITE).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -1366,7 +1363,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("STATUS_UNKNOWN",),
             ("STATUS_WAITING",),
             ("STATUS_TODO",),
             ("STATUS_DOING",),

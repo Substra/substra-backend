@@ -7,12 +7,10 @@ import django.http
 from django.conf import settings
 from django.forms import CharField
 from django.forms import ChoiceField
-from django.forms import TypedChoiceField
 from django.forms import UUIDField
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import ChoiceFilter
-from django_filters.rest_framework import TypedChoiceFilter
 from django_filters.rest_framework import UUIDFilter
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
@@ -21,8 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.model_pb2 as model_pb2
+from localrep.models import ComputeTask as ComputeTaskRep
 from node.authentication import NodeUser
 from substrapp.clients import node as node_client
 from substrapp.exceptions import AssetPermissionError
@@ -33,18 +30,10 @@ from substrapp.utils import get_owner
 CP_BASENAME_PREFIX = "compute_plan_"
 
 TASK_CATEGORY = {
-    "unknown": computetask_pb2.TASK_UNKNOWN,
-    "traintuple": computetask_pb2.TASK_TRAIN,
-    "testtuple": computetask_pb2.TASK_TEST,
-    "aggregatetuple": computetask_pb2.TASK_AGGREGATE,
-    "composite_traintuple": computetask_pb2.TASK_COMPOSITE,
-}
-
-
-MODEL_CATEGORY = {
-    "unknown": model_pb2.MODEL_UNKNOWN,
-    "simple": model_pb2.MODEL_SIMPLE,
-    "head": model_pb2.MODEL_HEAD,
+    "traintuple": ComputeTaskRep.Category.TASK_TRAIN,
+    "testtuple": ComputeTaskRep.Category.TASK_TEST,
+    "aggregatetuple": ComputeTaskRep.Category.TASK_AGGREGATE,
+    "composite_traintuple": ComputeTaskRep.Category.TASK_COMPOSITE,
 }
 
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
@@ -266,12 +255,6 @@ class ChoiceInFilter(BaseInFilter, ChoiceFilter):
     """Allow choice field to be filtered with IN lookup passing comma separated values list"""
 
     field_class = ChoiceField
-
-
-class TypedChoiceInFilter(BaseInFilter, TypedChoiceFilter):
-    """Allow typed choice field to be filtered with IN lookup passing comma separated values list"""
-
-    field_class = TypedChoiceField
 
 
 class CharInFilter(BaseInFilter, CharFilter):

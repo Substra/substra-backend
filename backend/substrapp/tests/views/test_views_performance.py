@@ -8,8 +8,8 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
+from localrep.models import ComputePlan as ComputePlanRep
+from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import Performance as PerformanceRep
 from substrapp.tests import factory
 
@@ -43,8 +43,8 @@ class CPPerformanceViewTests(APITestCase):
             metrics=self.metrics,
             data_manager=self.data_manager,
             data_samples=[self.data_sample.key],
-            category=computetask_pb2.TASK_TEST,
-            status=computetask_pb2.STATUS_DONE,
+            category=ComputeTaskRep.Category.TASK_TEST,
+            status=ComputeTaskRep.Status.STATUS_DONE,
             error_type=None,
         )
         self.performances = [factory.create_performance(self.compute_task, self.metrics[i]) for i in range(3)]
@@ -127,8 +127,8 @@ class PerformanceViewTests(APITestCase):
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plans = [
-            factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DOING),
-            factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE),
+            factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DOING),
+            factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE),
         ]
 
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
@@ -144,8 +144,8 @@ class PerformanceViewTests(APITestCase):
                 metrics=self.metrics,
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
-                category=computetask_pb2.TASK_TEST,
-                status=computetask_pb2.STATUS_DONE,
+                category=ComputeTaskRep.Category.TASK_TEST,
+                status=ComputeTaskRep.Status.STATUS_DONE,
                 error_type=None,
             )
             for i in range(2)
@@ -288,7 +288,7 @@ class PerformanceViewTests(APITestCase):
         """Filter performance on cp key and status."""
         key_0 = self.compute_plans[0].key
         key_1 = self.compute_plans[1].key
-        status = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
+        status = ComputePlanRep.Status.PLAN_STATUS_DOING
         params = urlencode({"key": ",".join([str(key_0), str(key_1)]), "status": status})
         response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
         content_list = list(response.streaming_content)

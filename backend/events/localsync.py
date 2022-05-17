@@ -6,10 +6,7 @@ from rest_framework.exceptions import ValidationError
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
-import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.errors import AlreadyExistsError
 from orchestrator import client as orc_client
 from substrapp.orchestrator import get_orchestrator_client
@@ -133,6 +130,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     from events.dynamic_fields import fetch_failure_report_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
+    from localrep.models.computetask import ComputeTask
 
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
@@ -140,10 +138,8 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
     failure_report = fetch_failure_report_from_event(event, client)
 
-    status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
-    category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
-    if status == computetask_pb2.STATUS_DONE:
-        if category == computetask_pb2.TASK_TEST:
+    if data["status"] == ComputeTask.Status.STATUS_DONE:
+        if data["category"] == ComputeTask.Category.TASK_TEST:
             _sync_performances(data["key"], client)
         else:
             _sync_models(data["key"], client)
@@ -155,7 +151,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     # update CP dates:
     # - after task status, to ensure proper rules are applied
     # - before CP status, to ensure dates are up-to-date when client wait on status
-    if status != computetask_pb2.STATUS_TODO:
+    if data["status"] != ComputeTask.Status.STATUS_TODO:
         compute_plan.update_dates()
     compute_plan.update_status()
 
@@ -165,7 +161,7 @@ def _update_computetask(key: str, status: str, start_date: str, end_date: str, f
     from localrep.models import ComputeTask
 
     compute_task = ComputeTask.objects.get(key=key)
-    compute_task.status = computetask_pb2.ComputeTaskStatus.Value(status)
+    compute_task.status = status
     # The computetask start/end date is the timestamp of the first event related to the new status.
     # During a single event sync, we rely on the asset values to deduce if they were previous events.
     # If so, dates are not updated on the asset
@@ -174,7 +170,7 @@ def _update_computetask(key: str, status: str, start_date: str, end_date: str, f
     if compute_task.end_date is None and end_date is not None:
         compute_task.end_date = parse_datetime(end_date)
     if failure_report is not None:
-        compute_task.error_type = failure_report_pb2.ErrorType.Value(failure_report["error_type"])
+        compute_task.error_type = failure_report["error_type"]
         if "logs_address" in failure_report:
             compute_task.logs_address = failure_report["logs_address"]["storage_address"]
             compute_task.logs_checksum = failure_report["logs_address"]["checksum"]
@@ -411,8 +407,7 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
 
     for data in computeplans:
         is_created = _create_computeplan(client.channel_name, data)
-        status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
-        if status != computeplan_pb2.PLAN_STATUS_TODO:
+        if data["status"] != ComputePlan.Status.PLAN_STATUS_TODO:
             compute_plan = ComputePlan.objects.get(key=data["key"])
             compute_plan.update_dates()
         if is_created:
@@ -471,6 +466,7 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import fetch_failure_report_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
+    from localrep.models.computetask import ComputeTask
 
     logger.info("Resyncing computetasks")
     computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
@@ -503,10 +499,8 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
             logger.debug("Updated computetask", asset_key=data["key"])
             nb_updated_assets += 1
 
-        status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
-        category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
-        if status == computetask_pb2.STATUS_DONE:
-            if category == computetask_pb2.TASK_TEST:
+        if data["status"] == ComputeTask.Status.STATUS_DONE:
+            if data["category"] == ComputeTask.Category.TASK_TEST:
                 _sync_performances(data["key"], client)
             else:
                 _sync_models(data["key"], client)

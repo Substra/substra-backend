@@ -11,8 +11,8 @@ from django.utils import timezone
 from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
-from localrep.models import ComputePlan
+from localrep.models import ComputePlan as ComputePlanRep
+from localrep.models import ComputeTask as ComputeTaskRep
 from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
@@ -44,14 +44,14 @@ class NewsFeedViewTests(APITestCase):
         # first all CPs are created in the order below
         # then they all start in the same order (depending on the status)
         # finally they all end in the same order (depending on the status)
-        todo_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_TODO)  # no start_date, end_date
-        doing_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DOING)  # no end_date
-        canceled_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_CANCELED)
-        failed_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_FAILED)
+        todo_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_TODO)  # no start_date, end_date
+        doing_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DOING)  # no end_date
+        canceled_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
+        failed_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_FAILED)
         failed_cp.failed_task_key = str(uuid4())
-        failed_cp.failed_task_category = 0
+        failed_cp.failed_task_category = ComputeTaskRep.Category.TASK_TRAIN
         failed_cp.save()
-        done_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
+        done_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
         metric = factory.create_metric()
@@ -272,9 +272,9 @@ class NewsFeedViewTests(APITestCase):
         start_date = creation_date + timedelta(minutes=1)
         end_date = creation_date + timedelta(minutes=2)
 
-        cp = ComputePlan.objects.create(
+        cp = ComputePlanRep.objects.create(
             key=uuid.uuid4(),
-            status=computeplan_pb2.PLAN_STATUS_DONE,
+            status=ComputePlanRep.Status.PLAN_STATUS_DONE,
             tag="",
             delete_intermediary_models=False,
             start_date=start_date,

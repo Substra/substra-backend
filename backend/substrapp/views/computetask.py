@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-import orchestrator.computetask_pb2 as computetask_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputeTask as ComputeTaskRep
@@ -24,8 +23,8 @@ from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
-from substrapp.views.utils import TypedChoiceInFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
@@ -207,11 +206,12 @@ def create(request, basename, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-def map_status_and_cp_key(key, values):
+def validate_status_and_map_cp_key(key, values):
     if key == "status":
         try:
-            values = [computetask_pb2.ComputeTaskStatus.Value(value) for value in values]
-        except ValueError as e:
+            for value in values:
+                getattr(ComputeTaskRep.Status, value)
+        except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     elif key == "compute_plan_key":
         key = "compute_plan_id"
@@ -230,15 +230,13 @@ class ComputeTaskRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
-    status = TypedChoiceInFilter(
+    status = ChoiceInFilter(
         field_name="status",
-        choices=[(key, key) for key in computetask_pb2.ComputeTaskStatus.keys()],
-        coerce=lambda x: computetask_pb2.ComputeTaskStatus.Value(x),
+        choices=ComputeTaskRep.Status.choices,
     )
-    category = TypedChoiceInFilter(
+    category = ChoiceInFilter(
         field_name="category",
-        choices=[(key, key) for key in computetask_pb2.ComputeTaskCategory.keys()],
-        coerce=lambda x: computetask_pb2.ComputeTaskCategory.Value(x),
+        choices=ComputeTaskRep.Category.choices,
     )
 
     class Meta:
@@ -291,7 +289,7 @@ class ComputeTaskViewSetConfig:
     ]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    custom_search_mapping_callback = map_status_and_cp_key
+    custom_search_mapping_callback = validate_status_and_map_cp_key  # deprecated
     search_fields = ("key",)
     filterset_class = ComputeTaskRepFilter
 
@@ -315,7 +313,7 @@ class ComputeTaskViewSetConfig:
         queryset = ComputeTaskRep.objects.filter(
             channel=get_channel_name(self.request), category=self.category
         ).select_related("algo")
-        if self.category == computetask_pb2.TASK_TEST:
+        if self.category == ComputeTaskRep.Category.TASK_TEST:
             queryset = queryset.prefetch_related("performances", "metrics")
         else:
             queryset = queryset.prefetch_related("models")

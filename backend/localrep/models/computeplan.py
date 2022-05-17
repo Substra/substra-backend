@@ -4,10 +4,7 @@ from django.db.models import Count
 from django.db.models import Q
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
-from localrep.models.computetask import CATEGORY_CHOICES
 from localrep.models.computetask import ComputeTask
-from localrep.models.utils import get_enum_choices
 
 logger = structlog.get_logger(__name__)
 
@@ -15,12 +12,20 @@ logger = structlog.get_logger(__name__)
 class ComputePlan(models.Model):
     """ComputePlan represent a compute plan and its associated metadata"""
 
-    STATUS_CHOICES = get_enum_choices(computeplan_pb2.ComputePlanStatus)
+    class Status(models.TextChoices):
+        # `UNKNOWN` status is legitimate for CP without child task
+        PLAN_STATUS_UNKNOWN = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_UNKNOWN)
+        PLAN_STATUS_WAITING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_WAITING)
+        PLAN_STATUS_TODO = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO)
+        PLAN_STATUS_DOING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
+        PLAN_STATUS_DONE = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DONE)
+        PLAN_STATUS_CANCELED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_CANCELED)
+        PLAN_STATUS_FAILED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_FAILED)
 
     key = models.UUIDField(primary_key=True)
     owner = models.CharField(max_length=100)
     delete_intermediary_models = models.BooleanField(null=True)
-    status = models.IntegerField(choices=STATUS_CHOICES, default=computeplan_pb2.ComputePlanStatus.PLAN_STATUS_UNKNOWN)
+    status = models.CharField(max_length=64, choices=Status.choices)
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
@@ -28,7 +33,7 @@ class ComputePlan(models.Model):
     end_date = models.DateTimeField(null=True)
     metadata = models.JSONField(null=True)
     failed_task_key = models.CharField(max_length=100, null=True)
-    failed_task_category = models.IntegerField(choices=CATEGORY_CHOICES, null=True)
+    failed_task_category = models.CharField(max_length=64, choices=ComputeTask.Category.choices, null=True)
     channel = models.CharField(max_length=100)
 
     class Meta:
@@ -40,7 +45,7 @@ class ComputePlan(models.Model):
             return
 
         first_failed_task = (
-            self.compute_tasks.filter(end_date__isnull=False, status=computetask_pb2.ComputeTaskStatus.STATUS_FAILED)
+            self.compute_tasks.filter(end_date__isnull=False, status=ComputeTask.Status.STATUS_FAILED)
             .order_by("end_date")
             .first()
         )
@@ -51,35 +56,37 @@ class ComputePlan(models.Model):
         self.failed_task_key = first_failed_task.key
         self.failed_task_category = first_failed_task.category
 
+    def get_task_stats(self) -> dict:
+        return ComputeTask.objects.filter(compute_plan__key=str(self.key)).aggregate(
+            task_count=Count("key"),
+            done_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DONE)),
+            waiting_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING)),
+            todo_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_TODO)),
+            doing_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DOING)),
+            canceled_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_CANCELED)),
+            failed_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_FAILED)),
+        )
+
     def update_status(self) -> None:
         """
         Compute cp status from tasks counts.
         See: `orchestrator/lib/persistence/computeplan_dbal.go`
         """
-        stats = ComputeTask.objects.filter(compute_plan__key=str(self.key)).aggregate(
-            task_count=Count("key"),
-            done_count=Count("key", filter=Q(status=computetask_pb2.STATUS_DONE)),
-            waiting_count=Count("key", filter=Q(status=computetask_pb2.STATUS_WAITING)),
-            todo_count=Count("key", filter=Q(status=computetask_pb2.STATUS_TODO)),
-            doing_count=Count("key", filter=Q(status=computetask_pb2.STATUS_DOING)),
-            canceled_count=Count("key", filter=Q(status=computetask_pb2.STATUS_CANCELED)),
-            failed_count=Count("key", filter=Q(status=computetask_pb2.STATUS_FAILED)),
-        )
-
+        stats = self.get_task_stats()
         if stats["task_count"] == 0:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_UNKNOWN
+            compute_plan_status = self.Status.PLAN_STATUS_UNKNOWN
         elif stats["done_count"] == stats["task_count"]:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_DONE
+            compute_plan_status = self.Status.PLAN_STATUS_DONE
         elif stats["failed_count"] > 0:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_FAILED
+            compute_plan_status = self.Status.PLAN_STATUS_FAILED
         elif stats["canceled_count"] > 0:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_CANCELED
+            compute_plan_status = self.Status.PLAN_STATUS_CANCELED
         elif stats["waiting_count"] == stats["task_count"]:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_WAITING
+            compute_plan_status = self.Status.PLAN_STATUS_WAITING
         elif stats["waiting_count"] < stats["task_count"] and stats["doing_count"] == 0 and stats["done_count"] == 0:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_TODO
+            compute_plan_status = self.Status.PLAN_STATUS_TODO
         else:
-            compute_plan_status = computeplan_pb2.PLAN_STATUS_DOING
+            compute_plan_status = self.Status.PLAN_STATUS_DOING
 
         logger.debug(
             "update cp status",
@@ -95,7 +102,7 @@ class ComputePlan(models.Model):
 
         self.status = compute_plan_status
 
-        if self.status == computeplan_pb2.PLAN_STATUS_FAILED:
+        if self.status == self.Status.PLAN_STATUS_FAILED:
             self._add_failed_task()
 
         self.save()
@@ -111,8 +118,8 @@ class ComputePlan(models.Model):
         ongoing_tasks = self.compute_tasks.filter(end_date__isnull=True).exists()
         failed_or_canceled_tasks = self.compute_tasks.filter(
             status__in=(
-                computeplan_pb2.PLAN_STATUS_FAILED,
-                computeplan_pb2.PLAN_STATUS_CANCELED,
+                ComputeTask.Status.STATUS_FAILED,
+                ComputeTask.Status.STATUS_CANCELED,
             )
         ).exists()
         # some tasks could remain in waiting status without end date

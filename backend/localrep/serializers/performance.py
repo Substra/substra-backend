@@ -4,7 +4,6 @@ from localrep.models import Algo
 from localrep.models import ComputeTask
 from localrep.models import Performance
 from localrep.serializers.utils import SafeSerializerMixin
-from orchestrator import computeplan_pb2
 
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -75,16 +74,11 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
         ]
 
 
-class CPStatusField(serializers.Field):
-    def to_representation(self, instance):
-        return computeplan_pb2.ComputePlanStatus.Name(instance)
-
-
 class ExportPerformanceSerializer(serializers.ModelSerializer):
     compute_plan_key = serializers.UUIDField()
     compute_plan_name = serializers.CharField()
     compute_plan_tag = serializers.CharField()
-    compute_plan_status = CPStatusField()
+    compute_plan_status = serializers.CharField()
     compute_plan_start_date = serializers.DateTimeField()
     compute_plan_end_date = serializers.DateTimeField()
     compute_plan_metadata = serializers.JSONField()

@@ -6,15 +6,15 @@ Basic example:
 >>> algo = create_algo(category=Algo.Category.ALGO_SIMPLE)
 >>> data_manager = create_datamanager()
 >>> data_sample = create_datasample([data_manager])
->>> compute_plan = create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
+>>> compute_plan = create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
 
 >>> train_task = create_computetask(
 ...     compute_plan,
 ...     algo,
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample.key],
-...     category=computetask_pb2.TASK_TRAIN,
-...     status=computetask_pb2.STATUS_DONE,
+...     category=ComputeTask.Category.TASK_TRAIN,
+...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> model = create_model(train_task, category=Model.Category.MODEL_SIMPLE)
 
@@ -26,8 +26,8 @@ Basic example:
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample],
 ...     parent_tasks=[train_task.key],
-...     category=computetask_pb2.TASK_TEST,
-...     status=computetask_pb2.STATUS_DONE,
+...     category=ComputeTask.Category.TASK_TEST,
+...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> performance = create_performance(test_task, metric)
 
@@ -50,8 +50,6 @@ import uuid
 
 from django.utils import timezone
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
@@ -87,14 +85,14 @@ def get_log_permissions(owner: str, public: bool) -> dict:
 
 
 def get_computetask_permissions(category: int, owner: str, public: bool) -> dict:
-    if category in (computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_AGGREGATE):
+    if category in (ComputeTask.Category.TASK_TRAIN, ComputeTask.Category.TASK_AGGREGATE):
         return {
             "model_permissions_download_public": public,
             "model_permissions_download_authorized_ids": [owner],
             "model_permissions_process_public": public,
             "model_permissions_process_authorized_ids": [owner],
         }
-    elif category == computetask_pb2.TASK_COMPOSITE:
+    elif category == ComputeTask.Category.TASK_COMPOSITE:
         return {
             "head_permissions_download_public": public,
             "head_permissions_download_authorized_ids": [owner],
@@ -105,23 +103,23 @@ def get_computetask_permissions(category: int, owner: str, public: bool) -> dict
             "trunk_permissions_process_public": public,
             "trunk_permissions_process_authorized_ids": [owner],
         }
-    else:  # computetask_pb2.TASK_TEST
+    else:  # ComputeTask.Category.TASK_TEST
         return {}
 
 
 def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime]:
     start_date = end_date = None
     if status in (
-        computetask_pb2.STATUS_DOING,
-        computetask_pb2.STATUS_DONE,
-        computetask_pb2.STATUS_FAILED,
-        computetask_pb2.STATUS_CANCELED,
+        ComputeTask.Status.STATUS_DOING,
+        ComputeTask.Status.STATUS_DONE,
+        ComputeTask.Status.STATUS_FAILED,
+        ComputeTask.Status.STATUS_CANCELED,
     ):
         start_date = creation_date + datetime.timedelta(hours=1)
     if status in (
-        computetask_pb2.STATUS_DONE,
-        computetask_pb2.STATUS_FAILED,
-        computetask_pb2.STATUS_CANCELED,
+        ComputeTask.Status.STATUS_DONE,
+        ComputeTask.Status.STATUS_FAILED,
+        ComputeTask.Status.STATUS_CANCELED,
     ):
         end_date = creation_date + datetime.timedelta(hours=2)
     return start_date, end_date
@@ -130,16 +128,16 @@ def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tupl
 def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime]:
     start_date = end_date = None
     if status in (
-        computeplan_pb2.PLAN_STATUS_DOING,
-        computeplan_pb2.PLAN_STATUS_DONE,
-        computeplan_pb2.PLAN_STATUS_FAILED,
-        computeplan_pb2.PLAN_STATUS_CANCELED,
+        ComputePlan.Status.PLAN_STATUS_DOING,
+        ComputePlan.Status.PLAN_STATUS_DONE,
+        ComputePlan.Status.PLAN_STATUS_FAILED,
+        ComputePlan.Status.PLAN_STATUS_CANCELED,
     ):
         start_date = creation_date + datetime.timedelta(hours=1)
     if status in (
-        computeplan_pb2.PLAN_STATUS_DONE,
-        computeplan_pb2.PLAN_STATUS_FAILED,
-        computeplan_pb2.PLAN_STATUS_CANCELED,
+        ComputePlan.Status.PLAN_STATUS_DONE,
+        ComputePlan.Status.PLAN_STATUS_FAILED,
+        ComputePlan.Status.PLAN_STATUS_CANCELED,
     ):
         end_date = creation_date + datetime.timedelta(hours=2)
     return start_date, end_date
@@ -249,7 +247,7 @@ def create_datasample(
 
 def create_computeplan(
     key: uuid.UUID = None,
-    status: int = computeplan_pb2.PLAN_STATUS_TODO,
+    status: int = ComputePlan.Status.PLAN_STATUS_TODO,
     tag: str = "",
     name: str = "computeplan",
     delete_intermediary_models: bool = False,
@@ -288,8 +286,8 @@ def create_computetask(
     data_samples: list[uuid.UUID] = None,
     metrics: list[Algo] = None,
     key: uuid.UUID = None,
-    category: int = computetask_pb2.TASK_TRAIN,
-    status: int = computetask_pb2.STATUS_TODO,
+    category: int = ComputeTask.Category.TASK_TRAIN,
+    status: int = ComputeTask.Status.STATUS_TODO,
     rank: int = 1,
     worker: str = DEFAULT_OWNER,
     tag: str = "",

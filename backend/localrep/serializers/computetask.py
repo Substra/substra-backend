@@ -2,7 +2,6 @@ from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers
 
-import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
@@ -19,39 +18,14 @@ from localrep.serializers.utils import get_channel_choices
 from localrep.serializers.utils import make_addressable_serializer
 from localrep.serializers.utils import make_download_process_permission_serializer
 from localrep.serializers.utils import make_permission_serializer
-from substrapp.compute_tasks.context import TASK_DATA_FIELD
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
 
 TASK_CATEGORY_FIELDS = {
-    computetask_pb2.TASK_TRAIN: "train",
-    computetask_pb2.TASK_TEST: "test",
-    computetask_pb2.TASK_COMPOSITE: "composite",
-    computetask_pb2.TASK_AGGREGATE: "aggregate",
+    ComputeTask.Category.TASK_TRAIN: "train",
+    ComputeTask.Category.TASK_TEST: "test",
+    ComputeTask.Category.TASK_COMPOSITE: "composite",
+    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
 }
-
-
-class CategoryField(serializers.Field):
-    def to_representation(self, instance):
-        return computetask_pb2.ComputeTaskCategory.Name(instance)
-
-    def to_internal_value(self, data):
-        return computetask_pb2.ComputeTaskCategory.Value(data)
-
-
-class StatusField(serializers.Field):
-    def to_representation(self, instance):
-        return computetask_pb2.ComputeTaskStatus.Name(instance)
-
-    def to_internal_value(self, data):
-        return computetask_pb2.ComputeTaskStatus.Value(data)
-
-
-class ErrorTypeField(serializers.Field):
-    def to_representation(self, instance):
-        return failure_report_pb2.ErrorType.Name(instance)
-
-    def to_internal_value(self, data):
-        return failure_report_pb2.ErrorType.Value(data)
 
 
 class AlgoField(serializers.Field):
@@ -162,9 +136,6 @@ class CompositeTaskSerializer(serializers.Serializer):
 
 
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-    category = CategoryField()
-    status = StatusField()
-    error_type = ErrorTypeField(required=False)
     logs_permission = make_permission_serializer("logs_permission")(source="*")
     logs_address = make_addressable_serializer("logs")(source="*", required=False)
     algo = AlgoField()
@@ -257,9 +228,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             )
 
         # replace in category-dependent relationships
-
-        category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
-        task_details = task[TASK_DATA_FIELD[category]]
+        task_details = task[TASK_CATEGORY_FIELDS[task["category"]]]
 
         if "data_manager" in task_details and task_details["data_manager"]:
             data_manager = task_details["data_manager"]
@@ -320,24 +289,28 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 
 TASK_FIELD = {
-    computetask_pb2.TASK_TRAIN: "train",
-    computetask_pb2.TASK_TEST: "test",
-    computetask_pb2.TASK_AGGREGATE: "aggregate",
-    computetask_pb2.TASK_COMPOSITE: "composite",
+    ComputeTask.Category.TASK_TRAIN: "train",
+    ComputeTask.Category.TASK_TEST: "test",
+    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
+    ComputeTask.Category.TASK_COMPOSITE: "composite",
 }
 
 
 class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if instance.category in [computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST, computetask_pb2.TASK_COMPOSITE]:
+        if instance.category in [
+            ComputeTask.Category.TASK_TRAIN,
+            ComputeTask.Category.TASK_TEST,
+            ComputeTask.Category.TASK_COMPOSITE,
+        ]:
             data_manager = DataManager.objects.get(
                 key=data[TASK_FIELD[instance.category]]["data_manager_key"],
                 channel=instance.channel,
             )
             data[TASK_FIELD[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
 
-        if instance.category == computetask_pb2.TASK_TEST:
+        if instance.category == ComputeTask.Category.TASK_TEST:
             metrics = Algo.objects.filter(
                 key__in=data[TASK_FIELD[instance.category]]["metric_keys"],
                 channel=instance.channel,

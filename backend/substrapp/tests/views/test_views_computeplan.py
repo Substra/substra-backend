@@ -12,9 +12,8 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import ComputePlan as ComputePlanRep
+from localrep.models import ComputeTask as ComputeTaskRep
 from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
 from substrapp.views.computeplan import extract_tasks_data
@@ -33,7 +32,7 @@ def mock_register_compute_plan(data):
         "name": data["name"],
         "metadata": data["metadata"],
         "delete_intermediary_models": data["delete_intermediary_models"],
-        "status": computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO),
+        "status": ComputePlanRep.Status.PLAN_STATUS_TODO,
         "task_count": 0,
         "done_count": 0,
         "waiting_count": 0,
@@ -68,26 +67,26 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         algo = factory.create_algo()
 
-        todo_cp = factory.create_computeplan(name="To do", status=computeplan_pb2.PLAN_STATUS_TODO)
-        factory.create_computetask(todo_cp, algo, status=computetask_pb2.STATUS_TODO)
+        todo_cp = factory.create_computeplan(name="To do", status=ComputePlanRep.Status.PLAN_STATUS_TODO)
+        factory.create_computetask(todo_cp, algo, status=ComputeTaskRep.Status.STATUS_TODO)
 
-        doing_cp = factory.create_computeplan(name="Doing", status=computeplan_pb2.PLAN_STATUS_DOING)
-        factory.create_computetask(doing_cp, algo, status=computetask_pb2.STATUS_DOING)
+        doing_cp = factory.create_computeplan(name="Doing", status=ComputePlanRep.Status.PLAN_STATUS_DOING)
+        factory.create_computetask(doing_cp, algo, status=ComputeTaskRep.Status.STATUS_DOING)
         self.now = doing_cp.start_date + datetime.timedelta(hours=1)
 
-        done_cp = factory.create_computeplan(name="Done", status=computeplan_pb2.PLAN_STATUS_DONE)
-        factory.create_computetask(done_cp, algo, status=computetask_pb2.STATUS_DONE)
+        done_cp = factory.create_computeplan(name="Done", status=ComputePlanRep.Status.PLAN_STATUS_DONE)
+        factory.create_computetask(done_cp, algo, status=ComputeTaskRep.Status.STATUS_DONE)
 
-        failed_cp = factory.create_computeplan(name="Failed", status=computeplan_pb2.PLAN_STATUS_FAILED)
+        failed_cp = factory.create_computeplan(name="Failed", status=ComputePlanRep.Status.PLAN_STATUS_FAILED)
         failed_task = factory.create_computetask(
-            failed_cp, algo, category=computetask_pb2.TASK_TRAIN, status=computetask_pb2.STATUS_FAILED
+            failed_cp, algo, category=ComputeTaskRep.Category.TASK_TRAIN, status=ComputeTaskRep.Status.STATUS_FAILED
         )
         failed_cp.failed_task_key = str(failed_task.key)
         failed_cp.failed_task_category = failed_task.category
         failed_cp.save()
 
-        canceled_cp = factory.create_computeplan(name="Canceled", status=computeplan_pb2.PLAN_STATUS_CANCELED)
-        factory.create_computetask(canceled_cp, algo, status=computetask_pb2.STATUS_CANCELED)
+        canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
+        factory.create_computetask(canceled_cp, algo, status=ComputeTaskRep.Status.STATUS_CANCELED)
 
         self.expected_results = [
             {
@@ -437,6 +436,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
+            ("PLAN_STATUS_UNKNOWN",),
             ("PLAN_STATUS_WAITING",),
             ("PLAN_STATUS_TODO",),
             ("PLAN_STATUS_DOING",),
@@ -468,6 +468,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
+            ("PLAN_STATUS_UNKNOWN",),
             ("PLAN_STATUS_WAITING",),
             ("PLAN_STATUS_TODO",),
             ("PLAN_STATUS_DOING",),

@@ -1,6 +1,6 @@
 import pytest
 
-import orchestrator.computetask_pb2 as computetask_pb2
+from localrep.models import ComputeTask
 from substrapp.tests import factory
 
 
@@ -8,12 +8,12 @@ from substrapp.tests import factory
 @pytest.mark.parametrize(
     "status,has_start_date,has_end_date",
     (
-        (computetask_pb2.STATUS_WAITING, False, False),
-        (computetask_pb2.STATUS_TODO, False, False),
-        (computetask_pb2.STATUS_DOING, True, False),
-        (computetask_pb2.STATUS_DONE, True, True),
-        (computetask_pb2.STATUS_FAILED, True, True),
-        (computetask_pb2.STATUS_CANCELED, True, True),
+        (ComputeTask.Status.STATUS_WAITING, False, False),
+        (ComputeTask.Status.STATUS_TODO, False, False),
+        (ComputeTask.Status.STATUS_DOING, True, False),
+        (ComputeTask.Status.STATUS_DONE, True, True),
+        (ComputeTask.Status.STATUS_FAILED, True, True),
+        (ComputeTask.Status.STATUS_CANCELED, True, True),
     ),
 )
 def test_update_dates_single_task(status, has_start_date, has_end_date):
@@ -46,16 +46,16 @@ def test_update_dates_single_task(status, has_start_date, has_end_date):
 @pytest.mark.parametrize(
     "status,has_start_date,has_end_date",
     (
-        (computetask_pb2.STATUS_DONE, True, False),  # cp has restarted
-        (computetask_pb2.STATUS_FAILED, True, True),
-        (computetask_pb2.STATUS_CANCELED, True, True),
+        (ComputeTask.Status.STATUS_DONE, True, False),  # cp has restarted
+        (ComputeTask.Status.STATUS_FAILED, True, True),
+        (ComputeTask.Status.STATUS_CANCELED, True, True),
     ),
 )
 def test_update_dates_ended_cp_with_ongoing_task(status, has_start_date, has_end_date):
     algo = factory.create_algo()
     compute_plan = factory.create_computeplan()
     factory.create_computetask(compute_plan, algo, status=status)
-    factory.create_computetask(compute_plan, algo, status=computetask_pb2.STATUS_WAITING)
+    factory.create_computetask(compute_plan, algo, status=ComputeTask.Status.STATUS_WAITING)
 
     compute_plan.update_dates()
     # validate outputs

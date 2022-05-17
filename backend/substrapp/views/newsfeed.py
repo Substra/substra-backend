@@ -2,7 +2,6 @@ import structlog
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.common_pb2 as common_pb2
-import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
@@ -47,24 +46,22 @@ class NewsFeedViewSet(GenericViewSet):
         items = []
         channel = get_channel_name(self.request)
         for compute_plan in ComputePlanRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
-            status = PLAN_STATUS_CREATED
             items.append(
                 cp_item(
                     compute_plan.key,
                     compute_plan.metadata.get("name", compute_plan.tag),
-                    status,
+                    PLAN_STATUS_CREATED,
                     compute_plan.creation_date,
                 )
             )
         for compute_plan in ComputePlanRep.objects.filter(
             channel=channel, start_date__isnull=False, **self.date_filters("start_date")
         ):
-            status = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
             items.append(
                 cp_item(
                     compute_plan.key,
                     compute_plan.metadata.get("name", compute_plan.tag),
-                    status,
+                    ComputePlanRep.Status.PLAN_STATUS_DOING,
                     compute_plan.start_date,
                 )
             )
@@ -72,7 +69,6 @@ class NewsFeedViewSet(GenericViewSet):
         for compute_plan in ComputePlanRep.objects.filter(
             channel=channel, end_date__isnull=False, **self.date_filters("end_date")
         ):
-            status = computeplan_pb2.ComputePlanStatus.Name(compute_plan.status)
             detail = {}
             if compute_plan.failed_task_key:
                 detail["first_failed_task_key"] = compute_plan.failed_task_key
@@ -81,7 +77,7 @@ class NewsFeedViewSet(GenericViewSet):
                 cp_item(
                     compute_plan.key,
                     compute_plan.metadata.get("name", compute_plan.tag),
-                    status,
+                    compute_plan.status,
                     compute_plan.end_date,
                     detail,
                 )
