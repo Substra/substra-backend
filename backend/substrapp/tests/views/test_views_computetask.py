@@ -11,6 +11,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from localrep.models import Algo as AlgoRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
@@ -38,7 +39,7 @@ class ComputeTaskViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
         self.algo = factory.create_algo()
-        self.metric = factory.create_metric()
+        self.metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plan = factory.create_computeplan()

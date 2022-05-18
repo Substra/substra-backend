@@ -88,6 +88,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
         factory.create_computetask(canceled_cp, algo, status=ComputeTaskRep.Status.STATUS_CANCELED)
 
+        unknown_cp = factory.create_computeplan(name="Unknown", status=ComputePlanRep.Status.PLAN_STATUS_UNKNOWN)
+
         self.expected_results = [
             {
                 "key": str(todo_cp.key),
@@ -200,6 +202,27 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "estimated_end_date": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "duration": 3600,  # 1 hour (default factory value)
             },
+            {
+                "key": str(unknown_cp.key),
+                "tag": "",
+                "name": "Unknown",
+                "owner": "MyOrg1MSP",
+                "metadata": {},
+                "task_count": 0,
+                "waiting_count": 0,
+                "todo_count": 0,
+                "doing_count": 0,
+                "canceled_count": 0,
+                "failed_count": 0,
+                "done_count": 0,
+                "failed_task": None,
+                "delete_intermediary_models": False,
+                "status": "PLAN_STATUS_UNKNOWN",
+                "creation_date": unknown_cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": None,
+                "end_date": None,
+                "duration": None,  # because start_date is None
+            },
         ]
 
     def tearDown(self):
@@ -261,9 +284,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_computeplan_list_success(self):
-        for compute_plan in self.expected_results:
-            if compute_plan["status"] == "PLAN_STATUS_UNKNOWN":
-                del compute_plan["estimated_end_date"]
         with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
             response = self.client.get(self.url, **self.extra)
         self.assertEqual(

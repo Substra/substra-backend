@@ -8,6 +8,7 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import Performance as PerformanceRep
@@ -36,7 +37,7 @@ class CPPerformanceViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("substrapp:compute_plan_perf-list", args=[self.compute_plan.key])
 
-        self.metrics = [factory.create_metric() for _ in range(3)]
+        self.metrics = [factory.create_algo(category=AlgoRep.Category.ALGO_METRIC) for _ in range(3)]
         self.compute_task = factory.create_computetask(
             self.compute_plan,
             algo=self.algo,
@@ -136,7 +137,7 @@ class PerformanceViewTests(APITestCase):
         self.export_extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "*/*"}
         self.export_url = reverse("substrapp:performance-export")
 
-        self.metrics = [factory.create_metric() for _ in range(3)]
+        self.metrics = [factory.create_algo(category=AlgoRep.Category.ALGO_METRIC) for _ in range(3)]
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plans[i],

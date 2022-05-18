@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
+from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from substrapp.tests import factory
@@ -54,7 +55,7 @@ class NewsFeedViewTests(APITestCase):
         done_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
-        metric = factory.create_metric()
+        metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
 
         # we expect items to be sorted from the latest to the earliest
         expected_results = [
@@ -201,7 +202,7 @@ class NewsFeedViewTests(APITestCase):
         cp = factory.create_computeplan()
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
-        metric = factory.create_metric()
+        metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
 
         expected_results = [
             {

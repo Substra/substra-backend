@@ -18,7 +18,7 @@ Basic example:
 ... )
 >>> model = create_model(train_task, category=Model.Category.MODEL_SIMPLE)
 
->>> metric = create_metric()
+>>> metric = create_algo(category=Algo.Category.ALGO_METRIC)
 >>> test_task = create_computetask(
 ...     compute_plan,
 ...     algo,
@@ -165,32 +165,6 @@ def create_algo(
         description_checksum=DUMMY_CHECKSUM,
         creation_date=timezone.now(),
         owner=owner,
-        channel=channel,
-        **get_permissions(owner, public),
-    )
-
-
-def create_metric(
-    key: uuid.UUID = None,
-    name: str = "metric",
-    metadata: dict = None,
-    owner: str = DEFAULT_OWNER,
-    channel: str = DEFAULT_CHANNEL,
-    public: bool = False,
-) -> Algo:
-    if key is None:
-        key = uuid.uuid4()
-    return Algo.objects.create(
-        key=key,
-        name=name,
-        category=Algo.Category.ALGO_METRIC,
-        metadata=metadata or {},
-        algorithm_address=get_storage_address("metric", key, "metrics"),
-        algorithm_checksum=DUMMY_CHECKSUM,
-        description_address=get_storage_address("metric", key, "description"),
-        description_checksum=DUMMY_CHECKSUM,
-        owner=owner,
-        creation_date=timezone.now(),
         channel=channel,
         **get_permissions(owner, public),
     )

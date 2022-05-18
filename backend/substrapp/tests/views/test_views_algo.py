@@ -46,9 +46,9 @@ class AlgoViewTests(APITestCase):
         self.metric_url = reverse("substrapp:metric-list")
 
         simple_algo = factory.create_algo(category=AlgoRep.Category.ALGO_SIMPLE, name="simple algo")
-        aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE)
-        composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE)
-        metric_algo = factory.create_metric()
+        aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE, name="aggregate")
+        composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE, name="composite")
+        metric_algo = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC, name="metric")
 
         self.algos = [simple_algo, aggregate_algo, composite_algo]
         self.expected_algos = [
@@ -80,7 +80,7 @@ class AlgoViewTests(APITestCase):
             },
             {
                 "key": str(aggregate_algo.key),
-                "name": "algo",
+                "name": "aggregate",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -106,7 +106,7 @@ class AlgoViewTests(APITestCase):
             },
             {
                 "key": str(composite_algo.key),
-                "name": "algo",
+                "name": "composite",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
