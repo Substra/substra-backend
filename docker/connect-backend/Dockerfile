@@ -25,6 +25,12 @@ COPY ./backend/users /usr/src/app/users
 COPY ./backend/orchestrator /usr/src/app/orchestrator
 COPY ./backend/localrep /usr/src/app/localrep
 
+# only for `docker build --target dev`
+FROM build AS dev
+
+COPY ./backend/dev-requirements.txt /usr/src/app/.
+RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
+
 FROM python:3.9-slim
 
 ARG BACKEND_VERSION
@@ -37,6 +43,8 @@ ENV GRPC_POLL_STRATEGY=epoll1
 COPY --from=build /usr/local/lib/python3.9/ /usr/local/lib/python3.9/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
+
+RUN find /usr/src/app -type d -name tests -prune -exec rm -rf {} \;
 
 WORKDIR /usr/src/app
 

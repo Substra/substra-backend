@@ -1,6 +1,3 @@
-backend/node/tests
-backend/substrapp/tests
-backend/dev-requirements.txt
 **/.env
 **/.venv
 **/env

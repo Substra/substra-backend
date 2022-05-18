@@ -37,6 +37,13 @@ Each organization will have:
 
 For Visual Studio resources for connect-backend, see [this page](./docs/vscode.md)
 
+### Use dev profile
+
+Use `skaffold [run|dev] -p dev` in order to take advandage of:
+- Pre-installed dev tools: debugger, profiler
+- Test modules: fixtures, assets factory, utils
+- Run application container as root: install packages, edit files, restart services
+
 ### Use debugger
 
 Add a breakpoint, then attach to the `backend-server` container.
