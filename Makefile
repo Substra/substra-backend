@@ -38,11 +38,18 @@ shell:	## Start a Python shell for the Django project
 
 .PHONY: migrations
 migrations: ## Create missing Django migrations, if any. See also: check-migrations.
-	DJANGO_SETTINGS_MODULE=backend.settings.test python backend/manage.py makemigrations
+	python backend/manage.py makemigrations --settings backend.settings.test
 
 .PHONY: check-migrations
 check-migrations: ## Check whether there are missing Django migrations
-	DJANGO_SETTINGS_MODULE=backend.settings.test python backend/manage.py makemigrations --dry-run --check --no-input
+	python backend/manage.py makemigrations --dry-run --check --no-input --settings backend.settings.test
+
+.PHONY: quickstart
+quickstart:  ## Quickstart for local dev
+	python backend/manage.py migrate --settings backend.settings.localdev
+	python backend/manage.py add_user node-1 p@sswr0d44 mychannel --settings backend.settings.localdev
+	python backend/manage.py generate_fixtures --settings backend.settings.localdev
+	ISOLATED=1 python backend/manage.py runserver 0.0.0.0:8000 --settings backend.settings.localdev
 
 ### gRPC
 

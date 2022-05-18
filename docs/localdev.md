@@ -1,81 +1,48 @@
 # How-to run API locally
 
 Steps to run django server in a virtualenv, without needing a k8s cluster.
+For now only isolated mode is supported: without assert registration or task computation.
 
-## Define settings
+## Quickstart
 
-```sh
-export DJANGO_SETTINGS_MODULE=backend.settings.localdev
-```
-
-## Start the DB
-
-### Option 1: using a container
-
-```
-make db
-```
-
-### Option 2: using native install
-
-Documented for macOS.
-
-#### Server
-
-You can use [edb bundle](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) (version >= 11). This comes with pgAdmin 4.
-
-#### Client (psql)
+Activate a virtualenv, then run the commands:
 
 ```sh
-brew install postgres
+make db  # start postgres instance inside a container named `postgres`
+make install  # install python dependencies
+make quickstart  # run migrations, create a user, generate assets fixtures, start the server
 ```
 
-#### Database
-
-Create a `substra` database.
+Connect substra client (`node-1` profile is used by Titanic example).
 
 ```sh
-psql postgresql://postgres:postgres@localhost:5432/postgres -c "CREATE DATABASE substra;"
+substra config --profile node-1 http://127.0.0.1:8000
+substra login --profile node-1 -u node-1 -p p@sswr0d44
+substra list --profile node-1 algo  # should display fixtures
 ```
 
-Note: to use another DB name, set the `BACKEND_DB_NAME` env var.
+## (Optional) Restore a dump
 
-## Load data
-
-### Option 1: restore a dump
+Warning: it will erase the database content (user, fixtures, etc).
 
 ```sh
 cat dump-file.sql | docker exec -it postgres psql postgresql://postgres:postgres@localhost:5432/substra
 ```
 
-### Option 2: create data
+## (Optional) Use another DB
 
-Replace `user` and `password` by values of your choice.
+### Install postgres on macOS
+
+You can use [edb bundle](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) (version >= 11). This comes with pgAdmin 4.
 
 ```sh
-python backend/manage.py migrate
-python backend/manage.py add_user <user> <password> mychannel
-python backend/manage.py generate_fixtures
+brew install postgres  # install the psql client
 ```
 
-## Start the API
+### Create a database
 
-For now only isolated mode is supported: without assert registration or task computation.
-
-```sh
-ISOLATED=1 python backend/manage.py runserver
-```
-
-## Connect clients
-
-### Frontend
+Create a `substra` database. To use another name, set the `BACKEND_DB_NAME` env var accordingly.
 
 ```sh
-export API_URL=http://127.0.0.1:8000
-```
-
-### Substra
-
-```sh
-substra config --profile localdev http://127.0.0.1:8000
+psql postgresql://postgres:postgres@localhost:5432/postgres -c "CREATE DATABASE substra;"
 ```
