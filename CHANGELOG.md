@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Within a CP, allow image builds to occur concurrently with another task's execution (#996)
 - (BREAKING) Store enum values as string (impact ordering) - ComputePlan ComputeTask (#1045)
 
+### Fixed
+- Mount GPU manually in GKE to be able to share them (#1041)
+
 ## [0.14.0] 2022-05-16
 
 ### Added

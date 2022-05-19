@@ -41,13 +41,22 @@ def get_pod_security_context():
 
 
 def get_security_context(root: bool = False, capabilities: List[str] = None) -> kubernetes.client.V1SecurityContext:
+    """
+    root:
+     - True: force running as root
+     - False: disable running as root
+    """
     security_context = kubernetes.client.V1SecurityContext(
         privileged=False,
         allow_privilege_escalation=False,
         capabilities=kubernetes.client.V1Capabilities(drop=["ALL"], add=capabilities),
     )
 
-    if not root:
+    if root:
+        security_context.run_as_non_root = False
+        security_context.run_as_group = 0
+        security_context.run_as_user = 0
+    else:
         security_context.run_as_non_root = True
         security_context.run_as_group = int(RUN_AS_GROUP)
         security_context.run_as_user = int(RUN_AS_USER)

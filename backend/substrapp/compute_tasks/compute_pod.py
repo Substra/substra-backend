@@ -75,10 +75,36 @@ def create_pod(
     metadata = kubernetes.client.V1ObjectMeta(name=name, labels=compute_pod.labels)
 
     container_optional_kwargs = {}
+
+    gpu_volume = []
+    gpu_volume_mounts = []
     if settings.COMPUTE_POD_GKE_GPUS_LIMITS > 0:
         container_optional_kwargs["resources"] = kubernetes.client.V1ResourceRequirements(
             limits={"nvidia.com/gpu": str(settings.COMPUTE_POD_GKE_GPUS_LIMITS)}
         )
+
+        # To be able to share the same GPU between different pods in GKE context,
+        # we use a "hack" based on misleading the Google Nvidia device plugin with
+        # fake gpu devices (/dev/nvidia*), which are just symlinks of the original one.
+        # To do that we use:
+        # https://github.com/owkin/connect-generator/blob/0.4.3/templates/helmfile/values/gpu-sharing.yaml
+        #
+        # Moreover, it seems that original GPU, which are simlinks, are not automatically mounted once a
+        # fake GPU is assigned to a specific pod. To fix that we mount them manually.
+        for i in range(settings.COMPUTE_POD_GKE_GPUS_LIMITS):
+            gpu_volume_mounts.append(
+                {
+                    "name": f"nvidia{i}",
+                    "mountPath": f"/dev/nvidia{i}",
+                    "readOnly": True,
+                }
+            )
+            gpu_volume.append(
+                {
+                    "name": f"nvidia{i}",
+                    "hostPath": {"path": f"/dev/nvidia{i}"},
+                }
+            )
 
     container_compute = kubernetes.client.V1Container(
         name=name,
@@ -86,7 +112,7 @@ def create_pod(
         # Wait until SIGTERM is received, then exit gracefully. See https://stackoverflow.com/a/21882119/1370722
         command=["/bin/sh", "-c", "trap 'trap - TERM; kill -s TERM -- -$$' TERM; tail -f /dev/null & wait; exit 0"],
         args=None,
-        volume_mounts=volume_mounts,
+        volume_mounts=volume_mounts + gpu_volume_mounts,
         security_context=get_security_context(),
         env=[kubernetes.client.V1EnvVar(name=env_name, value=env_value) for env_name, env_value in environment.items()],
         **container_optional_kwargs,
@@ -113,7 +139,7 @@ def create_pod(
         restart_policy="Never",
         affinity=pod_affinity,
         containers=[container_compute],
-        volumes=volumes,
+        volumes=volumes + gpu_volume,
         security_context=get_pod_security_context(),
         termination_grace_period_seconds=0,
         automount_service_account_token=False,
