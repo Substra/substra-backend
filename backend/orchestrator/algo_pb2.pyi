@@ -24,6 +24,7 @@ class _AlgoCategoryEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._E
     ALGO_AGGREGATE: _AlgoCategory.ValueType  # 2
     ALGO_COMPOSITE: _AlgoCategory.ValueType  # 3
     ALGO_METRIC: _AlgoCategory.ValueType  # 4
+    ALGO_PREDICT: _AlgoCategory.ValueType  # 5
 class AlgoCategory(_AlgoCategory, metaclass=_AlgoCategoryEnumTypeWrapper):
     pass
 
@@ -32,6 +33,7 @@ ALGO_SIMPLE: AlgoCategory.ValueType  # 1
 ALGO_AGGREGATE: AlgoCategory.ValueType  # 2
 ALGO_COMPOSITE: AlgoCategory.ValueType  # 3
 ALGO_METRIC: AlgoCategory.ValueType  # 4
+ALGO_PREDICT: AlgoCategory.ValueType  # 5
 global___AlgoCategory = AlgoCategory
 
 

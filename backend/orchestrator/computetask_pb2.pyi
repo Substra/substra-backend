@@ -80,6 +80,40 @@ TASK_ACTION_FAILED: ComputeTaskAction.ValueType  # 3
 global___ComputeTaskAction = ComputeTaskAction
 
 
+class ParentTaskOutputRef(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    PARENT_TASK_KEY_FIELD_NUMBER: builtins.int
+    OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
+    parent_task_key: typing.Text
+    output_identifier: typing.Text
+    def __init__(self,
+        *,
+        parent_task_key: typing.Text = ...,
+        output_identifier: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["output_identifier",b"output_identifier","parent_task_key",b"parent_task_key"]) -> None: ...
+global___ParentTaskOutputRef = ParentTaskOutputRef
+
+class ComputeTaskInput(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    IDENTIFIER_FIELD_NUMBER: builtins.int
+    ASSET_KEY_FIELD_NUMBER: builtins.int
+    PARENT_TASK_OUTPUT_FIELD_NUMBER: builtins.int
+    identifier: typing.Text
+    asset_key: typing.Text
+    @property
+    def parent_task_output(self) -> global___ParentTaskOutputRef: ...
+    def __init__(self,
+        *,
+        identifier: typing.Text = ...,
+        asset_key: typing.Text = ...,
+        parent_task_output: typing.Optional[global___ParentTaskOutputRef] = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["asset_key",b"asset_key","parent_task_output",b"parent_task_output","ref",b"ref"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset_key",b"asset_key","identifier",b"identifier","parent_task_output",b"parent_task_output","ref",b"ref"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["ref",b"ref"]) -> typing.Optional[typing_extensions.Literal["asset_key","parent_task_output"]]: ...
+global___ComputeTaskInput = ComputeTaskInput
+
 class ComputeTask(google.protobuf.message.Message):
     """ComputeTask is a computation step in a ComputePlan.
     It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
@@ -114,6 +148,7 @@ class ComputeTask(google.protobuf.message.Message):
     COMPOSITE_FIELD_NUMBER: builtins.int
     AGGREGATE_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
+    INPUTS_FIELD_NUMBER: builtins.int
     key: typing.Text
     category: global___ComputeTaskCategory.ValueType
     @property
@@ -143,6 +178,8 @@ class ComputeTask(google.protobuf.message.Message):
     def aggregate(self) -> global___AggregateTrainTaskData: ...
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, typing.Text]: ...
+    @property
+    def inputs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ComputeTaskInput]: ...
     def __init__(self,
         *,
         key: typing.Text = ...,
@@ -161,9 +198,10 @@ class ComputeTask(google.protobuf.message.Message):
         composite: typing.Optional[global___CompositeTrainTaskData] = ...,
         aggregate: typing.Optional[global___AggregateTrainTaskData] = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
+        inputs: typing.Optional[typing.Iterable[global___ComputeTaskInput]] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","algo",b"algo","composite",b"composite","creation_date",b"creation_date","data",b"data","logs_permission",b"logs_permission","test",b"test","train",b"train"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","algo",b"algo","category",b"category","composite",b"composite","compute_plan_key",b"compute_plan_key","creation_date",b"creation_date","data",b"data","key",b"key","logs_permission",b"logs_permission","metadata",b"metadata","owner",b"owner","parent_task_keys",b"parent_task_keys","rank",b"rank","status",b"status","test",b"test","train",b"train","worker",b"worker"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","algo",b"algo","category",b"category","composite",b"composite","compute_plan_key",b"compute_plan_key","creation_date",b"creation_date","data",b"data","inputs",b"inputs","key",b"key","logs_permission",b"logs_permission","metadata",b"metadata","owner",b"owner","parent_task_keys",b"parent_task_keys","rank",b"rank","status",b"status","test",b"test","train",b"train","worker",b"worker"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["test","train","composite","aggregate"]]: ...
 global___ComputeTask = ComputeTask
 
@@ -192,6 +230,7 @@ class NewComputeTask(google.protobuf.message.Message):
     COMPOSITE_FIELD_NUMBER: builtins.int
     AGGREGATE_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
+    INPUTS_FIELD_NUMBER: builtins.int
     key: typing.Text
     category: global___ComputeTaskCategory.ValueType
     algo_key: typing.Text
@@ -210,6 +249,8 @@ class NewComputeTask(google.protobuf.message.Message):
     def aggregate(self) -> global___NewAggregateTrainTaskData: ...
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, typing.Text]: ...
+    @property
+    def inputs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ComputeTaskInput]: ...
     def __init__(self,
         *,
         key: typing.Text = ...,
@@ -222,9 +263,10 @@ class NewComputeTask(google.protobuf.message.Message):
         composite: typing.Optional[global___NewCompositeTrainTaskData] = ...,
         aggregate: typing.Optional[global___NewAggregateTrainTaskData] = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
+        inputs: typing.Optional[typing.Iterable[global___ComputeTaskInput]] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","composite",b"composite","data",b"data","test",b"test","train",b"train"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","algo_key",b"algo_key","category",b"category","composite",b"composite","compute_plan_key",b"compute_plan_key","data",b"data","key",b"key","metadata",b"metadata","parent_task_keys",b"parent_task_keys","test",b"test","train",b"train"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregate",b"aggregate","algo_key",b"algo_key","category",b"category","composite",b"composite","compute_plan_key",b"compute_plan_key","data",b"data","inputs",b"inputs","key",b"key","metadata",b"metadata","parent_task_keys",b"parent_task_keys","test",b"test","train",b"train"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["test","train","composite","aggregate"]]: ...
 global___NewComputeTask = NewComputeTask
 
