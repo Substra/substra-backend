@@ -22,6 +22,8 @@ class DateEncoder(json.JSONEncoder):
 
 
 def main():
+    print("This script is deprecated")
+    print("see https://github.com/owkin/connect-backend/issues/1054#issuecomment-1131497607")
 
     client = substra.Client(url=URL, insecure=False)
     client.login(USERNAME, PASSWORD)
