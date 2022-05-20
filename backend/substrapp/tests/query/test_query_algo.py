@@ -65,6 +65,8 @@ class AlgoQueryTests(APITestCase):
                     "name": "super top algo",
                     "category": "ALGO_SIMPLE",
                     "permissions": {"public": True, "authorized_ids": []},
+                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
                 }
             ),
         }
@@ -79,6 +81,8 @@ class AlgoQueryTests(APITestCase):
                     "name": "super top algo",
                     "category": "ALGO_SIMPLE",
                     "permissions": {"public": True, "authorized_ids": []},
+                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
                 }
             ),
         }
@@ -88,8 +92,11 @@ class AlgoQueryTests(APITestCase):
             "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
+        algo = assets.get_algo()
+        algo["inputs"] = factory.ALGO_INPUTS_PER_CATEGORY[algo["category"]]
+        algo["outputs"] = factory.ALGO_OUTPUTS_PER_CATEGORY[algo["category"]]
 
-        with mock.patch.object(OrchestratorClient, "register_algo", return_value=assets.get_algo()):
+        with mock.patch.object(OrchestratorClient, "register_algo", return_value=algo):
             response = self.client.post(self.url, self.get_default_algo_data_zip(), format="multipart", **extra)
             self.assertIsNotNone(response.json()["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)

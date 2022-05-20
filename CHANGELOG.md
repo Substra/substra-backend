@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Store enum values as string (impact ordering) - Model (#1044)
 - Within a CP, allow image builds to occur concurrently with another task's execution (#996)
 - (BREAKING) Store enum values as string (impact ordering) - ComputePlan ComputeTask (#1045)
+- Add algo inputs and outputs (#1030)
 
 ### Fixed
 - Mount GPU manually in GKE to be able to share them (#1041)

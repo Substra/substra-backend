@@ -2,10 +2,33 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from localrep.models import Algo
+from localrep.models import AlgoInput
+from localrep.models import AlgoOutput
 from localrep.serializers.utils import SafeSerializerMixin
 from localrep.serializers.utils import get_channel_choices
 from localrep.serializers.utils import make_addressable_serializer
 from localrep.serializers.utils import make_download_process_permission_serializer
+
+
+class AlgoInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    class Meta:
+        model = AlgoInput
+        fields = [
+            "identifier",
+            "kind",
+            "optional",
+            "multiple",
+        ]
+
+
+class AlgoOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    class Meta:
+        model = AlgoOutput
+        fields = [
+            "identifier",
+            "kind",
+            "multiple",
+        ]
 
 
 class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -13,6 +36,8 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     description = make_addressable_serializer("description")(source="*")
     permissions = make_download_process_permission_serializer()(source="*")
+    inputs = AlgoInputSerializer(many=True)
+    outputs = AlgoOutputSerializer(many=True)
 
     class Meta:
         model = Algo
@@ -27,6 +52,8 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "name",
             "owner",
             "permissions",
+            "inputs",
+            "outputs",
         ]
 
     def to_representation(self, instance):
@@ -39,4 +66,31 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             res["algorithm"]["storage_address"] = request.build_absolute_uri(
                 reverse("substrapp:algo-file", args=[res["key"]])
             )
+        # from list to dict, to align with the orchestrator format
+        res["inputs"] = {_input.pop("identifier"): _input for _input in res["inputs"]}
+        res["outputs"] = {_output.pop("identifier"): _output for _output in res["outputs"]}
+
         return res
+
+    def to_internal_value(self, data):
+        # from dict to list, to use drf nested serializers
+        data["inputs"] = [{"identifier": identifier, **_input} for identifier, _input in data["inputs"].items()]
+        data["outputs"] = [{"identifier": identifier, **_output} for identifier, _output in data["outputs"].items()]
+        return super().to_internal_value(data)
+
+    def create(self, validated_data):
+        inputs = validated_data.pop("inputs")
+        outputs = validated_data.pop("outputs")
+        algo = super().create(validated_data)
+
+        algo_inputs = AlgoInputSerializer(data=inputs, many=True)
+        algo_inputs.is_valid(raise_exception=True)
+        for algo_input in algo_inputs.validated_data:
+            AlgoInput.objects.create(algo=algo, **algo_input)
+
+        algo_outputs = AlgoOutputSerializer(data=outputs, many=True)
+        algo_outputs.is_valid(raise_exception=True)
+        for algo_output in algo_outputs.validated_data:
+            AlgoOutput.objects.create(algo=algo, **algo_output)
+
+        return algo

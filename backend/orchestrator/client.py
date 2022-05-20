@@ -182,6 +182,10 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_algo(self, args):
+        args["inputs"] = {identifier: algo_pb2.AlgoInput(**_input) for identifier, _input in args["inputs"].items()}
+        args["outputs"] = {
+            identifier: algo_pb2.AlgoOutput(**_output) for identifier, _output in args["outputs"].items()
+        }
         data = self._algo_client.RegisterAlgo(algo_pb2.NewAlgo(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 

@@ -17,9 +17,6 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
-from orchestrator.algo_pb2 import AlgoInput
-from orchestrator.algo_pb2 import AlgoOutput
-from orchestrator.common_pb2 import AssetKind
 from substrapp import exceptions
 from substrapp.models import Algo
 from substrapp.orchestrator import get_orchestrator_client
@@ -37,52 +34,6 @@ from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
-
-# This mapping will be deleted once the algo inputs are provided by the client
-ALGO_INPUTS_PER_CATEGORY = {
-    AlgoRep.Category.ALGO_SIMPLE: {
-        "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
-        "datasamples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
-        "model": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
-    },
-    AlgoRep.Category.ALGO_COMPOSITE: {
-        "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
-        "data-samples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
-        "shared": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
-        "local": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
-    },
-    AlgoRep.Category.ALGO_AGGREGATE: {
-        "model": AlgoInput(kind=AssetKind.ASSET_MODEL, multiple=True),
-    },
-    AlgoRep.Category.ALGO_METRIC: {  # evaluation step
-        "opener": AlgoInput(kind=AssetKind.ASSET_DATA_MANAGER),
-        "data-samples": AlgoInput(kind=AssetKind.ASSET_DATA_SAMPLE, multiple=True),
-        # we don't have a "predictions" asset kind yet, so we use the "model" kind
-        "predictions": AlgoInput(kind=AssetKind.ASSET_MODEL, optional=True),
-    },
-    # Note: algo of category "prediction" is missing. This will becomes irrelevant once we get rid of algo categories
-    # and inputs are provided by the client.
-}
-
-# This mapping will be deleted once the algo outputs are provided by the client
-ALGO_OUTPUTS_PER_CATEGORY = {
-    AlgoRep.Category.ALGO_SIMPLE: {
-        "model": AlgoOutput(kind=AssetKind.ASSET_MODEL),
-    },
-    AlgoRep.Category.ALGO_COMPOSITE: {
-        "shared": AlgoOutput(kind=AssetKind.ASSET_MODEL),
-        "local": AlgoOutput(kind=AssetKind.ASSET_MODEL),
-    },
-    AlgoRep.Category.ALGO_AGGREGATE: {
-        "model": AlgoOutput(kind=AssetKind.ASSET_MODEL),
-    },
-    AlgoRep.Category.ALGO_METRIC: {  # evaluation step
-        "performance": AlgoOutput(kind=AssetKind.ASSET_PERFORMANCE),
-    },
-    # Note: algo of category "prediction" is missing. This will becomes irrelevant once we get rid of algo categories
-    # and inputs are provided by the client.
-}
-
 
 ALGO_CATEGORIES = {
     "algo": [
@@ -123,8 +74,8 @@ def _register_in_orchestrator(request, basename, instance):
             "authorized_ids": permissions.get("authorized_ids"),
         },
         "metadata": request.data.get("metadata"),
-        "inputs": ALGO_INPUTS_PER_CATEGORY[category],
-        "outputs": ALGO_OUTPUTS_PER_CATEGORY[category],
+        "inputs": request.data["inputs"],
+        "outputs": request.data["outputs"],
     }
 
     with get_orchestrator_client(get_channel_name(request)) as client:

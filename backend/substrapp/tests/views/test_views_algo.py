@@ -77,6 +77,8 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{simple_algo.key}/file/",
                 },
+                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
             },
             {
                 "key": str(aggregate_algo.key),
@@ -103,6 +105,8 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{aggregate_algo.key}/file/",
                 },
+                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_AGGREGATE"],
+                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_AGGREGATE"],
             },
             {
                 "key": str(composite_algo.key),
@@ -129,6 +133,8 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{composite_algo.key}/file/",
                 },
+                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
+                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
             },
         ]
 
@@ -158,6 +164,8 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{metric_algo.key}/file/",
                 },
+                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_METRIC"],
+                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_METRIC"],
             },
         ]
 
@@ -478,6 +486,8 @@ class AlgoViewTests(APITestCase):
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "description": data["description"],
                 "algorithm": data["algorithm"],
+                "inputs": data["inputs"],
+                "outputs": data["outputs"],
             }
 
         algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
@@ -492,6 +502,8 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
+                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY.get(category, {}),
+                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY.get(category, {}),
                 }
             ),
             "file": open(algorithm_path, "rb"),
@@ -526,6 +538,8 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
+                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
                 }
             ),
             "file": open(algorithm_path, "rb"),
@@ -557,6 +571,8 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": [],
                     },
+                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
                 }
             ),
             "file": open(algorithm_path, "rb"),

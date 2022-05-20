@@ -18,6 +18,7 @@ from localrep.serializers import DataManagerSerializer as DataManagerRepSerializ
 from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from substrapp.tests import factory
 
 from .. import assets
 from ..common import AuthenticatedClient
@@ -39,12 +40,16 @@ class ComputeTaskQueryTests(APITestCase):
 
         self.algos = assets.get_algos()
         for algo in self.algos:
+            algo["inputs"] = factory.ALGO_INPUTS_PER_CATEGORY[algo["category"]]
+            algo["outputs"] = factory.ALGO_OUTPUTS_PER_CATEGORY[algo["category"]]
             serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
         self.metrics = assets.get_metrics()
         for metric in self.metrics:
+            metric["inputs"] = factory.ALGO_INPUTS_PER_CATEGORY[metric["category"]]
+            metric["outputs"] = factory.ALGO_OUTPUTS_PER_CATEGORY[metric["category"]]
             serializer = AlgoRepSerializer(data={"channel": "mychannel", **metric})
             serializer.is_valid(raise_exception=True)
             serializer.save()
