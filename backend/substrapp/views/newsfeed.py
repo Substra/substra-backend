@@ -42,29 +42,9 @@ class NewsFeedViewSet(GenericViewSet):
             filters[f"{field}__lt"] = timestamp_before
         return filters
 
-    def get_compute_plan_items(self):
+    def get_compute_plan_items(self, is_important_news_only: bool = False):
         items = []
         channel = get_channel_name(self.request)
-        for compute_plan in ComputePlanRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
-            items.append(
-                cp_item(
-                    compute_plan.key,
-                    compute_plan.metadata.get("name", compute_plan.tag),
-                    PLAN_STATUS_CREATED,
-                    compute_plan.creation_date,
-                )
-            )
-        for compute_plan in ComputePlanRep.objects.filter(
-            channel=channel, start_date__isnull=False, **self.date_filters("start_date")
-        ):
-            items.append(
-                cp_item(
-                    compute_plan.key,
-                    compute_plan.metadata.get("name", compute_plan.tag),
-                    ComputePlanRep.Status.PLAN_STATUS_DOING,
-                    compute_plan.start_date,
-                )
-            )
 
         for compute_plan in ComputePlanRep.objects.filter(
             channel=channel, end_date__isnull=False, **self.date_filters("end_date")
@@ -80,6 +60,33 @@ class NewsFeedViewSet(GenericViewSet):
                     compute_plan.status,
                     compute_plan.end_date,
                     detail,
+                )
+            )
+
+        # only cp end is considered as important news
+        if is_important_news_only:
+            return items
+
+        # else retrieve all other news
+        for compute_plan in ComputePlanRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
+            items.append(
+                cp_item(
+                    compute_plan.key,
+                    compute_plan.metadata.get("name", compute_plan.tag),
+                    PLAN_STATUS_CREATED,
+                    compute_plan.creation_date,
+                )
+            )
+
+        for compute_plan in ComputePlanRep.objects.filter(
+            channel=channel, start_date__isnull=False, **self.date_filters("start_date")
+        ):
+            items.append(
+                cp_item(
+                    compute_plan.key,
+                    compute_plan.metadata.get("name", compute_plan.tag),
+                    ComputePlanRep.Status.PLAN_STATUS_DOING,
+                    compute_plan.start_date,
                 )
             )
 
@@ -133,8 +140,24 @@ class NewsFeedViewSet(GenericViewSet):
                 - STATUS_CREATED with computeplan creation_date
                 - STATUS_DOING with computeplan start_date
                 - STATUS_DONE/FAILED/CANCELED with computeplan end_date
+            - ASSET_ALGO:
+                - STATUS_CREATED with algo/metric creation_date
+            - ASSET_DATAMANGER:
+                - STATUS_CREATED with datamanager creation_date
+
+        Important newsfeed items include:
+            - ASSET_COMPUTE_PLAN:
+                - STATUS_DONE/FAILED/CANCELED with computeplan end_date
         """
-        items = self.get_compute_plan_items() + self.get_algo_items() + self.get_datamanager_items()
+        is_important_news_only = self.request.query_params.get("important_news_only") == "true"
+        if is_important_news_only:
+            items = self.get_compute_plan_items(is_important_news_only)
+        else:
+            items = (
+                self.get_compute_plan_items(is_important_news_only)
+                + self.get_algo_items()
+                + self.get_datamanager_items()
+            )
         items.sort(key=lambda x: x["timestamp"], reverse=True)
         items = self.paginate_queryset(items)
         return self.get_paginated_response(items)

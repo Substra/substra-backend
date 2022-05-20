@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Possibility to filter only important news in newsfeed view (#1050)
+
 ### Changed
 
 - (BREAKING) Store enum values as string (impact ordering) - Model (#1044)
