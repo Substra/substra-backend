@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] 2022-05-23
+
 ### Added
 
 - Possibility to filter only important news in newsfeed view (#1050)
@@ -19,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add algo inputs and outputs (#1030)
 
 ### Fixed
+
 - Mount GPU manually in GKE to be able to share them (#1041)
 
 ## [0.14.0] 2022-05-16
@@ -36,7 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use the algo checksum as image tag (#1019)
 
 ### Fixed
-- completed pod state in `kubernetes_utils.watch_pod()` (#1046)
+
+- Completed pod state in `kubernetes_utils.watch_pod()` (#1046)
 
 ## [0.13.0] 2022-05-09
 
