@@ -55,7 +55,7 @@ spec:
 
             # Graceful shutdown on SIGTERM
             # See https://veithen.io/2014/11/16/sigterm-propagation.html
-            sleep 60 &
+            sleep 1800 &
             wait $!
 
           done

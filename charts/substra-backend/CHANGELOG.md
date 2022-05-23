@@ -1,5 +1,10 @@
 # Changelog
 
+## 17.1.6
+
+### Changed
+- Run the loop responsible for adding accounts and running migrations once per 30 min instead of every minute.
+
 ## 17.1.5
 
 ### Changed
