@@ -4,7 +4,6 @@ from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
 from events.dynamic_fields import fetch_failure_report_from_event
@@ -323,13 +322,7 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
 
 def resync_algos(client: orc_client.OrchestratorClient):
     logger.info("Resyncing algos")
-    algos = client.query_algos(
-        categories=[
-            algo_pb2.AlgoCategory.ALGO_SIMPLE,
-            algo_pb2.AlgoCategory.ALGO_COMPOSITE,
-            algo_pb2.AlgoCategory.ALGO_AGGREGATE,
-        ]
-    )  # TODO: Add filter on last_modification_date
+    algos = client.query_algos()  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
     nb_skipped_assets = 0
 
