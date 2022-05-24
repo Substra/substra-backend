@@ -14,6 +14,10 @@ import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from events import localsync
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
+from substrapp.tasks.tasks_prepare_task import queue_prepare_task
+from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
+from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
 from substrapp.utils import get_owner
 
 ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT = 30
@@ -52,8 +56,6 @@ def on_computetask_event(payload):
                 if model["owner"] == my_organisation and client.can_disable_model(model["key"])
             ]
             if model_keys:
-                from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
-
                 queue_remove_intermediary_models_from_db(channel_name, model_keys)
 
             # Handle compute plan if necessary
@@ -71,7 +73,6 @@ def on_computetask_event(payload):
                     asset_key=asset_key,
                     kind=event_kind,
                 )
-                from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 
                 queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan=compute_plan)
 
@@ -95,8 +96,6 @@ def on_computetask_event(payload):
     with get_orchestrator_client(channel_name) as client:
         task = client.query_task(asset_key)
 
-    from substrapp.tasks.tasks_prepare_task import queue_prepare_task
-
     queue_prepare_task(channel_name, task=task)
 
 
@@ -107,7 +106,6 @@ def on_model_event(payload):
     logger.info("Processing model", asset_key=asset_key, kind=event_kind)
 
     if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_DISABLED:
-        from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
 
         # This task is broadcasted to all worker (see the broadcast defined in backend/celery.py)
         remove_intermediary_models_from_buffer.apply_async([asset_key])
@@ -173,7 +171,6 @@ def get_rabbitmq_connection():
 
 
 def consume():
-
     # Queues are defined by the orchestrator and are named according user login
     queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
 

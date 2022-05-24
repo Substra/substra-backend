@@ -7,7 +7,22 @@ from rest_framework.exceptions import ValidationError
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
+from events.dynamic_fields import fetch_failure_report_from_event
+from events.dynamic_fields import parse_computetask_dates_from_event
 from localrep.errors import AlreadyExistsError
+from localrep.models import ComputePlan
+from localrep.models import ComputeTask
+from localrep.models import DataManager
+from localrep.models import DataSample
+from localrep.models import Model
+from localrep.serializers import AlgoSerializer
+from localrep.serializers import ChannelNodeSerializer
+from localrep.serializers import ComputePlanSerializer
+from localrep.serializers import ComputeTaskSerializer
+from localrep.serializers import DataManagerSerializer
+from localrep.serializers import DataSampleSerializer
+from localrep.serializers import ModelSerializer
+from localrep.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from substrapp.orchestrator import get_orchestrator_client
 
@@ -23,8 +38,6 @@ def _on_create_node_event(event: dict, client: orc_client.OrchestratorClient) ->
 
 
 def _create_node(channel: str, data: dict) -> bool:
-    from localrep.serializers import ChannelNodeSerializer
-
     data["channel"] = channel
     serializer = ChannelNodeSerializer(data=data)
     try:
@@ -45,8 +58,6 @@ def _on_create_algo_event(event: dict, client: orc_client.OrchestratorClient) ->
 
 
 def _create_algo(channel: str, data: dict) -> bool:
-    from localrep.serializers import AlgoSerializer
-
     data["channel"] = channel
     serializer = AlgoSerializer(data=data)
     try:
@@ -67,8 +78,6 @@ def _on_create_computeplan_event(event: dict, client: orc_client.OrchestratorCli
 
 
 def _create_computeplan(channel: str, data: dict) -> bool:
-    from localrep.serializers import ComputePlanSerializer
-
     data["channel"] = channel
     serializer = ComputePlanSerializer(data=data)
     try:
@@ -82,9 +91,6 @@ def _create_computeplan(channel: str, data: dict) -> bool:
 
 def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process create computetask event to update local database."""
-
-    from localrep.models.computeplan import ComputePlan
-
     logger.debug("Syncing computetask create", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_task(event["asset_key"])
@@ -97,7 +103,6 @@ def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorCli
 def _create_computetask(
     channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
 ) -> bool:
-    from localrep.serializers import ComputeTaskSerializer
 
     data["channel"] = channel
     if start_date is not None:
@@ -126,12 +131,6 @@ def _create_computetask(
 
 def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process update computetask event to update local database."""
-
-    from events.dynamic_fields import fetch_failure_report_from_event
-    from events.dynamic_fields import parse_computetask_dates_from_event
-    from localrep.models.computeplan import ComputePlan
-    from localrep.models.computetask import ComputeTask
-
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_task(event["asset_key"])
@@ -158,7 +157,6 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
 
 def _update_computetask(key: str, status: str, start_date: str, end_date: str, failure_report: dict = None) -> None:
     """Update only mutable fields: status, start_date, end_date, error_type, logs_address, logs_checksum, logs_owner"""
-    from localrep.models import ComputeTask
 
     compute_task = ComputeTask.objects.get(key=key)
     compute_task.status = status
@@ -188,8 +186,6 @@ def _on_create_datamanager_event(event: dict, client: orc_client.OrchestratorCli
 
 
 def _create_datamanager(channel: str, data: dict) -> bool:
-    from localrep.serializers import DataManagerSerializer
-
     data["channel"] = channel
     # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
     #      the orchestrator and backend used to generate the dumps are both outdated.
@@ -214,8 +210,6 @@ def _on_create_datasample_event(event: dict, client: orc_client.OrchestratorClie
 
 
 def _create_datasample(channel: str, data: dict) -> bool:
-    from localrep.serializers import DataSampleSerializer
-
     data["channel"] = channel
     serializer = DataSampleSerializer(data=data)
     try:
@@ -237,9 +231,6 @@ def _on_update_datasample_event(event: dict, client: orc_client.OrchestratorClie
 
 def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
     """Update only datamanager relations"""
-    from localrep.models import DataManager
-    from localrep.models import DataSample
-
     data_managers = DataManager.objects.filter(key__in=data_manager_keys)
     data_sample = DataSample.objects.get(key=key)
     data_sample.data_managers.set(data_managers)
@@ -247,8 +238,6 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
 
 
 def _create_performance(channel: str, data: dict) -> bool:
-    from localrep.serializers import PerformanceSerializer
-
     data["channel"] = channel
     serializer = PerformanceSerializer(data=data)
     try:
@@ -263,8 +252,6 @@ def _create_performance(channel: str, data: dict) -> bool:
 
 
 def _create_model(channel: str, data: dict) -> bool:
-    from localrep.serializers import ModelSerializer
-
     data["channel"] = channel
     serializer = ModelSerializer(data=data)
     try:
@@ -285,7 +272,6 @@ def _on_disable_model_event(event: dict, _client: orc_client.OrchestratorClient)
 
 def _disable_model(key: str) -> None:
     """Disable model."""
-    from localrep.models import Model
 
     model = Model.objects.get(key=key)
     model.model_address = None
@@ -397,8 +383,6 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
-    from localrep.models import ComputePlan
-
     logger.info("Resyncing computeplans")
 
     computeplans = client.query_compute_plans()  # TODO: Add filter on last_modification_date
@@ -463,11 +447,6 @@ def _sync_models(compute_task_key: str, client: orc_client.OrchestratorClient) -
 
 
 def resync_computetasks(client: orc_client.OrchestratorClient):
-    from events.dynamic_fields import fetch_failure_report_from_event
-    from events.dynamic_fields import parse_computetask_dates_from_event
-    from localrep.models.computeplan import ComputePlan
-    from localrep.models.computetask import ComputeTask
-
     logger.info("Resyncing computetasks")
     computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
