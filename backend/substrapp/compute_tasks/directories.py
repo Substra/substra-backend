@@ -100,10 +100,12 @@ def init_task_dirs(dirs: Directories) -> None:
 
 def teardown_task_dirs(dirs: Directories) -> None:
     for folder_name in TaskDirName.All:
-        # We can't delete the directoy because it's mounted, instead, delete the _contents_
+        # We can't delete the directory because it's mounted, instead, delete the _contents_
         dir = os.path.join(dirs.task_dir, folder_name)
-        remove_directory_contents(dir)
-        logger.debug("Cleared directory", dir=dir)
+
+        if os.path.exists(dir):
+            remove_directory_contents(dir)
+            logger.debug("Cleared directory", dir=dir)
 
 
 def teardown_compute_plan_dir(dirs: Directories) -> None:

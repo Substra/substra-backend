@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full resync: also resync metrics when syncing algos (#1063)
 - CP name properly included in newsfeed items (#1060)
 - Clean up `taskdir` before adding assets to it (#1039)
+- Only run `remove_directory_contents` when the directory exists (#1051)
 
 ### Added
 
