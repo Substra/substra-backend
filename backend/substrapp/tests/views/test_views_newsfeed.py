@@ -60,7 +60,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(done_cp.key),
-                "name": str(done_cp.metadata.get("name", done_cp.tag)),
+                "name": str(done_cp.name),
                 "status": "STATUS_DONE",
                 "timestamp": done_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -69,7 +69,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(failed_cp.key),
-                "name": str(failed_cp.metadata.get("name", failed_cp.tag)),
+                "name": str(failed_cp.name),
                 "status": "STATUS_FAILED",
                 "timestamp": failed_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {
@@ -81,7 +81,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(canceled_cp.key),
-                "name": str(canceled_cp.metadata.get("name", canceled_cp.tag)),
+                "name": str(canceled_cp.name),
                 "status": "STATUS_CANCELED",
                 "timestamp": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -90,7 +90,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(done_cp.key),
-                "name": str(done_cp.metadata.get("name", done_cp.tag)),
+                "name": str(done_cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": done_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -98,7 +98,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(failed_cp.key),
-                "name": str(failed_cp.metadata.get("name", failed_cp.tag)),
+                "name": str(failed_cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": failed_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -106,7 +106,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(canceled_cp.key),
-                "name": str(canceled_cp.metadata.get("name", canceled_cp.tag)),
+                "name": str(canceled_cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": canceled_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -114,7 +114,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(doing_cp.key),
-                "name": str(doing_cp.metadata.get("name", doing_cp.tag)),
+                "name": str(doing_cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": doing_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -150,7 +150,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(done_cp.key),
-                "name": str(done_cp.metadata.get("name", done_cp.tag)),
+                "name": str(done_cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": done_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -158,7 +158,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(failed_cp.key),
-                "name": str(failed_cp.metadata.get("name", failed_cp.tag)),
+                "name": str(failed_cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": failed_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -166,7 +166,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(canceled_cp.key),
-                "name": str(canceled_cp.metadata.get("name", canceled_cp.tag)),
+                "name": str(canceled_cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": canceled_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -174,7 +174,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(doing_cp.key),
-                "name": str(doing_cp.metadata.get("name", doing_cp.tag)),
+                "name": str(doing_cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": doing_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -182,7 +182,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(todo_cp.key),
-                "name": str(todo_cp.metadata.get("name", todo_cp.tag)),
+                "name": str(todo_cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -229,7 +229,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": str(cp.metadata.get("name", cp.tag)),
+                "name": str(cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -272,7 +272,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_DONE",
                 "timestamp": cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -280,7 +280,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -288,7 +288,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -334,7 +334,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_DONE",
                 "timestamp": cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -342,7 +342,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": cp.start_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
@@ -374,7 +374,7 @@ class NewsFeedViewTests(APITestCase):
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
                 "asset_key": str(cp.key),
-                "name": "",
+                "name": str(cp.name),
                 "status": "STATUS_CREATED",
                 "timestamp": cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},

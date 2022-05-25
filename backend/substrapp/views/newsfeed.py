@@ -56,7 +56,7 @@ class NewsFeedViewSet(GenericViewSet):
             items.append(
                 cp_item(
                     compute_plan.key,
-                    compute_plan.metadata.get("name", compute_plan.tag),
+                    compute_plan.name,
                     compute_plan.status,
                     compute_plan.end_date,
                     detail,
@@ -72,7 +72,7 @@ class NewsFeedViewSet(GenericViewSet):
             items.append(
                 cp_item(
                     compute_plan.key,
-                    compute_plan.metadata.get("name", compute_plan.tag),
+                    compute_plan.name,
                     PLAN_STATUS_CREATED,
                     compute_plan.creation_date,
                 )
@@ -84,7 +84,7 @@ class NewsFeedViewSet(GenericViewSet):
             items.append(
                 cp_item(
                     compute_plan.key,
-                    compute_plan.metadata.get("name", compute_plan.tag),
+                    compute_plan.name,
                     ComputePlanRep.Status.PLAN_STATUS_DOING,
                     compute_plan.start_date,
                 )
