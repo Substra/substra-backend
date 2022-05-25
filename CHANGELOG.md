@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full resync: also resync metrics when syncing algos (#1063)
 - CP name properly included in newsfeed items (#1060)
 
+### Added
+
+- Empty compute plan status (#1048)
+
 ## [0.15.0] 2022-05-23
 
 ### Added

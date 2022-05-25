@@ -13,14 +13,13 @@ class ComputePlan(models.Model):
     """ComputePlan represent a compute plan and its associated metadata"""
 
     class Status(models.TextChoices):
-        # `UNKNOWN` status is legitimate for CP without child task
-        PLAN_STATUS_UNKNOWN = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_UNKNOWN)
         PLAN_STATUS_WAITING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_WAITING)
         PLAN_STATUS_TODO = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO)
         PLAN_STATUS_DOING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
         PLAN_STATUS_DONE = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DONE)
         PLAN_STATUS_CANCELED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_CANCELED)
         PLAN_STATUS_FAILED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_FAILED)
+        PLAN_STATUS_EMPTY = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_EMPTY)
 
     key = models.UUIDField(primary_key=True)
     owner = models.CharField(max_length=100)
@@ -74,7 +73,7 @@ class ComputePlan(models.Model):
         """
         stats = self.get_task_stats()
         if stats["task_count"] == 0:
-            compute_plan_status = self.Status.PLAN_STATUS_UNKNOWN
+            compute_plan_status = self.Status.PLAN_STATUS_EMPTY
         elif stats["done_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_DONE
         elif stats["failed_count"] > 0:

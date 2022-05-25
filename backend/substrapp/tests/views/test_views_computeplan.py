@@ -88,7 +88,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
         factory.create_computetask(canceled_cp, algo, status=ComputeTaskRep.Status.STATUS_CANCELED)
 
-        unknown_cp = factory.create_computeplan(name="Unknown", status=ComputePlanRep.Status.PLAN_STATUS_UNKNOWN)
+        empty_cp = factory.create_computeplan(name="Empty", status=ComputePlanRep.Status.PLAN_STATUS_EMPTY)
 
         self.expected_results = [
             {
@@ -203,9 +203,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "duration": 3600,  # 1 hour (default factory value)
             },
             {
-                "key": str(unknown_cp.key),
+                "key": str(empty_cp.key),
                 "tag": "",
-                "name": "Unknown",
+                "name": "Empty",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 0,
@@ -217,8 +217,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": None,
                 "delete_intermediary_models": False,
-                "status": "PLAN_STATUS_UNKNOWN",
-                "creation_date": unknown_cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "status": "PLAN_STATUS_EMPTY",
+                "creation_date": empty_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
                 "duration": None,  # because start_date is None
@@ -456,7 +456,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
-            ("PLAN_STATUS_UNKNOWN",),
+            ("PLAN_STATUS_EMPTY",),
             ("PLAN_STATUS_WAITING",),
             ("PLAN_STATUS_TODO",),
             ("PLAN_STATUS_DOING",),
@@ -488,7 +488,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
-            ("PLAN_STATUS_UNKNOWN",),
+            ("PLAN_STATUS_EMPTY",),
             ("PLAN_STATUS_WAITING",),
             ("PLAN_STATUS_TODO",),
             ("PLAN_STATUS_DOING",),

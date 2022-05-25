@@ -25,6 +25,7 @@ class _ComputePlanStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapp
     PLAN_STATUS_DONE: _ComputePlanStatus.ValueType  # 4
     PLAN_STATUS_CANCELED: _ComputePlanStatus.ValueType  # 5
     PLAN_STATUS_FAILED: _ComputePlanStatus.ValueType  # 6
+    PLAN_STATUS_EMPTY: _ComputePlanStatus.ValueType  # 7
 class ComputePlanStatus(_ComputePlanStatus, metaclass=_ComputePlanStatusEnumTypeWrapper):
     pass
 
@@ -35,6 +36,7 @@ PLAN_STATUS_DOING: ComputePlanStatus.ValueType  # 3
 PLAN_STATUS_DONE: ComputePlanStatus.ValueType  # 4
 PLAN_STATUS_CANCELED: ComputePlanStatus.ValueType  # 5
 PLAN_STATUS_FAILED: ComputePlanStatus.ValueType  # 6
+PLAN_STATUS_EMPTY: ComputePlanStatus.ValueType  # 7
 global___ComputePlanStatus = ComputePlanStatus
 
 

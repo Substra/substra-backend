@@ -13687,7 +13687,7 @@ def get_compute_plans():
             "done_count": 0,
             "failed_task": None,
             "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_UNKNOWN",
+            "status": "PLAN_STATUS_EMPTY",
             "creation_date": "2022-01-20T14:26:02.074587+00:00",
             "start_date": None,
             "end_date": None,
@@ -13709,7 +13709,7 @@ def get_compute_plans():
             "done_count": 0,
             "failed_task": None,
             "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_UNKNOWN",
+            "status": "PLAN_STATUS_EMPTY",
             "creation_date": "2022-01-20T14:26:02.262833+00:00",
             "start_date": None,
             "end_date": None,
@@ -13753,7 +13753,7 @@ def get_compute_plans():
             "done_count": 0,
             "failed_task": None,
             "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_UNKNOWN",
+            "status": "PLAN_STATUS_EMPTY",
             "creation_date": "2022-01-20T14:26:03.931037+00:00",
             "start_date": None,
             "end_date": None,
@@ -13775,7 +13775,7 @@ def get_compute_plans():
             "done_count": 0,
             "failed_task": None,
             "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_UNKNOWN",
+            "status": "PLAN_STATUS_EMPTY",
             "creation_date": "2022-01-20T14:26:12.807829+00:00",
             "start_date": None,
             "end_date": None,
@@ -13885,7 +13885,7 @@ def get_compute_plans():
             "done_count": 0,
             "failed_task": None,
             "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_UNKNOWN",
+            "status": "PLAN_STATUS_EMPTY",
             "creation_date": "2022-01-20T14:27:22.050455+00:00",
             "start_date": None,
             "end_date": None,
@@ -17764,5 +17764,3 @@ def get_models():
 
 def get_model():
     return get_models()[0]
-
-

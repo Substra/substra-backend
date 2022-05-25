@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         # CP without task
         factory.create_computeplan(
-            status=ComputePlan.Status.PLAN_STATUS_UNKNOWN,
+            status=ComputePlan.Status.PLAN_STATUS_EMPTY,
             metadata={
                 "device": "cpu",
                 "epochs": "30",
