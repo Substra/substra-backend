@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import tempfile
 import uuid
@@ -226,7 +227,6 @@ class AssetBufferTests(APITestCase):
         with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload, mock.patch(
             "substrapp.compute_tasks.asset_buffer.get_owner"
         ) as mget_owner:
-
             mget_owner.return_value = node_id
 
             _add_opener_to_buffer(CHANNEL, self.data_manager)
@@ -296,7 +296,6 @@ class AssetBufferTests(APITestCase):
         model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
-
             _add_model_to_buffer(CHANNEL, model, node_id)
 
             mdownload.assert_called_once_with(
@@ -358,3 +357,23 @@ class AssetBufferTests(APITestCase):
         with open(dest) as f:
             contents = f.read()
             self.assertEqual(contents, self.model_contents)
+
+
+def test_add_assets_to_taskdir_target_directory_already_exists(settings, tmpdir):
+    settings.ASSET_BUFFER_DIR = pathlib.Path(tmpdir.mkdir("asset_buffer"))
+
+    dirs = mock.Mock()
+    dirs.task_dir = pathlib.Path(tmpdir.mkdir("task_dir"))
+
+    b_dir = "asset_buffer_datasamples"
+    t_dir = "task_dir_datasamples"
+
+    asset_keys = ["ccba50f0-a0fb-44f2-8d35-6a2bff4c6030"]
+
+    src_dir = settings.ASSET_BUFFER_DIR / b_dir / asset_keys[0]
+    src_dir.mkdir(parents=True)
+
+    dst_dir = dirs.task_dir / t_dir / asset_keys[0]
+    dst_dir.mkdir(parents=True)
+
+    _add_assets_to_taskdir(dirs, b_dir, t_dir, keys=asset_keys)
