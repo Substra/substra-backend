@@ -1,5 +1,10 @@
 # Changelog
 
+## 17.2.0
+
+### Added
+- Support for ServiceMonitor resource creation directly from the chart
+
 ## 17.1.6
 
 ### Changed

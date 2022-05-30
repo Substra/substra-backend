@@ -243,6 +243,28 @@ server:
       tag: 0.4.0
       pullPolicy: IfNotPresent
 
+    serviceMonitor:
+      ## @param server.metrics.serviceMonitor.enabled Create ServiceMonitor resource for scraping metrics using Prometheus Operator
+      ##
+      enabled: false
+      ## @param server.metrics.serviceMonitor.namespace Namespace for the ServiceMonitor resource (defaults to the Release Namespace)
+      ##
+      namespace: ""
+      ## @param server.metrics.serviceMonitor.interval Interval at which metrics should be scraped
+      ##
+      interval: ""
+      ## @param server.metrics.serviceMonitor.scrapeTimeout Timeout after which the scrape is ended
+      ##
+      scrapeTimeout: ""
+      ## @param server.metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping
+      ##
+      relabelings: []
+      ## @param server.metrics.serviceMonitor.metricRelabelings MetricRelabelConfigs to apply to samples before insertion
+      ##
+      metricRelabelings: []
+      ## @param server.metrics.serviceMonitor.honorLabels Specify honorLabels parameter of the scrape endpoint
+      ##
+      honorLabels: false
 
 ## @section Substra worker settings
 ##

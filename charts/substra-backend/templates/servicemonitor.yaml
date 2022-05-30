@@ -1,0 +1,34 @@
+{{- if and .Values.server.metrics.enabled .Values.server.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "substra.fullname" . }}-server
+  namespace: {{ default .Release.Namespace .Values.server.metrics.serviceMonitor.namespace | quote }}
+  labels:
+    {{- include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-server
+spec:
+  endpoints:
+    - port: metrics
+      {{- if .Values.server.metrics.serviceMonitor.interval }}
+      interval: {{ .Values.server.metrics.serviceMonitor.interval }}
+      {{- end }}
+      {{- if .Values.server.metrics.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.server.metrics.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if .Values.server.metrics.serviceMonitor.relabelings }}
+      relabelings: {{- include "common.tplvalues.render" ( dict "value" .Valuess.server.metrics.serviceMonitor.relabelings "context" $) | nindent 6 }}
+      {{- end }}
+      {{- if .Values.server.metrics.serviceMonitor.metricRelabelings }}
+      metricRelabelings: {{- include "common.tplvalues.render" ( dict "value" .Values.server.metrics.serviceMonitor.metricRelabelings "context" $) | nindent 6 }}
+      {{- end }}
+      {{- if .Values.server.metrics.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.server.metrics.serviceMonitor.honorLabels }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  selector:
+    matchLabels: {{- include "substra.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ template "substra.name" . }}-server
+{{- end }}
