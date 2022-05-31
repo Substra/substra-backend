@@ -126,8 +126,7 @@ def on_message(channel, method_frame, header_frame, body):
     try:
         payload = json.loads(body.decode())
         logger.debug("Received payload", payload=payload)
-        with get_orchestrator_client(payload["channel"]) as client:
-            localsync.sync_on_event_message(payload, client)
+        localsync.sync_on_event_message(payload)
         on_message_compute_engine(payload)
     except Exception as e:
         logger.exception("Error processing message", e=e)

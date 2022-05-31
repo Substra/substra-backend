@@ -41,6 +41,10 @@ GRPC_RETRYABLE_ERRORS = [
 ]
 
 
+def add_tag_from_metadata(task: dict) -> None:
+    task["tag"] = task["metadata"].pop("__tag__", "")
+
+
 def grpc_retry(func):
     """Decorator to handle grpc errors from the orchestrator.
     It retries on UNKNOWN or UNAVAILABLE error and wraps the returned error as an OrcError.
@@ -305,7 +309,7 @@ class OrchestratorClient:
         )
         data = MessageToDict(data, **CONVERT_SETTINGS)["tasks"]
         for datum in data:
-            datum["tag"] = datum["metadata"].pop("__tag__", "")
+            add_tag_from_metadata(datum)
         return data
 
     @grpc_retry
@@ -343,7 +347,7 @@ class OrchestratorClient:
             page_token = data.get("next_page_token")
             # handle tag
             for datum in tasks:
-                datum["tag"] = datum["metadata"].pop("__tag__", "")
+                add_tag_from_metadata(datum)
             res.extend(tasks)
             if page_token == "" or not tasks:  # nosec
                 break
@@ -353,7 +357,7 @@ class OrchestratorClient:
     def query_task(self, key):
         data = self._computetask_client.GetTask(computetask_pb2.GetTaskParam(key=key), metadata=self._metadata)
         data = MessageToDict(data, **CONVERT_SETTINGS)
-        data["tag"] = data["metadata"].pop("__tag__", "")
+        add_tag_from_metadata(data)
         return data
 
     @grpc_retry
@@ -570,6 +574,9 @@ class OrchestratorClient:
             events = data.get("events", [])
 
             for event in events:
+                if event["asset_kind"] == common_pb2.AssetKind.Name(common_pb2.ASSET_COMPUTE_TASK):
+                    add_tag_from_metadata(event["compute_task"])
+
                 yield event
 
             if page_token == "" or not events:  # nosec

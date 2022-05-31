@@ -1,3 +1,5 @@
+from typing import Optional
+
 import structlog
 from django.conf import settings
 from django.db import transaction
@@ -28,12 +30,10 @@ from substrapp.orchestrator import get_orchestrator_client
 logger = structlog.get_logger(__name__)
 
 
-def _on_create_node_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_node_event(event: dict) -> None:
     """Process create node event to update local database."""
     logger.debug("Syncing node create", asset_key=event["asset_key"], event_id=event["id"])
-
-    # there is no query_node method, we extract data from the event directly
-    _create_node(event["channel"], {"id": event["asset_key"], "creation_date": event["timestamp"]})
+    _create_node(channel=event["channel"], data=event["node"])
 
 
 def _create_node(channel: str, data: dict) -> bool:
@@ -48,12 +48,10 @@ def _create_node(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_create_algo_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_algo_event(event: dict) -> None:
     """Process create algo event to update local database."""
     logger.debug("Syncing algo create", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_algo(event["asset_key"])
-    _create_algo(event["channel"], data)
+    _create_algo(channel=event["channel"], data=event["algo"])
 
 
 def _create_algo(channel: str, data: dict) -> bool:
@@ -68,12 +66,10 @@ def _create_algo(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_create_computeplan_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_computeplan_event(event: dict) -> None:
     """Process create computeplan event to update local database."""
     logger.debug("Syncing computeplan", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_compute_plan(event["asset_key"])
-    _create_computeplan(event["channel"], data)
+    _create_computeplan(channel=event["channel"], data=event["compute_plan"])
 
 
 def _create_computeplan(channel: str, data: dict) -> bool:
@@ -88,14 +84,14 @@ def _create_computeplan(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_computetask_event(event: dict) -> None:
     """Process create computetask event to update local database."""
     logger.debug("Syncing computetask create", asset_key=event["asset_key"], event_id=event["id"])
 
-    data = client.query_task(event["asset_key"])
-    _create_computetask(event["channel"], data)
+    task_data = event["compute_task"]
+    _create_computetask(channel=event["channel"], data=task_data)
 
-    compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
+    compute_plan = ComputePlan.objects.get(key=task_data["compute_plan_key"])
     compute_plan.update_status()
 
 
@@ -128,44 +124,46 @@ def _create_computetask(
         return True
 
 
-def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_update_computetask_event(event: dict) -> None:
     """Process update computetask event to update local database."""
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
-    data = client.query_task(event["asset_key"])
     candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
-    failure_report = fetch_failure_report_from_event(event, client)
 
-    if data["status"] == ComputeTask.Status.STATUS_DONE:
-        if data["category"] == ComputeTask.Category.TASK_TEST:
-            _sync_performances(data["key"], client)
-        else:
-            _sync_models(data["key"], client)
-
-    # Update computetask after synchronize performances and models,
-    # because when the status is done, the outputs should be available.
-    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, failure_report)
-    compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
+    task = event["compute_task"]
+    _update_computetask(task["key"], task["status"], candidate_start_date, candidate_end_date)
+    compute_plan = ComputePlan.objects.get(key=task["compute_plan_key"])
     # update CP dates:
     # - after task status, to ensure proper rules are applied
     # - before CP status, to ensure dates are up-to-date when client wait on status
-    if data["status"] != ComputeTask.Status.STATUS_TODO:
+    if task["status"] != ComputeTask.Status.STATUS_TODO:
         compute_plan.update_dates()
     compute_plan.update_status()
 
 
-def _update_computetask(key: str, status: str, start_date: str, end_date: str, failure_report: dict = None) -> None:
+def _update_computetask(
+    key: str,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    failure_report: Optional[dict] = None,
+) -> None:
     """Update only mutable fields: status, start_date, end_date, error_type, logs_address, logs_checksum, logs_owner"""
 
     compute_task = ComputeTask.objects.get(key=key)
-    compute_task.status = status
+
+    if status is not None:
+        compute_task.status = status
+
     # The computetask start/end date is the timestamp of the first event related to the new status.
     # During a single event sync, we rely on the asset values to deduce if they were previous events.
     # If so, dates are not updated on the asset
     if compute_task.start_date is None and start_date is not None:
         compute_task.start_date = parse_datetime(start_date)
+
     if compute_task.end_date is None and end_date is not None:
         compute_task.end_date = parse_datetime(end_date)
+
     if failure_report is not None:
         compute_task.error_type = failure_report["error_type"]
         if "logs_address" in failure_report:
@@ -173,15 +171,14 @@ def _update_computetask(key: str, status: str, start_date: str, end_date: str, f
             compute_task.logs_checksum = failure_report["logs_address"]["checksum"]
         if "owner" in failure_report:
             compute_task.logs_owner = failure_report["owner"]
+
     compute_task.save()
 
 
-def _on_create_datamanager_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_datamanager_event(event: dict) -> None:
     """Process create datamanager event to update local database."""
     logger.debug("Syncing datamanager create", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_datamanager(event["asset_key"])
-    _create_datamanager(event["channel"], data)
+    _create_datamanager(channel=event["channel"], data=event["data_manager"])
 
 
 def _create_datamanager(channel: str, data: dict) -> bool:
@@ -200,12 +197,10 @@ def _create_datamanager(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_create_datasample_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_create_datasample_event(event: dict) -> None:
     """Process create datasample event to update local database."""
     logger.debug("Syncing datasample create", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_datasample(event["asset_key"])
-    _create_datasample(event["channel"], data)
+    _create_datasample(channel=event["channel"], data=event["data_sample"])
 
 
 def _create_datasample(channel: str, data: dict) -> bool:
@@ -220,12 +215,10 @@ def _create_datasample(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_update_datasample_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+def _on_update_datasample_event(event: dict) -> None:
     """Process update datasample event to update local database."""
     logger.debug("Syncing datasample update", asset_key=event["asset_key"], event_id=event["id"])
-
-    data = client.query_datasample(event["asset_key"])
-    _update_datasample(data["key"], data["data_manager_keys"])
+    _update_datasample(event["asset_key"], event["data_sample"]["data_manager_keys"])
 
 
 def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
@@ -234,6 +227,12 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
     data_sample = DataSample.objects.get(key=key)
     data_sample.data_managers.set(data_managers)
     data_sample.save()
+
+
+def _on_create_performance_event(event: dict) -> None:
+    """Process create performance event to update local database."""
+    logger.debug("Syncing performance create", asset_key=event["asset_key"], event_id=event["id"])
+    _create_performance(channel=event["channel"], data=event["performance"])
 
 
 def _create_performance(channel: str, data: dict) -> bool:
@@ -250,6 +249,12 @@ def _create_performance(channel: str, data: dict) -> bool:
         return True
 
 
+def _on_create_model_event(event: dict) -> None:
+    """Process create model event to update local database."""
+    logger.debug("Syncing model create", asset_key=event["asset_key"], event_id=event["id"])
+    _create_model(channel=event["channel"], data=event["model"])
+
+
 def _create_model(channel: str, data: dict) -> bool:
     data["channel"] = channel
     serializer = ModelSerializer(data=data)
@@ -262,10 +267,9 @@ def _create_model(channel: str, data: dict) -> bool:
         return True
 
 
-def _on_disable_model_event(event: dict, _client: orc_client.OrchestratorClient) -> None:
+def _on_disable_model_event(event: dict) -> None:
     """Process disable model event to update local database."""
     logger.debug("Syncing model disable", asset_key=event["asset_key"], event_id=event["id"])
-
     _disable_model(event["asset_key"])
 
 
@@ -275,6 +279,12 @@ def _disable_model(key: str) -> None:
     model = Model.objects.get(key=key)
     model.model_address = None
     model.save()
+
+
+def _on_create_failure_report(event: dict) -> None:
+    """Process create failure report event to update local database."""
+    logger.debug("Syncing failure report create", asset_key=event["asset_key"], event_id=event["id"])
+    _update_computetask(key=event["asset_key"], failure_report=event["failure_report"])
 
 
 EVENT_CALLBACKS = {
@@ -296,16 +306,23 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_UPDATED: _on_update_datasample_event,
     },
     common_pb2.ASSET_MODEL: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_model_event,
         event_pb2.EVENT_ASSET_DISABLED: _on_disable_model_event,
     },
     common_pb2.ASSET_NODE: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_node_event,
     },
+    common_pb2.ASSET_PERFORMANCE: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_performance_event,
+    },
+    common_pb2.ASSET_FAILURE_REPORT: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report,
+    },
 }
 
 
 @transaction.atomic
-def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) -> None:
+def sync_on_event_message(event: dict) -> None:
     """Handler to consume event.
     This function is idempotent (can be called in sync and resync mode)
     """
@@ -314,8 +331,11 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
 
     callback = EVENT_CALLBACKS.get(asset_kind, {}).get(event_kind)
 
+    if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
+        orc_client.add_tag_from_metadata(event["compute_task"])
+
     if callback:
-        callback(event, client)
+        callback(event)
     else:
         logger.debug("Nothing to sync", event_kind=event["event_kind"], asset_kind=event["asset_kind"])
 
