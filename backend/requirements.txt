@@ -1,6 +1,6 @@
 Django==4.0.4
 django-structlog==2.2.0
-celery==5.2.6
+celery==5.2.7
 checksumdir==1.2.0
 cryptography==37.0.2
 django-cors-headers==3.11.0
