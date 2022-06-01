@@ -39,7 +39,7 @@ jobs:
 
     - name: Docker metadata
       id: docker-metadata
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@v4
       with:
         images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/connect-backend-metrics-exporter'
         flavor: |
