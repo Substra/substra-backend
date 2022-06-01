@@ -40,6 +40,7 @@ ALGO_CATEGORIES = {
         AlgoRep.Category.ALGO_SIMPLE,
         AlgoRep.Category.ALGO_AGGREGATE,
         AlgoRep.Category.ALGO_COMPOSITE,
+        AlgoRep.Category.ALGO_PREDICT,
     ],
     "metric": [AlgoRep.Category.ALGO_METRIC],
 }

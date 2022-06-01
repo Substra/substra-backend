@@ -49,8 +49,9 @@ class AlgoViewTests(APITestCase):
         aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE, name="aggregate")
         composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE, name="composite")
         metric_algo = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC, name="metric")
+        predict_algo = factory.create_algo(category=AlgoRep.Category.ALGO_PREDICT, name="predict")
 
-        self.algos = [simple_algo, aggregate_algo, composite_algo]
+        self.algos = [simple_algo, aggregate_algo, composite_algo, predict_algo]
         self.expected_algos = [
             {
                 "key": str(simple_algo.key),
@@ -135,6 +136,34 @@ class AlgoViewTests(APITestCase):
                 },
                 "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
                 "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
+            },
+            {
+                "key": str(predict_algo.key),
+                "name": "predict",
+                "owner": "MyOrg1MSP",
+                "permissions": {
+                    "process": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                    "download": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                },
+                "metadata": {},
+                "category": "ALGO_PREDICT",
+                "creation_date": predict_algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "description": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{predict_algo.key}/description/",
+                },
+                "algorithm": {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/algo/{predict_algo.key}/file/",
+                },
+                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_PREDICT"],
+                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_PREDICT"],
             },
         ]
 
@@ -467,6 +496,7 @@ class AlgoViewTests(APITestCase):
             ("ALGO_AGGREGATE",),
             ("ALGO_COMPOSITE",),
             ("ALGO_METRIC",),
+            ("ALGO_PREDICT"),
             ("ALGO_XXX",),  # invalid
         ]
     )

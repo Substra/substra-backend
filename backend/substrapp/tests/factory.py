@@ -87,6 +87,12 @@ ALGO_INPUTS_PER_CATEGORY = {
         "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
         "predictions": {"kind": "ASSET_MODEL", "multiple": False, "optional": False},
     },
+    "ALGO_PREDICT": {
+        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "multiple": True, "optional": False},
+        "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
+        "model": {"kind": "ASSET_MODEL", "multiple": False, "optional": False},
+        "shared": {"kind": "ASSET_MODEL", "multiple": False, "optional": True},
+    },
 }
 
 
@@ -104,6 +110,7 @@ ALGO_OUTPUTS_PER_CATEGORY = {
     "ALGO_METRIC": {
         "performance": {"kind": "ASSET_PERFORMANCE", "multiple": False},
     },
+    "ALGO_PREDICT": {"predictions": {"kind": "ASSET_MODEL", "multiple": False}},
 }
 
 

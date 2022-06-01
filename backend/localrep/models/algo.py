@@ -47,6 +47,7 @@ class Algo(models.Model, AssetPermissionMixin):
         ALGO_AGGREGATE = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_AGGREGATE)
         ALGO_COMPOSITE = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_COMPOSITE)
         ALGO_METRIC = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_METRIC)
+        ALGO_PREDICT = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_PREDICT)
 
     key = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=100)
