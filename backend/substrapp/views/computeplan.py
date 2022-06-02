@@ -43,7 +43,7 @@ def register_compute_plan_in_orchestrator(data, channel_name):
         return client.register_compute_plan(orc_cp)
 
 
-def extract_tasks_data(data, compute_plan_key):
+def extract_tasks_data(channel, data, compute_plan_key):
 
     task_pairs = [
         ("traintuple", "traintuples"),
@@ -62,16 +62,14 @@ def extract_tasks_data(data, compute_plan_key):
     for task_type, task_data_attribute in task_pairs:
         for task in data.get(task_data_attribute, []):
 
-            if task_type == "testtuple":
-                tasks_cache = {
-                    **extracted_tasks["traintuple"],
-                    **extracted_tasks["composite_traintuple"],
-                    **extracted_tasks["aggregatetuple"],
-                }
-            else:
-                tasks_cache = None
+            tasks_cache = {
+                **extracted_tasks["traintuple"],
+                **extracted_tasks["composite_traintuple"],
+                **extracted_tasks["aggregatetuple"],
+            }
 
             task_data = build_computetask_data(
+                channel,
                 {**task, **{"compute_plan_key": compute_plan_key}},
                 task_type,
                 tasks_cache=tasks_cache,
@@ -103,7 +101,7 @@ def create(request, get_success_headers):
         "delete_intermediary_models": request.data.get("clean_models", False),
     }
 
-    tasks = extract_tasks_data(request.data, str(compute_plan_data["key"]))
+    tasks = extract_tasks_data(get_channel_name(request), request.data, str(compute_plan_data["key"]))
 
     localrep_data = register_compute_plan_in_orchestrator(compute_plan_data, get_channel_name(request))
 
@@ -230,7 +228,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         key = self.kwargs[lookup_url_kwarg]
         validated_key = validate_key(key)
 
-        tasks = extract_tasks_data(request.data, str(validated_key))
+        tasks = extract_tasks_data(get_channel_name(request), request.data, str(validated_key))
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             registered_tasks_data = client.register_tasks({"tasks": tasks})

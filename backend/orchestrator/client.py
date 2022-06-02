@@ -304,6 +304,11 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_tasks(self, args):
+        for task in args["tasks"]:
+            task["outputs"] = {
+                identifier: computetask_pb2.NewComputeTaskOutput(permissions=output["permissions"])
+                for identifier, output in task["outputs"].items()
+            }
         data = self._computetask_client.RegisterTasks(
             computetask_pb2.RegisterTasksParam(**args), metadata=self._metadata
         )

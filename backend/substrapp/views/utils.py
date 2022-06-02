@@ -238,6 +238,32 @@ def if_true(decorator: Callable, condition: bool):
     return wrapper
 
 
+def permissions_intersect(x, y):
+    if x["public"] and y["public"]:
+        return {"public": True}
+
+    elif x["public"] and not y["public"]:
+        return {"public": False, "authorized_ids": y["authorized_ids"]}
+
+    elif not x["public"] and y["public"]:
+        return {"public": False, "authorized_ids": x["authorized_ids"]}
+
+    else:
+        return {
+            "public": False,
+            "authorized_ids": list(set(x["authorized_ids"]).intersection(set(y["authorized_ids"]))),
+        }
+
+
+def permissions_union(x, y):
+    if x["public"] or y["public"]:
+        return {"public": True}
+    return {
+        "public": False,
+        "authorized_ids": list(set(x["authorized_ids"]).union(set(y["authorized_ids"]))),
+    }
+
+
 class MatchFilter(SearchFilter):
     """Full text search in a selected number of fields.
 

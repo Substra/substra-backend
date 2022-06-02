@@ -16,6 +16,7 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
+from substrapp.tests.test_node_client import CHANNEL
 from substrapp.views.computeplan import extract_tasks_data
 
 from ..common import AuthenticatedClient
@@ -254,7 +255,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         with mock.patch.object(
             OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan
-        ), mock.patch.object(OrchestratorClient, "register_tasks", return_value={}):
+        ), mock.patch.object(OrchestratorClient, "register_tasks", return_value={}), mock.patch(
+            "substrapp.views.computetask._get_task_outputs"
+        ):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data["key"])
@@ -608,7 +611,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             ]
         }
 
-        tasks = extract_tasks_data(composite, dummy_key)
+        with mock.patch("substrapp.views.computetask._get_task_outputs"):
+            tasks = extract_tasks_data(CHANNEL, composite, dummy_key)
         self.assertEqual(len(tasks[0]["parent_task_keys"]), 2)
 
     @internal_server_error_on_exception()

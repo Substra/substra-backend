@@ -107,17 +107,20 @@ class TrainTaskQueryTests(ComputeTaskQueryTests):
         if with_compute_plan:
             data["compute_plan_key"] = train_task["compute_plan_key"]
 
-        with mock.patch.object(OrchestratorClient, "register_tasks", return_value=[train_task]) as mregister_task:
-            with mock.patch.object(
+        with (
+            mock.patch.object(OrchestratorClient, "register_tasks", return_value=[train_task]) as mregister_task,
+            mock.patch.object(
                 OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]
-            ) as mregister_compute_plan:
-                response = self.client.post(self.url, data, format="json", **self.extra)
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                self.assertEqual(mregister_task.call_count, 1)
-                if with_compute_plan:
-                    self.assertEqual(mregister_compute_plan.call_count, 0)
-                else:
-                    self.assertEqual(mregister_compute_plan.call_count, 1)
+            ) as mregister_compute_plan,
+            mock.patch("substrapp.views.computetask._get_task_outputs"),
+        ):
+            response = self.client.post(self.url, data, format="json", **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(mregister_task.call_count, 1)
+            if with_compute_plan:
+                self.assertEqual(mregister_compute_plan.call_count, 0)
+            else:
+                self.assertEqual(mregister_compute_plan.call_count, 1)
 
     def test_add_traintask_ko(self):
         class MockOrcError(OrcError):
@@ -132,11 +135,14 @@ class TrainTaskQueryTests(ComputeTaskQueryTests):
             "train_data_sample_keys": train_task["train"]["data_sample_keys"],
         }
 
-        with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError):
-            with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
-                response = self.client.post(self.url, data, format="json", **self.extra)
-                self.assertEqual("Failed", response.json()["message"])
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with (
+            mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError),
+            mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]),
+            mock.patch("substrapp.views.computetask._get_task_outputs"),
+        ):
+            response = self.client.post(self.url, data, format="json", **self.extra)
+            self.assertEqual("Failed", response.json()["message"])
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 @override_settings(
@@ -220,17 +226,20 @@ class CompositeTaskQueryTests(ComputeTaskQueryTests):
             data["in_head_model_key"] = uuid4()
             data["in_trunk_model_key"] = uuid4()
 
-        with mock.patch.object(OrchestratorClient, "register_tasks", return_value=[composite_task]) as mregister_task:
-            with mock.patch.object(
+        with (
+            mock.patch.object(OrchestratorClient, "register_tasks", return_value=[composite_task]) as mregister_task,
+            mock.patch.object(
                 OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]
-            ) as mregister_compute_plan:
-                response = self.client.post(self.url, data, format="json", **self.extra)
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                self.assertEqual(mregister_task.call_count, 1)
-                if with_compute_plan:
-                    self.assertEqual(mregister_compute_plan.call_count, 0)
-                else:
-                    self.assertEqual(mregister_compute_plan.call_count, 1)
+            ) as mregister_compute_plan,
+            mock.patch("substrapp.views.computetask._get_task_outputs"),
+        ):
+            response = self.client.post(self.url, data, format="json", **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(mregister_task.call_count, 1)
+            if with_compute_plan:
+                self.assertEqual(mregister_compute_plan.call_count, 0)
+            else:
+                self.assertEqual(mregister_compute_plan.call_count, 1)
 
     def test_add_compositetraintuple_ko(self):
         class MockOrcError(OrcError):
@@ -245,8 +254,11 @@ class CompositeTaskQueryTests(ComputeTaskQueryTests):
             "data_manager_key": composite_task["composite"]["data_manager_key"],
             "train_data_sample_keys": composite_task["composite"]["data_sample_keys"],
         }
-        with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError):
-            with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
-                response = self.client.post(self.url, data, format="multipart", **self.extra)
-                self.assertEqual("Failed", response.json()["message"])
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with (
+            mock.patch.object(OrchestratorClient, "register_tasks", side_effect=MockOrcError),
+            mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]),
+            mock.patch("substrapp.views.computetask._get_task_outputs"),
+        ):
+            response = self.client.post(self.url, data, format="multipart", **self.extra)
+            self.assertEqual("Failed", response.json()["message"])
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

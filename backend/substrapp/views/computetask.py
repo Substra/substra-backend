@@ -19,6 +19,7 @@ from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializ
 from localrep.serializers import ComputeTaskWithRelationshipsSerializer as ComputeTaskWithRelationshipsRepSerializer
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_owner
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
@@ -27,6 +28,8 @@ from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
+from substrapp.views.utils import permissions_intersect
+from substrapp.views.utils import permissions_union
 from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
 
@@ -53,7 +56,6 @@ def _add_task_extra_data(data, task_type, tasks_cache=None):
         return {
             "data_manager_key": str(data.get("data_manager_key", "") or ""),
             "data_sample_keys": [str(d) for d in (data.get("train_data_sample_keys", []) or [])],
-            "trunk_permissions": data.get("out_trunk_model_permissions", {}),
         }
 
     elif task_type == "testtuple":
@@ -78,7 +80,92 @@ def _add_task_extra_data(data, task_type, tasks_cache=None):
         raise Exception(f'Task type "{task_type}" not handled')
 
 
-def build_computetask_data(data, task_type, tasks_cache=None, from_compute_plan=False):
+def _get_task_outputs(channel, task_data, trunk_permissions, tasks_cache=None):
+    """
+    This function replicates the historical permission rules, originally implemented in the orchestrator.
+    In a later iteration, this function will be removed and the permissions will be set explicitly by the client.
+    """
+    if task_data["category"] == ComputeTaskRep.Category.TASK_TRAIN:
+        # Adapted from
+        # https://github.com/owkin/orchestrator/blob/a9f7d14867746f58958f30dd6304167d87a6f15c/lib/service/computetask.go#L506
+        with get_orchestrator_client(channel) as client:
+            algo = client.query_algo(task_data["algo_key"])
+            data_manager = client.query_datamanager(task_data["train"]["data_manager_key"])
+
+        permissions = permissions_intersect(algo["permissions"]["process"], data_manager["permissions"]["process"])
+        return {"model": {"permissions": permissions}}
+
+    elif task_data["category"] == ComputeTaskRep.Category.TASK_TEST:
+        # Performances should always be public
+        # Orchestrator will refuse anything else
+        return {"performance": {"permissions": {"public": True}}}
+
+    elif task_data["category"] == ComputeTaskRep.Category.TASK_AGGREGATE:
+        # Adapted from
+        # https://github.com/owkin/orchestrator/blob/a9f7d14867746f58958f30dd6304167d87a6f15c/lib/service/computetask.go#L456-L471
+        permissions = {
+            "public": False,
+            "authorized_ids": [get_owner()],
+        }
+        for task_key in task_data["parent_task_keys"]:
+            perm = _get_parent_task_output_permission(channel, task_key, tasks_cache)
+            permissions = permissions_union(permissions, perm)
+
+        return {"model": {"permissions": permissions}}
+
+    elif task_data["category"] == ComputeTaskRep.Category.TASK_COMPOSITE:
+        # Adapted from
+        # https://github.com/owkin/orchestrator/blob/a9f7d14867746f58958f30dd6304167d87a6f15c/lib/service/computetask.go#L409-L416
+        with get_orchestrator_client(channel) as client:
+            data_manager = client.query_datamanager(task_data["composite"]["data_manager_key"])
+
+        permissions_local = {"public": False, "authorized_ids": [data_manager["owner"]]}
+        permissions_shared = trunk_permissions
+
+        if not permissions_shared["public"]:
+            authorized_ids = set(permissions_shared["authorized_ids"])
+            authorized_ids.add(data_manager["owner"])
+            permissions_shared["authorized_ids"] = list(authorized_ids)
+
+        return {
+            "local": {"permissions": permissions_local},
+            "shared": {"permissions": permissions_shared},
+        }
+
+    else:
+        raise Exception(f'Task type "{task_data["category"]}" unknown')
+
+
+def _get_parent_task_output_permission(channel, task_key, tasks_cache):
+    task = None
+    perm = None
+    from_orchestrator = False
+
+    if tasks_cache:
+        task = tasks_cache.get(to_string_uuid(task_key))
+
+    if not task:
+        from_orchestrator = True
+        with get_orchestrator_client(channel) as client:
+            task = client.query_task(task_key)
+
+    if task["category"] == ComputeTaskRep.Category.TASK_TRAIN:
+        perm = task["outputs"]["model"]["permissions"]
+    elif task["category"] == ComputeTaskRep.Category.TASK_AGGREGATE:
+        perm = task["outputs"]["model"]["permissions"]
+    elif task["category"] == ComputeTaskRep.Category.TASK_COMPOSITE:
+        perm = task["outputs"]["shared"]["permissions"]
+    else:
+        raise Exception(f"Unknown parent task category: {task['category']}")
+
+    if from_orchestrator:
+        return perm["process"]
+    else:
+        # for results coming from the cache, there's no distinction between process and download permissions
+        return perm
+
+
+def build_computetask_data(channel: str, data, task_type, tasks_cache=None, from_compute_plan=False):
     # *in_models_ depends if we use this function from computetask view or compute plan view
     field = "id" if from_compute_plan else "key"
 
@@ -89,6 +176,7 @@ def build_computetask_data(data, task_type, tasks_cache=None, from_compute_plan=
     else:
         key = str(uuid.uuid4())
 
+    trunk_permissions = data.get("out_trunk_model_permissions", {})
     task_data = {
         "key": key,
         "category": TASK_CATEGORY[task_type],
@@ -135,13 +223,14 @@ def build_computetask_data(data, task_type, tasks_cache=None, from_compute_plan=
         task_data["metadata"]["__tag__"] = data.get("tag", "") or ""
 
     task_data[TASK_EXTRA_DATA_FIELD[task_type]] = _add_task_extra_data(data, task_type, tasks_cache)
+    task_data["outputs"] = _get_task_outputs(channel, task_data, trunk_permissions, tasks_cache)
 
     return task_data
 
 
 def _register_in_orchestrator(request, basename):
     """Register computetask in orchestrator."""
-    orc_task = build_computetask_data(dict(request.data), basename)
+    orc_task = build_computetask_data(get_channel_name(request), dict(request.data), basename)
 
     create_cp = False
     if basename in ["composite_traintuple", "aggregatetuple", "traintuple"]:
