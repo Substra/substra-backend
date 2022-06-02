@@ -1,5 +1,10 @@
 # Changelog
 
+## 17.2.1
+
+### Changed
+- Dependencies versions for minIO, RabbitMQ and PostgreSQL
+
 ## 17.2.0
 
 ### Added
