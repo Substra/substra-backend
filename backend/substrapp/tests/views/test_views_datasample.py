@@ -70,9 +70,18 @@ class DataSampleViewTests(APITestCase):
 
         data_manager = factory.create_datamanager()
         self.data_manager_key = str(data_manager.key)
+
         train_data_sample_1 = factory.create_datasample([data_manager])
         train_data_sample_2 = factory.create_datasample([data_manager])
         test_data_sample = factory.create_datasample([data_manager], test_only=True)
+
+        self.algo = factory.create_algo()
+        self.compute_plan = factory.create_computeplan()
+        self.data_manager_key_uuid = data_manager.key
+        factory.create_computetask(
+            self.compute_plan, self.algo, data_manager=data_manager, data_samples=[train_data_sample_1.key]
+        )
+
         self.expected_results = [
             {
                 "key": str(train_data_sample_1.key),
@@ -224,6 +233,23 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
+
+    def test_datasample_list_cross_assets_filters(self):
+        """Filter datasample on other asset key such as compute_plan_key, algo_key and dataset_key"""
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on algo_key
+        params = urlencode({"algo_key": self.algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": self.data_manager_key_uuid})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
     def test_datasample_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})

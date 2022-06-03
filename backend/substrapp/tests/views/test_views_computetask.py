@@ -587,12 +587,34 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     def test_traintask_list_filter_cp_key(self):
         """Filter traintask on key."""
-        params = urlencode({"compute_plan__key": self.compute_plan.key})
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
+
+    def test_traintask_list_cross_assets_filters(self):
+        """Filter traintask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on algo_key
+        params = urlencode({"algo_key": self.algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": self.data_manager.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": self.data_sample.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
     def test_traintask_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
@@ -932,6 +954,28 @@ class TestTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
+
+    def test_testtask_list_cross_assets_filters(self):
+        """Filter testtask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on algo_key
+        params = urlencode({"algo_key": self.algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": self.data_manager.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": self.data_sample.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
     @parameterized.expand(
         [
@@ -1415,6 +1459,28 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
+
+    def test_compositetask_list_cross_assets_filters(self):
+        """Filter compositetask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on algo_key
+        params = urlencode({"algo_key": self.algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": self.data_manager.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": self.data_sample.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
     @parameterized.expand(
         [

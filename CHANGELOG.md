@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Support for predict Algos (#1071)
 - Hardcode task outputs (#1068)
+- Cross asset filtering by key on asset views (#1070)
 
 ### Changed
 

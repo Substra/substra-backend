@@ -3,6 +3,7 @@ import uuid
 import structlog
 from django.db import models
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -24,6 +25,7 @@ from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import ValidationExceptionError
@@ -327,6 +329,10 @@ class ComputeTaskRepFilter(FilterSet):
         field_name="category",
         choices=ComputeTaskRep.Category.choices,
     )
+    compute_plan_key = CharInFilter(field_name="compute_plan__key")
+    algo_key = CharFilter(field_name="algo__key", distinct=True, label="algo_key")
+    dataset_key = CharFilter(field_name="data_manager__key", distinct=True, label="dataset_key")
+    data_sample_key = CharInFilter(field_name="data_samples__key", distinct=True, label="data_sample_key")
 
     class Meta:
         model = ComputeTaskRep
@@ -336,7 +342,6 @@ class ComputeTaskRepFilter(FilterSet):
             "rank": ["exact"],
             "worker": ["exact"],
             "tag": ["exact"],
-            "compute_plan__key": ["exact"],
         }
         filter_overrides = {
             models.CharField: {

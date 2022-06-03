@@ -420,6 +420,32 @@ class AlgoViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
+    def test_algo_list_cross_assets_filters(self):
+        """Filter algos on other asset key such as compute_plan_key, dataset_key and data_sample_key"""
+        compute_plan = factory.create_computeplan()
+        data_manager = factory.create_datamanager()
+        data_sample = factory.create_datasample([data_manager])
+
+        factory.create_computetask(
+            compute_plan, self.algos[0], data_manager=data_manager, data_samples=[data_sample.key]
+        )
+        factory.create_computetask(compute_plan, self.algos[1])
+
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:2])
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": data_manager.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": data_sample.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
     def test_algo_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)

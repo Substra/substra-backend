@@ -548,6 +548,51 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_compute_plan_list_cross_assets_filters(self):
+        """Filter computeplan on other asset key such as algo_key, dataset_key and data_sample_key"""
+        algo = factory.create_algo()
+        data_manager = factory.create_datamanager()
+        data_sample = factory.create_datasample([data_manager])
+
+        compute_plan = factory.create_computeplan(name="cp", status=ComputePlanRep.Status.PLAN_STATUS_TODO)
+        factory.create_computetask(compute_plan, algo, data_manager=data_manager, data_samples=[data_sample.key])
+        expected_cp = {
+            "key": str(compute_plan.key),
+            "tag": "",
+            "name": "cp",
+            "owner": "MyOrg1MSP",
+            "metadata": {},
+            "task_count": 1,
+            "waiting_count": 0,
+            "todo_count": 1,
+            "doing_count": 0,
+            "canceled_count": 0,
+            "failed_count": 0,
+            "done_count": 0,
+            "failed_task": None,
+            "delete_intermediary_models": False,
+            "status": "PLAN_STATUS_TODO",
+            "creation_date": compute_plan.creation_date.isoformat().replace("+00:00", "Z"),
+            "start_date": None,
+            "end_date": None,
+            "duration": None,  # because start_date is None
+        }
+
+        # filter on algo_key
+        params = urlencode({"algo_key": algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [expected_cp])
+
+        # filter on dataset_key
+        params = urlencode({"dataset_key": data_manager.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [expected_cp])
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": data_sample.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), [expected_cp])
+
     @parameterized.expand(
         [
             ("page_size_1_page_3", 1, 3),

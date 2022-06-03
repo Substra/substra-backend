@@ -1,6 +1,7 @@
 import structlog
 from django.db import models
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -20,6 +21,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import get_channel_name
@@ -171,6 +173,11 @@ class ComputePlanRepFilter(FilterSet):
     status = ChoiceInFilter(
         field_name="status",
         choices=ComputePlanRep.Status.choices,
+    )
+    algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
+    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
+    data_sample_key = CharInFilter(
+        field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
 
     class Meta:

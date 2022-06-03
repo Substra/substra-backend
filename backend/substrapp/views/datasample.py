@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.files import File
 from django.db import models
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -39,6 +40,7 @@ from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
+from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -283,6 +285,11 @@ def _get_archive_and_files(f: BinaryIO) -> Tuple[Union[ZipFile, TarFile], List[s
 
 class DataSampleRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
+    compute_plan_key = CharInFilter(
+        field_name="data_managers__compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
+    )
+    algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
+    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
 
     class Meta:
         model = DataSampleRep

@@ -52,6 +52,13 @@ class DataManagerViewTests(APITestCase):
         self.train_data_sample_keys = [str(train_data_sample.key)]
         self.test_data_sample_keys = [str(test_data_sample.key)]
 
+        self.algo = factory.create_algo()
+        self.compute_plan = factory.create_computeplan()
+        self.train_data_sample_key_uuid = train_data_sample.key
+        factory.create_computetask(
+            self.compute_plan, self.algo, data_manager=data_manager_1, data_samples=[train_data_sample.key]
+        )
+
         data_manager_2 = factory.create_datamanager()
         data_manager_3 = factory.create_datamanager()
         self.expected_results = [
@@ -267,6 +274,23 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
+
+    def test_datamanager_list_cross_assets_filters(self):
+        """Filter datamanager on other asset key such as compute_plan_key, algo_key and data_sample_key"""
+        # filter on compute_plan_key
+        params = urlencode({"compute_plan_key": self.compute_plan.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
+        # filter on algo_key
+        params = urlencode({"algo_key": self.algo.key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
+        # filter on data_sample_key
+        params = urlencode({"data_sample_key": self.train_data_sample_key_uuid})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
     def test_datamanager_match(self):
         """Match datamanager on part of the name."""
