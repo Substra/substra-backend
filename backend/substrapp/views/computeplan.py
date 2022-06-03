@@ -15,10 +15,8 @@ from libs.pagination import SmallPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
-from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.views.computetask import build_computetask_data
 from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import CharInFilter
@@ -26,12 +24,12 @@ from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
-from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
 
 
-def register_compute_plan_in_orchestrator(data, channel_name):
+def _register_in_orchestrator(data, channel_name):
+    """Register computeplan in orchestrator."""
 
     orc_cp = {
         "key": str(data.get("key")),
@@ -40,51 +38,8 @@ def register_compute_plan_in_orchestrator(data, channel_name):
         "metadata": data.get("metadata"),
         "delete_intermediary_models": data.get("delete_intermediary_models", False),
     }
-
     with get_orchestrator_client(channel_name) as client:
         return client.register_compute_plan(orc_cp)
-
-
-def extract_tasks_data(channel, data, compute_plan_key):
-
-    task_pairs = [
-        ("traintuple", "traintuples"),
-        ("composite_traintuple", "composite_traintuples"),
-        ("aggregatetuple", "aggregatetuples"),
-        ("testtuple", "testtuples"),
-    ]
-
-    extracted_tasks = {
-        "traintuple": {},
-        "composite_traintuple": {},
-        "aggregatetuple": {},
-        "testtuple": {},
-    }
-
-    for task_type, task_data_attribute in task_pairs:
-        for task in data.get(task_data_attribute, []):
-
-            tasks_cache = {
-                **extracted_tasks["traintuple"],
-                **extracted_tasks["composite_traintuple"],
-                **extracted_tasks["aggregatetuple"],
-            }
-
-            task_data = build_computetask_data(
-                channel,
-                {**task, **{"compute_plan_key": compute_plan_key}},
-                task_type,
-                tasks_cache=tasks_cache,
-                from_compute_plan=True,
-            )
-            extracted_tasks[task_type][task_data["key"]] = task_data
-
-    return (
-        list(extracted_tasks["traintuple"].values())
-        + list(extracted_tasks["composite_traintuple"].values())
-        + list(extracted_tasks["aggregatetuple"].values())
-        + list(extracted_tasks["testtuple"].values())
-    )
 
 
 def create(request, get_success_headers):
@@ -102,14 +57,7 @@ def create(request, get_success_headers):
         "metadata": request.data.get("metadata"),
         "delete_intermediary_models": request.data.get("clean_models", False),
     }
-
-    tasks = extract_tasks_data(get_channel_name(request), request.data, str(compute_plan_data["key"]))
-
-    localrep_data = register_compute_plan_in_orchestrator(compute_plan_data, get_channel_name(request))
-
-    if tasks:
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            registered_tasks_data = client.register_tasks({"tasks": tasks})
+    localrep_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
 
     # Step2: save metadata in local database
     localrep_data["channel"] = get_channel_name(request)
@@ -122,17 +70,6 @@ def create(request, get_success_headers):
         data = ComputePlanRepSerializer(cp).data
     else:
         data = localrep_serializer.data
-
-    # Save tasks metadata in localrep
-    if tasks:
-        for registered_task_data in registered_tasks_data:
-            registered_task_data["channel"] = get_channel_name(request)
-            task_serializer = ComputeTaskRepSerializer(data=registered_task_data)
-            try:
-                task_serializer.save_if_not_exists()
-            except AlreadyExistsError:
-                # May happen if the events app already processed the event pushed by the orchestrator
-                pass
 
     # Return ApiResponse
     headers = get_success_headers(data)
@@ -227,32 +164,4 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             client.cancel_compute_plan(key)
-        return ApiResponse({}, status=status.HTTP_200_OK)
-
-    @action(methods=["post"], detail=True)
-    def update_ledger(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = self.kwargs[lookup_url_kwarg]
-        validated_key = validate_key(key)
-
-        tasks = extract_tasks_data(get_channel_name(request), request.data, str(validated_key))
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            registered_tasks_data = client.register_tasks({"tasks": tasks})
-
-        # Save tasks metadata in localrep
-        for registered_task_data in registered_tasks_data:
-            registered_task_data["channel"] = get_channel_name(request)
-            task_serializer = ComputeTaskRepSerializer(data=registered_task_data)
-            try:
-                task_serializer.save_if_not_exists()
-            except AlreadyExistsError:
-                # May happen if the events app already processed the event pushed by the orchestrator
-                pass
-
-        # Update cp status after creating tasks
-
-        compute_plan = ComputePlanRep.objects.get(key=validated_key)
-        compute_plan.update_status()
-
         return ApiResponse({}, status=status.HTTP_200_OK)

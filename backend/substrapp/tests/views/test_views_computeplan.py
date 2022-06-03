@@ -16,8 +16,6 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
-from substrapp.tests.test_node_client import CHANNEL
-from substrapp.views.computeplan import extract_tasks_data
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -230,43 +228,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_create(self):
-        dummy_key = str(uuid.uuid4())
-
+        key = str(uuid.uuid4())
         data = {
-            "key": dummy_key,
+            "key": key,
             "tag": "foo",
             "name": "Bar",
-            "traintuples": [
-                {
-                    "algo_key": dummy_key,
-                    "data_manager_key": dummy_key,
-                    "train_data_sample_keys": [dummy_key],
-                    "traintuple_id": dummy_key,
-                }
-            ],
-            "testtuples": [
-                {
-                    "traintuple_id": dummy_key,
-                    "metric_key": dummy_key,
-                    "data_manager_key": dummy_key,
-                }
-            ],
         }
-
-        with mock.patch.object(
-            OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan
-        ), mock.patch.object(OrchestratorClient, "register_tasks", return_value={}), mock.patch(
-            "substrapp.views.computetask._get_task_outputs"
-        ):
-            response = self.client.post(self.url, data=data, format="json", **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIsNotNone(response.data["key"])
-        # asset created in local db
-        self.assertEqual(ComputePlanRep.objects.count(), len(self.expected_results) + 1)
-
-    def test_create_without_tasks(self):
-        key = str(uuid.uuid4())
-        data = {"key": key, "tag": "foo", "name": "Bar"}
 
         with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
@@ -634,37 +601,5 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.cancel", side_effect=Exception("Unexpected error"))
     def test_computeplan_cancel_fail_internal_server_error(self, _):
         url = reverse("substrapp:compute_plan-cancel", args=[self.expected_results[0]["key"]])
-        response = self.client.post(url, data={}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def test_extract_tasks_data(self):
-        dummy_key = str(uuid.uuid4())
-        dummy_key2 = str(uuid.uuid4())
-
-        composite = {
-            "composite_traintuples": [
-                {
-                    "composite_traintuple_id": dummy_key,
-                    "in_head_model_id": dummy_key,
-                    "in_trunk_model_id": dummy_key2,
-                    "algo_key": dummy_key,
-                    "metadata": {"simple_metadata": "data"},
-                    "data_manager_key": dummy_key,
-                    "train_data_sample_keys": [dummy_key, dummy_key],
-                    "out_trunk_model_permissions": {"public": False, "authorized_ids": ["test-org"]},
-                }
-            ]
-        }
-
-        with mock.patch("substrapp.views.computetask._get_task_outputs"):
-            tasks = extract_tasks_data(CHANNEL, composite, dummy_key)
-        self.assertEqual(len(tasks[0]["parent_task_keys"]), 2)
-
-    @internal_server_error_on_exception()
-    @mock.patch(
-        "substrapp.views.computeplan.ComputePlanViewSet.update_ledger", side_effect=Exception("Unexpected error")
-    )
-    def test_computeplan_update_ledger_fail_internal_server_error(self, _):
-        url = reverse("substrapp:compute_plan-update-ledger", kwargs={"pk": self.expected_results[0]["key"]})
         response = self.client.post(url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

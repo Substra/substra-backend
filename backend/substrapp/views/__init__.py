@@ -4,6 +4,7 @@ from .algo import CPAlgoViewSet
 from .computeplan import ComputePlanViewSet
 from .computetask import ComputeTaskViewSet
 from .computetask import CPTaskViewSet
+from .computetask import task_bulk_create_view
 from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
@@ -32,4 +33,5 @@ __all__ = [
     "CPPerformanceViewSet",
     "ComputePlanMetadataViewSet",
     "PerformanceViewSet",
+    "task_bulk_create_view",
 ]

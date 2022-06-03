@@ -45,7 +45,14 @@ class Command(BaseCommand):
                 "regression_weight": "0.75",
             },
         )
-        factory.create_computetask(todo_cp, simple_algo, status=ComputeTask.Status.STATUS_TODO)
+        factory.create_computetask(
+            todo_cp,
+            simple_algo,
+            data_manager=data_manager,
+            data_samples=[train_data_sample.key],
+            category=ComputeTask.Category.TASK_TRAIN,
+            status=ComputeTask.Status.STATUS_TODO,
+        )
 
         # CP with two done train tasks and a doing aggregate train task
         doing_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DOING)
@@ -127,4 +134,11 @@ class Command(BaseCommand):
 
         # CP with a single canceled train task
         canceled_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_CANCELED)
-        factory.create_computetask(canceled_cp, simple_algo, status=ComputeTask.Status.STATUS_CANCELED)
+        factory.create_computetask(
+            canceled_cp,
+            simple_algo,
+            data_manager=data_manager,
+            data_samples=[train_data_sample.key],
+            category=ComputeTask.Category.TASK_TRAIN,
+            status=ComputeTask.Status.STATUS_CANCELED,
+        )

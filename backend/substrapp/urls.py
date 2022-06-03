@@ -47,4 +47,5 @@ compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
+    path(r"task/bulk_create/", views.task_bulk_create_view, name="task_bulk_create"),
 ]

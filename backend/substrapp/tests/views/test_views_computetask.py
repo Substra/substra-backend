@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import tempfile
+import uuid
 from unittest import mock
 
 from django.test import override_settings
@@ -18,7 +19,9 @@ from localrep.models import Performance as PerformanceRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import ModelSerializer as ModelRepSerializer
+from orchestrator.client import OrchestratorClient
 from substrapp.tests import factory
+from substrapp.views.computetask import EXTRA_DATA_FIELD
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -96,6 +99,188 @@ class ComputeTaskViewTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
+
+
+@override_settings(
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+)
+class TaskBulkCreateViewTests(ComputeTaskViewTests):
+    def test_task_bulk_create(self):
+        def mock_register_compute_task(orc_request):
+            """Build orchestrator register response from request data."""
+            res = []
+            for in_data in orc_request["tasks"]:
+                extra_data_field = EXTRA_DATA_FIELD[in_data["category"]]
+                out_data = {
+                    "key": in_data["key"],
+                    "category": in_data["category"],
+                    "algo": {
+                        "key": in_data["algo_key"],
+                    },
+                    "compute_plan_key": in_data["compute_plan_key"],
+                    "parent_task_keys": in_data["parent_task_keys"],
+                    "rank": 0,
+                    "status": "STATUS_WAITING",
+                    "owner": "MyOrg1MSP",
+                    "worker": "MyOrg1MSP",
+                    "creation_date": "2021-11-04T13:54:09.882662Z",
+                    extra_data_field: in_data[extra_data_field],
+                    "metadata": in_data["metadata"],
+                    "logs_permission": {
+                        "public": False,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                }
+                res.append(out_data)
+            return res
+
+        train_task_key = str(uuid.uuid4())
+        aggregate_task_key = str(uuid.uuid4())
+        test_task_key = str(uuid.uuid4())
+        done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
+        data = {
+            "tasks": [
+                {
+                    "compute_plan_key": self.compute_plan.key,
+                    "category": "TASK_TRAIN",
+                    "key": train_task_key,
+                    "algo_key": self.algo.key,
+                    "data_manager_key": self.data_manager.key,
+                    "train_data_sample_keys": [self.data_sample.key],
+                },
+                {
+                    "compute_plan_key": self.compute_plan.key,
+                    "category": "TASK_AGGREGATE",
+                    "key": aggregate_task_key,
+                    "in_models_keys": [train_task_key, done_train_task.key],
+                    "algo_key": self.algo.key,
+                    "worker": "MyOrg1MSP",
+                },
+                {
+                    "compute_plan_key": self.compute_plan.key,
+                    "category": "TASK_TEST",
+                    "key": test_task_key,
+                    "traintuple_key": train_task_key,
+                    "metric_keys": [self.metric.key],
+                    "data_manager_key": self.data_manager.key,
+                    "test_data_sample_keys": [self.data_sample.key],
+                },
+            ]
+        }
+
+        expected_response = [
+            {
+                "key": train_task_key,
+                "algo": self.algo_data,
+                "category": "TASK_TRAIN",
+                "compute_plan_key": str(self.compute_plan.key),
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "end_date": None,
+                "error_type": None,
+                "logs_permission": {
+                    "authorized_ids": ["MyOrg1MSP"],
+                    "public": False,
+                },
+                "metadata": {
+                    "__tag__": "",
+                },
+                "owner": "MyOrg1MSP",
+                "parent_task_keys": [],
+                "rank": 0,
+                "start_date": None,
+                "status": "STATUS_WAITING",
+                "tag": None,
+                "train": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "model_permissions": {
+                        "download": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                        "process": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                    },
+                    "models": None,
+                },
+                "worker": "MyOrg1MSP",
+            },
+            {
+                "key": aggregate_task_key,
+                "algo": self.algo_data,
+                "category": "TASK_AGGREGATE",
+                "compute_plan_key": str(self.compute_plan.key),
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "end_date": None,
+                "error_type": None,
+                "logs_permission": {
+                    "authorized_ids": ["MyOrg1MSP"],
+                    "public": False,
+                },
+                "metadata": {
+                    "__tag__": "",
+                },
+                "owner": "MyOrg1MSP",
+                "parent_task_keys": [train_task_key, str(done_train_task.key)],
+                "rank": 0,
+                "start_date": None,
+                "status": "STATUS_WAITING",
+                "tag": None,
+                "aggregate": {
+                    "model_permissions": {
+                        "download": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                        "process": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                    },
+                    "models": None,
+                },
+                "worker": "MyOrg1MSP",
+            },
+            {
+                "key": test_task_key,
+                "algo": self.algo_data,
+                "category": "TASK_TEST",
+                "compute_plan_key": str(self.compute_plan.key),
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "end_date": None,
+                "error_type": None,
+                "logs_permission": {
+                    "authorized_ids": ["MyOrg1MSP"],
+                    "public": False,
+                },
+                "metadata": {
+                    "__tag__": "",
+                },
+                "owner": "MyOrg1MSP",
+                "parent_task_keys": [train_task_key],
+                "rank": 0,
+                "start_date": None,
+                "status": "STATUS_WAITING",
+                "tag": None,
+                "test": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "metric_keys": [str(self.metric.key)],
+                    "perfs": None,
+                },
+                "worker": "MyOrg1MSP",
+            },
+        ]
+        url = reverse("substrapp:task_bulk_create")
+        with mock.patch.object(
+            OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task
+        ), mock.patch("substrapp.views.computetask._get_task_outputs"):
+            response = self.client.post(url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.json(), expected_response)
 
 
 @override_settings(
