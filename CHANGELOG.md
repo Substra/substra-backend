@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for predict Algos (#1071)
 - Hardcode task outputs (#1068)
 - Cross asset filtering by key on asset views (#1070)
+- Health service for the event app (#1089)
 
 ### Changed
 

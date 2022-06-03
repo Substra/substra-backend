@@ -54,6 +54,13 @@ spec:
                 name: {{ include "substra.fullname" . }}-rabbitmq
             - secretRef:
                 name: {{ include "substra.fullname" . }}-database
+          readinessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/ready
+            initialDelaySeconds: 5
+            periodSeconds: 20
           env:
             - name: NAMESPACE
               valueFrom:

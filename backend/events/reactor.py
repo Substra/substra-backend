@@ -12,6 +12,7 @@ import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
+from events import health
 from events import localsync
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
@@ -169,7 +170,7 @@ def get_rabbitmq_connection():
     )
 
 
-def consume():
+def consume(health_service: health.HealthService):
     # Queues are defined by the orchestrator and are named according user login
     queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
 
@@ -184,6 +185,7 @@ def consume():
         log.info("Connected to orchestrator RabbitMQ")
         channel = connection.channel()  # Creating channel
         channel.queue_declare(queue=queue_name, passive=True)  # Declaring queue
+        health_service.ready()
         channel.basic_consume(queue=queue_name, on_message_callback=on_message, auto_ack=False)
         log.info("Starting to consume messages from orchestrator RabbitMQ")
         channel.start_consuming()

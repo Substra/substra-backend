@@ -1,5 +1,10 @@
 # Changelog
 
+## 17.3.0
+
+### Added
+- Readiness probe for the event app
+
 ## 17.2.1
 
 ### Changed
