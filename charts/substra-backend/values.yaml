@@ -626,11 +626,15 @@ addAccountOperator:
 ##
 postgresql:
   enabled: true
-  postgresqlDatabase: substra
-  postgresqlUsername: postgres
-  postgresqlPassword: postgres
-  persistence:
-    enabled: false
+  auth:
+    enablePostgresUser: true
+    postgresPassword: postgres
+    username: postgres
+    password: postgres
+    database: substra
+  primary:
+    persistence:
+      enabled: false
 
 ## @skip rabbitmq
 ##
@@ -641,7 +645,9 @@ rabbitmq:
     password: rabbitmq
   persistence:
     enabled: false
-  port: 5672
+  service:
+    ports: 
+      amqp: 5672
 
 ## @skip docker-registry
 ##

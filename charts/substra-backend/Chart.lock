@@ -1,15 +1,15 @@
 dependencies:
 - name: rabbitmq
   repository: https://charts.bitnami.com/bitnami
-  version: 8.24.13
+  version: 10.1.1
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 10.14.4
+  version: 11.6.2
 - name: docker-registry
   repository: https://helm.twun.io
   version: 1.13.0
 - name: minio
   repository: https://charts.bitnami.com/bitnami
-  version: 9.2.11
-digest: sha256:29ed7a3ea545c1daf02f90dd6f0802c1305000d51c4dbaa8cf4e412ba3d0dfeb
-generated: "2022-06-02T16:11:31.731583+02:00"
+  version: 11.6.5
+digest: sha256:ac6b4177a283b29401c24d6a555eb8c12ad01ecfd9b2c9aa0c44ffd719a8b674
+generated: "2022-06-03T16:26:56.930119+02:00"

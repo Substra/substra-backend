@@ -7,4 +7,4 @@ metadata:
 data:
   CELERY_BROKER_USER: {{ .Values.rabbitmq.auth.username }}
   CELERY_BROKER_HOST: {{ default (include "rabbitmq.serviceName" .) .Values.rabbitmq.host }}
-  CELERY_BROKER_PORT: {{ .Values.rabbitmq.port | quote }}
+  CELERY_BROKER_PORT: {{ .Values.rabbitmq.service.ports.amqp | quote }}

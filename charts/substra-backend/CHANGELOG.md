@@ -1,5 +1,10 @@
 # Changelog
 
+## 18.0.0
+
+### Changed
+- Dependencies versions for MinIO, RabbitMQ and PostgreSQL including major bumps. If you set specific values for these subcharts adapt them to the newer version.
+
 ## 17.3.0
 
 ### Added
