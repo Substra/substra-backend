@@ -10,8 +10,6 @@ from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
-from substrapp.compute_tasks.transfer_bucket import TAG_VALUE_FOR_TRANSFER_BUCKET
-from substrapp.compute_tasks.transfer_bucket import TRANSFER_BUCKET_TESTTUPLE_TAG
 from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
@@ -53,10 +51,9 @@ def get_exec_command(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> List[
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
-    env = _get_env(ctx, is_testtuple_eval)
     args = _get_args(ctx, algo.key, is_testtuple_eval)
 
-    return env + command + args
+    return command + args
 
 
 class TaskResource(dict):
@@ -199,17 +196,3 @@ def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]
     logger.debug("Generated task command", command=command)
 
     return command
-
-
-def _get_env(ctx: Context, is_testtuple_eval: bool) -> List[str]:
-    """This return environment variables for the task"""
-
-    env = []
-
-    # Transfer bucket
-    tag = ctx.task.get("tag")
-    if ctx.task_category == computetask_pb2.TASK_TEST and not is_testtuple_eval:
-        if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
-            env.append(f"{TRANSFER_BUCKET_TESTTUPLE_TAG}={TAG_VALUE_FOR_TRANSFER_BUCKET}")
-
-    return env

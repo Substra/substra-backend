@@ -51,8 +51,6 @@ from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.save_models import save_models
-from substrapp.compute_tasks.transfer_bucket import TAG_VALUE_FOR_TRANSFER_BUCKET
-from substrapp.compute_tasks.transfer_bucket import transfer_to_bucket
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import list_dir
@@ -226,8 +224,6 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 result["result"] = {"performances": {}}
                 for metric in ctx.metrics:
                     result["result"]["performances"][metric.key] = _get_perf(dirs, metric.key)
-
-                _transfer_model_to_bucket(ctx)
             else:
                 logger.info("Saving models and local folder")
                 save_models(ctx)
@@ -269,13 +265,6 @@ def _get_perf(dirs: Directories, metric_key: str) -> object:
 def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
     chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
     prepare_chainkeys_dir(chainkeys_dir, compute_plan_tag)  # does nothing if chainkeys already populated
-
-
-def _transfer_model_to_bucket(ctx: Context) -> None:
-    """Export model to S3 bucket if the task has appropriate tag"""
-    if ctx.task["tag"] and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
-        logger.info("Task eligible to bucket export")
-        transfer_to_bucket(ctx)
 
 
 def _store_failure(exc: Exception, compute_task_key: str) -> Optional[models.ComputeTaskFailureReport]:
