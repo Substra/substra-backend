@@ -62,6 +62,7 @@ from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
 
 DEFAULT_OWNER = "MyOrg1MSP"
+DEFAULT_WORKER = "MyOrg1MSP"
 DEFAULT_CHANNEL = "mychannel"
 DUMMY_CHECKSUM = "dummy-checksum"
 
@@ -114,8 +115,8 @@ ALGO_OUTPUTS_PER_CATEGORY = {
 }
 
 
-def get_storage_address(asset: str, key: str, field: str) -> str:
-    return f"http://testserver/{asset}/{key}/{field}/"
+def get_storage_address(asset_kind: str, key: str, field: str) -> str:
+    return f"http://testserver/{asset_kind}/{key}/{field}/"
 
 
 def get_permissions(owner: str, public: bool) -> dict:
@@ -321,7 +322,7 @@ def create_computetask(
     category: int = ComputeTask.Category.TASK_TRAIN,
     status: int = ComputeTask.Status.STATUS_TODO,
     rank: int = 1,
-    worker: str = DEFAULT_OWNER,
+    worker: str = DEFAULT_WORKER,
     tag: str = "",
     error_type: int = None,
     metadata: dict = None,

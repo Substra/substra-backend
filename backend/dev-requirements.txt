@@ -16,3 +16,4 @@ responses==0.21.0
 watchdog==2.1.8
 flake8-bugbear==22.4.25
 pdbpp==0.10.3
+factory-boy==3.2.1
