@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: rename node to organization (#1096)
 
+### Fixed
+
+- Duplicated datasamples (#1102)
+
 ## [0.17.0] 2022-06-07
 
 ### Added

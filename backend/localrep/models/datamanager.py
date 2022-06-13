@@ -27,10 +27,14 @@ class DataManager(models.Model, AssetPermissionMixin):
     channel = models.CharField(max_length=100)
 
     def get_train_data_samples(self):
-        return self.data_samples.filter(test_only=False)
+        # default ordering is based on an association table `TaskDataSamples`
+        # the join operation generates duplicates
+        return self.data_samples.filter(test_only=False).distinct()
 
     def get_test_data_samples(self):
-        return self.data_samples.filter(test_only=True)
+        # default ordering is based on an association table `TaskDataSamples`
+        # the join operation generates duplicates
+        return self.data_samples.filter(test_only=True).distinct()
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations

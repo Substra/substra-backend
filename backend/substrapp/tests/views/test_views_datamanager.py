@@ -534,6 +534,33 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_results[0])
 
+    def test_datamanager_retrieve_with_tasks(self):
+        """Ensure the ordering association table does not create duplicate."""
+        compute_plan = factory.create_computeplan()
+        algo = factory.create_algo()
+        data_manager = factory.create_datamanager()
+        train_data_sample = factory.create_datasample([data_manager])
+        test_data_sample = factory.create_datasample([data_manager], test_only=True)
+        # Creating compute tasks will insert ordering objects `TaskDataSamples`
+        for _ in range(3):
+            factory.create_computetask(
+                compute_plan,
+                algo,
+                data_manager=data_manager,
+                data_samples=[train_data_sample.key],
+            )
+            factory.create_computetask(
+                compute_plan,
+                algo,
+                data_manager=data_manager,
+                data_samples=[test_data_sample.key],
+            )
+        url = reverse("substrapp:data_manager-detail", args=[data_manager.key])
+        response = self.client.get(url, **self.extra)
+        result = response.json()
+        self.assertEqual(result["train_data_sample_keys"], [str(train_data_sample.key)])
+        self.assertEqual(result["test_data_sample_keys"], [str(test_data_sample.key)])
+
     def test_datamanager_retrieve_wrong_channel(self):
         url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
