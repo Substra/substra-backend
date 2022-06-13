@@ -9,7 +9,7 @@ import structlog
 from billiard import Process
 from django.conf import settings
 
-from substrapp.clients import node as node_client
+from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import AssetBufferDirName
@@ -214,7 +214,7 @@ def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
 @add_to_buffer_safe
 def _add_opener_to_buffer_internal(channel_name: str, opener: Dict, dst: str) -> None:
     os.mkdir(dst)
-    node_client.download(
+    organization_client.download(
         channel_name, get_owner(), opener["storage_address"], os.path.join(dst, Filenames.Opener), opener["checksum"]
     )
 
@@ -252,16 +252,16 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
         raise Exception(exceptions)
 
 
-def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
+def _add_model_to_buffer(channel_name: str, model: Dict, organization_id: str) -> None:
     dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model["key"])
-    _add_model_to_buffer_internal(channel_name, model, node_id, dst=dst)
+    _add_model_to_buffer_internal(channel_name, model, organization_id, dst=dst)
 
 
 @add_to_buffer_safe
-def _add_model_to_buffer_internal(channel_name: str, model: Dict, node_id: str, dst: str) -> None:
-    node_client.download(
+def _add_model_to_buffer_internal(channel_name: str, model: Dict, organization_id: str, dst: str) -> None:
+    organization_client.download(
         channel_name,
-        node_id,
+        organization_id,
         model["address"]["storage_address"],
         dst,
         model["address"]["checksum"],
@@ -269,9 +269,9 @@ def _add_model_to_buffer_internal(channel_name: str, model: Dict, node_id: str, 
     )
 
 
-def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, node_id: str) -> None:
+def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, organization_id: str) -> None:
     with lock_resource("model", model["key"], ttl=LOCK_FETCH_ASSET_TTL):
-        return _add_model_to_buffer(channel_name, model, node_id)
+        return _add_model_to_buffer(channel_name, model, organization_id)
 
 
 def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List[str]):

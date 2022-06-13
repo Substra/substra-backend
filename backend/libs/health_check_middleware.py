@@ -2,7 +2,7 @@ import structlog
 from django.conf import settings
 from django.http import HttpResponse
 
-from localrep.models import ChannelNode as ChannelNodeRep
+from localrep.models import ChannelOrganization as ChannelOrganizationRep
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -53,15 +53,17 @@ def validate_connections():
 def validate_channels():
     # Check channel restrictions
     for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
-        nodes = ChannelNodeRep.objects.filter(channel=channel_name).values_list("node_id", flat=True)
+        organizations = ChannelOrganizationRep.objects.filter(channel=channel_name).values_list(
+            "organization_id", flat=True
+        )
 
         # throw an Exception if the solo channel has more than 1 member
         if channel_name.startswith("solo-") or channel_settings["restricted"]:
-            if len(nodes) > 1:
+            if len(organizations) > 1:
                 raise Exception(
-                    f"Restricted channel {channel_name} should have at most 1 member, but has " f"{len(nodes)}"
+                    f"Restricted channel {channel_name} should have at most 1 member, but has " f"{len(organizations)}"
                 )
 
-        # throw an Exception if the node is not in the list
-        if settings.LEDGER_MSP_ID not in nodes:
-            raise Exception(f'Node {settings.LEDGER_MSP_ID} is not registered in channel "{channel_name}"')
+        # throw an Exception if the organization is not in the list
+        if settings.LEDGER_MSP_ID not in organizations:
+            raise Exception(f'Organization {settings.LEDGER_MSP_ID} is not registered in channel "{channel_name}"')

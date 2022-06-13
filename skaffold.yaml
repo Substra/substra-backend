@@ -23,12 +23,12 @@ build:
         - src: backend/backend/**/*
           dest: /usr/src/app/backend
           strip: backend/backend/
-        - src: backend/node/**/*
-          dest: /usr/src/app/node
-          strip: backend/node/
-        - src: backend/node_register/**/*
-          dest: /usr/src/app/node_register
-          strip: backend/node_register/
+        - src: backend/organization/**/*
+          dest: /usr/src/app/organization
+          strip: backend/organization/
+        - src: backend/organization_register/**/*
+          dest: /usr/src/app/organization_register
+          strip: backend/organization_register/
         - src: backend/users/**/*
           dest: /usr/src/app/users
           strip: backend/users/
@@ -198,7 +198,7 @@ profiles:
         value: [ examples/values/backend-org-1.yaml, examples/values/add-worker-server-node-selectors.yaml ]
       - op: replace
         path: /deploy/helm/releases/1/valuesFiles
-        value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-node-selectors.yaml ]
+        value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-organization-selectors.yaml ]
   - name: isolated
     patches:
       - op: remove

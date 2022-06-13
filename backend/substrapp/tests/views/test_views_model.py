@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import Model as ModelRep
-from node.authentication import NodeUser
+from organization.authentication import OrganizationUser
 from substrapp.tests import factory
 from substrapp.views.model import ModelPermissionViewSet
 from substrapp.views.utils import AssetPermissionError
@@ -349,13 +349,13 @@ class ModelViewTests(APITestCase):
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_model_download_by_node_for_worker(self):
-        """ "Simple node-to-node download, e.g. worker downloads in-model"""
+    def test_model_download_by_organization_for_worker(self):
+        """ "Simple organization-to-organization download, e.g. worker downloads in-model"""
         pvs = ModelPermissionViewSet()
 
         pvs.check_access(
             CHANNEL,
-            NodeUser(),
+            OrganizationUser(),
             factory.create_model(self.train_task, public=True),
             is_proxied_request=False,
         )
@@ -363,14 +363,14 @@ class ModelViewTests(APITestCase):
         with self.assertRaises(AssetPermissionError):
             pvs.check_access(
                 CHANNEL,
-                NodeUser(),
+                OrganizationUser(),
                 factory.create_model(self.train_task, public=False),
                 is_proxied_request=False,
             )
 
         pvs.check_access(
             CHANNEL,
-            NodeUser(username="foo"),
+            OrganizationUser(username="foo"),
             factory.create_model(self.train_task, public=False, owner="foo"),
             is_proxied_request=False,
         )
@@ -382,7 +382,7 @@ class ModelViewTests(APITestCase):
 
         pvs.check_access(
             CHANNEL,
-            NodeUser(),
+            OrganizationUser(),
             factory.create_model(self.train_task, public=True),
             is_proxied_request=True,
         )
@@ -390,27 +390,27 @@ class ModelViewTests(APITestCase):
         with self.assertRaises(AssetPermissionError):
             pvs.check_access(
                 CHANNEL,
-                NodeUser(),
+                OrganizationUser(),
                 factory.create_model(self.train_task, public=False),
                 is_proxied_request=True,
             )
 
         pvs.check_access(
             CHANNEL,
-            NodeUser(username="foo"),
+            OrganizationUser(username="foo"),
             factory.create_model(self.train_task, public=False, owner="foo"),
             is_proxied_request=True,
         )
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {"model_export_enabled": False}})
-    def test_model_download_by_node_proxied_option_disabled(self):
+    def test_model_download_by_organization_proxied_option_disabled(self):
         """Model export (proxied) with option disabled"""
         pvs = ModelPermissionViewSet()
 
         with self.assertRaises(AssetPermissionError):
             pvs.check_access(
                 CHANNEL,
-                NodeUser(),
+                OrganizationUser(),
                 factory.create_model(self.train_task, public=True),
                 is_proxied_request=True,
             )

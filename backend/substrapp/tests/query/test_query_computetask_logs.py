@@ -11,8 +11,8 @@ from rest_framework import status
 from rest_framework import test
 
 from localrep.models import ComputeTask
-from node import authentication as node_auth
-from node import models as node_models
+from organization import authentication as organization_auth
+from organization import models as organization_models
 from substrapp import utils
 from substrapp.models import ComputeTaskFailureReport
 from substrapp.tests import factory
@@ -56,7 +56,7 @@ def test_download_local_logs_success(
     compute_task_failure_report,
     authenticated_client: test.APIClient,
 ):
-    """An authorized user download logs located on the node."""
+    """An authorized user download logs located on the organization."""
 
     compute_task, failure_report = compute_task_failure_report
     assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
@@ -109,14 +109,16 @@ def test_download_remote_logs_success(
     compute_task_failure_report,
     authenticated_client: test.APIClient,
 ):
-    """An authorized user download logs on a remote node by using his node as proxy."""
+    """An authorized user download logs on a remote organization by using his organization as proxy."""
 
     compute_task, failure_report = compute_task_failure_report
-    outgoing_node = "outgoing-node"
-    compute_task.logs_owner = outgoing_node  # remote
-    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_node]  # allowed
+    outgoing_organization = "outgoing-organization"
+    compute_task.logs_owner = outgoing_organization  # remote
+    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_organization]  # allowed
     compute_task.save()
-    node_models.OutgoingNode.objects.create(node_id=outgoing_node, secret=node_models.Node.generate_secret())
+    organization_models.OutgoingOrganization.objects.create(
+        organization_id=outgoing_organization, secret=organization_models.Organization.generate_secret()
+    )
 
     logs_content = failure_report.logs.read()
     with responses.RequestsMock() as mocked_responses:
@@ -137,10 +139,10 @@ def test_download_remote_logs_success(
 
 
 @pytest.fixture
-def incoming_node_user(settings: conf.Settings) -> node_auth.NodeUser:
-    incoming_node = "incoming-node"
-    settings.LEDGER_CHANNELS.update({incoming_node: {"chaincode": {"name": "mycc2"}}})
-    return node_auth.NodeUser(username=incoming_node)
+def incoming_organization_user(settings: conf.Settings) -> organization_auth.OrganizationUser:
+    incoming_organization = "incoming-organization"
+    settings.LEDGER_CHANNELS.update({incoming_organization: {"chaincode": {"name": "mycc2"}}})
+    return organization_auth.OrganizationUser(username=incoming_organization)
 
 
 def get_proxy_headers(channel_name: str) -> dict[str, str]:
@@ -148,24 +150,24 @@ def get_proxy_headers(channel_name: str) -> dict[str, str]:
 
 
 @pytest.mark.django_db
-def test_node_download_logs_success(
+def test_organization_download_logs_success(
     compute_task_failure_report,
     api_client: test.APIClient,
-    incoming_node_user: node_auth.NodeUser,
+    incoming_organization_user: organization_auth.OrganizationUser,
 ):
-    """An authorized node can download logs from another node."""
+    """An authorized organization can download logs from another organization."""
 
     compute_task, failure_report = compute_task_failure_report
     compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
     compute_task.logs_permission_authorized_ids = [
         conf.settings.LEDGER_MSP_ID,
-        incoming_node_user.username,
+        incoming_organization_user.username,
     ]  # incoming user allowed
-    compute_task.channel = incoming_node_user.username
+    compute_task.channel = incoming_organization_user.username
     compute_task.save()
 
-    api_client.force_authenticate(user=incoming_node_user)
-    extra_headers = get_proxy_headers(incoming_node_user.username)
+    api_client.force_authenticate(user=incoming_organization_user)
+    extra_headers = get_proxy_headers(incoming_organization_user.username)
     res = get_logs(key=compute_task.key, client=api_client, **extra_headers)
 
     assert res.status_code == status.HTTP_200_OK
@@ -175,21 +177,21 @@ def test_node_download_logs_success(
 
 
 @pytest.mark.django_db
-def test_node_download_logs_forbidden(
+def test_organization_download_logs_forbidden(
     compute_task_failure_report,
     api_client: test.APIClient,
-    incoming_node_user: node_auth.NodeUser,
+    incoming_organization_user: organization_auth.OrganizationUser,
 ):
-    """An unauthorized node cannot download logs from another node."""
+    """An unauthorized organization cannot download logs from another organization."""
 
     compute_task, failure_report = compute_task_failure_report
     compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
     compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID]  # incoming user not allowed
-    compute_task.channel = incoming_node_user.username
+    compute_task.channel = incoming_organization_user.username
     compute_task.save()
 
-    api_client.force_authenticate(user=incoming_node_user)
-    extra_headers = get_proxy_headers(incoming_node_user.username)
+    api_client.force_authenticate(user=incoming_organization_user)
+    extra_headers = get_proxy_headers(incoming_organization_user.username)
     res = get_logs(key=compute_task.key, client=api_client, **extra_headers)
 
     assert res.status_code == status.HTTP_403_FORBIDDEN

@@ -73,9 +73,9 @@ class FailureReport(google.protobuf.message.Message):
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     owner: typing.Text
     """The owner of a failure report matches the 'worker' field of the associated compute task but can differ from
-    the owner of the compute task. Indeed, a task belonging to some user can be executed on a node belonging
-    to another user. The failure report generated will be located on the execution node and belong to the owner
-    of this node.
+    the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
+    to another user. The failure report generated will be located on the execution organization and belong to the owner
+    of this organization.
     """
 
     def __init__(self,

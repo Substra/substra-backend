@@ -2,4 +2,4 @@ from ..deps.ledger import *
 from ..deps.orchestrator import *
 from ..prod import *
 
-INSTALLED_APPS += ["node_register"]
+INSTALLED_APPS += ["organization_register"]

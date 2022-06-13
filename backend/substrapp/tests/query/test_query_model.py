@@ -7,7 +7,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from node.authentication import NodeUser
+from organization.authentication import OrganizationUser
 from substrapp.models import Model
 from substrapp.tests import factory
 from substrapp.utils import compute_hash
@@ -46,7 +46,7 @@ class ModelQueryTests(APITestCase):
         head_model = Model.objects.create(file=self.model, checksum=checksum)
         metadata = factory.create_model(self.compute_task, key=head_model.key, public=False, owner="substra")
         with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner), mock.patch(
-            "substrapp.views.model.type", return_value=NodeUser
+            "substrapp.views.model.type", return_value=OrganizationUser
         ):
             response = self.client.get(f"/model/{head_model.key}/file/", **self.extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -61,12 +61,12 @@ class ModelQueryTests(APITestCase):
             response = self.client.get(f"/model/{head_model.key}/file/", **self.extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get_head_model_ko_wrong_node(self):
+    def test_get_head_model_ko_wrong_organization(self):
         checksum = compute_hash(self.model.read(), key="key_traintuple")
         head_model = Model.objects.create(file=self.model, checksum=checksum)
         metadata = factory.create_model(self.compute_task, key=head_model.key, public=False, owner="owkin")
         with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner), mock.patch(
-            "substrapp.views.model.type", return_value=NodeUser
+            "substrapp.views.model.type", return_value=OrganizationUser
         ):
             response = self.client.get(f"/model/{head_model.key}/file/", **self.extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -76,7 +76,7 @@ class ModelQueryTests(APITestCase):
         metadata.model_address = None
         metadata.save()
         with mock.patch("substrapp.views.utils.get_owner", return_value=metadata.owner), mock.patch(
-            "substrapp.views.model.type", return_value=NodeUser
+            "substrapp.views.model.type", return_value=OrganizationUser
         ):
             response = self.client.get(f"/model/{metadata.key}/file/", **self.extra)
             self.assertEqual(response.status_code, status.HTTP_410_GONE)

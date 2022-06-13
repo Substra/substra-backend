@@ -25,7 +25,7 @@ from rest_framework.settings import api_settings
 
 from backend.views import info_view
 from backend.views import obtain_auth_token
-from node.urls import router as node_router
+from organization.urls import router as organization_router
 from substrapp.urls import urlpatterns
 from users.urls import router as user_router
 
@@ -36,7 +36,7 @@ urlpatterns = (
             include(
                 [
                     path("", include((urlpatterns, "substrapp"))),
-                    path("", include((node_router.urls, "node"))),
+                    path("", include((organization_router.urls, "organization"))),
                     path("", include((user_router.urls, "user"))),  # for secure jwt authent
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
                 ]

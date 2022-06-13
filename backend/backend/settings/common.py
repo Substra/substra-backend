@@ -105,7 +105,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "rest_framework_simplejwt.token_blacklist",
     "substrapp",
-    "node",
+    "organization",
     "users",
     "localrep",
     "drf_spectacular",
@@ -114,7 +114,7 @@ INSTALLED_APPS = [
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "node.authentication.NodeBackend",
+    "organization.authentication.OrganizationBackend",
 ]
 
 MIDDLEWARE = [

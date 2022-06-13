@@ -17,7 +17,7 @@ from localrep.models import DataManager
 from localrep.models import DataSample
 from localrep.models import Model
 from localrep.serializers import AlgoSerializer
-from localrep.serializers import ChannelNodeSerializer
+from localrep.serializers import ChannelOrganizationSerializer
 from localrep.serializers import ComputePlanSerializer
 from localrep.serializers import ComputeTaskSerializer
 from localrep.serializers import DataManagerSerializer
@@ -30,19 +30,19 @@ from substrapp.orchestrator import get_orchestrator_client
 logger = structlog.get_logger(__name__)
 
 
-def _on_create_node_event(event: dict) -> None:
-    """Process create node event to update local database."""
-    logger.debug("Syncing node create", asset_key=event["asset_key"], event_id=event["id"])
-    _create_node(channel=event["channel"], data=event["node"])
+def _on_create_organization_event(event: dict) -> None:
+    """Process create organization event to update local database."""
+    logger.debug("Syncing organization create", asset_key=event["asset_key"], event_id=event["id"])
+    _create_organization(channel=event["channel"], data=event["organization"])
 
 
-def _create_node(channel: str, data: dict) -> bool:
+def _create_organization(channel: str, data: dict) -> bool:
     data["channel"] = channel
-    serializer = ChannelNodeSerializer(data=data)
+    serializer = ChannelOrganizationSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
-        logger.debug("Node already exists", node_id=data["id"], channel=data["channel"])
+        logger.debug("Organization already exists", organization_id=data["id"], channel=data["channel"])
         return False
     else:
         return True
@@ -309,8 +309,8 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_model_event,
         event_pb2.EVENT_ASSET_DISABLED: _on_disable_model_event,
     },
-    common_pb2.ASSET_NODE: {
-        event_pb2.EVENT_ASSET_CREATED: _on_create_node_event,
+    common_pb2.ASSET_ORGANIZATION: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_organization_event,
     },
     common_pb2.ASSET_PERFORMANCE: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_performance_event,
@@ -503,22 +503,22 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
 
 
-def resync_nodes(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing nodes")
-    nodes = client.query_nodes()
+def resync_organizations(client: orc_client.OrchestratorClient):
+    logger.info("Resyncing organizations")
+    organizations = client.query_organizations()
     nb_new_assets = 0
     nb_skipped_assets = 0
 
-    for data in nodes:
-        is_created = _create_node(client.channel_name, data)
+    for data in organizations:
+        is_created = _create_organization(client.channel_name, data)
         if is_created:
-            logger.debug("Created new node", node_id=data["id"])
+            logger.debug("Created new organization", organization_id=data["id"])
             nb_new_assets += 1
         else:
-            logger.debug("Skipped node", node_id=data["id"])
+            logger.debug("Skipped organization", organization_id=data["id"])
             nb_skipped_assets += 1
 
-    logger.info("Done resync nodes", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
+    logger.info("Done resync organizations", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
 def resync() -> None:
@@ -530,7 +530,7 @@ def resync() -> None:
     for channel_name in settings.LEDGER_CHANNELS.keys():
         logger.info("Resyncing for channel", channel=channel_name)
         with get_orchestrator_client(channel_name) as client:
-            resync_nodes(client)
+            resync_organizations(client)
             resync_algos(client)
             resync_datamanagers(client)
             resync_datasamples(client)

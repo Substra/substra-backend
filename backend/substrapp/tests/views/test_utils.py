@@ -10,8 +10,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from node.authentication import NodeUser
-from node.models import OutgoingNode
+from organization.authentication import OrganizationUser
+from organization.models import OutgoingOrganization
 from substrapp.models import Algo
 from substrapp.tests import factory
 
@@ -45,12 +45,12 @@ class PermissionMixinDownloadFileTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_download_file_local_allowed(self):
-        """Asset is local (owner is local-node) and local-node in authorized ids."""
+        """Asset is local (owner is local-organization) and local-organization in authorized ids."""
         Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-node")
-        self.assertIn("local-node", metadata.permissions_process_authorized_ids)
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
+        self.assertIn("local-organization", metadata.permissions_process_authorized_ids)
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="local-node"):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="local-organization"):
             response = self.client.get(self.algo_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -58,26 +58,26 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(response.getvalue(), self.algo_content)
 
     def test_download_file_local_denied(self):
-        """Asset is local (owner is local-node) and local-node NOT in authorized ids."""
+        """Asset is local (owner is local-organization) and local-organization NOT in authorized ids."""
         Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-node")
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
         metadata.permissions_process_authorized_ids = []
         metadata.save()
 
-        with mock.patch("substrapp.views.utils.get_owner", return_value="local-node"):
+        with mock.patch("substrapp.views.utils.get_owner", return_value="local-organization"):
             response = self.client.get(self.algo_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_download_file_remote_allowed(self):
-        """Asset is remote (owner is remote-node) and local-node in authorized ids."""
-        metadata = factory.create_algo(key=self.algo_key, public=True, owner="remote-node")
-        metadata.permissions_process_authorized_ids = ["remote-node", "local-node"]
+        """Asset is remote (owner is remote-organization) and local-organization in authorized ids."""
+        metadata = factory.create_algo(key=self.algo_key, public=True, owner="remote-organization")
+        metadata.permissions_process_authorized_ids = ["remote-organization", "local-organization"]
         metadata.save()
-        OutgoingNode.objects.create(node_id="remote-node", secret="s3cr37")
+        OutgoingOrganization.objects.create(organization_id="remote-organization", secret="s3cr37")
 
         with mock.patch(
-            "substrapp.views.utils.get_owner", return_value="local-node"
+            "substrapp.views.utils.get_owner", return_value="local-organization"
         ), responses.RequestsMock() as mocked_responses:
             mocked_responses.add(
                 responses.GET,
@@ -92,12 +92,12 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(response.getvalue(), self.algo_content)
 
     def test_download_file_remote_denied(self):
-        """Asset is remote (owner is remote-node) and local-node NOT in authorized ids."""
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="remote-node")
-        metadata.permissions_process_authorized_ids = ["remote-node"]
+        """Asset is remote (owner is remote-organization) and local-organization NOT in authorized ids."""
+        metadata = factory.create_algo(key=self.algo_key, public=False, owner="remote-organization")
+        metadata.permissions_process_authorized_ids = ["remote-organization"]
         metadata.save()
 
-        self.client.force_authenticate(user=NodeUser(username="local-node"))
+        self.client.force_authenticate(user=OrganizationUser(username="local-organization"))
         response = self.client.get(self.algo_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

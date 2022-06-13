@@ -247,8 +247,8 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
         try:
             teardown_task_dirs(dirs)
         except FileNotFoundError:
-            # This happens when the CP directory is deleted (because a task failed on another node) while a task's
-            # container images were being built on this node. Nothing to do.
+            # This happens when the CP directory is deleted (because a task failed on another organization)
+            # while a task's container images were being built on this organization. Nothing to do.
             pass
 
     logger.info("Compute task finished")

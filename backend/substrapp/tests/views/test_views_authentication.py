@@ -9,8 +9,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from node.models import IncomingNode
-from node.models import OutgoingNode
+from organization.models import IncomingOrganization
+from organization.models import OutgoingOrganization
 from substrapp.models import Algo
 from substrapp.tests import factory
 
@@ -45,8 +45,12 @@ class AuthenticationTests(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.incoming_node = IncomingNode.objects.create(node_id="external_node_id", secret="s3cr37")
-        cls.outgoing_node = OutgoingNode.objects.create(node_id="external_node_id", secret="s3cr37")
+        cls.incoming_organization = IncomingOrganization.objects.create(
+            organization_id="external_organization_id", secret="s3cr37"
+        )
+        cls.outgoing_organization = OutgoingOrganization.objects.create(
+            organization_id="external_organization_id", secret="s3cr37"
+        )
         user, created = User.objects.get_or_create(username="foo")
         if created:
             user.set_password("bar")
@@ -59,7 +63,9 @@ class AuthenticationTests(APITestCase):
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_authentication_internal(self):
-        authorization_header = generate_basic_auth_header(self.outgoing_node.node_id, self.outgoing_node.secret)
+        authorization_header = generate_basic_auth_header(
+            self.outgoing_organization.organization_id, self.outgoing_organization.secret
+        )
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
@@ -76,8 +82,8 @@ class AuthenticationTests(APITestCase):
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
-    def test_authentication_with_node(self):
-        authorization_header = generate_basic_auth_header("external_node_id", "s3cr37")
+    def test_authentication_with_organization(self):
+        authorization_header = generate_basic_auth_header("external_organization_id", "s3cr37")
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
@@ -86,11 +92,11 @@ class AuthenticationTests(APITestCase):
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-    def test_authentication_with_node_fail(self):
+    def test_authentication_with_organization_fail(self):
         bad_authorization_headers = [
-            generate_basic_auth_header("external_node_id", "bad_s3cr37"),
-            generate_basic_auth_header("bad_external_node_id", "s3cr37"),
-            generate_basic_auth_header("bad_external_node_id", "bad_s3cr37"),
+            generate_basic_auth_header("external_organization_id", "bad_s3cr37"),
+            generate_basic_auth_header("bad_external_organization_id", "s3cr37"),
+            generate_basic_auth_header("bad_external_organization_id", "bad_s3cr37"),
         ]
 
         for header in bad_authorization_headers:

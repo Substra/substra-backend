@@ -17,7 +17,7 @@ import orchestrator.event_pb2 as event_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 import orchestrator.info_pb2 as info_pb2
 import orchestrator.model_pb2 as model_pb2
-import orchestrator.node_pb2 as node_pb2
+import orchestrator.organization_pb2 as organization_pb2
 import orchestrator.performance_pb2 as performance_pb2
 from orchestrator.algo_pb2_grpc import AlgoServiceStub
 from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
@@ -30,7 +30,7 @@ from orchestrator.event_pb2_grpc import EventServiceStub
 from orchestrator.failure_report_pb2_grpc import FailureReportServiceStub
 from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
-from orchestrator.node_pb2_grpc import NodeServiceStub
+from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
 
 logger = structlog.get_logger(__name__)
@@ -150,7 +150,7 @@ class OrchestratorClient:
 
             self._channel = grpc.secure_channel(target, creds, opts)
 
-        self._node_client = NodeServiceStub(self._channel)
+        self._organization_client = OrganizationServiceStub(self._channel)
         self._algo_client = AlgoServiceStub(self._channel)
         self._datasample_client = DataSampleServiceStub(self._channel)
         self._datamanager_client = DataManagerServiceStub(self._channel)
@@ -175,14 +175,18 @@ class OrchestratorClient:
         return self._channel_name
 
     @grpc_retry
-    def register_node(self):
-        data = self._node_client.RegisterNode(node_pb2.RegisterNodeParam(), metadata=self._metadata)
+    def register_organization(self):
+        data = self._organization_client.RegisterOrganization(
+            organization_pb2.RegisterOrganizationParam(), metadata=self._metadata
+        )
         MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_nodes(self):
-        data = self._node_client.GetAllNodes(node_pb2.GetAllNodesParam(), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS).get("nodes", [])
+    def query_organizations(self):
+        data = self._organization_client.GetAllOrganizations(
+            organization_pb2.GetAllOrganizationsParam(), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS).get("organizations", [])
 
     @grpc_retry
     def register_algo(self, args):

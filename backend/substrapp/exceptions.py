@@ -54,12 +54,12 @@ class ImageDeletionError(Exception):
         super().__init__(message)
 
 
-class NodeError(Exception):
-    """An error occurred during the download of an asset from a node"""
+class OrganizationError(Exception):
+    """An error occurred during the download of an asset from a organization"""
 
 
 class IntegrityError(Exception):
-    """An asset downloaded from a node has an invalid checksum"""
+    """An asset downloaded from a organization has an invalid checksum"""
 
 
 class ServerMediasNoSubdirError(Exception):

@@ -117,6 +117,8 @@ SECRET
 
 # substra-backend files
 **/medias/*
+backend/organization/organizations/*
+# for backward compatibility
 backend/node/nodes/*
 
 

@@ -24,7 +24,7 @@ data:
   ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH: "/var/substra/orchestrator_rabbitmq/tls/client/tls.crt"
   ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH: "/var/substra/orchestrator_rabbitmq/tls/client/tls.key"
 
-  # Node identity
+  # Organization identity
   LEDGER_MSP_ID: {{ .Values.orchestrator.mspID | quote }}
   # Orchestrator channels configuration
   LEDGER_CHANNELS: {{ .Values.orchestrator.channels | toJson | quote }}

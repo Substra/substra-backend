@@ -14,7 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 from libs.pagination import DefaultPageNumberPagination
 from localrep.models import Model as ModelRep
 from localrep.serializers import ModelSerializer as ModelRepSerializer
-from node.authentication import NodeUser
+from organization.authentication import OrganizationUser
 from substrapp import exceptions
 from substrapp.models import Model
 from substrapp.utils import get_owner
@@ -98,18 +98,18 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
         if user.is_anonymous:
             raise AssetPermissionError()
 
-        elif type(user) is NodeUser and is_proxied_request:  # Export request (proxied)
+        elif type(user) is OrganizationUser and is_proxied_request:  # Export request (proxied)
             self._check_export_enabled(channel_name)
-            field, node_id = "download", user.username
+            field, organization_id = "download", user.username
 
-        elif type(user) is NodeUser:  # Node-to-node download
-            field, node_id = "process", user.username
+        elif type(user) is OrganizationUser:  # Organization-to-organization download
+            field, organization_id = "process", user.username
 
-        else:  # user is an end-user (not a NodeUser): this is an export request
+        else:  # user is an end-user (not a OrganizationUser): this is an export request
             self._check_export_enabled(channel_name)
-            field, node_id = "download", get_owner()
+            field, organization_id = "download", get_owner()
 
-        if not asset.is_public(field) and node_id not in asset.get_authorized_ids(field):
+        if not asset.is_public(field) and organization_id not in asset.get_authorized_ids(field):
             raise AssetPermissionError()
 
     @staticmethod

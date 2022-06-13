@@ -16,7 +16,7 @@ import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
 import model_pb2
-import node_pb2
+import organization_pb2
 import performance_pb2
 import typing
 import typing_extensions
@@ -73,7 +73,7 @@ class Event(google.protobuf.message.Message):
     DATA_SAMPLE_FIELD_NUMBER: builtins.int
     FAILURE_REPORT_FIELD_NUMBER: builtins.int
     MODEL_FIELD_NUMBER: builtins.int
-    NODE_FIELD_NUMBER: builtins.int
+    ORGANIZATION_FIELD_NUMBER: builtins.int
     PERFORMANCE_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     id: typing.Text
@@ -98,7 +98,7 @@ class Event(google.protobuf.message.Message):
     @property
     def model(self) -> model_pb2.Model: ...
     @property
-    def node(self) -> node_pb2.Node: ...
+    def organization(self) -> organization_pb2.Organization: ...
     @property
     def performance(self) -> performance_pb2.Performance: ...
     @property
@@ -118,13 +118,13 @@ class Event(google.protobuf.message.Message):
         data_sample: typing.Optional[datasample_pb2.DataSample] = ...,
         failure_report: typing.Optional[failure_report_pb2.FailureReport] = ...,
         model: typing.Optional[model_pb2.Model] = ...,
-        node: typing.Optional[node_pb2.Node] = ...,
+        organization: typing.Optional[organization_pb2.Organization] = ...,
         performance: typing.Optional[performance_pb2.Performance] = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["algo",b"algo","asset",b"asset","compute_plan",b"compute_plan","compute_task",b"compute_task","data_manager",b"data_manager","data_sample",b"data_sample","failure_report",b"failure_report","model",b"model","node",b"node","performance",b"performance","timestamp",b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algo",b"algo","asset",b"asset","asset_key",b"asset_key","asset_kind",b"asset_kind","channel",b"channel","compute_plan",b"compute_plan","compute_task",b"compute_task","data_manager",b"data_manager","data_sample",b"data_sample","event_kind",b"event_kind","failure_report",b"failure_report","id",b"id","metadata",b"metadata","model",b"model","node",b"node","performance",b"performance","timestamp",b"timestamp"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["asset",b"asset"]) -> typing.Optional[typing_extensions.Literal["algo","compute_plan","compute_task","data_manager","data_sample","failure_report","model","node","performance"]]: ...
+    def HasField(self, field_name: typing_extensions.Literal["algo",b"algo","asset",b"asset","compute_plan",b"compute_plan","compute_task",b"compute_task","data_manager",b"data_manager","data_sample",b"data_sample","failure_report",b"failure_report","model",b"model","organization",b"organization","performance",b"performance","timestamp",b"timestamp"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algo",b"algo","asset",b"asset","asset_key",b"asset_key","asset_kind",b"asset_kind","channel",b"channel","compute_plan",b"compute_plan","compute_task",b"compute_task","data_manager",b"data_manager","data_sample",b"data_sample","event_kind",b"event_kind","failure_report",b"failure_report","id",b"id","metadata",b"metadata","model",b"model","organization",b"organization","performance",b"performance","timestamp",b"timestamp"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["asset",b"asset"]) -> typing.Optional[typing_extensions.Literal["algo","compute_plan","compute_task","data_manager","data_sample","failure_report","model","organization","performance"]]: ...
 global___Event = Event
 
 class QueryEventsParam(google.protobuf.message.Message):

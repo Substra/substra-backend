@@ -13,12 +13,12 @@ make install  # install python dependencies
 make quickstart  # run migrations, create a user, generate assets fixtures, start the server
 ```
 
-Connect substra client (`node-1` profile is used by Titanic example).
+Connect substra client (`organization-1` profile is used by Titanic example).
 
 ```sh
-substra config --profile node-1 http://127.0.0.1:8000
-substra login --profile node-1 -u node-1 -p p@sswr0d44
-substra list --profile node-1 algo  # should display fixtures
+substra config --profile organization-1 http://127.0.0.1:8000
+substra login --profile organization-1 -u org-1 -p p@sswr0d44
+substra list --profile organization-1 algo  # should display fixtures
 ```
 
 ## (Optional) Restore a dump

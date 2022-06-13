@@ -2601,7 +2601,7 @@ def get_data_managers():
         },
         {
             "key": "32a7edad-cc8a-4236-bd3a-8934b0697e30",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[all_nodes] - Dataset 0",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[all_orgs] - Dataset 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -2641,7 +2641,7 @@ def get_data_managers():
         },
         {
             "key": "8f9a1525-05f8-4bcf-9dc0-52c72f9fc4bd",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[all_nodes] - Dataset 1",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[all_orgs] - Dataset 1",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -2681,7 +2681,7 @@ def get_data_managers():
         },
         {
             "key": "75bc6f87-dd36-4de7-8dc9-c9425f308432",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[node_1_only] - Dataset 0",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[org_1_only] - Dataset 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -2719,7 +2719,7 @@ def get_data_managers():
         },
         {
             "key": "d60029a8-1bbf-4fa1-9dc3-cec7e72f5a67",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[node_1_only] - Dataset 1",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[org_1_only] - Dataset 1",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -2759,7 +2759,7 @@ def get_data_managers():
         },
         {
             "key": "81d36bbb-34e6-4c27-9cfa-dda92d3b8cf1",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[node_2_only] - Dataset 0",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[org_2_only] - Dataset 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -2799,7 +2799,7 @@ def get_data_managers():
         },
         {
             "key": "4966a629-e7d6-4422-8101-b3c64e170d8f",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[node_2_only] - Dataset 1",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_get_metadata[org_2_only] - Dataset 1",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -2875,7 +2875,7 @@ def get_data_managers():
         },
         {
             "key": "8dc488c4-e28c-4774-903b-416a89314b92",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_download_asset_access_granted[node_2_only] - Dataset 0",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_download_asset_access_granted[org_2_only] - Dataset 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -2953,7 +2953,7 @@ def get_data_managers():
         },
         {
             "key": "b33a4404-4b14-43c1-af46-2b45701ac564",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[node_2_only-node_1_...13d5042df7f24ecfa01c",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[org_2_only-org_1_...13d5042df7f24ecfa01c",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -2993,7 +2993,7 @@ def get_data_managers():
         },
         {
             "key": "5030779e-3cc9-45e3-b858-3255e7664129",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-node_1_only-...13d5042df7f24ecfa01c",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-org_1_only-...13d5042df7f24ecfa01c",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -3335,7 +3335,7 @@ def get_data_managers():
         },
         {
             "key": "258ed296-be23-4ff9-94ce-565f81bfb4f1",
-            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only...b0e7169a8d5148559371",
+            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only...b0e7169a8d5148559371",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -3375,7 +3375,7 @@ def get_data_managers():
         },
         {
             "key": "943a6bbc-2aef-4cca-afa3-677ab2a47520",
-            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only...c0e7169a8d5148559371",
+            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only...c0e7169a8d5148559371",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -3512,7 +3512,7 @@ def get_algos():
         },
         {
             "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_node - Algo 0",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -3752,7 +3752,7 @@ def get_algos():
         },
         {
             "key": "9c160655-9f21-4b67-abe4-acbf3b3f791e",
-            "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_nodes - Algo 0",
+            "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_orgs - Algo 0",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -4504,7 +4504,7 @@ def get_algos():
         },
         {
             "key": "644c148f-3925-4337-bea0-da047851c337",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[node_2_only-node_1_...13d5042df7f24ecfa01c",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[org_2_only-org_1_...13d5042df7f24ecfa01c",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -4566,7 +4566,7 @@ def get_algos():
         },
         {
             "key": "675cfd68-fbfd-493c-b2d1-35824272d64e",
-            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-node_1_only-...13d5042df7f24ecfa01c",
+            "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-org_1_only-...13d5042df7f24ecfa01c",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -4808,7 +4808,7 @@ def get_algos():
         },
         {
             "key": "28214e2a-2403-4b32-8afe-f89217ec83fa",
-            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only-private-True] - Algo 0",
+            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only-private-True] - Algo 0",
             "owner": "MyOrg1MSP",
             "permissions": {
                 "process": {
@@ -4840,7 +4840,7 @@ def get_algos():
         },
         {
             "key": "cce6f499-ec20-45aa-862d-70685662b23b",
-            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only-private-True] - Algo 1",
+            "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only-private-True] - Algo 1",
             "owner": "MyOrg2MSP",
             "permissions": {
                 "process": {
@@ -5166,7 +5166,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_node - Algo 0",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -5534,7 +5534,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_node - Algo 0",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -5870,7 +5870,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "9c160655-9f21-4b67-abe4-acbf3b3f791e",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_nodes - Algo 0",
+                "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_orgs - Algo 0",
                 "owner": "MyOrg2MSP",
                 "permissions": {
                     "process": {
@@ -5968,7 +5968,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_node - Algo 0",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -10183,7 +10183,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "644c148f-3925-4337-bea0-da047851c337",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[node_2_only-node_1_...13d5042df7f24ecfa01c",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[org_2_only-org_1_...13d5042df7f24ecfa01c",
                 "owner": "MyOrg2MSP",
                 "permissions": {
                     "process": {
@@ -10476,7 +10476,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "675cfd68-fbfd-493c-b2d1-35824272d64e",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-node_1_only-...13d5042df7f24ecfa01c",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_merge_permissions[public-org_1_only-...13d5042df7f24ecfa01c",
                 "owner": "MyOrg2MSP",
                 "permissions": {
                     "process": {
@@ -10672,7 +10672,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "28214e2a-2403-4b32-8afe-f89217ec83fa",
-                "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only-private-True] - Algo 0",
+                "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only-private-True] - Algo 0",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -10962,7 +10962,7 @@ def get_train_tasks():
             "category": "TASK_TRAIN",
             "algo": {
                 "key": "cce6f499-ec20-45aa-862d-70685662b23b",
-                "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[node_2_only-private-True] - Algo 1",
+                "name": "b0e7169a8d5148559371586d844ecf0c_test_permissions_model_process[org_2_only-private-True] - Algo 1",
                 "owner": "MyOrg2MSP",
                 "permissions": {
                     "process": {
@@ -11421,7 +11421,7 @@ def get_test_tasks():
             "category": "TASK_TEST",
             "algo": {
                 "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_node - Algo 0",
+                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -11548,7 +11548,7 @@ def get_test_tasks():
             "category": "TASK_TEST",
             "algo": {
                 "key": "9c160655-9f21-4b67-abe4-acbf3b3f791e",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_nodes - Algo 0",
+                "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_orgs - Algo 0",
                 "owner": "MyOrg2MSP",
                 "permissions": {
                     "process": {

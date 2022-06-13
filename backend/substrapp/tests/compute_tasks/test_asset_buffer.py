@@ -220,20 +220,20 @@ class AssetBufferTests(APITestCase):
     def test_add_opener_to_buffer(self):
 
         init_asset_buffer()
-        node_id = "node id"
+        organization_id = "organization id"
 
         dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.data_manager_key, Filenames.Opener)
 
-        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload, mock.patch(
+        with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload, mock.patch(
             "substrapp.compute_tasks.asset_buffer.get_owner"
         ) as mget_owner:
-            mget_owner.return_value = node_id
+            mget_owner.return_value = organization_id
 
             _add_opener_to_buffer(CHANNEL, self.data_manager)
 
             mdownload.assert_called_once_with(
                 CHANNEL,
-                node_id,
+                organization_id,
                 self.opener_storage_address,
                 dest,
                 self.opener_checksum,
@@ -290,17 +290,17 @@ class AssetBufferTests(APITestCase):
             "compute_task_key": self.model_compute_task_key,
         }
 
-        node_id = "node 1"
+        organization_id = "organization 1"
         storage_address = "some storage address"
 
         model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
-        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
-            _add_model_to_buffer(CHANNEL, model, node_id)
+        with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
+            _add_model_to_buffer(CHANNEL, model, organization_id)
 
             mdownload.assert_called_once_with(
                 CHANNEL,
-                node_id,
+                organization_id,
                 storage_address,
                 dest,
                 self.model_checksum,
@@ -342,12 +342,12 @@ class AssetBufferTests(APITestCase):
             "address": {"storage_address": "some storage address", "checksum": self.model_checksum},
         }
 
-        def download_model(channel, node_id, storage_address, dest, checksum, salt):
+        def download_model(channel, organization_id, storage_address, dest, checksum, salt):
             shutil.copyfile(self.model_path, dest)
 
-        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
+        with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
             mdownload.side_effect = download_model
-            _add_model_to_buffer(CHANNEL, model, "node 1")
+            _add_model_to_buffer(CHANNEL, model, "organization 1")
 
         # load from buffer into task dir
         dest = os.path.join(self.dirs.task_dir, TaskDirName.InModels, self.model_key)

@@ -14,13 +14,13 @@ def test_prepare_chainkeys_dir(tmpdir):
     secrets.append(
         k8s.V1Secret(
             data={"key": "9HI2MVHg98dSxsvJ6cT/3uiSkW3ik56LV5Jqaiy0YRU="},
-            metadata=k8s.V1ObjectMeta(labels={"index": "1", "pair": "node-2", "compute_plan": "cp1"}),
+            metadata=k8s.V1ObjectMeta(labels={"index": "1", "pair": "organization-2", "compute_plan": "cp1"}),
         )
     )
     secrets.append(
         k8s.V1Secret(
             data={"key": "Lx8u1CW6ZVRmj9GmEnAsWKZH7htFGZehW7ta0IJLdzU="},
-            metadata=k8s.V1ObjectMeta(labels={"index": "2", "pair": "node-3", "compute_plan": "cp1"}),
+            metadata=k8s.V1ObjectMeta(labels={"index": "2", "pair": "organization-3", "compute_plan": "cp1"}),
         )
     )
     # fmt: off
@@ -71,7 +71,7 @@ def test_empty_secret(tmpdir):
         k8s.V1Secret(
             data={},
             metadata=k8s.V1ObjectMeta(
-                labels={"index": "1", "pair": "node-2", "compute_plan": "cp1"}, name="test-secret"
+                labels={"index": "1", "pair": "organization-2", "compute_plan": "cp1"}, name="test-secret"
             ),
         )
     )

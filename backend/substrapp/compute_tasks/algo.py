@@ -1,7 +1,7 @@
 from typing import Any
 
 import orchestrator.algo_pb2 as algo_pb2
-from substrapp.clients import node as node_client
+from substrapp.clients import organization as organization_client
 
 
 class Algo:
@@ -35,7 +35,7 @@ class Algo:
 
     @property
     def archive(self) -> bytes:
-        return node_client.get(self._channel, self._owner, self._storage_address, self.checksum)
+        return organization_client.get(self._channel, self._owner, self._storage_address, self.checksum)
 
     def is_composite(self) -> bool:
         return algo_pb2.AlgoCategory.Value(self._algo["category"]) == algo_pb2.ALGO_COMPOSITE

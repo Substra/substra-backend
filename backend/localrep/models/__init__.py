@@ -6,7 +6,7 @@ from .computetask import ComputeTask
 from .datamanager import DataManager
 from .datasample import DataSample
 from .model import Model
-from .node import ChannelNode
+from .organization import ChannelOrganization
 from .performance import Performance
 
 __all__ = [
@@ -18,6 +18,6 @@ __all__ = [
     "DataManager",
     "DataSample",
     "Model",
-    "ChannelNode",
+    "ChannelOrganization",
     "Performance",
 ]

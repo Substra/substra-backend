@@ -542,13 +542,13 @@ orchestrator:
       ## @param orchestrator.rabbitmq.tls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
       ##
       clientCertificate:
-  ## @param orchestrator.mspID current node name on the Orchestrator
+  ## @param orchestrator.mspID current organization name on the Orchestrator
   ##
   mspID: OwkinPeerMSP
 
   channels:
-    ## @param orchestrator.channels[0].mychannel.restricted Make this channel restricted to a single node. The server will fail if there is more than one instance in this channel
-    ## @param orchestrator.channels[0].mychannel.model_export_enabled Allow logged-in users to download models trained on this node
+    ## @param orchestrator.channels[0].mychannel.restricted Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel
+    ## @param orchestrator.channels[0].mychannel.model_export_enabled Allow logged-in users to download models trained on this organization
     ## @param orchestrator.channels[0].mychannel.chaincode.name The name of the chaincode instantiated on this channel
     ##
     - mychannel:
@@ -602,18 +602,18 @@ addAccountOperator:
   ## @param addAccountOperator.resources add-account-operator resources requests and limits
   ##
   resources: {}
-  ## @param addAccountOperator.outgoingNodes Outgoind nodes credentials for substra backend node-to-node communications
+  ## @param addAccountOperator.outgoingOrganizations Outgoind organizations credentials for substra backend organization-to-organization communications
   ## e.g:
-  ## - name: nodeId
-  ##   secret: nodeSecret
+  ## - name: organizationId
+  ##   secret: organizationSecret
   ##
-  outgoingNodes: []
-  ## @param addAccountOperator.incomingNodes Incoming nodes credentials for substra backend node-to-node communications
+  outgoingOrganizations: []
+  ## @param addAccountOperator.incomingOrganizations Incoming organizations credentials for substra backend organization-to-organization communications
   ## e.g:
-  ## - name: nodeId
-  ##   secret: nodeSecret
+  ## - name: organizationId
+  ##   secret: organizationSecret
   ##
-  incomingNodes: []
+  incomingOrganizations: []
   ## @param addAccountOperator.users A list of users who can log into the substra backend server
   ## e.g:
   ## - name: username
@@ -646,7 +646,7 @@ rabbitmq:
   persistence:
     enabled: false
   service:
-    ports: 
+    ports:
       amqp: 5672
 
 ## @skip docker-registry

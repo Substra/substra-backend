@@ -43,15 +43,15 @@ spec:
                 ./manage.py add_user $user_password_channel
               done < /accounts/users
 
-              ## IncomingNode
+              ## IncomingOrganization
               while read user_password; do
-                ./manage.py create_incoming_node $user_password
-              done < /accounts/incoming_nodes
+                ./manage.py create_incoming_organization $user_password
+              done < /accounts/incoming_organizations
 
-              ## OutgoingNode
+              ## OutgoingOrganization
               while read user_password; do
-                ./manage.py create_outgoing_node $user_password
-              done < /accounts/outgoing_nodes
+                ./manage.py create_outgoing_organization $user_password
+              done < /accounts/outgoing_organizations
 
             # Graceful shutdown on SIGTERM
             # See https://veithen.io/2014/11/16/sigterm-propagation.html

@@ -163,7 +163,7 @@ class CustomSearchFilter(BaseFilterBackend):
 
 
 class PermissionFilter(BaseFilterBackend):
-    """Filter assets who can be used by a given set of nodes"""
+    """Filter assets who can be used by a given set of organizations"""
 
     def get_param(self):
         try:
@@ -177,18 +177,18 @@ class PermissionFilter(BaseFilterBackend):
         except AttributeError:
             raise NotImplementedError("Missing field definition")
 
-    def get_node_ids(self, request):
+    def get_organization_ids(self, request):
         params = request.query_params.get(self.get_param())
         if params:
-            node_ids = [param.strip() for param in params.split(",")]
-            return node_ids
+            organization_ids = [param.strip() for param in params.split(",")]
+            return organization_ids
         return []
 
     def filter_queryset(self, request, queryset, view):
-        node_ids = self.get_node_ids(request)
-        if node_ids:
+        organization_ids = self.get_organization_ids(request)
+        if organization_ids:
             is_public = Q(**{f"{self.get_field()}_public": True})
-            is_authorized = Q(**{f"{self.get_field()}_authorized_ids__contains": node_ids})
+            is_authorized = Q(**{f"{self.get_field()}_authorized_ids__contains": organization_ids})
             queryset = queryset.filter(is_public | is_authorized)
         return queryset
 

@@ -175,10 +175,10 @@ Note that this requires grpcio-tools, which should be available if you installed
 On deployment, several user accounts are created (for [./values/backend-org-1.yaml](org1) and [./values/backend-org-2.yaml](org2)).
 
 The sample credentials for org1 are:
-- user: `node-1`
+- user: `org-1`
 - pass: `p@sswr0d44`
 
-Provided you have correctly setup your [network configuration](https://doc.substra.ai/setup/local_install_skaffold.html#network), you can use them to access the exposed API at http://substra-backend.node-1.com/
+Provided you have correctly setup your [network configuration](https://doc.substra.ai/setup/local_install_skaffold.html#network), you can use them to access the exposed API at http://substra-backend.org-1.com/
 
 ## Compatibility
 

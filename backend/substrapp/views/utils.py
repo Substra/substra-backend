@@ -20,8 +20,8 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
 from localrep.models import ComputeTask as ComputeTaskRep
-from node.authentication import NodeUser
-from substrapp.clients import node as node_client
+from organization.authentication import OrganizationUser
+from substrapp.clients import organization as organization_client
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
 from substrapp.storages.minio import MinioStorage
@@ -84,13 +84,13 @@ class PermissionMixin(object):
         if user.is_anonymous:  # safeguard, should never happen
             raise AssetPermissionError()
 
-        if type(user) is NodeUser:  # for node
-            node_id = user.username
+        if type(user) is OrganizationUser:  # for organization
+            organization_id = user.username
         else:
             # for classic user, test on current msp id
-            node_id = get_owner()
+            organization_id = get_owner()
 
-        if not asset.is_public("process") and node_id not in asset.get_authorized_ids("process"):
+        if not asset.is_public("process") and organization_id not in asset.get_authorized_ids("process"):
             raise AssetPermissionError()
 
     def download_file(self, request, asset_class, content_field, address_field):
@@ -137,9 +137,9 @@ class PermissionMixin(object):
         return response
 
     def _download_remote_file(self, channel_name: str, owner: str, url: str) -> django.http.FileResponse:
-        proxy_response = node_client.http_get(
+        proxy_response = organization_client.http_get(
             channel=channel_name,
-            node_id=owner,
+            organization_id=owner,
             url=url,
             stream=True,
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
@@ -202,7 +202,7 @@ def get_channel_name(request):
 
 
 def is_proxied_request(request) -> bool:
-    """Return True if the API consumer is another backend-server node proxying a user request.
+    """Return True if the API consumer is another backend-server organization proxying a user request.
 
     :param request: incoming HTTP request
     """

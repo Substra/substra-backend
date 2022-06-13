@@ -5,8 +5,8 @@ from datetime import datetime
 
 import substra
 
-URL = "http://substra-backend.node-1.com"
-USERNAME = "node-1"
+URL = "http://substra-backend.org-1.com"
+USERNAME = "org-1"
 PASSWORD = "p@sswr0d44"
 
 dir_path = os.path.dirname(__file__)

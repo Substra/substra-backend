@@ -43,8 +43,8 @@ class Info(APIView):
     def get(self, request, *args, **kwargs):
         res = {
             "host": settings.DEFAULT_DOMAIN,
-            "node_id": get_owner(),
-            "node_name": settings.ORG_NAME,
+            "organization_id": get_owner(),
+            "organization_name": settings.ORG_NAME,
             "config": {},
         }
 

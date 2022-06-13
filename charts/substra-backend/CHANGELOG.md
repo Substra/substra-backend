@@ -1,5 +1,11 @@
 # Changelog
 
+## 18.01.0
+
+### Changed
+- Rename node to organization
+
+
 ## 18.0.0
 
 ### Changed

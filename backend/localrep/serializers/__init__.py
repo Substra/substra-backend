@@ -6,7 +6,7 @@ from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
 from .model import ModelSerializer
-from .node import ChannelNodeSerializer
+from .organization import ChannelOrganizationSerializer
 from .performance import CPPerformanceSerializer
 from .performance import ExportPerformanceSerializer
 from .performance import PerformanceSerializer
@@ -20,7 +20,7 @@ __all__ = [
     "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
     "ModelSerializer",
-    "ChannelNodeSerializer",
+    "ChannelOrganizationSerializer",
     "PerformanceSerializer",
     "CPPerformanceSerializer",
     "ExportPerformanceSerializer",

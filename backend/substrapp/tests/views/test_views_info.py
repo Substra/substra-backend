@@ -22,8 +22,8 @@ class InfoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         assert "host" in data
-        assert "node_id" in data
-        assert "node_name" in data
+        assert "organization_id" in data
+        assert "organization_name" in data
         self.assertEqual(data["config"], {})
         assert "version" not in data
         assert "orchestrator_version" not in data
@@ -40,8 +40,8 @@ class InfoViewTests(APITestCase):
 
         data = response.json()
         assert "host" in data
-        assert "node_id" in data
-        assert "node_name" in data
+        assert "organization_id" in data
+        assert "organization_name" in data
         assert "config" in data
         assert "model_export_enabled" in data["config"]
         assert "version" in data

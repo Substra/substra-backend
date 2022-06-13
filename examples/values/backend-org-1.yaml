@@ -1,9 +1,9 @@
 settings: dev
 config:
   TOKEN_STRATEGY: "reuse"
-  CORS_ORIGIN_WHITELIST: '["http://substra-frontend.node-1.com", "http://substra-frontend.node-1.com:3000", "http://substra-frontend.node-1.com:3001"]'
+  CORS_ORIGIN_WHITELIST: '["http://substra-frontend.org-1.com", "http://substra-frontend.org-1.com:3000", "http://substra-frontend.org-1.com:3001"]'
   CORS_ALLOW_CREDENTIALS: "true"
-  ALLOWED_HOSTS: '[".node-1.com", ".org-1", ".org-1.svc.cluster.local"]'
+  ALLOWED_HOSTS: '[".org-1.com", ".org-1", ".org-1.svc.cluster.local"]'
   DEFAULT_THROTTLE_RATES: "120"
   TASK_CACHE_DOCKER_IMAGES: "False"
   LOG_LEVEL: DEBUG
@@ -33,10 +33,10 @@ worker:
 
 server:
   defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
-  commonHostDomain: node-1.com
+  commonHostDomain: org-1.com
   ingress:
     enabled: true
-    hostname: "substra-backend.node-1.com"
+    hostname: "substra-backend.org-1.com"
     annotations:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
@@ -55,18 +55,18 @@ kaniko:
         - gcr.io/connect-314908/connect-tools:latest-minimal
 
 addAccountOperator:
-  incomingNodes:
+  incomingOrganizations:
     - { name: MyOrg1MSP, secret: selfSecret1 }
-    - { name: MyOrg2MSP, secret: nodeSecret1w2 }
-  outgoingNodes:
+    - { name: MyOrg2MSP, secret: organizationSecret1w2 }
+  outgoingOrganizations:
     - { name: MyOrg1MSP, secret: selfSecret1 }
-    - { name: MyOrg2MSP, secret: nodeSecret2w1 }
+    - { name: MyOrg2MSP, secret: organizationSecret2w1 }
 
   users:
-    - name: "node-1"
+    - name: "org-1"
       secret: "p@sswr0d44"
       channel: "mychannel"
-    - name: "node-1-yourchannel"
+    - name: "org-1-yourchannel"
       secret: "p@sswr0d44"
       channel: "yourchannel"
 
