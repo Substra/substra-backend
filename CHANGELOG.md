@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Filtering on compute plan metadata (#1043)
+
 ## [0.18.0] 2022-06-14
 
 ### Removed

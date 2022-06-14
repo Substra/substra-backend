@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import shutil
 import tempfile
@@ -559,6 +560,153 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         params = urlencode({"data_sample_key": data_sample.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), [expected_cp])
+
+    def test_computeplan_filter_by_metadata(self):
+        """Match compute_plan on metadata"""
+        key = self.expected_results[0]["key"]
+        metadata = {
+            "array": ["foo", "bar"],
+            "number": 1,
+            "float": 1.0,
+            "string": "foo",
+            'special "?= %` chars': "foo",
+            "special_chars": 'special "?= %` chars',
+        }
+        self.expected_results[0]["metadata"] = metadata
+        instance = ComputePlanRep.objects.get(key=key)
+        instance.metadata = metadata
+        instance.save()
+
+        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
+            response = self.client.get(self.url, **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            )
+
+            # non json data (must be ignored)
+            params = urlencode({"metadata": "{not json}"})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            )
+
+            # json data with incorrect structure (must be ignored)
+            params = urlencode({"metadata": json.dumps({"dummy": "exists"})})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            )
+
+            # json data with proper structure and missing keys (must be ignored)
+            params = urlencode({"metadata": json.dumps([{"foo": "bar"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            )
+
+            # exists
+            params = urlencode({"metadata": json.dumps([{"key": "dummy", "type": "exists"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+
+            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "exists"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # string is
+            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "is", "value": "foo"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # string contains
+            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "contains", "value": "oo"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # number as number (works for simple cases)
+            params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": 1}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # number as string (works)
+            params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": "1"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # float as float (works for simple cases)
+            params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": 1.0}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # float as string (works)
+            params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": "1.0"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # array as array (doesn't work)
+            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": ["foo", "bar"]}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+
+            # array as string not serialized properly (doesn't work)
+            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": "['foo','bar']"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+
+            # array as string serialized properly (works)
+            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": '["foo", "bar"]'}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # special chars in key (works)
+            params = urlencode(
+                {"metadata": json.dumps([{"key": 'special "?= %` chars', "type": "is", "value": "foo"}])}
+            )
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # special chars in value (works)
+            params = urlencode(
+                {"metadata": json.dumps([{"key": "special_chars", "type": "is", "value": 'special "?= %` chars'}])}
+            )
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(
+                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            )
+
+            # trying to be sneaky (doesn't work)
+            params = urlencode({"metadata": json.dumps([{"key": "array__contains", "type": "is", "value": "foo"}])})
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+
+            # trying to be really naughty (doesn't work)
+            params = urlencode(
+                {
+                    "metadata": json.dumps(
+                        [{"key": 'string); DROP TABLE "localrep_computeplan"; --', "type": "is", "value": "foo"}]
+                    )
+                }
+            )
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @parameterized.expand(
         [

@@ -1,5 +1,9 @@
+import json
+
 import structlog
 from django.db import models
+from django.db.models.expressions import RawSQL
+from django.db.models.functions import JSONObject
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
@@ -8,6 +12,7 @@ from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.filters import BaseFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
@@ -103,6 +108,60 @@ class MetadataOrderingFilter(OrderingFilter):
         return [term for term in fields if term_valid(term)]
 
 
+class MetadataFilterBackend(BaseFilterBackend):
+    """Accepts filters that will match values in the metadata field.
+
+    * The query param value must be a JSON encoded string.
+    * The decoded query param value must be an array where each item is defined as:
+    {
+        "key": str # the key of the metadata to filter on
+        "type": "is", "contains" or "exists" # the type of query that will be used
+        "value": str # the value that the key must be (if type is "is") or contain (if type if "contains")
+    }
+
+    All values will be cast as string.
+
+    If the query param value isn't in the right format, it'll be ignored entirely.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        metadata = request.query_params.get("metadata")
+        filters = []
+        try:
+            metadata = json.loads(metadata)
+            for f in metadata:
+                filters.append({"key": str(f["key"]), "type": str(f["type"]), "value": str(f.get("value", ""))})
+        except (TypeError, KeyError, json.JSONDecodeError):
+            return queryset
+
+        if not filters:
+            return queryset
+
+        # split filters by type
+        exists_filters = [f for f in filters if f["type"] == "exists"]
+        is_filters = [f for f in filters if f["type"] == "is"]
+        contains_filters = [f for f in filters if f["type"] == "contains"]
+
+        # cast values we want to filter on as strings
+        filter_keys = [f["key"] for f in is_filters + contains_filters]
+        queryset = queryset.annotate(
+            metadata_filters=JSONObject(
+                **{f"{filter_key}": RawSQL("metadata ->> %s", (filter_key,)) for filter_key in filter_keys}
+            )
+        )
+
+        # convert filters into django filters
+        django_filters = {}
+        if exists_filters:
+            django_filters["metadata__has_keys"] = [f["key"] for f in exists_filters]
+        for f in is_filters:
+            django_filters[f'metadata_filters__{f["key"]}'] = f["value"]
+        for f in contains_filters:
+            django_filters[f'metadata_filters__{f["key"]}__icontains'] = f["value"]
+
+        return queryset.filter(**django_filters)
+
+
 class ComputePlanRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
@@ -144,7 +203,13 @@ class ComputePlanRepFilter(FilterSet):
 class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = ComputePlanRepSerializer
     pagination_class = SmallPageNumberPagination
-    filter_backends = (MetadataOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
+    filter_backends = (
+        MetadataOrderingFilter,
+        CustomSearchFilter,
+        MatchFilter,
+        DjangoFilterBackend,
+        MetadataFilterBackend,
+    )
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name"]
     custom_search_object_type = "compute_plan"  # deprecated
     custom_search_mapping_callback = validate_status  # deprecated
