@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Filtering on compute plan metadata (#1043)
 
+### Changed
+
+- use tasks from event for task processing (#1104)
+
 ## [0.18.0] 2022-06-14
 
 ### Removed

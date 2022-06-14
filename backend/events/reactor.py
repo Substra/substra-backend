@@ -31,12 +31,12 @@ def on_computetask_event(payload):
     asset_key = payload["asset_key"]
     channel_name = payload["channel"]
     event_kind = payload["event_kind"]
-    metadata = payload["metadata"]
-    targeted_organisation = metadata["worker"]
+    task = payload["compute_task"]
+    targeted_organisation = task["worker"]
 
-    logger.info("Processing task", asset_key=asset_key, kind=event_kind, status=metadata["status"])
+    logger.info("Processing task", asset_key=asset_key, kind=event_kind, status=task["status"])
 
-    event_task_status = computetask_pb2.ComputeTaskStatus.Value(metadata["status"])
+    event_task_status = computetask_pb2.ComputeTaskStatus.Value(task["status"])
 
     if event_task_status in [
         computetask_pb2.STATUS_DONE,
@@ -44,8 +44,6 @@ def on_computetask_event(payload):
         computetask_pb2.STATUS_FAILED,
     ]:
         with get_orchestrator_client(channel_name) as client:
-            task = client.query_task(asset_key)
-
             # Handle intermediary models
             models = []
             for parent_key in task["parent_task_keys"]:
@@ -88,14 +86,11 @@ def on_computetask_event(payload):
             "Skipping task: this organisation is not the targeted organisation",
             my_organisation=my_organisation,
             targeted_organisation=targeted_organisation,
-            assert_key=asset_key,
+            asset_key=asset_key,
             kind=event_kind,
-            status=metadata["status"],
+            status=task["status"],
         )
         return
-
-    with get_orchestrator_client(channel_name) as client:
-        task = client.query_task(asset_key)
 
     queue_prepare_task(channel_name, task=task)
 
