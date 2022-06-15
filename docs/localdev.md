@@ -9,21 +9,27 @@ Start postgres instance
 
 ```sh
 make db
-export BACKEND_DB_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
 ```
 
 Activate a virtualenv, then run the commands:
 
 ```sh
 make install  # install python dependencies
-make quickstart  # run migrations, create a user, generate assets fixtures, start the server
+make quickstart  # wait for db, run migrations, create a user, start the server
+make fixtures  # generate assets fixtures
 ```
 
 Alternatively, you can run it inside a container by using dev target (adapt to mount volumes you need).
 
 ```sh
 docker build -f docker/connect-backend/Dockerfile --target dev -t connect-backend .
-docker run -it --rm -p 8000:8000 -v ${PWD}/backend/substrapp:/usr/src/app/substrapp -e DJANGO_SETTINGS_MODULE=backend.settings.localdev -e ISOLATED=1 -e BACKEND_DB_HOST=${BACKEND_DB_HOST} connect-backend sh dev-startup.sh
+docker run -it --name connect-backend --rm -p 8000:8000 \
+  -v ${PWD}/backend/substrapp:/usr/src/app/substrapp \
+  -e DJANGO_SETTINGS_MODULE=backend.settings.localdev \
+  -e ISOLATED=1 \
+  -e BACKEND_DB_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres) \
+  connect-backend sh dev-startup.sh
+docker exec connect-backend python manage.py generate_fixtures
 ```
 
 Connect substra client (`org-1` profile is used by Titanic example).
