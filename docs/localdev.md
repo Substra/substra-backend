@@ -5,20 +5,33 @@ For now only isolated mode is supported: without assert registration or task com
 
 ## Quickstart
 
+Start postgres instance
+
+```sh
+make db
+export BACKEND_DB_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres)
+```
+
 Activate a virtualenv, then run the commands:
 
 ```sh
-make db  # start postgres instance inside a container named `postgres`
 make install  # install python dependencies
 make quickstart  # run migrations, create a user, generate assets fixtures, start the server
 ```
 
-Connect substra client (`organization-1` profile is used by Titanic example).
+Alternatively, you can run it inside a container by using dev target (adapt to mount volumes you need).
 
 ```sh
-substra config --profile organization-1 http://127.0.0.1:8000
-substra login --profile organization-1 -u org-1 -p p@sswr0d44
-substra list --profile organization-1 algo  # should display fixtures
+docker build -f docker/connect-backend/Dockerfile --target dev -t connect-backend .
+docker run -it --rm -p 8000:8000 -v ${PWD}/backend/substrapp:/usr/src/app/substrapp -e DJANGO_SETTINGS_MODULE=backend.settings.localdev -e ISOLATED=1 -e BACKEND_DB_HOST=${BACKEND_DB_HOST} connect-backend sh dev-startup.sh
+```
+
+Connect substra client (`org-1` profile is used by Titanic example).
+
+```sh
+substra config --profile org-1 http://127.0.0.1:8000
+substra login --profile org-1 -u org-1 -p p@sswr0d44
+substra list --profile org-1 algo  # should display fixtures
 ```
 
 ## (Optional) Restore a dump

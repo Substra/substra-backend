@@ -46,10 +46,7 @@ check-migrations: ## Check whether there are missing Django migrations
 
 .PHONY: quickstart
 quickstart:  ## Quickstart for local dev
-	python backend/manage.py migrate --settings backend.settings.localdev
-	python backend/manage.py add_user org-1 p@sswr0d44 mychannel --settings backend.settings.localdev
-	python backend/manage.py generate_fixtures --settings backend.settings.localdev
-	ISOLATED=1 python backend/manage.py runserver 0.0.0.0:8000 --settings backend.settings.localdev
+	DJANGO_SETTINGS_MODULE=backend.settings.localdev ISOLATED=1 sh backend/dev-startup.sh
 
 ### gRPC
 
