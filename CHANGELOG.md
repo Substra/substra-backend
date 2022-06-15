@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- failure_report KeyError when updating compute task (localrep sync) (#1092)
+
 ### Added
 
 - Filtering on compute plan metadata (#1043)

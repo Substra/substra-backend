@@ -166,7 +166,8 @@ def _update_computetask(
 
     if failure_report is not None:
         compute_task.error_type = failure_report["error_type"]
-        if "logs_address" in failure_report:
+        # logs_address only has a value if there are logs associated with the failure report, e.g. ExecutionError.
+        if failure_report.get("logs_address"):
             compute_task.logs_address = failure_report["logs_address"]["storage_address"]
             compute_task.logs_checksum = failure_report["logs_address"]["checksum"]
         if "owner" in failure_report:
