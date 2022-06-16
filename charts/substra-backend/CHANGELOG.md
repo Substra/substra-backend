@@ -1,10 +1,14 @@
 # Changelog
 
-## 18.01.0
+## 18.2.0
+
+### Changed
+- Run migrations in a _Job_
+
+## 18.1.0
 
 ### Changed
 - Rename node to organization
-
 
 ## 18.0.0
 

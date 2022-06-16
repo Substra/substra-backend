@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-migrations
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.fullname" . }}-migrations
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      name: {{ template "substra.fullname" . }}-migrations
+    spec:
+      restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      {{- if .Values.server.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.server.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
+      {{- end}}
+      containers:
+      - name: db-migrations
+        image: {{ include "common.images.name" .Values.server.image }}
+        imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -euo pipefail
+            ./manage.py migrate
+
+            ## Users
+            while read -r user_password_channel; do
+                read user password channel <<< "$user_password_channel"
+                ./manage.py add_user "$user" "$password" "$channel"
+            done < /accounts/users
+
+            ## IncomingOrganization
+            while read -r user_password; do
+                read user password <<< "$user_password"
+                ./manage.py create_incoming_organization "$user" "$password"
+            done < /accounts/incoming_organizations
+
+            ## OutgoingOrganization
+            while read -r user_password; do
+                read user password <<< "$user_password"
+                ./manage.py create_outgoing_organization "$user" "$password"
+            done < /accounts/outgoing_organizations
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-database
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-database
+        env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: backend.settings.{{ .Values.settings }}
+        volumeMounts:
+          - mountPath: /accounts
+            name: accounts
+            readOnly: True
+      volumes:
+        - name: accounts
+          secret:
+            secretName: {{ template "substra.fullname" . }}-add-account

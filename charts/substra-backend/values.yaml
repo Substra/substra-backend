@@ -599,9 +599,6 @@ kaniko:
 ## @section Account operator settings
 ##
 addAccountOperator:
-  ## @param addAccountOperator.resources add-account-operator resources requests and limits
-  ##
-  resources: {}
   ## @param addAccountOperator.outgoingOrganizations Outgoind organizations credentials for substra backend organization-to-organization communications
   ## e.g:
   ## - name: organizationId

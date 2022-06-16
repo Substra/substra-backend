@@ -247,7 +247,6 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 | Name                                       | Description                                                                                        | Value |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- | ----- |
-| `addAccountOperator.resources`             | add-account-operator resources requests and limits                                                 | `{}`  |
 | `addAccountOperator.outgoingOrganizations` | Outgoind organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.users`                 | A list of users who can log into the substra backend server                                        | `[]`  |
