@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - failure_report KeyError when updating compute task (localrep sync) (#1092)
+- password displayed when running django commands to add users (#1109)
 
 ### Added
 

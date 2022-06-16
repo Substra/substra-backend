@@ -22,4 +22,3 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS("organization successfully created"))
             self.stdout.write(f"organization_id={incoming_organization.organization_id}")
-            self.stdout.write(f"secret={incoming_organization.secret}")

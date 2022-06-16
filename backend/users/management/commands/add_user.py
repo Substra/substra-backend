@@ -38,4 +38,4 @@ class Command(BaseCommand):
                 self.stderr.write(f"User already exists: {str(e)}")
             else:
                 Channel.objects.create(user=user, name=channel_name)
-                self.stdout.write(f"password: {password}")
+                self.stdout.write(f"user created {username}")
