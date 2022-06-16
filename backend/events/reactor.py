@@ -16,7 +16,7 @@ from events import health
 from events import localsync
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
-from substrapp.tasks.tasks_prepare_task import queue_prepare_task
+from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
 from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
 from substrapp.utils import get_owner
@@ -92,7 +92,7 @@ def on_computetask_event(payload):
         )
         return
 
-    queue_prepare_task(channel_name, task=task)
+    queue_compute_task(channel_name, task=task)
 
 
 def on_model_event(payload):

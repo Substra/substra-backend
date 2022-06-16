@@ -21,6 +21,7 @@ from typing import Optional
 import celery.exceptions
 import structlog
 from celery import Task
+from celery.result import AsyncResult
 from django.conf import settings
 from django.core import files
 
@@ -53,6 +54,7 @@ from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.save_models import save_models
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
@@ -125,6 +127,64 @@ class ComputeTask(Task):
         channel_name = celery_args[0]
         task = celery_args[1]
         return channel_name, task
+
+
+@app.task(ignore_result=True)
+def prepare_training_task(channel_name):
+    prepare_tasks(channel_name, computetask_pb2.TASK_TRAIN)
+
+
+@app.task(ignore_result=True)
+def prepare_testing_task(channel_name):
+    prepare_tasks(channel_name, computetask_pb2.TASK_TEST)
+
+
+@app.task(ignore_result=True)
+def prepare_composite_training_task(channel_name):
+    prepare_tasks(channel_name, computetask_pb2.TASK_COMPOSITE)
+
+
+@app.task(ignore_result=True)
+def prepare_aggregate_task(channel_name):
+    prepare_tasks(channel_name, computetask_pb2.TASK_AGGREGATE)
+
+
+def prepare_tasks(channel_name: str, task_category) -> None:
+    with get_orchestrator_client(channel_name) as client:
+        tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO, category=task_category)
+
+    for task in tasks:
+        queue_compute_task(channel_name, task)
+
+
+def queue_compute_task(channel_name, task):
+    from substrapp.task_routing import get_worker_queue
+
+    task_key = task["key"]
+
+    # Verify that celery task does not already exist
+    if AsyncResult(task_key).state != "PENDING":
+        logger.info(
+            "skipping this task because is already exists",
+            compute_task_key=task_key,
+            celery_task_key=task_key,
+        )
+        return
+
+    with get_orchestrator_client(channel_name) as client:
+        if not task_utils.is_task_runnable(task_key, client):
+            return  # avoid creating a Celery task
+
+    # get mapping cp to worker or create a new one
+    worker_queue = get_worker_queue(task["compute_plan_key"])
+    logger.info(
+        "Assigned compute plan to worker queue",
+        compute_task_key=task_key,
+        compute_plan_key=task["compute_plan_key"],
+        worker_queue=worker_queue,
+    )
+
+    compute_task.apply_async((channel_name, task, task["compute_plan_key"]), queue=worker_queue, task_id=task_key)
 
 
 @app.task(

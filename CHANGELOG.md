@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - use tasks from event for task processing (#1104)
 - set task status to doing in compute task task (#1105)
+- remove the `prepare_task` Celery task (#1106)
 
 ## [0.18.0] 2022-06-14
 
