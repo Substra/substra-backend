@@ -1,10 +1,12 @@
 import itertools
+import uuid
 from typing import Optional
 from typing import Type
 from unittest import mock
 
 import pytest
 
+import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator import client as orc_client
 from substrapp.compute_tasks import compute_task as task_utils
 
@@ -46,13 +48,11 @@ def client() -> mock.Mock:
 
 @pytest.mark.parametrize("task_status", NON_RUNNABLE_TASK_STATUSES)
 def test_raise_if_task_not_runnable_raise_TaskNonRunnableStatusError(task_status: str, client: mock.Mock):  # noqa: N802
-    client.query_task.return_value = {"status": task_status}
+    task = {"status": task_status}
 
     with pytest.raises(task_utils.TaskNonRunnableStatusError) as exc:
-        task_utils.raise_if_task_not_runnable("task-key", client)
+        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
         assert exc.status == task_status
-
-    client.query_task.assert_called_once()
 
 
 @pytest.mark.parametrize("compute_plan_status", NON_RUNNABLE_COMPUTE_PLAN_STATUSES)
@@ -60,14 +60,13 @@ def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # 
     compute_plan_status: str, client: mock.Mock
 ):
     task_status = RUNNABLE_TASK_STATUSES[0]
-    client.query_task.return_value = {"status": task_status, "compute_plan_key": "cp-key"}
+    task = {"status": task_status, "compute_plan_key": "cp-key"}
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
     with pytest.raises(task_utils.ComputePlanNonRunnableStatusError) as exc:
-        task_utils.raise_if_task_not_runnable("task-key", client)
+        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
         assert exc.status == compute_plan_status
 
-    client.query_task.assert_called_once()
     client.query_compute_plan.assert_called_once()
 
 
@@ -76,23 +75,21 @@ def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # 
     list(itertools.product(RUNNABLE_TASK_STATUSES, RUNNABLE_COMPUTE_PLAN_STATUSES)),
 )
 def test_raise_if_task_not_runnable_do_not_raise(task_status: str, compute_plan_status: str, client: mock.Mock):
-    client.query_task.return_value = {"status": task_status, "compute_plan_key": "cp-key"}
+    task = {"status": task_status, "compute_plan_key": "cp-key"}
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
-    task_utils.raise_if_task_not_runnable("task-key", client)
+    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
 
-    client.query_task.assert_called_once()
     client.query_compute_plan.assert_called_once()
 
 
 @pytest.mark.parametrize("compute_plan_status", RUNNABLE_COMPUTE_PLAN_STATUSES)
 def test_raise_if_task_not_runnable_allow_doing_do_not_raise(compute_plan_status: str, client: mock.Mock):
-    client.query_task.return_value = {"status": task_utils._TASK_STATUS_DOING, "compute_plan_key": "cp-key"}
+    task = {"status": task_utils._TASK_STATUS_DOING, "compute_plan_key": "cp-key"}
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
-    task_utils.raise_if_task_not_runnable("task-key", client, allow_doing=True)
+    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_doing=True, task=task)
 
-    client.query_task.assert_called_once()
     client.query_compute_plan.assert_called_once()
 
 
@@ -100,7 +97,23 @@ def test_raise_if_task_not_runnable_allow_doing_do_not_raise(compute_plan_status
     "exception", [task_utils.TaskNonRunnableStatusError, task_utils.ComputePlanNonRunnableStatusError, None]
 )
 @mock.patch("substrapp.compute_tasks.compute_task.raise_if_task_not_runnable", autospec=True)
-def is_task_runnable(raise_if_task_not_runnable: mock.Mock, exception: Optional[Type[Exception]]):
-    raise_if_task_not_runnable.side_effect = [exception]
+def is_task_runnable(_raise_if_task_not_runnable: mock.Mock, exception: Optional[Type[Exception]]):
+    _raise_if_task_not_runnable.side_effect = [exception]
     expected = not exception
     assert task_utils.is_task_runnable("task-key", None) is expected
+
+
+@pytest.mark.parametrize(
+    "status, should_update",
+    [
+        (computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_TODO), True),
+        (computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING), False),
+    ],
+)
+def test_start_task_if_not_started(client: mock.Mock, status, should_update: bool):
+    task = {"status": status, "key": uuid.uuid4()}
+
+    task_utils.start_task_if_not_started(task, client)
+
+    if should_update:
+        client.update_task_status.assert_called_once()

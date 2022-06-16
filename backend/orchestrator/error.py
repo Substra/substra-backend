@@ -26,6 +26,10 @@ RPC_TO_HTTP = {
 class OrcError(Exception):
     """OrcError may be raised by the orchestrator API layer"""
 
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+        self.details = ""
+
     def http_status(self):
         """If the error has a gRPC code, returns the matching HTTP code.
         Otherwise, a generic internal server error is returned.

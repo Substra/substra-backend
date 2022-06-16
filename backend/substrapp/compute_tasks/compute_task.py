@@ -1,8 +1,11 @@
+from typing import Any
+
 import structlog
 
-from orchestrator import client as orc_client
-from orchestrator import computeplan_pb2
-from orchestrator import computetask_pb2
+import orchestrator.client as orc_client
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+from orchestrator.error import OrcError
 
 _RUNNABLE_TASK_STATUSES = [computetask_pb2.STATUS_TODO]
 _RUNNABLE_TASK_STATUSES = {computetask_pb2.ComputeTaskStatus.Name(s) for s in _RUNNABLE_TASK_STATUSES}
@@ -51,14 +54,17 @@ class ComputePlanNonRunnableStatusError(_NonRunnableStatusError):
     """
 
 
-def raise_if_task_not_runnable(task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False) -> None:
+def _raise_if_task_not_runnable(
+    task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False, task: dict[str, Any] = None
+) -> None:
     """Raise an exception if a compute task is not runnable by taking into account its status
     and the status of the associated compute plan.
 
     Args:
-        task_key: the key of the compute task.
+        task_key: the compute task key
         client: the orchestrator gRPC client.
         allow_doing: whether a compute task with the status DOING should be considered as runnable.
+        task: the compute task. if specified this task will be used to check the status instead of retrieving a task
 
     Returns:
         None if the task is runnable.
@@ -69,7 +75,9 @@ def raise_if_task_not_runnable(task_key: str, client: orc_client.OrchestratorCli
             of its associated compute plan.
 
     """
-    task = client.query_task(task_key)
+    if not task:
+        task = client.query_task(task_key)
+
     if not _is_task_status_runnable(task, allow_doing):
         raise TaskNonRunnableStatusError(task["status"])
 
@@ -91,21 +99,24 @@ def is_task_runnable(task_key: str, client: orc_client.OrchestratorClient, allow
 
     """
     try:
-        raise_if_task_not_runnable(task_key, client, allow_doing)
+        _raise_if_task_not_runnable(task_key, client, allow_doing)
     except (TaskNonRunnableStatusError, ComputePlanNonRunnableStatusError):
         return False
     else:
         return True
 
 
-def abort_task_if_not_runnable(task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False) -> None:
+def abort_task_if_not_runnable(
+    task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False, task: dict[str, Any] = None
+) -> None:
     """Cancel a compute task if its associated compute plan is not runnable. In addition, raise an error if the compute
     task is not runnable because of its status or the status of its compute plan.
 
     Args:
-        task_key: the key of the compute task.
+        task_key: the compute task key.
         client: the orchestrator gRPC client.
         allow_doing: whether a compute task with the status DOING should be considered as runnable.
+        task: the compute task. if specified this task will be used to check the status instead of retrieving a task.
 
     Returns:
         None if the task is runnable.
@@ -117,7 +128,7 @@ def abort_task_if_not_runnable(task_key: str, client: orc_client.OrchestratorCli
 
     """
     try:
-        raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing)
+        _raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing, task=task)
     except ComputePlanNonRunnableStatusError as exc:
         logger.info("Compute plan not runnable. Canceling task.", compute_plan_status=exc.status)
         client.update_task_status(
@@ -126,3 +137,28 @@ def abort_task_if_not_runnable(task_key: str, client: orc_client.OrchestratorCli
             log=f"Compute plan has a non-runnable status: {exc.status}",
         )
         raise
+
+
+def start_task_if_not_started(task: dict[str, Any], client: orc_client.OrchestratorClient) -> None:
+    """Start a compute task if it is not already started
+
+    Args:
+        task: the compute task.
+        client: the orchestrator gRPC client.
+
+    Returns:
+        None
+
+    Raises:
+        OrcError: if the status can't be updated to DOING
+    """
+    if task["status"] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_TODO):
+        try:
+            logger.info("Updating task status to STATUS_DOING", task_key=task["key"])
+            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_DOING)
+        except OrcError as rpc_error:
+            logger.exception(
+                f"failed to update task status to DOING, {rpc_error.details}",
+                task_key=task["key"],
+            )
+            raise

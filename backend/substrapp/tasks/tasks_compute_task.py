@@ -172,8 +172,11 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
     # In case of retries: only execute the compute task if it is not in a final state
     with get_orchestrator_client(channel_name) as client:
+        task = client.query_task(task_key)
         # Set allow_doing=True to allow celery retries.
-        task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
+        task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True, task=task)
+        # Try to set the tasks status to DOING if it is not already the case
+        task_utils.start_task_if_not_started(task, client)
 
     logger.info(
         "Computing task",
@@ -199,6 +202,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
             # Check the task/cp status again, as the task/cp may not be in a runnable state anymore
             with get_orchestrator_client(channel_name) as client:
+                task = client.query_task(task_key)
                 # Set allow_doing=True to allow celery retries.
                 task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
 
