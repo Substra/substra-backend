@@ -17,6 +17,13 @@ spec:
       labels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         {{ include "substra.labels" . | nindent 8 }}
+      annotations:
+        # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
+        checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
+        checksum-cm-settings: {{ include (print $.Template.BasePath "/configmap-settings.yaml") . | sha256sum }}
+        checksum-cm-db: {{ include (print $.Template.BasePath "/configmap-database.yaml") . | sha256sum }}
+        checksum-secret-objectstore : {{ include (print $.Template.BasePath "/secret-objectstore.yaml") . | sha256sum }}
+        checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
     spec:
       {{- if .Values.server.podSecurityContext.enabled }}
       securityContext:

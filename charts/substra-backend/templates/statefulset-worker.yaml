@@ -33,6 +33,16 @@ spec:
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/component: substra-worker
+      annotations:
+        # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
+        checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
+        checksum-cm-settings: {{ include (print $.Template.BasePath "/configmap-settings.yaml") . | sha256sum }}
+        checksum-cm-db: {{ include (print $.Template.BasePath "/configmap-database.yaml") . | sha256sum }}
+        checksum-cm-registry: {{ include (print $.Template.BasePath "/configmap-registry.yaml") . | sha256sum }}
+        checksum-cm-rabbitmq: {{ include (print $.Template.BasePath "/configmap-rabbitmq.yaml") . | sha256sum }}
+        checksum-secret-objectstore : {{ include (print $.Template.BasePath "/secret-objectstore.yaml") . | sha256sum }}
+        checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
+        checksum-secret-database : {{ include (print $.Template.BasePath "/secret-rabbitmq.yaml") . | sha256sum }}
     spec:
       {{- if .Values.worker.podSecurityContext.enabled }}
       securityContext:

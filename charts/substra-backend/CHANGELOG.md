@@ -1,5 +1,10 @@
 # Changelog
 
+## 18.3.0
+
+### Added
+- Auto reload pod on configmap and secret change
+
 ## 18.2.0
 
 ### Changed
