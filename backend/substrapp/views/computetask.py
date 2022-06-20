@@ -1,10 +1,14 @@
 import structlog
 from django.db import models
+from django.db.models.functions import Coalesce
+from django.db.models.functions import Extract
+from django.db.models.functions import Now
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import RangeFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -299,6 +303,7 @@ class ComputeTaskRepFilter(FilterSet):
     algo_key = CharFilter(field_name="algo__key", distinct=True, label="algo_key")
     dataset_key = CharFilter(field_name="data_manager__key", distinct=True, label="dataset_key")
     data_sample_key = CharInFilter(field_name="data_samples__key", distinct=True, label="data_sample_key")
+    duration = RangeFilter(label="duration")
 
     class Meta:
         model = ComputeTaskRep
@@ -346,6 +351,7 @@ class ComputeTaskViewSetConfig:
         "worker",
         "tag",
         "compute_plan_key",
+        "duration",
     ]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
@@ -370,9 +376,18 @@ class ComputeTaskViewSetConfig:
         return ComputeTaskRepSerializer
 
     def get_queryset(self):
-        queryset = ComputeTaskRep.objects.filter(
-            channel=get_channel_name(self.request), category=self.category
-        ).select_related("algo")
+        queryset = (
+            ComputeTaskRep.objects.filter(channel=get_channel_name(self.request), category=self.category)
+            .select_related("algo")
+            .annotate(
+                # Using 0 as default value instead of None for ordering purpose, as default
+                # Postgres behavior considers null as greater than any other value.
+                duration=models.Case(
+                    models.When(start_date__isnull=True, then=0),
+                    default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+                )
+            )
+        )
         if self.category == ComputeTaskRep.Category.TASK_TEST:
             queryset = queryset.prefetch_related("performances", "metrics")
         else:
@@ -390,4 +405,11 @@ class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericView
         validate_key(compute_plan_key)
 
         queryset = super().get_queryset()
-        return queryset.filter(compute_plan__key=compute_plan_key)
+        return queryset.filter(compute_plan__key=compute_plan_key).annotate(
+            # Using 0 as default value instead of None for ordering purpose, as default
+            # Postgres behavior considers null as greater than any other value.
+            duration=models.Case(
+                models.When(start_date__isnull=True, then=0),
+                default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+            )
+        )

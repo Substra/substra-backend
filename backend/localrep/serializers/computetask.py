@@ -173,6 +173,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     aggregate = AggregateTaskSerializer(required=False, source="*")
     composite = CompositeTaskSerializer(required=False, source="*")
 
+    duration = serializers.IntegerField(read_only=True)
+
     @transaction.atomic
     def create(self, validated_data):
         if "data_samples" not in validated_data:
@@ -285,6 +287,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "train",
             "trunk_permissions",
             "worker",
+            "duration",
         ]
 
 

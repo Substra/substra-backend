@@ -110,7 +110,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "creation_date": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
-                "duration": None,  # because start_date is None
+                "duration": 0,  # because start_date is None
             },
             {
                 "key": str(doing_cp.key),
@@ -221,7 +221,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "creation_date": empty_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
-                "duration": None,  # because start_date is None
+                "duration": 0,  # because start_date is None
             },
         ]
 
@@ -255,8 +255,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_computeplan_list_success(self):
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url, **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -277,18 +281,16 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         """Filter compute_plan on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"compute_plan:key:{key}"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compute_plan_list_filter(self):
+    def test_computeplan_list_filter(self):
         """Filter compute_plan on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
@@ -297,18 +299,16 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         """Filter compute_plan on key and tag."""
         key, tag = self.expected_results[0]["key"], self.expected_results[0]["tag"]
         params = urlencode({"search": f"compute_plan:key:{key},compute_plan:tag:{tag}"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compute_plan_list_filter_and(self):
+    def test_computeplan_list_filter_and(self):
         """Filter compute_plan on key and tag."""
         key, tag = self.expected_results[0]["key"], self.expected_results[0]["tag"]
         params = urlencode({"key": key, "tag": tag})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
@@ -318,19 +318,27 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"compute_plan:key:{key_0},compute_plan:key:{key_1}"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_compute_plan_list_filter_in(self):
+    def test_computeplan_list_filter_in(self):
         """Filter compute_plan in key_0, key_1"""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
@@ -340,8 +348,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"search": f"compute_plan:key:{key_0}-OR-compute_plan:key:{key_1}"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
@@ -358,8 +370,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 )
             }
         )
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
@@ -373,14 +389,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         instance.name = name
         instance.save()
         params = urlencode({"match": "cp156"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
         params = urlencode({"match": "cp156 PH1"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
@@ -399,8 +413,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "match": "cp156 PH1",
             }
         )
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
@@ -419,32 +432,35 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "match": "cp156 PH1",
             }
         )
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
     @parameterized.expand(
         [
-            ("PLAN_STATUS_EMPTY",),
-            ("PLAN_STATUS_WAITING",),
-            ("PLAN_STATUS_TODO",),
-            ("PLAN_STATUS_DOING",),
-            ("PLAN_STATUS_DONE",),
-            ("PLAN_STATUS_CANCELED",),
-            ("PLAN_STATUS_FAILED",),
-            ("PLAN_STATUS_XXX",),
+            ("PLAN_STATUS_EMPTY"),
+            ("PLAN_STATUS_WAITING"),
+            ("PLAN_STATUS_TODO"),
+            ("PLAN_STATUS_DOING"),
+            ("PLAN_STATUS_DONE"),
+            ("PLAN_STATUS_CANCELED"),
+            ("PLAN_STATUS_FAILED"),
+            ("PLAN_STATUS_XXX"),
         ]
     )
     def test_computeplan_list_search_filter_by_status(self, p_status):
         """Filter computeplan on status."""
         filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
         params = urlencode({"search": f"compute_plan:status:{p_status}"})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if p_status != "PLAN_STATUS_XXX":
+            # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+            # couldn't be properly mocked
+            if p_status == "PLAN_STATUS_DOING":
+                for cp in response.json().get("results"):
+                    cp["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {
@@ -459,24 +475,28 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
-            ("PLAN_STATUS_EMPTY",),
-            ("PLAN_STATUS_WAITING",),
-            ("PLAN_STATUS_TODO",),
-            ("PLAN_STATUS_DOING",),
-            ("PLAN_STATUS_DONE",),
-            ("PLAN_STATUS_CANCELED",),
-            ("PLAN_STATUS_FAILED",),
-            ("PLAN_STATUS_XXX",),
+            ("PLAN_STATUS_EMPTY"),
+            ("PLAN_STATUS_WAITING"),
+            ("PLAN_STATUS_TODO"),
+            ("PLAN_STATUS_DOING"),
+            ("PLAN_STATUS_DONE"),
+            ("PLAN_STATUS_CANCELED"),
+            ("PLAN_STATUS_FAILED"),
+            ("PLAN_STATUS_XXX"),
         ]
     )
     def test_computeplan_list_filter_by_status(self, p_status):
         """Filter computeplan on status."""
         filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
         params = urlencode({"status": p_status})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if p_status != "PLAN_STATUS_XXX":
+            # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+            # couldn't be properly mocked
+            if p_status == "PLAN_STATUS_DOING":
+                for cp in response.json().get("results"):
+                    cp["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {
@@ -500,10 +520,15 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         """Filter computeplan on several statuses."""
         filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] in p_statuses]
         params = urlencode({"status": ",".join(p_statuses)})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if "PLAN_STATUS_XXX" not in p_statuses:
+            # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+            # couldn't be properly mocked
+            if "PLAN_STATUS_DOING" in p_statuses:
+                for cp in response.json().get("results"):
+                    if cp["status"] == "PLAN_STATUS_DOING":
+                        cp["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {
@@ -543,7 +568,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "creation_date": compute_plan.creation_date.isoformat().replace("+00:00", "Z"),
             "start_date": None,
             "end_date": None,
-            "duration": None,  # because start_date is None
+            "duration": 0,  # because start_date is None
         }
 
         # filter on algo_key
@@ -577,136 +602,153 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         instance.metadata = metadata
         instance.save()
 
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(self.url, **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
-            )
+        response = self.client.get(self.url, **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
+        self.assertEqual(
+            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+        )
 
-            # non json data (must be ignored)
-            params = urlencode({"metadata": "{not json}"})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
-            )
+        # non json data (must be ignored)
+        params = urlencode({"metadata": "{not json}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
+        self.assertEqual(
+            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+        )
 
-            # json data with incorrect structure (must be ignored)
-            params = urlencode({"metadata": json.dumps({"dummy": "exists"})})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
-            )
+        # json data with incorrect structure (must be ignored)
+        params = urlencode({"metadata": json.dumps({"dummy": "exists"})})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
+        self.assertEqual(
+            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+        )
 
-            # json data with proper structure and missing keys (must be ignored)
-            params = urlencode({"metadata": json.dumps([{"foo": "bar"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
-            )
+        # json data with proper structure and missing keys (must be ignored)
+        params = urlencode({"metadata": json.dumps([{"foo": "bar"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in response.json().get("results"):
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
+        self.assertEqual(
+            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+        )
 
-            # exists
-            params = urlencode({"metadata": json.dumps([{"key": "dummy", "type": "exists"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        # exists
+        params = urlencode({"metadata": json.dumps([{"key": "dummy", "type": "exists"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "exists"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        params = urlencode({"metadata": json.dumps([{"key": "string", "type": "exists"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # string is
-            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "is", "value": "foo"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # string is
+        params = urlencode({"metadata": json.dumps([{"key": "string", "type": "is", "value": "foo"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # string contains
-            params = urlencode({"metadata": json.dumps([{"key": "string", "type": "contains", "value": "oo"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # string contains
+        params = urlencode({"metadata": json.dumps([{"key": "string", "type": "contains", "value": "oo"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # number as number (works for simple cases)
-            params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": 1}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # number as number (works for simple cases)
+        params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": 1}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # number as string (works)
-            params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": "1"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # number as string (works)
+        params = urlencode({"metadata": json.dumps([{"key": "number", "type": "is", "value": "1"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # float as float (works for simple cases)
-            params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": 1.0}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # float as float (works for simple cases)
+        params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": 1.0}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # float as string (works)
-            params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": "1.0"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # float as string (works)
+        params = urlencode({"metadata": json.dumps([{"key": "float", "type": "is", "value": "1.0"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # array as array (doesn't work)
-            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": ["foo", "bar"]}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        # array as array (doesn't work)
+        params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": ["foo", "bar"]}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-            # array as string not serialized properly (doesn't work)
-            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": "['foo','bar']"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        # array as string not serialized properly (doesn't work)
+        params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": "['foo','bar']"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-            # array as string serialized properly (works)
-            params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": '["foo", "bar"]'}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # array as string serialized properly (works)
+        params = urlencode({"metadata": json.dumps([{"key": "array", "type": "is", "value": '["foo", "bar"]'}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # special chars in key (works)
-            params = urlencode(
-                {"metadata": json.dumps([{"key": 'special "?= %` chars', "type": "is", "value": "foo"}])}
-            )
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # special chars in key (works)
+        params = urlencode({"metadata": json.dumps([{"key": 'special "?= %` chars', "type": "is", "value": "foo"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # special chars in value (works)
-            params = urlencode(
-                {"metadata": json.dumps([{"key": "special_chars", "type": "is", "value": 'special "?= %` chars'}])}
-            )
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(
-                response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-            )
+        # special chars in value (works)
+        params = urlencode(
+            {"metadata": json.dumps([{"key": "special_chars", "type": "is", "value": 'special "?= %` chars'}])}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
 
-            # trying to be sneaky (doesn't work)
-            params = urlencode({"metadata": json.dumps([{"key": "array__contains", "type": "is", "value": "foo"}])})
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        # trying to be sneaky (doesn't work)
+        params = urlencode({"metadata": json.dumps([{"key": "array__contains", "type": "is", "value": "foo"}])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-            # trying to be really naughty (doesn't work)
-            params = urlencode(
-                {
-                    "metadata": json.dumps(
-                        [{"key": 'string); DROP TABLE "localrep_computeplan"; --', "type": "is", "value": "foo"}]
-                    )
-                }
-            )
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
-            self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        # trying to be really naughty (doesn't work)
+        params = urlencode(
+            {
+                "metadata": json.dumps(
+                    [{"key": 'string); DROP TABLE "localrep_computeplan"; --', "type": "is", "value": "foo"}]
+                )
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @parameterized.expand(
         [
@@ -717,9 +759,13 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     )
     def test_computeplan_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        with mock.patch("localrep.serializers.computeplan.timezone.now", return_value=self.now):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
+        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for cp in r["results"]:
+            if cp["status"] == "PLAN_STATUS_DOING":
+                cp["duration"] = 3600
         self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])

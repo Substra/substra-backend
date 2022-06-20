@@ -274,6 +274,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
             },
         ]
+
         url = reverse("substrapp:task_bulk_create")
         with mock.patch.object(
             OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task
@@ -334,6 +335,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,  # because start_date is None
             },
             {
                 "key": str(waiting_train_task.key),
@@ -370,6 +372,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,  # because start_date is None
             },
             {
                 "key": str(doing_train_task.key),
@@ -406,6 +409,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(done_train_task.key),
@@ -442,6 +446,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(failed_train_task.key),
@@ -478,6 +483,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(canceled_train_task.key),
@@ -514,6 +520,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
         ]
 
@@ -525,6 +532,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     def test_traintask_list_success(self):
         response = self.client.get(self.url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -642,6 +654,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
+            if t_status == ComputeTaskRep.Status.STATUS_DOING:
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
@@ -667,6 +685,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
+            if t_status == ComputeTaskRep.Status.STATUS_DOING:
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
@@ -688,9 +712,20 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if "STATUS_XXX" not in t_statuses:
+            if ComputeTaskRep.Status.STATUS_DOING in t_statuses:
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
             self.assertEqual(
                 response.json(),
-                {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
+                {
+                    "count": len(filtered_train_tasks),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_train_tasks,
+                },
             )
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -748,6 +783,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in r["results"]:
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
@@ -756,6 +796,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """List traintasks for a specific compute plan (CPtraintaskViewSet)."""
         url = reverse("substrapp:compute_plan_traintuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -765,15 +810,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """Filter traintask on key."""
         params = urlencode({"search": f"traintuple:compute_plan_key:{self.compute_plan.key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(),
-            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
-        )
-
-    def test_traintask_list_filter_cp_key(self):
-        """Filter traintask on key."""
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -781,33 +822,45 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     def test_traintask_list_cross_assets_filters(self):
         """Filter traintask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
-        # filter on compute_plan_key
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # filter on asset keys
+        params_list = [
+            urlencode({"compute_plan_key": self.compute_plan.key}),
+            urlencode({"algo_key": self.algo.key}),
+            urlencode({"dataset_key": self.data_manager.key}),
+            urlencode({"data_sample_key": self.data_sample.key}),
+        ]
+
+        for params in params_list:
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results)
 
-        # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
+        # filter on wrong key
+        params = urlencode({"algo_key": self.data_manager.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
-
-        # filter on dataset_key
-        params = urlencode({"dataset_key": self.data_manager.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
-
-        # filter on data_sample_key
-        params = urlencode({"data_sample_key": self.data_sample.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        self.assertEqual(len(response.json().get("results")), 0)
 
     def test_traintask_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_traintask_retrieve(self):
@@ -874,6 +927,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,
             },
             {
                 "key": str(waiting_test_task.key),
@@ -901,6 +955,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,
             },
             {
                 "key": str(doing_test_task.key),
@@ -928,6 +983,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(done_test_task.key),
@@ -955,6 +1011,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(failed_test_task.key),
@@ -982,6 +1039,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(canceled_test_task.key),
@@ -1009,6 +1067,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
         ]
 
@@ -1020,6 +1079,11 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     def test_testtask_list_success(self):
         response = self.client.get(self.url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -1036,7 +1100,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_testtask_list_filter(self):
+    def test_testtask_list_search_filter(self):
         """Filter testtask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"testtuple:key:{key}"})
@@ -1045,7 +1109,16 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_testtask_list_filter_and(self):
+    def test_testtask_list_filter(self):
+        """Filter testtask on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_testtask_list_search_filter_and(self):
         """Filter testtask on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"testtuple:key:{key},testtuple:owner:{owner}"})
@@ -1054,7 +1127,16 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_testtask_list_filter_in(self):
+    def test_testtask_list_filter_and(self):
+        """Filter testtask on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_testtask_list_search_filter_in(self):
         """Filter testtask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -1064,7 +1146,17 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_testtask_list_filter_or(self):
+    def test_testtask_list_filter_in(self):
+        """Filter testtask in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key": ",".join([key_0, key_1])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_testtask_list_search_filter_or(self):
         """Filter testtask on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -1074,7 +1166,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_testtask_list_filter_or_and(self):
+    def test_testtask_list_search_filter_or_and(self):
         """Filter testtask on (key_0 and owner_0) or (key_1 and owner_1)."""
         key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
@@ -1102,13 +1194,49 @@ class TestTaskViewTests(ComputeTaskViewTests):
             ("STATUS_XXX",),
         ]
     )
-    def test_testtask_list_filter_by_status(self, tt__status):
+    def test_testtask_list_search_filter_by_status(self, tt__status):
         """Filter testtask on status."""
         filtered_test_tasks = [task for task in self.expected_results if task["status"] == tt__status]
         params = urlencode({"search": f"testtuple:status:{tt__status}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         if tt__status != "STATUS_XXX":
+            if tt__status == "STATUS_DOING":
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
+            self.assertEqual(
+                response.json(),
+                {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @parameterized.expand(
+        [
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+            ("STATUS_XXX",),
+        ]
+    )
+    def test_testtask_list_filter_by_status(self, t_status):
+        """Filter testtask on status."""
+        filtered_test_tasks = [task for task in self.expected_results if task["status"] == t_status]
+        params = urlencode({"status": t_status})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if t_status != "STATUS_XXX":
+            if t_status == "STATUS_DOING":
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
@@ -1125,7 +1253,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_testtask_match_and_filter(self):
+    def test_testtask_match_and_search_filter(self):
         """Match testtask with filter."""
         key = self.expected_results[0]["key"]
         params = urlencode({"match": key[19:]})
@@ -1140,27 +1268,44 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
+    def test_testtask_match_and_filter(self):
+        """Match testtask with filter."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"match": key[19:]})
+        params = urlencode(
+            {
+                "status": "STATUS_TODO",
+                "match": key[19:],
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
     def test_testtask_list_cross_assets_filters(self):
         """Filter testtask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
-        # filter on compute_plan_key
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        # filter on asset keys
+        params_list = [
+            urlencode({"compute_plan_key": self.compute_plan.key}),
+            urlencode({"algo_key": self.algo.key}),
+            urlencode({"dataset_key": self.data_manager.key}),
+            urlencode({"data_sample_key": self.data_sample.key}),
+        ]
 
-        # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        for params in params_list:
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+            # couldn't be properly mocked
+            for task in response.json().get("results"):
+                if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    task["duration"] = 3600
+            self.assertEqual(response.json().get("results"), self.expected_results)
 
-        # filter on dataset_key
-        params = urlencode({"dataset_key": self.data_manager.key})
+        # filter on wrong key
+        params = urlencode({"algo_key": self.compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
-
-        # filter on data_sample_key
-        params = urlencode({"data_sample_key": self.data_sample.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        self.assertEqual(len(response.json().get("results")), 0)
 
     @parameterized.expand(
         [
@@ -1173,6 +1318,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in r.get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
+
         self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.expected_results[offset : offset + page_size])
@@ -1181,6 +1332,11 @@ class TestTaskViewTests(ComputeTaskViewTests):
         """List testtasks for a specific compute plan (CPtesttaskViewSet)."""
         url = reverse("substrapp:compute_plan_testtuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -1189,10 +1345,20 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def test_testtask_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_testtask_retrieve(self):
@@ -1279,6 +1445,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,
             },
             {
                 "key": str(waiting_composite_task.key),
@@ -1325,6 +1492,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 0,
             },
             {
                 "key": str(doing_composite_task.key),
@@ -1371,6 +1539,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(done_composite_task.key),
@@ -1417,6 +1586,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(failed_composite_task.key),
@@ -1463,6 +1633,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
             {
                 "key": str(canceled_composite_task.key),
@@ -1509,6 +1680,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "duration": 3600,
             },
         ]
 
@@ -1520,6 +1692,11 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
     def test_compositetask_list_success(self):
         response = self.client.get(self.url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -1536,7 +1713,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_compositetask_list_filter(self):
+    def test_compositetask_list_search_filter(self):
         """Filter compositetask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key}"})
@@ -1545,7 +1722,16 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compositetask_list_filter_and(self):
+    def test_compositetask_list_filter(self):
+        """Filter compositetask on key."""
+        key = self.expected_results[0]["key"]
+        params = urlencode({"key": key})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_compositetask_list_search_filter_and(self):
         """Filter compositetask on key and owner."""
         key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         params = urlencode({"search": f"composite_traintuple:key:{key},composite_traintuple:owner:{owner}"})
@@ -1554,7 +1740,16 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compositetask_list_filter_in(self):
+    def test_compositetask_list_filter_and(self):
+        """Filter compositetask on key and owner."""
+        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        params = urlencode({"key": key, "owner": owner})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+        )
+
+    def test_compositetask_list_search_filter_in(self):
         """Filter compositetask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -1564,7 +1759,17 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_compositetask_list_filter_or(self):
+    def test_compositetask_list_filter_in(self):
+        """Filter compositetask in key_0, key_1."""
+        key_0 = self.expected_results[0]["key"]
+        key_1 = self.expected_results[1]["key"]
+        params = urlencode({"key": ",".join([key_0, key_1])})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+        )
+
+    def test_compositetask_list_search_filter_or(self):
         """Filter compositetask on key_0 or key_1."""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
@@ -1574,7 +1779,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_compositetask_list_filter_or_and(self):
+    def test_compositetask_list_search_filter_or_and(self):
         """Filter compositetask on (key_0 and owner_0) or (key_1 and owner_1)."""
         key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
         key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
@@ -1602,6 +1807,42 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             ("STATUS_XXX",),
         ]
     )
+    def test_compositetask_list_search_filter_by_status(self, t_status):
+        """Filter compositetask on status."""
+        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == t_status]
+        params = urlencode({"search": f"composite_traintuple:status:{t_status}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if t_status != "STATUS_XXX":
+            if t_status == "STATUS_DOING":
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_composite_tasks),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_composite_tasks,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+            ("STATUS_XXX",),
+        ]
+    )
     def test_compositetask_list_filter_by_status(self, t_status):
         """Filter compositetask on status."""
         filtered_composite_tasks = [task for task in self.expected_results if task["status"] == t_status]
@@ -1609,6 +1850,44 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
+            if t_status == "STATUS_DOING":
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
+            self.assertEqual(
+                response.json(),
+                {
+                    "count": len(filtered_composite_tasks),
+                    "next": None,
+                    "previous": None,
+                    "results": filtered_composite_tasks,
+                },
+            )
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand(
+        [
+            (["STATUS_WAITING", "STATUS_TODO"],),
+            (["STATUS_DOING", "STATUS_DONE"],),
+            (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
+        ]
+    )
+    def test_compositetask_list_filter_by_status_in(self, t_statuses):
+        """Filter compositetask on status."""
+        filtered_composite_tasks = [task for task in self.expected_results if task["status"] in t_statuses]
+        params = urlencode({"status": ",".join(t_statuses)})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+
+        if "STATUS_XXX" not in t_statuses:
+            if "STATUS_DOING" in t_statuses:
+                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+                # couldn't be properly mocked
+                for task in response.json().get("results"):
+                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                        task["duration"] = 3600
             self.assertEqual(
                 response.json(),
                 {
@@ -1630,7 +1909,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compositetask_match_and_filter(self):
+    def test_compositetask_match_and_search_filter(self):
         """Match compositetask with filter."""
         key = self.expected_results[0]["key"]
         params = urlencode({"match": key[19:]})
@@ -1647,25 +1926,27 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
     def test_compositetask_list_cross_assets_filters(self):
         """Filter compositetask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
-        # filter on compute_plan_key
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        # filter on asset keys
+        params_list = [
+            urlencode({"compute_plan_key": self.compute_plan.key}),
+            urlencode({"algo_key": self.algo.key}),
+            urlencode({"dataset_key": self.data_manager.key}),
+            urlencode({"data_sample_key": self.data_sample.key}),
+        ]
 
-        # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        for params in params_list:
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+            # couldn't be properly mocked
+            for task in response.json().get("results"):
+                if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    task["duration"] = 3600
+            self.assertEqual(response.json().get("results"), self.expected_results)
 
-        # filter on dataset_key
-        params = urlencode({"dataset_key": self.data_manager.key})
+        # filter on wrong key
+        params = urlencode({"algo_key": self.data_manager.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
-
-        # filter on data_sample_key
-        params = urlencode({"data_sample_key": self.data_sample.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
+        self.assertEqual(len(response.json().get("results")), 0)
 
     @parameterized.expand(
         [
@@ -1677,6 +1958,11 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def test_compositetask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         r = response.json()
         self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
@@ -1686,6 +1972,11 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         """List compositetasks for a specific compute plan (CPcompositetaskViewSet)."""
         url = reverse("substrapp:compute_plan_composite_traintuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -1694,10 +1985,20 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def test_compositetask_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
+        # couldn't be properly mocked
+        for task in response.json().get("results"):
+            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_compositetask_retrieve(self):

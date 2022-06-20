@@ -3,12 +3,16 @@ import json
 import structlog
 from django.db import models
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
+from django.db.models.functions import Extract
 from django.db.models.functions import JSONObject
+from django.db.models.functions import Now
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import RangeFilter
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -175,6 +179,7 @@ class ComputePlanRepFilter(FilterSet):
     data_sample_key = CharInFilter(
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
+    duration = RangeFilter(label="duration")
 
     class Meta:
         model = ComputePlanRep
@@ -210,14 +215,21 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         DjangoFilterBackend,
         MetadataFilterBackend,
     )
-    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name"]
+    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration"]
     custom_search_object_type = "compute_plan"  # deprecated
     custom_search_mapping_callback = validate_status  # deprecated
     search_fields = ("key", "name")
     filterset_class = ComputePlanRepFilter
 
     def get_queryset(self):
-        return ComputePlanRep.objects.filter(channel=get_channel_name(self.request))
+        return ComputePlanRep.objects.filter(channel=get_channel_name(self.request)).annotate(
+            # Using 0 as default value instead of None for ordering purpose, as default
+            # Postgres behavior considers null as greater than any other value.
+            duration=models.Case(
+                models.When(start_date__isnull=True, then=0),
+                default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+            ),
+        )
 
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
