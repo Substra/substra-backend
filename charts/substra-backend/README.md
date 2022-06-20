@@ -288,7 +288,7 @@ kubectl create secret docker-registry docker-config --docker-server=gcr.io --doc
 
 Where `docker-config` is the name of the docker config secret which needs to be used.
 
-### Data sample storage {#datasample-storage}
+### Data sample storage
 
 By default (`DataSampleStorageInServerMedia` set to `False`), all the datasamples are stored in MinIO.
 
