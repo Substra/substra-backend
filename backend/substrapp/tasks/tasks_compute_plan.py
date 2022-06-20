@@ -45,7 +45,6 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_pla
 
 @app.task(ignore_result=False)
 def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
-
     compute_plan_key = compute_plan["key"]
     with get_orchestrator_client(channel_name) as client:
         algos = client.query_algos(
@@ -75,7 +74,8 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         with get_orchestrator_client(channel_name) as client:
             is_cp_running = client.is_compute_plan_doing(compute_plan_key)
         if is_cp_running:
-            raise Exception(f"Skipping teardown of CP {compute_plan_key}: CP is still running.")
+            logger.info("Skipping teardown of compute_plan, it is still running", compute_plan_key=compute_plan_key)
+            return
 
         release_worker(compute_plan_key)
         # Teardown
