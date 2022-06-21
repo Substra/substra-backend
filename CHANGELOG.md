@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Filtering and ordering on duration in CPs ans Tasks views (#1101)
 
+### Fixed
+
+- deprecated metadata was used during event processing (#1116)
 
 ## [0.19.0] 2022-06-20
 

@@ -11,9 +11,9 @@ def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Opti
     # In case of all-assets re-sync, the task status contains only the last status.
     # If we want to retrieve start/end dates, we have to reassemble data from the event history.
     # This is why have to use event-status.
-    if event["metadata"]["status"] == ComputeTask.Status.STATUS_DOING:
+    if event["compute_task"]["status"] == ComputeTask.Status.STATUS_DOING:
         start_date = event["timestamp"]
-    elif event["metadata"]["status"] in (
+    elif event["compute_task"]["status"] in (
         ComputeTask.Status.STATUS_CANCELED,
         ComputeTask.Status.STATUS_DONE,
         ComputeTask.Status.STATUS_FAILED,
@@ -23,5 +23,5 @@ def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Opti
 
 
 def fetch_failure_report_from_event(event: dict, client: orc_client.OrchestratorClient) -> Optional[str]:
-    if event["metadata"]["status"] == ComputeTask.Status.STATUS_FAILED:
+    if event["compute_task"]["status"] == ComputeTask.Status.STATUS_FAILED:
         return client.get_failure_report({"compute_task_key": event["asset_key"]})
