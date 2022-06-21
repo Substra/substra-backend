@@ -11,9 +11,10 @@
 - Run migrations in a _Job_
 
 ## 18.1.0
+This release contains a breaking change check the UPGRADE document for the upgrade procedure.
 
 ### Changed
-- Rename node to organization
+- BREAKING CHANGE Rename node to organization
 
 ## 18.0.0
 

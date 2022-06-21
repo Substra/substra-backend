@@ -1,5 +1,10 @@
 ## unreleased
 
+## 18.1.0
+
+Rename the key `addAccountOperator.outgoingNodes` to `addAccountOperator.outgoingOrganizations`.
+Rename the key `addAccountOperator.incomingNodes` to `addAccountOperator.incomingOrganizations`.
+
 ## 16.0.0
 
 Rename the key `worker.rbac.enable` to `worker.rbac.create` in your values file
