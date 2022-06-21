@@ -3,7 +3,7 @@ from django.conf import settings
 from orchestrator.client import OrchestratorClient
 
 
-def get_orchestrator_client(channel_name):
+def get_orchestrator_client(channel_name: str) -> OrchestratorClient:
 
     host = f"{settings.ORCHESTRATOR_HOST}:{settings.ORCHESTRATOR_PORT}"
 

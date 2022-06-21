@@ -50,7 +50,7 @@ def get_hash(file, key=None):
     return compute_hash(data, key)
 
 
-def get_owner():
+def get_owner() -> str:
     return settings.LEDGER_MSP_ID
 
 

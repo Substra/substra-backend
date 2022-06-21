@@ -12,14 +12,19 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
+from __future__ import annotations
+
 import errno
 import json
 import os
 from os import path
+from typing import Any
 from typing import Optional
+from typing import Tuple
 
 import celery.exceptions
 import structlog
+from billiard.einfo import ExceptionInfo
 from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
@@ -69,10 +74,10 @@ class ComputeTask(Task):
     retry_jitter = settings.CELERY_TASK_RETRY_JITTER
 
     @property
-    def attempt(self):
+    def attempt(self) -> int:
         return self.request.retries + 1
 
-    def on_success(self, retval, task_id, args, kwargs):
+    def on_success(self, retval: dict[str, Any], task_id: str, args: Tuple, kwargs: dict[str, Any]) -> None:
         from django.db import close_old_connections
 
         close_old_connections()
@@ -86,18 +91,20 @@ class ComputeTask(Task):
                         {"compute_task_key": task["key"], "metric_key": metric_key, "performance_value": float(perf)}
                     )
 
-    def on_retry(self, exc, task_id, args, kwargs, einfo):
+    def on_retry(self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources
         delete_compute_plan_pods(task["compute_plan_key"])
         logger.info(
             "Retrying task",
             celery_task_id=task_id,
-            attempt=(self.request.retries + 2),
+            attempt=(self.attempt + 1),
             max_attempts=(settings.CELERY_TASK_MAX_RETRIES + 1),
         )
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
+    def on_failure(
+        self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
+    ) -> None:
         from django.db import close_old_connections
 
         close_old_connections()
@@ -123,33 +130,33 @@ class ComputeTask(Task):
                 {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
             )
 
-    def split_args(self, celery_args):
+    def split_args(self, celery_args: Tuple) -> Tuple[str, dict[str, Any]]:
         channel_name = celery_args[0]
         task = celery_args[1]
         return channel_name, task
 
 
 @app.task(ignore_result=True)
-def prepare_training_task(channel_name):
+def prepare_training_task(channel_name: str) -> None:
     prepare_tasks(channel_name, computetask_pb2.TASK_TRAIN)
 
 
 @app.task(ignore_result=True)
-def prepare_testing_task(channel_name):
+def prepare_testing_task(channel_name: str) -> None:
     prepare_tasks(channel_name, computetask_pb2.TASK_TEST)
 
 
 @app.task(ignore_result=True)
-def prepare_composite_training_task(channel_name):
+def prepare_composite_training_task(channel_name: str) -> None:
     prepare_tasks(channel_name, computetask_pb2.TASK_COMPOSITE)
 
 
 @app.task(ignore_result=True)
-def prepare_aggregate_task(channel_name):
+def prepare_aggregate_task(channel_name: str) -> None:
     prepare_tasks(channel_name, computetask_pb2.TASK_AGGREGATE)
 
 
-def prepare_tasks(channel_name: str, task_category) -> None:
+def prepare_tasks(channel_name: str, task_category: computetask_pb2.ComputeTaskCategory.V) -> None:
     with get_orchestrator_client(channel_name) as client:
         tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO, category=task_category)
 
@@ -157,7 +164,7 @@ def prepare_tasks(channel_name: str, task_category) -> None:
         queue_compute_task(channel_name, task)
 
 
-def queue_compute_task(channel_name, task):
+def queue_compute_task(channel_name: str, task: dict[str, Any]) -> None:
     from substrapp.task_routing import get_worker_queue
 
     task_key = task["key"]
@@ -197,7 +204,7 @@ def queue_compute_task(channel_name, task):
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
+def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> dict[str, Any]:
     try:
         return _run(self, channel_name, task, compute_plan_key)
     except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
@@ -215,7 +222,9 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
 
 # TODO: function too complex, consider refactoring
-def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
+def _run(  # noqa: C901
+    self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str
+) -> dict[str, Any]:
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
 
     try:
@@ -225,7 +234,7 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
         worker = f"{settings.ORG_NAME}.worker"
         queue = f"{settings.ORG_NAME}"
 
-    result = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
+    result: dict[str, Any] = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
 
     task_key = task["key"]
     logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt)
@@ -308,7 +317,8 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     finally:
         # Teardown
         try:
-            teardown_task_dirs(dirs)
+            if dirs:
+                teardown_task_dirs(dirs)
         except FileNotFoundError:
             # This happens when the CP directory is deleted (because a task failed on another organization)
             # while a task's container images were being built on this organization. Nothing to do.
@@ -318,14 +328,14 @@ def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     return result
 
 
-def _get_perf(dirs: Directories, metric_key: str) -> object:
+def _get_perf(dirs: Directories, metric_key: str) -> dict[str, Any]:
     with open(
         path.join(dirs.task_dir, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance])), "r"
     ) as perf_file:
         return json.load(perf_file)["all"]
 
 
-def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
+def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str) -> None:
     chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
     prepare_chainkeys_dir(chainkeys_dir, compute_plan_tag)  # does nothing if chainkeys already populated
 

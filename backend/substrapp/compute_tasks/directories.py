@@ -130,7 +130,7 @@ def teardown_compute_plan_dir(dirs: Directories) -> None:
 # chainkeys folder, instead of a half-modified/corrupted folder.
 
 
-def restore_dir(dirs: Directories, cp_folder: str, task_folder):
+def restore_dir(dirs: Directories, cp_folder: str, task_folder: str) -> None:
     """Copy the contents of a folder from compute_plan_dir to task_dir"""
     src = os.path.join(dirs.compute_plan_dir, cp_folder)
     dest = os.path.join(dirs.task_dir, task_folder)
@@ -142,7 +142,7 @@ def restore_dir(dirs: Directories, cp_folder: str, task_folder):
     copytree(src, dest, dirs_exist_ok=True)
 
 
-def commit_dir(dirs: Directories, task_folder: str, cp_folder: str):
+def commit_dir(dirs: Directories, task_folder: str, cp_folder: str) -> None:
     """Move the contents of a folder from task_dir to compute_dir"""
     src = os.path.join(dirs.task_dir, task_folder)
     dest = os.path.join(dirs.compute_plan_dir, cp_folder)

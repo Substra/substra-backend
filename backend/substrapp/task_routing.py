@@ -47,7 +47,7 @@ def get_worker_queue(compute_plan_key: str) -> str:
     return _get_worker_queue(worker_index)
 
 
-def get_existing_worker_queue(compute_plan_key: str) -> Optional[int]:
+def get_existing_worker_queue(compute_plan_key: str) -> Optional[str]:
     """
     Return the name of a worker queue mapped to this compute plan, if it exists.
 

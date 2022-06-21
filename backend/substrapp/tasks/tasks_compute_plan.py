@@ -1,3 +1,5 @@
+from typing import Any
+
 import structlog
 from django.conf import settings
 
@@ -16,7 +18,7 @@ from substrapp.task_routing import release_worker
 logger = structlog.get_logger(__name__)
 
 
-def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
+def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan: dict[str, Any]) -> None:
     compute_plan_key = compute_plan["key"]
 
     if settings.DEBUG_KEEP_POD_AND_DIRS:
@@ -44,7 +46,7 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_pla
 
 
 @app.task(ignore_result=False)
-def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
+def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan: dict[str, Any]) -> None:
     compute_plan_key = compute_plan["key"]
     with get_orchestrator_client(channel_name) as client:
         algos = client.query_algos(
@@ -87,6 +89,6 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
     _remove_docker_images(list(metrics.values()))
 
 
-def _remove_docker_images(algos: list[Algo]):
+def _remove_docker_images(algos: list[Algo]) -> None:
     for algo in algos:
         delete_container_image_safe(algo.container_image_tag)
