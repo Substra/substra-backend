@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - deprecated metadata was used during event processing (#1116)
+- datamanagers' and metrics' storage_addresses in task responses (#1124)
 
 ### Changed
 

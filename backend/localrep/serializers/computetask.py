@@ -253,7 +253,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 reverse("substrapp:algo-description", args=[metric["key"]])
             )
             metric["algorithm"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:algo-algorithm", args=[metric["key"]])
+                reverse("substrapp:algo-file", args=[metric["key"]])
             )
 
     class Meta:
@@ -319,6 +319,10 @@ class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
                 channel=instance.channel,
             ).order_by("creation_date", "key")
             data[TASK_FIELD[instance.category]]["metrics"] = AlgoSerializer(metrics, many=True).data
+
+        # replace storage addresses
+        # we need to call this again because this time, there are values for data_manager and metrics
+        self._replace_storage_addresses(data)
 
         # parent_tasks
         parent_tasks = ComputeTask.objects.filter(
