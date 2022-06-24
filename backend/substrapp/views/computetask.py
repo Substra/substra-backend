@@ -24,7 +24,6 @@ from localrep.serializers import ComputeTaskWithRelationshipsSerializer as Compu
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
@@ -338,7 +337,7 @@ class ComputeTaskRepFilter(FilterSet):
 
 class ComputeTaskViewSetConfig:
     serializer_class = ComputeTaskRepSerializer
-    filter_backends = (ComputePlanKeyOrderingFilter, CustomSearchFilter, MatchFilter, DjangoFilterBackend)
+    filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend)
     ordering_fields = [
         "creation_date",
         "start_date",
@@ -355,7 +354,6 @@ class ComputeTaskViewSetConfig:
     ]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    custom_search_mapping_callback = validate_status_and_map_cp_key  # deprecated
     search_fields = ("key",)
     filterset_class = ComputeTaskRepFilter
 
@@ -366,9 +364,6 @@ class ComputeTaskViewSetConfig:
     @property
     def category(self):
         return TASK_CATEGORY[self.short_basename]
-
-    def get_custom_search_object_type(self):
-        return self.short_basename
 
     def get_serializer_class(self):
         if self.action == "retrieve":

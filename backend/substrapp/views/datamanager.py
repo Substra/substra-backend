@@ -22,7 +22,6 @@ from substrapp.models import DataManager
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
 from substrapp.utils import get_hash
-from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.filters_utils import LogsPermissionFilter
 from substrapp.views.filters_utils import ProcessPermissionFilter
 from substrapp.views.utils import ApiResponse
@@ -166,7 +165,6 @@ class DataManagerRepFilter(FilterSet):
 class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
     filter_backends = (
         OrderingFilter,
-        CustomSearchFilter,
         MatchFilter,
         DjangoFilterBackend,
         ProcessPermissionFilter,
@@ -175,7 +173,6 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
     ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    custom_search_object_type = "dataset"
     filterset_class = DataManagerRepFilter
 
     def get_queryset(self):

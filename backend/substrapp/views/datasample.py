@@ -38,7 +38,6 @@ from substrapp.serializers import DataSampleSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
-from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import get_channel_name
@@ -315,11 +314,10 @@ class DataSampleRepFilter(FilterSet):
 
 class DataSampleViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_class = DataSampleRepSerializer
-    filter_backends = (OrderingFilter, CustomSearchFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "key", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    custom_search_object_type = "datasample"
     filterset_class = DataSampleRepFilter
 
     def get_queryset(self):

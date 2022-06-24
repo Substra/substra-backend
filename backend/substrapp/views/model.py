@@ -18,7 +18,6 @@ from organization.authentication import OrganizationUser
 from substrapp import exceptions
 from substrapp.models import Model
 from substrapp.utils import get_owner
-from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import PermissionMixin
@@ -69,13 +68,11 @@ class ModelRepFilter(FilterSet):
 
 
 class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
-    filter_backends = (OrderingFilter, CustomSearchFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, DjangoFilterBackend)
     pagination_class = DefaultPageNumberPagination
     serializer_class = ModelRepSerializer
     ordering_fields = ["creation_date", "key"]
     ordering = ["creation_date", "key"]
-    custom_search_object_type = "model"  # deprecated
-    custom_search_mapping_callback = validate_category  # deprecated
     filterset_class = ModelRepFilter
 
     def get_queryset(self):

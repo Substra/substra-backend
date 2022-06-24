@@ -277,28 +277,10 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_computeplan_list_search_filter(self):
-        """Filter compute_plan on key."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"search": f"compute_plan:key:{key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_computeplan_list_filter(self):
         """Filter compute_plan on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_computeplan_list_search_filter_and(self):
-        """Filter compute_plan on key and tag."""
-        key, tag = self.expected_results[0]["key"], self.expected_results[0]["tag"]
-        params = urlencode({"search": f"compute_plan:key:{key},compute_plan:tag:{tag}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -313,63 +295,11 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_computeplan_list_search_filter_in(self):
-        """Filter compute_plan in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"compute_plan:key:{key_0},compute_plan:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for cp in response.json().get("results"):
-            if cp["status"] == "PLAN_STATUS_DOING":
-                cp["duration"] = 3600
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
     def test_computeplan_list_filter_in(self):
         """Filter compute_plan in key_0, key_1"""
         key_0 = self.expected_results[0]["key"]
         key_1 = self.expected_results[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for cp in response.json().get("results"):
-            if cp["status"] == "PLAN_STATUS_DOING":
-                cp["duration"] = 3600
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_computeplan_list_search_filter_or(self):
-        """Filter compute_plan on key_0 or key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"compute_plan:key:{key_0}-OR-compute_plan:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for cp in response.json().get("results"):
-            if cp["status"] == "PLAN_STATUS_DOING":
-                cp["duration"] = 3600
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_computeplan_list_search_filter_or_and(self):
-        """Filter compute_plan on (key_0 and tag_0) or (key_1 and tag_1)."""
-        key_0, tag_0 = self.expected_results[0]["key"], self.expected_results[0]["tag"]
-        key_1, tag_1 = self.expected_results[1]["key"], self.expected_results[1]["tag"]
-        params = urlencode(
-            {
-                "search": (
-                    f"compute_plan:key:{key_0},compute_plan:tag:{tag_0}"
-                    f"-OR-compute_plan:key:{key_1},compute_plan:tag:{tag_1}"
-                )
-            }
-        )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
@@ -399,25 +329,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_computeplan_match_and_search_filter(self):
-        """Match compute_plan with filter."""
-        key = self.expected_results[0]["key"]
-        name = "cp156-MP-classification-PH1"
-        self.expected_results[0]["name"] = name
-        instance = ComputePlanRep.objects.get(key=key)
-        instance.name = name
-        instance.save()
-        params = urlencode(
-            {
-                "search": f"compute_plan:key:{key}",
-                "match": "cp156 PH1",
-            }
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_computeplan_match_and_filter(self):
         """Match compute_plan with filter."""
         key = self.expected_results[0]["key"]
@@ -436,42 +347,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
-
-    @parameterized.expand(
-        [
-            ("PLAN_STATUS_EMPTY"),
-            ("PLAN_STATUS_WAITING"),
-            ("PLAN_STATUS_TODO"),
-            ("PLAN_STATUS_DOING"),
-            ("PLAN_STATUS_DONE"),
-            ("PLAN_STATUS_CANCELED"),
-            ("PLAN_STATUS_FAILED"),
-            ("PLAN_STATUS_XXX"),
-        ]
-    )
-    def test_computeplan_list_search_filter_by_status(self, p_status):
-        """Filter computeplan on status."""
-        filtered_compute_plans = [cp for cp in self.expected_results if cp["status"] == p_status]
-        params = urlencode({"search": f"compute_plan:status:{p_status}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-
-        if p_status != "PLAN_STATUS_XXX":
-            # manually overriding duration for doing cps as "now" is taken from db and not timezone.now(),
-            # couldn't be properly mocked
-            if p_status == "PLAN_STATUS_DOING":
-                for cp in response.json().get("results"):
-                    cp["duration"] = 3600
-            self.assertEqual(
-                response.json(),
-                {
-                    "count": len(filtered_compute_plans),
-                    "next": None,
-                    "previous": None,
-                    "results": filtered_compute_plans,
-                },
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [

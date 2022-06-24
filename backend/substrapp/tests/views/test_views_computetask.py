@@ -553,28 +553,10 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_traintask_list_search_filter(self):
-        """Filter traintask on key."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"search": f"traintuple:key:{key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_traintask_list_filter(self):
         """Filter traintask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_traintask_list_search_filter_and(self):
-        """Filter traintask on key and owner."""
-        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        params = urlencode({"search": f"traintuple:key:{key},traintuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -589,16 +571,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_traintask_list_search_filter_in(self):
-        """Filter traintask in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"traintuple:key:{key_0},traintuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
     def test_traintask_list_filter_in(self):
         """Filter traintask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
@@ -608,64 +580,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
-
-    def test_traintask_list_search_filter_or(self):
-        """Filter traintask on key_0 or key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"traintuple:key:{key_0}-OR-traintuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_traintask_list_search_filter_or_and(self):
-        """Filter traintask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
-        params = urlencode(
-            {
-                "search": (
-                    f"traintuple:key:{key_0},traintuple:owner:{owner_0}"
-                    f"-OR-traintuple:key:{key_1},traintuple:owner:{owner_1}"
-                )
-            }
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    @parameterized.expand(
-        [
-            ("STATUS_WAITING",),
-            ("STATUS_TODO",),
-            ("STATUS_DOING",),
-            ("STATUS_DONE",),
-            ("STATUS_CANCELED",),
-            ("STATUS_FAILED",),
-            ("STATUS_XXX",),
-        ]
-    )
-    def test_traintask_list_search_filter_by_status(self, t_status):
-        """Filter traintask on status."""
-        filtered_train_tasks = [task for task in self.expected_results if task["status"] == t_status]
-        params = urlencode({"search": f"traintuple:status:{t_status}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-
-        if t_status != "STATUS_XXX":
-            if t_status == ComputeTaskRep.Status.STATUS_DOING:
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
-                response.json(),
-                {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
@@ -742,21 +656,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_traintask_match_and_search_filter(self):
-        """Match traintask with filter."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[19:]})
-        params = urlencode(
-            {
-                "search": "traintuple:status:STATUS_TODO",
-                "match": key[19:],
-            }
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_traintask_match_and_filter(self):
         """Match traintask with filter."""
         key = self.expected_results[0]["key"]
@@ -796,20 +695,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """List traintasks for a specific compute plan (CPtraintaskViewSet)."""
         url = reverse("substrapp:compute_plan_traintuple-list", args=[self.compute_plan.key])
         response = self.client.get(url, **self.extra)
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
-                task["duration"] = 3600
-        self.assertEqual(
-            response.json(),
-            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
-        )
-
-    def test_traintask_list_search_filter_cp_key(self):
-        """Filter traintask on key."""
-        params = urlencode({"search": f"traintuple:compute_plan_key:{self.compute_plan.key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -1100,28 +985,10 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_testtask_list_search_filter(self):
-        """Filter testtask on key."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"search": f"testtuple:key:{key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_testtask_list_filter(self):
         """Filter testtask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_testtask_list_search_filter_and(self):
-        """Filter testtask on key and owner."""
-        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        params = urlencode({"search": f"testtuple:key:{key},testtuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -1136,16 +1003,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_testtask_list_search_filter_in(self):
-        """Filter testtask in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"testtuple:key:{key_0},testtuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
     def test_testtask_list_filter_in(self):
         """Filter testtask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
@@ -1155,63 +1012,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
-
-    def test_testtask_list_search_filter_or(self):
-        """Filter testtask on key_0 or key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"testtuple:key:{key_0}-OR-testtuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_testtask_list_search_filter_or_and(self):
-        """Filter testtask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
-        params = urlencode(
-            {
-                "search": (
-                    f"testtuple:key:{key_0},testtuple:owner:{owner_0}"
-                    f"-OR-testtuple:key:{key_1},testtuple:owner:{owner_1}"
-                )
-            }
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    @parameterized.expand(
-        [
-            ("STATUS_WAITING",),
-            ("STATUS_TODO",),
-            ("STATUS_DOING",),
-            ("STATUS_DONE",),
-            ("STATUS_CANCELED",),
-            ("STATUS_FAILED",),
-            ("STATUS_XXX",),
-        ]
-    )
-    def test_testtask_list_search_filter_by_status(self, tt__status):
-        """Filter testtask on status."""
-        filtered_test_tasks = [task for task in self.expected_results if task["status"] == tt__status]
-        params = urlencode({"search": f"testtuple:status:{tt__status}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        if tt__status != "STATUS_XXX":
-            if tt__status == "STATUS_DOING":
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
-                response.json(),
-                {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
@@ -1248,21 +1048,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         """Match testtask on part of the name."""
         key = self.expected_results[0]["key"]
         params = urlencode({"match": key[19:]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_testtask_match_and_search_filter(self):
-        """Match testtask with filter."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[19:]})
-        params = urlencode(
-            {
-                "search": "testtuple:status:STATUS_TODO",
-                "match": key[19:],
-            }
-        )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -1713,28 +1498,10 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def test_compositetask_list_search_filter(self):
-        """Filter compositetask on key."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"search": f"composite_traintuple:key:{key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_compositetask_list_filter(self):
         """Filter compositetask on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_compositetask_list_search_filter_and(self):
-        """Filter compositetask on key and owner."""
-        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        params = urlencode({"search": f"composite_traintuple:key:{key},composite_traintuple:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -1749,16 +1516,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_compositetask_list_search_filter_in(self):
-        """Filter compositetask in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"composite_traintuple:key:{key_0},composite_traintuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
     def test_compositetask_list_filter_in(self):
         """Filter compositetask in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
@@ -1768,105 +1525,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
-
-    def test_compositetask_list_search_filter_or(self):
-        """Filter compositetask on key_0 or key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"composite_traintuple:key:{key_0}-OR-composite_traintuple:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_compositetask_list_search_filter_or_and(self):
-        """Filter compositetask on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
-        params = urlencode(
-            {
-                "search": (
-                    f"composite_traintuple:key:{key_0},composite_traintuple:owner:{owner_0}"
-                    f"-OR-composite_traintuple:key:{key_1},composite_traintuple:owner:{owner_1}"
-                )
-            }
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    @parameterized.expand(
-        [
-            ("STATUS_WAITING",),
-            ("STATUS_TODO",),
-            ("STATUS_DOING",),
-            ("STATUS_DONE",),
-            ("STATUS_CANCELED",),
-            ("STATUS_FAILED",),
-            ("STATUS_XXX",),
-        ]
-    )
-    def test_compositetask_list_search_filter_by_status(self, t_status):
-        """Filter compositetask on status."""
-        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == t_status]
-        params = urlencode({"search": f"composite_traintuple:status:{t_status}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-
-        if t_status != "STATUS_XXX":
-            if t_status == "STATUS_DOING":
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
-                response.json(),
-                {
-                    "count": len(filtered_composite_tasks),
-                    "next": None,
-                    "previous": None,
-                    "results": filtered_composite_tasks,
-                },
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @parameterized.expand(
-        [
-            ("STATUS_WAITING",),
-            ("STATUS_TODO",),
-            ("STATUS_DOING",),
-            ("STATUS_DONE",),
-            ("STATUS_CANCELED",),
-            ("STATUS_FAILED",),
-            ("STATUS_XXX",),
-        ]
-    )
-    def test_compositetask_list_filter_by_status(self, t_status):
-        """Filter compositetask on status."""
-        filtered_composite_tasks = [task for task in self.expected_results if task["status"] == t_status]
-        params = urlencode({"search": f"composite_traintuple:status:{t_status}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-
-        if t_status != "STATUS_XXX":
-            if t_status == "STATUS_DOING":
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
-                response.json(),
-                {
-                    "count": len(filtered_composite_tasks),
-                    "next": None,
-                    "previous": None,
-                    "results": filtered_composite_tasks,
-                },
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
@@ -1904,21 +1562,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         """Match compositetask on part of the name."""
         key = self.expected_results[0]["key"]
         params = urlencode({"match": key[19:]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_compositetask_match_and_search_filter(self):
-        """Match compositetask with filter."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"match": key[19:]})
-        params = urlencode(
-            {
-                "search": "composite_traintuple:status:STATUS_TODO",
-                "match": key[19:],
-            }
-        )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}

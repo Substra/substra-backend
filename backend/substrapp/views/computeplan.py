@@ -26,7 +26,6 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.views.filters_utils import CustomSearchFilter
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import ChoiceInFilter
@@ -210,14 +209,11 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     pagination_class = SmallPageNumberPagination
     filter_backends = (
         MetadataOrderingFilter,
-        CustomSearchFilter,
         MatchFilter,
         DjangoFilterBackend,
         MetadataFilterBackend,
     )
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration"]
-    custom_search_object_type = "compute_plan"  # deprecated
-    custom_search_mapping_callback = validate_status  # deprecated
     search_fields = ("key", "name")
     filterset_class = ComputePlanRepFilter
 

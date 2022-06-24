@@ -160,28 +160,10 @@ class ModelViewTests(APITestCase):
         for result, model in zip(response.data["results"], self.expected_results):
             self.assertEqual(result["address"]["storage_address"], model["address"]["storage_address"])
 
-    def test_model_list_search_filter(self):
-        """Filter model on key."""
-        key = self.expected_results[0]["key"]
-        params = urlencode({"search": f"model:key:{key}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
     def test_model_list_filter(self):
         """Filter model on key."""
         key = self.expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
-        )
-
-    def test_model_list_search_filter_and(self):
-        """Filter model on key and owner."""
-        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        params = urlencode({"search": f"model:key:{key},model:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
@@ -196,16 +178,6 @@ class ModelViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
         )
 
-    def test_model_list_search_filter_in(self):
-        """Filter model in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"model:key:{key_0},model:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
     def test_model_list_filter_in(self):
         """Filter model in key_0, key_1."""
         key_0 = self.expected_results[0]["key"]
@@ -215,48 +187,6 @@ class ModelViewTests(APITestCase):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
-
-    def test_model_list_search_filter_or(self):
-        """Filter model on key_0 or key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
-        params = urlencode({"search": f"model:key:{key_0}-OR-model:key:{key_1}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    def test_model_list_search_filter_or_and(self):
-        """Filter model on (key_0 and owner_0) or (key_1 and owner_1)."""
-        key_0, owner_0 = self.expected_results[0]["key"], self.expected_results[0]["owner"]
-        key_1, owner_1 = self.expected_results[1]["key"], self.expected_results[1]["owner"]
-        params = urlencode(
-            {"search": f"model:key:{key_0},model:owner:{owner_0}-OR-model:key:{key_1},model:owner:{owner_1}"}
-        )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
-        )
-
-    @parameterized.expand(
-        [
-            ("MODEL_SIMPLE",),
-            ("MODEL_HEAD",),
-            ("MODEL_XXX",),  # INVALID
-        ]
-    )
-    def test_model_list_search_filter_by_category(self, category):
-        """Filter model on category."""
-        filtered_models = [task for task in self.expected_results if task["category"] == category]
-        params = urlencode({"search": f"model:category:{category}"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        if category != "MODEL_XXX":
-            self.assertEqual(
-                response.json(),
-                {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [
