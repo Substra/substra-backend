@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed the search parameter from API (#1123)
 
+
+### Changed
+
+- Return HTTP 413 "Payload Too Large" when the orchestrator gRPC payload exceeds max size (#1122)
+
 ## [0.19.0] 2022-06-20
 
 ### Fixed

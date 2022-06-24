@@ -12,7 +12,7 @@ logger = structlog.get_logger(__name__)
 def api_exception_handler(exc, context):
     """API Exception handler."""
     if isinstance(exc, orchestrator.error.OrcError):
-        return response.Response({"message": exc.details}, status=exc.http_status())
+        return response.Response({"message": exc.details}, status=exc.http_status)
 
     if isinstance(exc, utils.ValidationExceptionError):
         return response.Response({"message": exc.data, "key": exc.key}, status=exc.st)
