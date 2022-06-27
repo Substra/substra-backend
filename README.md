@@ -29,7 +29,7 @@ Each organization will have:
 - Kaniko cache warmer
 - [Celery beat](./charts/substra-backend/templates/deployment-scheduler.yaml)
 - 2 celery workers (a [worker](./charts/substra-backend/templates/statefulset-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler-worker.yaml) restarting hanging tasks and performing cleanup tasks)
-- an [operator pattern to add accounts](./charts/substra-backend/templates/add-account-operator.yaml)
+- a [_Job_](./charts/substra-backend/templates/job-migrations.yaml) to run migrations and add accounts. 
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
 - the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the orchestrator into celery tasks
 
@@ -116,7 +116,7 @@ kubectl -n org-1 exec -i -t $(kubectl -n org-1 get pods -l=app.kubernetes.io/nam
 
 This will also gives you access to the [celery CLI](https://docs.celeryproject.org/en/stable/reference/cli.html). You can issue `celery inspect active_queues` to examine consumed queues.
 
-## Running substrap in a venv
+## Running substrapp in a venv
 If your useCase only involves the django app (not the eventapp, nor the compute engine for instance), you may easily run it and serve the API without a k8s cluster.
 See [this page](./docs/localdev.md)
 
