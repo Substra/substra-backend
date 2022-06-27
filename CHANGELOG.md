@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] 2022-06-27
+
 ### Added
 
 - Filtering and ordering on duration in CPs ans Tasks views (#1101)
@@ -20,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Removed the search parameter from API (#1123)
-
 
 ### Changed
 
