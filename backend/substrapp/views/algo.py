@@ -24,7 +24,6 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import ProcessPermissionFilter
-from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import ChoiceInFilter
@@ -36,21 +35,19 @@ from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
 
-ALGO_CATEGORIES = {
-    "algo": [
-        AlgoRep.Category.ALGO_SIMPLE,
-        AlgoRep.Category.ALGO_AGGREGATE,
-        AlgoRep.Category.ALGO_COMPOSITE,
-        AlgoRep.Category.ALGO_PREDICT,
-    ],
-    "metric": [AlgoRep.Category.ALGO_METRIC],
-}
+ALGO_CATEGORIES = [
+    AlgoRep.Category.ALGO_SIMPLE,
+    AlgoRep.Category.ALGO_AGGREGATE,
+    AlgoRep.Category.ALGO_COMPOSITE,
+    AlgoRep.Category.ALGO_PREDICT,
+    AlgoRep.Category.ALGO_METRIC,
+]
 
 
 def _register_in_orchestrator(request, basename, instance):
     """Register algo in orchestrator."""
 
-    category = AlgoRep.Category.ALGO_METRIC if basename == "metric" else request.data["category"]
+    category = request.data["category"]
     try:
         getattr(AlgoRep.Category, category)  # validate category
     except AttributeError:
@@ -196,7 +193,7 @@ class AlgoViewSetConfig:
 
     @property
     def categories(self):
-        return ALGO_CATEGORIES[self.basename.removeprefix(CP_BASENAME_PREFIX)]
+        return ALGO_CATEGORIES
 
     def get_queryset(self):
         return AlgoRep.objects.filter(channel=get_channel_name(self.request), category__in=self.categories)

@@ -43,13 +43,12 @@ class AlgoViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:algo-list")
-        self.metric_url = reverse("substrapp:metric-list")
 
         simple_algo = factory.create_algo(category=AlgoRep.Category.ALGO_SIMPLE, name="simple algo")
         aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE, name="aggregate")
         composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE, name="composite")
-        metric_algo = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC, name="metric")
         predict_algo = factory.create_algo(category=AlgoRep.Category.ALGO_PREDICT, name="predict")
+        metric_algo = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC, name="metric")
 
         self.algos = [simple_algo, aggregate_algo, composite_algo, predict_algo]
         self.expected_algos = [
@@ -165,9 +164,6 @@ class AlgoViewTests(APITestCase):
                 "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_PREDICT"],
                 "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_PREDICT"],
             },
-        ]
-
-        self.expected_metrics = [
             {
                 "key": str(metric_algo.key),
                 "name": "metric",
@@ -197,8 +193,6 @@ class AlgoViewTests(APITestCase):
                 "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_METRIC"],
             },
         ]
-
-        self.expected_results = self.expected_algos + self.expected_metrics
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -246,30 +240,30 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter(self):
         """Filter algo on key."""
-        key = self.expected_results[0]["key"]
+        key = self.expected_algos[0]["key"]
         params = urlencode({"key": key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_algos[:1]}
         )
 
     def test_algo_list_filter_and(self):
         """Filter algo on key and owner."""
-        key, owner = self.expected_results[0]["key"], self.expected_results[0]["owner"]
+        key, owner = self.expected_algos[0]["key"], self.expected_algos[0]["owner"]
         params = urlencode({"key": key, "owner": owner})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_algos[:1]}
         )
 
     def test_algo_list_filter_in(self):
         """Filter algo in key_0, key_1."""
-        key_0 = self.expected_results[0]["key"]
-        key_1 = self.expected_results[1]["key"]
+        key_0 = self.expected_algos[0]["key"]
+        key_1 = self.expected_algos[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_algos[:2]}
         )
 
     @parameterized.expand(
@@ -283,10 +277,9 @@ class AlgoViewTests(APITestCase):
     )
     def test_algo_list_filter_by_category(self, category):
         """Filter algo on category."""
-        filtered_algos = [task for task in self.expected_results if task["category"] == category]
+        filtered_algos = [task for task in self.expected_algos if task["category"] == category]
         params = urlencode({"category": category})
-        url = self.metric_url if category == "ALGO_METRIC" else self.url
-        response = self.client.get(f"{url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if category != "ALGO_XXX":
             self.assertEqual(
@@ -304,7 +297,7 @@ class AlgoViewTests(APITestCase):
     )
     def test_algo_list_filter_by_category_in(self, categories):
         """Filter algo on several categories."""
-        filtered_algos = [task for task in self.expected_results if task["category"] in categories]
+        filtered_algos = [task for task in self.expected_algos if task["category"] in categories]
         params = urlencode({"category": ",".join(categories)})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -317,20 +310,20 @@ class AlgoViewTests(APITestCase):
         params = urlencode({"match": "le al"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_algos[:1]}
         )
 
     def test_algo_match_and_filter(self):
         """Match algo with filter."""
         params = urlencode(
             {
-                "key": self.expected_results[0]["key"],
+                "key": self.expected_algos[0]["key"],
                 "match": "le al",
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
-            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_algos[:1]}
         )
 
     def test_algo_list_cross_assets_filters(self):
@@ -347,17 +340,17 @@ class AlgoViewTests(APITestCase):
         # filter on compute_plan_key
         params = urlencode({"compute_plan_key": compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:2])
+        self.assertEqual(response.json().get("results"), self.expected_algos[:2])
 
         # filter on dataset_key
         params = urlencode({"dataset_key": data_manager.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+        self.assertEqual(response.json().get("results"), self.expected_algos[:1])
 
         # filter on data_sample_key
         params = urlencode({"data_sample_key": data_sample.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+        self.assertEqual(response.json().get("results"), self.expected_algos[:1])
 
     def test_algo_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
@@ -395,10 +388,10 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "count": len(self.expected_results[:2]),
+                "count": len(self.expected_algos[:2]),
                 "next": None,
                 "previous": None,
-                "results": self.expected_results[:2],
+                "results": self.expected_algos[:2],
             },
         )
 
@@ -406,12 +399,12 @@ class AlgoViewTests(APITestCase):
         public_algo = AlgoRep.objects.get(key=self.expected_algos[0]["key"])
         public_algo.permissions_process_public = True
         public_algo.save()
-        self.expected_results[0]["permissions"]["process"]["public"] = True
+        self.expected_algos[0]["permissions"]["process"]["public"] = True
 
         shared_algo = AlgoRep.objects.get(key=self.expected_algos[1]["key"])
         shared_algo.permissions_process_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
         shared_algo.save()
-        self.expected_results[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
+        self.expected_algos[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
 
         params = urlencode({"can_process": "MyOrg1MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -485,7 +478,7 @@ class AlgoViewTests(APITestCase):
             self.assertIsNotNone(response.data["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             # asset created in local db
-            self.assertEqual(AlgoRep.objects.count(), len(self.expected_results) + 1)
+            self.assertEqual(AlgoRep.objects.count(), len(self.expected_algos) + 1)
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -551,7 +544,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "register_algo", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(AlgoRep.objects.count(), len(self.expected_results))
+        self.assertEqual(AlgoRep.objects.count(), len(self.expected_algos))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
@@ -562,32 +555,30 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_retrieve(self):
-        url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
+        url = reverse("substrapp:algo-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
-        self.assertEqual(response.json(), self.expected_results[0])
+        self.assertEqual(response.json(), self.expected_algos[0])
 
     def test_algo_retrieve_wrong_channel(self):
-        url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
+        url = reverse("substrapp:algo-detail", args=[self.expected_algos[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_algo_retrieve_storage_addresses_update(self):
-        algo = AlgoRep.objects.get(key=self.expected_results[0]["key"])
+        algo = AlgoRep.objects.get(key=self.expected_algos[0]["key"])
         algo.description_address.replace("http://testserver", "http://remotetestserver")
         algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
         algo.save()
 
-        url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
+        url = reverse("substrapp:algo-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         for field in ("description", "algorithm"):
-            self.assertEqual(
-                response.data[field]["storage_address"], self.expected_results[0][field]["storage_address"]
-            )
+            self.assertEqual(response.data[field]["storage_address"], self.expected_algos[0][field]["storage_address"])
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.algo.AlgoViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_algo_retrieve_fail(self, _):
-        url = reverse("substrapp:algo-detail", args=[self.expected_results[0]["key"]])
+        url = reverse("substrapp:algo-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
