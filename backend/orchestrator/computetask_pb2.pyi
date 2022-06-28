@@ -72,6 +72,7 @@ class _ComputeTaskActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapp
     TASK_ACTION_DOING: _ComputeTaskAction.ValueType  # 1
     TASK_ACTION_CANCELED: _ComputeTaskAction.ValueType  # 2
     TASK_ACTION_FAILED: _ComputeTaskAction.ValueType  # 3
+    TASK_ACTION_DONE: _ComputeTaskAction.ValueType  # 4
 class ComputeTaskAction(_ComputeTaskAction, metaclass=_ComputeTaskActionEnumTypeWrapper):
     pass
 
@@ -79,6 +80,7 @@ TASK_ACTION_UNKNOWN: ComputeTaskAction.ValueType  # 0
 TASK_ACTION_DOING: ComputeTaskAction.ValueType  # 1
 TASK_ACTION_CANCELED: ComputeTaskAction.ValueType  # 2
 TASK_ACTION_FAILED: ComputeTaskAction.ValueType  # 3
+TASK_ACTION_DONE: ComputeTaskAction.ValueType  # 4
 global___ComputeTaskAction = ComputeTaskAction
 
 
