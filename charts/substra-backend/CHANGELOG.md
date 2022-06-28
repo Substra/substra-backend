@@ -1,5 +1,10 @@
 # Changelog
 
+## 18.3.1
+
+### Fixed
+- Properly reload workers statefulset on secret change
+
 ## 18.3.0
 
 ### Added

@@ -42,7 +42,7 @@ spec:
         checksum-cm-rabbitmq: {{ include (print $.Template.BasePath "/configmap-rabbitmq.yaml") . | sha256sum }}
         checksum-secret-objectstore : {{ include (print $.Template.BasePath "/secret-objectstore.yaml") . | sha256sum }}
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
-        checksum-secret-database : {{ include (print $.Template.BasePath "/secret-rabbitmq.yaml") . | sha256sum }}
+        checksum-secret-rabbitmq : {{ include (print $.Template.BasePath "/secret-rabbitmq.yaml") . | sha256sum }}
     spec:
       {{- if .Values.worker.podSecurityContext.enabled }}
       securityContext:
