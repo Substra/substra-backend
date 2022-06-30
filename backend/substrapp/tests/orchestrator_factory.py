@@ -367,6 +367,14 @@ class MockOrchestratorClient(OrchestratorClient):
 
         return MessageToDict(dm, **CONVERT_SETTINGS)
 
+    def update_task_status(self, compute_task_key, action, log=""):
+        del log
+        task = self.tasks.get(compute_task_key)
+        if not task:
+            raise OrcError()
+        action_to_status = {computetask_pb2.TASK_ACTION_DONE: computetask_pb2.STATUS_DONE}
+        task.status = action_to_status[action]
+
 
 class AddressableFactory(factory.Factory):
     class Meta:

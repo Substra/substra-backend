@@ -30,8 +30,7 @@ def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrato
     mock_restore_dir = mocker.patch("substrapp.tasks.tasks_compute_task.restore_dir")
     mock_build_image = mocker.patch("substrapp.tasks.tasks_compute_task.build_images")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
-    mock_save_models = mocker.patch("substrapp.tasks.tasks_compute_task.save_models")
-    mock_commit_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.commit_dir")
+    mock_save_outputs = mocker.patch("substrapp.tasks.tasks_compute_task.save_outputs")
     mock_teardown_task_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
 
     train_task = orchestrator.create_train_task(status=computetask_pb2.STATUS_DOING)
@@ -61,8 +60,7 @@ def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrato
     mock_restore_dir.assert_called_once()
     mock_build_image.assert_called_once()
     mock_execute_compute_task.assert_called_once()
-    mock_save_models.assert_called_once()
-    mock_commit_dirs.assert_called_once()
+    mock_save_outputs.assert_called_once()
     mock_teardown_task_dirs.assert_called_once()
 
     # test RPC error
@@ -70,7 +68,7 @@ def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrato
     error.details = "OE0000"
     error.code = lambda: StatusCode.NOT_FOUND
 
-    mock_save_models.side_effect = error
+    mock_save_outputs.side_effect = error
     with pytest.raises(errors.CeleryRetryError) as excinfo:
         compute_task(CHANNEL, task, None)
     assert str(excinfo.value.__cause__.details) == "OE0000"
@@ -108,8 +106,6 @@ def test_celery_retry(mocker: MockerFixture, orchestrator: Orchestrator):
     mocker.patch("substrapp.tasks.tasks_compute_task.restore_dir")
     mocker.patch("substrapp.tasks.tasks_compute_task.build_images")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
-    mocker.patch("substrapp.tasks.tasks_compute_task.save_models")
-    mocker.patch("substrapp.tasks.tasks_compute_task.commit_dir")
     mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
     mock_retry = mocker.patch("substrapp.tasks.tasks_compute_task.ComputeTask.retry")
     mock_clear_asset_buffer = mocker.patch("substrapp.tasks.tasks_compute_task.clear_assets_buffer")

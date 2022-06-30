@@ -6,8 +6,8 @@ from unittest import mock
 
 import pytest
 
+import orchestrator.client as orc_client
 import orchestrator.computetask_pb2 as computetask_pb2
-from orchestrator import client as orc_client
 from substrapp.compute_tasks import compute_task as task_utils
 
 RUNNABLE_TASK_STATUSES = sorted(task_utils._RUNNABLE_TASK_STATUSES)
@@ -51,7 +51,7 @@ def test_raise_if_task_not_runnable_raise_TaskNonRunnableStatusError(task_status
     task = {"status": task_status}
 
     with pytest.raises(task_utils.TaskNonRunnableStatusError) as exc:
-        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
+        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, existing_task=task)
         assert exc.status == task_status
 
 
@@ -64,7 +64,7 @@ def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # 
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
     with pytest.raises(task_utils.ComputePlanNonRunnableStatusError) as exc:
-        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
+        task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, existing_task=task)
         assert exc.status == compute_plan_status
 
     client.query_compute_plan.assert_called_once()
@@ -78,7 +78,7 @@ def test_raise_if_task_not_runnable_do_not_raise(task_status: str, compute_plan_
     task = {"status": task_status, "compute_plan_key": "cp-key"}
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
-    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, task=task)
+    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, existing_task=task)
 
     client.query_compute_plan.assert_called_once()
 
@@ -88,7 +88,7 @@ def test_raise_if_task_not_runnable_allow_doing_do_not_raise(compute_plan_status
     task = {"status": task_utils._TASK_STATUS_DOING, "compute_plan_key": "cp-key"}
     client.query_compute_plan.return_value = {"status": compute_plan_status}
 
-    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_doing=True, task=task)
+    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_doing=True, existing_task=task)
 
     client.query_compute_plan.assert_called_once()
 

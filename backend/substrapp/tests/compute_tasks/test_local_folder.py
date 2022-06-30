@@ -15,13 +15,12 @@ from substrapp.tests.orchestrator_factory import Orchestrator
 CHANNEL = "mychannel"
 
 
-@pytest.mark.parametrize("text, compute_job_raises", [("with_exception", False), ("with_exception", True)])
-def test_local_folder(text: str, compute_job_raises: bool, settings, mocker: MockerFixture, orchestrator: Orchestrator):
+@pytest.mark.parametrize("compute_job_raises", [False, True], ids=["wihtout_exception", "with_exception"])
+def test_local_folder(compute_job_raises: bool, settings, mocker: MockerFixture, orchestrator: Orchestrator):
     """
     This test ensures that changes to the subtuple local folder are reflected to the compute plan local folder iff
     the tuple execution succeeds.
     """
-    del text
     settings.LEDGER_CHANNELS = {CHANNEL: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
     mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
     mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client", return_value=orchestrator.client)
@@ -31,7 +30,7 @@ def test_local_folder(text: str, compute_job_raises: bool, settings, mocker: Moc
     mocker.patch("substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer")
     mocker.patch("substrapp.tasks.tasks_compute_task.add_assets_to_taskdir")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
-    mocker.patch("substrapp.tasks.tasks_compute_task.save_models")
+    mocker.patch("substrapp.compute_tasks.outputs.save_models")
     mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
 
     file = "model.txt"

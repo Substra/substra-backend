@@ -15,9 +15,7 @@ We also handle the retry logic here.
 from __future__ import annotations
 
 import errno
-import json
 import os
-from os import path
 from typing import Any
 from typing import Optional
 from typing import Tuple
@@ -41,13 +39,10 @@ from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
 from substrapp.compute_tasks.asset_buffer import clear_assets_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
-from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import CPDirName
-from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
-from substrapp.compute_tasks.directories import commit_dir
 from substrapp.compute_tasks.directories import init_compute_plan_dirs
 from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
@@ -56,7 +51,7 @@ from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
-from substrapp.compute_tasks.save_models import save_models
+from substrapp.compute_tasks.outputs import save_outputs
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
@@ -75,21 +70,12 @@ class ComputeTask(Task):
 
     @property
     def attempt(self) -> int:
-        return self.request.retries + 1
+        return self.request.retries + 1  # type: ignore
 
     def on_success(self, retval: dict[str, Any], task_id: str, args: Tuple, kwargs: dict[str, Any]) -> None:
         from django.db import close_old_connections
 
         close_old_connections()
-
-        channel_name, task = self.split_args(args)
-        with get_orchestrator_client(channel_name) as client:
-            category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
-            if category == computetask_pb2.TASK_TEST:
-                for metric_key, perf in retval["result"]["performances"].items():
-                    client.register_performance(
-                        {"compute_task_key": task["key"], "metric_key": metric_key, "performance_value": float(perf)}
-                    )
 
     def on_retry(self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
@@ -204,9 +190,9 @@ def queue_compute_task(channel_name: str, task: dict[str, Any]) -> None:
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> dict[str, Any]:
+def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:
     try:
-        return _run(self, channel_name, task, compute_plan_key)
+        _run(self, channel_name, task, compute_plan_key)
     except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
         logger.exception(exception)
         raise celery.exceptions.Ignore
@@ -222,20 +208,8 @@ def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], com
 
 
 # TODO: function too complex, consider refactoring
-def _run(  # noqa: C901
-    self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str
-) -> dict[str, Any]:
+def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:  # noqa: C901
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
-
-    try:
-        worker = self.request.hostname.split("@")[1]
-        queue = self.request.delivery_info["routing_key"]
-    except Exception:
-        worker = f"{settings.ORG_NAME}.worker"
-        queue = f"{settings.ORG_NAME}"
-
-    result: dict[str, Any] = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
-
     task_key = task["key"]
     logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt)
 
@@ -292,16 +266,9 @@ def _run(  # noqa: C901
             execute_compute_task(ctx)
 
             # Collect results
-            if task_category == computetask_pb2.TASK_TEST:
-                result["result"] = {"performances": {}}
-                for metric in ctx.metrics:
-                    result["result"]["performances"][metric.key] = _get_perf(dirs, metric.key)
-            else:
-                logger.info("Saving models and local folder")
-                save_models(ctx)
-                commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
-                if ctx.has_chainkeys:
-                    commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
+            save_outputs(ctx)
+            with get_orchestrator_client(channel_name) as client:
+                task_utils.mark_as_done(ctx.task_key, client)
 
     except OSError as e:
         if e.errno == errno.ENOSPC:
@@ -325,14 +292,6 @@ def _run(  # noqa: C901
             pass
 
     logger.info("Compute task finished")
-    return result
-
-
-def _get_perf(dirs: Directories, metric_key: str) -> dict[str, Any]:
-    with open(
-        path.join(dirs.task_dir, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance])), "r"
-    ) as perf_file:
-        return json.load(perf_file)["all"]
 
 
 def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str) -> None:

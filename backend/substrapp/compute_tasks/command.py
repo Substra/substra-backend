@@ -43,6 +43,18 @@ TASK_COMMANDS = {
 }
 
 
+def get_performance_filename(algo_key: str) -> str:
+    """Builds the performance filename
+
+    Args:
+        algo_key: The key of the algo that produce this performance file.
+
+    Returns:
+        A string representation of the performance filename.
+    """
+    return "-".join([algo_key, Filenames.Performance])
+
+
 def get_exec_command(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> List[str]:
     entrypoint = ImageEntrypoint.objects.get(algo_checksum=algo.checksum)
 
@@ -81,7 +93,7 @@ def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]
     outputs = []
 
     if is_testtuple_eval:
-        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, "-".join([algo_key, Filenames.Performance]))
+        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(algo_key))
         command = ["--input-predictions-path", pred_path]
         command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [

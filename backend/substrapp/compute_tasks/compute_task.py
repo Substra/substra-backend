@@ -7,14 +7,16 @@ import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.error import OrcError
 
-_RUNNABLE_TASK_STATUSES = [computetask_pb2.STATUS_TODO]
-_RUNNABLE_TASK_STATUSES = {computetask_pb2.ComputeTaskStatus.Name(s) for s in _RUNNABLE_TASK_STATUSES}
+_RUNNABLE_TASK_STATUSES_VALUES = [computetask_pb2.STATUS_TODO]
+_RUNNABLE_TASK_STATUSES = {computetask_pb2.ComputeTaskStatus.Name(s) for s in _RUNNABLE_TASK_STATUSES_VALUES}
 _NON_RUNNABLE_TASK_STATUSES = set(computetask_pb2.ComputeTaskStatus.keys()) - _RUNNABLE_TASK_STATUSES
 
 _TASK_STATUS_DOING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.ComputeTaskStatus.STATUS_DOING)
 
-_RUNNABLE_COMPUTE_PLAN_STATUSES = [computeplan_pb2.PLAN_STATUS_TODO, computeplan_pb2.PLAN_STATUS_DOING]
-_RUNNABLE_COMPUTE_PLAN_STATUSES = {computeplan_pb2.ComputePlanStatus.Name(s) for s in _RUNNABLE_COMPUTE_PLAN_STATUSES}
+_RUNNABLE_COMPUTE_PLAN_STATUSES_VALUES = [computeplan_pb2.PLAN_STATUS_TODO, computeplan_pb2.PLAN_STATUS_DOING]
+_RUNNABLE_COMPUTE_PLAN_STATUSES = {
+    computeplan_pb2.ComputePlanStatus.Name(s) for s in _RUNNABLE_COMPUTE_PLAN_STATUSES_VALUES
+}
 _NON_RUNNABLE_COMPUTE_PLAN_STATUSES = set(computeplan_pb2.ComputePlanStatus.keys()) - _RUNNABLE_COMPUTE_PLAN_STATUSES
 
 logger = structlog.get_logger(__name__)
@@ -55,7 +57,10 @@ class ComputePlanNonRunnableStatusError(_NonRunnableStatusError):
 
 
 def _raise_if_task_not_runnable(
-    task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False, task: dict[str, Any] = None
+    task_key: str,
+    client: orc_client.OrchestratorClient,
+    allow_doing: bool = False,
+    existing_task: dict[str, Any] = None,
 ) -> None:
     """Raise an exception if a compute task is not runnable by taking into account its status
     and the status of the associated compute plan.
@@ -64,7 +69,8 @@ def _raise_if_task_not_runnable(
         task_key: the compute task key
         client: the orchestrator gRPC client.
         allow_doing: whether a compute task with the status DOING should be considered as runnable.
-        task: the compute task. if specified this task will be used to check the status instead of retrieving a task
+        existing_task: the compute task.
+            if specified this task will be used to check the status instead of retrieving a task
 
     Returns:
         None if the task is runnable.
@@ -75,8 +81,7 @@ def _raise_if_task_not_runnable(
             of its associated compute plan.
 
     """
-    if not task:
-        task = client.query_task(task_key)
+    task: dict[str, Any] = existing_task if existing_task else client.query_task(task_key)
 
     if not _is_task_status_runnable(task, allow_doing):
         raise TaskNonRunnableStatusError(task["status"])
@@ -128,7 +133,7 @@ def abort_task_if_not_runnable(
 
     """
     try:
-        _raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing, task=task)
+        _raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing, existing_task=task)
     except ComputePlanNonRunnableStatusError as exc:
         logger.info("Compute plan not runnable. Canceling task.", compute_plan_status=exc.status)
         client.update_task_status(
@@ -162,3 +167,18 @@ def start_task_if_not_started(task: dict[str, Any], client: orc_client.Orchestra
                 task_key=task["key"],
             )
             raise
+
+
+def mark_as_done(task_key: str, client: orc_client.OrchestratorClient) -> None:
+    """Transition a compute task to DONE
+
+    Args:
+        task_key: the key of the compute task to set to DONE.
+        client: the orchestrator gRPC client.
+    """
+    try:
+        client.update_task_status(task_key, computetask_pb2.TASK_ACTION_DONE, "task completed")
+    except OrcError as err:
+        if "transitionDone inappropriate in current state STATUS_DONE" in err.details:
+            return
+        raise
