@@ -1,4 +1,4 @@
-FROM python:3.9-buster AS build
+FROM python:3.9-bullseye AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
