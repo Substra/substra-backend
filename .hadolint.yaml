@@ -1,0 +1,4 @@
+ignored:
+  # ignore the rule https://github.com/hadolint/hadolint/wiki/DL3008 of hadolint
+  # apk package will be updated using docker-dependency-updater
+  - DL3008
