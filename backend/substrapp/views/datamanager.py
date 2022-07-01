@@ -22,11 +22,11 @@ from substrapp.models import DataManager
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
 from substrapp.utils import get_hash
+from substrapp.views.filters_utils import CharInFilter
 from substrapp.views.filters_utils import LogsPermissionFilter
+from substrapp.views.filters_utils import MatchFilter
 from substrapp.views.filters_utils import ProcessPermissionFilter
 from substrapp.views.utils import ApiResponse
-from substrapp.views.utils import CharInFilter
-from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name

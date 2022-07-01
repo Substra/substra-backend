@@ -17,10 +17,10 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import CPPerformanceSerializer as CPPerformanceRepSerializer
 from localrep.serializers import ExportPerformanceSerializer as ExportPerformanceRepSerializer
-from substrapp.views.utils import CharInFilter
-from substrapp.views.utils import ChoiceInFilter
-from substrapp.views.utils import MatchFilter
-from substrapp.views.utils import UUIDInFilter
+from substrapp.views.filters_utils import CharInFilter
+from substrapp.views.filters_utils import ChoiceInFilter
+from substrapp.views.filters_utils import MatchFilter
+from substrapp.views.filters_utils import UUIDInFilter
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)

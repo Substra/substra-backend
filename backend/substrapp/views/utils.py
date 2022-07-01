@@ -5,16 +5,8 @@ from wsgiref.util import is_hop_by_hop
 
 import django.http
 from django.conf import settings
-from django.forms import CharField
-from django.forms import ChoiceField
-from django.forms import UUIDField
-from django_filters.rest_framework import BaseInFilter
-from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import ChoiceFilter
-from django_filters.rest_framework import UUIDFilter
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -262,34 +254,3 @@ def permissions_union(x, y):
         "public": False,
         "authorized_ids": list(set(x["authorized_ids"]).union(set(y["authorized_ids"]))),
     }
-
-
-class MatchFilter(SearchFilter):
-    """Full text search in a selected number of fields.
-
-    Searches by default in key and name.
-    The list can be customized through the search_fields attribute on the view."""
-
-    search_param = "match"
-    default_search_fields = ("key", "name")
-
-    def get_search_fields(self, view, request):
-        return getattr(view, "search_fields", self.default_search_fields)
-
-
-class ChoiceInFilter(BaseInFilter, ChoiceFilter):
-    """Allow choice field to be filtered with IN lookup passing comma separated values list"""
-
-    field_class = ChoiceField
-
-
-class CharInFilter(BaseInFilter, CharFilter):
-    """Allow char field to be filtered with IN lookup passing comma separated values list"""
-
-    field_class = CharField
-
-
-class UUIDInFilter(BaseInFilter, UUIDFilter):
-    """Allow uuid field to be filtered with IN lookup passing comma separated values list"""
-
-    field_class = UUIDField

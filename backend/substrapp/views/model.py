@@ -18,8 +18,8 @@ from organization.authentication import OrganizationUser
 from substrapp import exceptions
 from substrapp.models import Model
 from substrapp.utils import get_owner
+from substrapp.views.filters_utils import ChoiceInFilter
 from substrapp.views.utils import AssetPermissionError
-from substrapp.views.utils import ChoiceInFilter
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import if_true

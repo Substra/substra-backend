@@ -1,7 +1,9 @@
 import structlog
 from django.db import models
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.db.models.functions import Extract
+from django.db.models.functions import JSONObject
 from django.db.models.functions import Now
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import CharFilter
@@ -24,12 +26,13 @@ from localrep.serializers import ComputeTaskWithRelationshipsSerializer as Compu
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
+from substrapp.views.filters_utils import CharInFilter
+from substrapp.views.filters_utils import ChoiceInFilter
+from substrapp.views.filters_utils import MatchFilter
+from substrapp.views.filters_utils import MetadataFilterBackend
 from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
-from substrapp.views.utils import CharInFilter
-from substrapp.views.utils import ChoiceInFilter
-from substrapp.views.utils import MatchFilter
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import permissions_intersect
@@ -286,6 +289,21 @@ class ComputePlanKeyOrderingFilter(OrderingFilter):
         return [v.replace("compute_plan_key", "compute_plan_id") for v in ordering]
 
 
+class ComputeTaskRepMetadataFilter(MetadataFilterBackend):
+    def _apply_filters(self, queryset, filter_keys):
+        return queryset.annotate(
+            metadata_filters=JSONObject(
+                **{
+                    f"{filter_key}": RawSQL(
+                        "localrep_computetask.metadata ->> %s",
+                        (filter_key,),
+                    )
+                    for filter_key in filter_keys
+                }
+            )
+        )
+
+
 class ComputeTaskRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
@@ -337,7 +355,7 @@ class ComputeTaskRepFilter(FilterSet):
 
 class ComputeTaskViewSetConfig:
     serializer_class = ComputeTaskRepSerializer
-    filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend)
+    filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskRepMetadataFilter)
     ordering_fields = [
         "creation_date",
         "start_date",

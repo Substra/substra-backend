@@ -38,8 +38,8 @@ from substrapp.serializers import DataSampleSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
+from substrapp.views.filters_utils import CharInFilter
 from substrapp.views.utils import ApiResponse
-from substrapp.views.utils import CharInFilter
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
