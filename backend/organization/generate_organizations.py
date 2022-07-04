@@ -25,7 +25,8 @@ def generate(orgs):
         files[org]["outgoing_organizations"].append({"organization_id": org, "secret": secret})
         files[org]["incoming_organizations"].append({"organization_id": org, "secret": secret})
 
-        for other_org in filter(lambda x: x != org, orgs):
+        other_orgs = [x for x in orgs if x != org]
+        for other_org in other_orgs:
             # outgoing from server B to server A share same secret as incoming from server B in server A
             secret = generate_secret()
             files[other_org]["outgoing_organizations"].append(
