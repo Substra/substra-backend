@@ -15,6 +15,7 @@ from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
 from .performance import CPPerformanceViewSet
 from .performance import PerformanceViewSet
+from .workflow_graph import CPWorkflowGraphViewSet
 
 __all__ = [
     "DataSampleViewSet",
@@ -33,5 +34,6 @@ __all__ = [
     "CPPerformanceViewSet",
     "ComputePlanMetadataViewSet",
     "PerformanceViewSet",
+    "CPWorkflowGraphViewSet",
     "task_bulk_create_view",
 ]

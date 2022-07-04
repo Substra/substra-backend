@@ -291,14 +291,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         ]
 
 
-TASK_FIELD = {
-    ComputeTask.Category.TASK_TRAIN: "train",
-    ComputeTask.Category.TASK_TEST: "test",
-    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
-    ComputeTask.Category.TASK_COMPOSITE: "composite",
-}
-
-
 class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -308,17 +300,17 @@ class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
             ComputeTask.Category.TASK_COMPOSITE,
         ]:
             data_manager = DataManager.objects.get(
-                key=data[TASK_FIELD[instance.category]]["data_manager_key"],
+                key=data[TASK_CATEGORY_FIELDS[instance.category]]["data_manager_key"],
                 channel=instance.channel,
             )
-            data[TASK_FIELD[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
+            data[TASK_CATEGORY_FIELDS[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
 
         if instance.category == ComputeTask.Category.TASK_TEST:
             metrics = Algo.objects.filter(
-                key__in=data[TASK_FIELD[instance.category]]["metric_keys"],
+                key__in=data[TASK_CATEGORY_FIELDS[instance.category]]["metric_keys"],
                 channel=instance.channel,
             ).order_by("creation_date", "key")
-            data[TASK_FIELD[instance.category]]["metrics"] = AlgoSerializer(metrics, many=True).data
+            data[TASK_CATEGORY_FIELDS[instance.category]]["metrics"] = AlgoSerializer(metrics, many=True).data
 
         # replace storage addresses
         # we need to call this again because this time, there are values for data_manager and metrics
@@ -333,3 +325,47 @@ class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
         for parent_task in data.get("parent_tasks", []):
             self._replace_storage_addresses(parent_task)
         return data
+
+
+TASK_CATEGORY_INPUTS = {
+    ComputeTask.Category.TASK_TRAIN: ["in/model"],
+    ComputeTask.Category.TASK_TEST: ["in/tested_model"],
+    ComputeTask.Category.TASK_COMPOSITE: ["in/head_model", "in/trunk_model"],
+    ComputeTask.Category.TASK_AGGREGATE: ["in/models[]"],
+}
+
+TASK_CATEGORY_OUTPUTS = {
+    ComputeTask.Category.TASK_TRAIN: ["out/model"],
+    ComputeTask.Category.TASK_TEST: [],
+    ComputeTask.Category.TASK_COMPOSITE: ["out/head_model", "out/trunk_model"],
+    ComputeTask.Category.TASK_AGGREGATE: ["out/model"],
+}
+
+
+class CPWorkflowTasksSerializer(serializers.ModelSerializer):
+    source_task_keys = serializers.PrimaryKeyRelatedField(
+        source="parent_tasks",
+        read_only=True,
+    )
+
+    inputs = serializers.SerializerMethodField()
+    outputs = serializers.SerializerMethodField()
+
+    def get_inputs(self, task):
+        return TASK_CATEGORY_INPUTS.get(task.category, [])
+
+    def get_outputs(self, task):
+        return TASK_CATEGORY_OUTPUTS.get(task.category, [])
+
+    class Meta:
+        model = ComputeTask
+        fields = [
+            "key",
+            "rank",
+            "worker",
+            "status",
+            "category",
+            "source_task_keys",
+            "inputs",
+            "outputs",
+        ]

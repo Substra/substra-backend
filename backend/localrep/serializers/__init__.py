@@ -2,6 +2,7 @@ from .algo import AlgoSerializer
 from .computeplan import ComputePlanSerializer
 from .computetask import ComputeTaskSerializer
 from .computetask import ComputeTaskWithRelationshipsSerializer
+from .computetask import CPWorkflowTasksSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
@@ -24,4 +25,5 @@ __all__ = [
     "PerformanceSerializer",
     "CPPerformanceSerializer",
     "ExportPerformanceSerializer",
+    "CPWorkflowTasksSerializer",
 ]

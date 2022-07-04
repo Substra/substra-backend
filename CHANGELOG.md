@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Filtering on compute tasks metadata (#1131)
+- View to build task workflow graph (#1135)
 
 ## [0.20.0] 2022-06-27
 
