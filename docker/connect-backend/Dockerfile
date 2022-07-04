@@ -1,14 +1,11 @@
-FROM python:3.9-bullseye AS build
+FROM python:3.9-slim AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
 
 ARG DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    # libpq is a required dependency to build psycopg2 from source (support for both amd64 and arm64 platform)
-    libpq-dev \
+    build-essential=12.9 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
@@ -27,7 +24,6 @@ COPY ./backend/organization_register /usr/src/app/organization_register
 COPY ./backend/users /usr/src/app/users
 COPY ./backend/orchestrator /usr/src/app/orchestrator
 COPY ./backend/localrep /usr/src/app/localrep
-
 
 # only for `docker build --target dev`
 FROM build AS dev
