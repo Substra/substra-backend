@@ -45,7 +45,7 @@ class ModelViewTests(APITestCase):
             self.assertEqual(
                 response.json(),
                 [
-                    {"id": "bar", "is_current": False, "creation_date": "2022-01-20T14:18:53.785788Z"},
-                    {"id": "foo", "is_current": True, "creation_date": "2022-01-20T14:18:53.785788Z"},
+                    {"id": "bar", "address": "", "is_current": False, "creation_date": "2022-01-20T14:18:53.785788Z"},
+                    {"id": "foo", "address": "", "is_current": True, "creation_date": "2022-01-20T14:18:53.785788Z"},
                 ],
             )
