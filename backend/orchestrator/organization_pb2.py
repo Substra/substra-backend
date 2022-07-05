@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12organization.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"M\n\x0cOrganization\x12\n\n\x02id\x18\x01 \x01(\t\x12\x31\n\rcreation_date\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"P\n\x1bGetAllOrganizationsResponse\x12\x31\n\rorganizations\x18\x01 \x03(\x0b\x32\x1a.orchestrator.Organization\"\x1b\n\x19RegisterOrganizationParam\"\x1a\n\x18GetAllOrganizationsParam2\xdc\x01\n\x13OrganizationService\x12[\n\x14RegisterOrganization\x12\'.orchestrator.RegisterOrganizationParam\x1a\x1a.orchestrator.Organization\x12h\n\x13GetAllOrganizations\x12&.orchestrator.GetAllOrganizationsParam\x1a).orchestrator.GetAllOrganizationsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12organization.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"^\n\x0cOrganization\x12\n\n\x02id\x18\x01 \x01(\t\x12\x31\n\rcreation_date\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07\x61\x64\x64ress\x18\x03 \x01(\t\"P\n\x1bGetAllOrganizationsResponse\x12\x31\n\rorganizations\x18\x01 \x03(\x0b\x32\x1a.orchestrator.Organization\",\n\x19RegisterOrganizationParam\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x1a\n\x18GetAllOrganizationsParam2\xdc\x01\n\x13OrganizationService\x12[\n\x14RegisterOrganization\x12\'.orchestrator.RegisterOrganizationParam\x1a\x1a.orchestrator.Organization\x12h\n\x13GetAllOrganizations\x12&.orchestrator.GetAllOrganizationsParam\x1a).orchestrator.GetAllOrganizationsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -57,13 +57,13 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
   _ORGANIZATION._serialized_start=69
-  _ORGANIZATION._serialized_end=146
-  _GETALLORGANIZATIONSRESPONSE._serialized_start=148
-  _GETALLORGANIZATIONSRESPONSE._serialized_end=228
-  _REGISTERORGANIZATIONPARAM._serialized_start=230
-  _REGISTERORGANIZATIONPARAM._serialized_end=257
-  _GETALLORGANIZATIONSPARAM._serialized_start=259
-  _GETALLORGANIZATIONSPARAM._serialized_end=285
-  _ORGANIZATIONSERVICE._serialized_start=288
-  _ORGANIZATIONSERVICE._serialized_end=508
+  _ORGANIZATION._serialized_end=163
+  _GETALLORGANIZATIONSRESPONSE._serialized_start=165
+  _GETALLORGANIZATIONSRESPONSE._serialized_end=245
+  _REGISTERORGANIZATIONPARAM._serialized_start=247
+  _REGISTERORGANIZATIONPARAM._serialized_end=291
+  _GETALLORGANIZATIONSPARAM._serialized_start=293
+  _GETALLORGANIZATIONSPARAM._serialized_end=319
+  _ORGANIZATIONSERVICE._serialized_start=322
+  _ORGANIZATIONSERVICE._serialized_end=542
 # @@protoc_insertion_point(module_scope)
