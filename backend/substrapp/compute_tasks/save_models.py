@@ -43,6 +43,7 @@ def save_models(ctx: Context) -> None:
         computetask_pb2.TASK_AGGREGATE,
         computetask_pb2.TASK_TRAIN,
         computetask_pb2.TASK_COMPOSITE,
+        computetask_pb2.TASK_PREDICT,
     ]:
         raise SaveModelsError(f"Cannot save models for task category {task_category}")
 

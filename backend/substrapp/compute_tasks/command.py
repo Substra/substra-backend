@@ -6,7 +6,6 @@ import structlog
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
-from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
@@ -37,7 +36,7 @@ class Filenames:
 
 TASK_COMMANDS = {
     computetask_pb2.TASK_TRAIN: "train",
-    computetask_pb2.TASK_TEST: "predict",
+    computetask_pb2.TASK_PREDICT: "predict",
     computetask_pb2.TASK_COMPOSITE: "train",
     computetask_pb2.TASK_AGGREGATE: "aggregate",
 }
@@ -55,15 +54,15 @@ def get_performance_filename(algo_key: str) -> str:
     return "-".join([algo_key, Filenames.Performance])
 
 
-def get_exec_command(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> List[str]:
-    entrypoint = ImageEntrypoint.objects.get(algo_checksum=algo.checksum)
+def get_exec_command(ctx: Context) -> List[str]:
+    entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.algo.checksum)
 
     command = entrypoint.entrypoint_json
 
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
-    args = _get_args(ctx, algo.key, is_testtuple_eval)
+    args = _get_args(ctx)
 
     return command + args
 
@@ -76,7 +75,7 @@ class TaskResource(dict):
 
 
 # TODO: '_get_args' is too complex, consider refactoring
-def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]:  # noqa: C901
+def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task_category
     task_data = ctx.task_data
@@ -85,16 +84,15 @@ def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
-    pred_path = os.path.join(SANDBOX_DIR, TaskDirName.Pred, Filenames.Predictions)
     local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
 
     inputs = []
     outputs = []
 
-    if is_testtuple_eval:
-        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(algo_key))
-        command = ["--input-predictions-path", pred_path]
+    if ctx.task_category == computetask_pb2.TASK_TEST:
+        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
+        command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.in_models[0]["key"])]
         command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [
             os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
@@ -165,27 +163,21 @@ def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    elif task_category == computetask_pb2.TASK_TEST:
+    elif task_category == computetask_pb2.TASK_PREDICT:
+        for input_model in ctx.in_models:
+            model_category = model_pb2.ModelCategory.Value(input_model["category"])
+            identifier = None
 
-        if ctx.algo.is_composite():
-            for input_model in ctx.in_models:
-                model_cat = model_pb2.ModelCategory.Value(input_model["category"])
+            if model_category == model_pb2.MODEL_HEAD:
+                identifier = COMPOSITE_IO_LOCAL
+            elif model_category == model_pb2.MODEL_SIMPLE and len(ctx.in_models) == 2:
+                identifier = COMPOSITE_IO_SHARED
+            elif model_category == model_pb2.MODEL_SIMPLE:
+                identifier = TRAIN_IO_MODELS
+            else:
+                raise ValueError(f"Invalid model category for predict task: {model_category}")
 
-                if model_cat == model_pb2.MODEL_HEAD:
-                    inputs.append(
-                        TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(in_models_dir, input_model["key"]))
-                    )
-                elif model_cat == model_pb2.MODEL_SIMPLE:
-                    inputs.append(
-                        TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(in_models_dir, input_model["key"]))
-                    )
-        else:
-            inputs.extend(
-                [
-                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, input_model["key"]))
-                    for input_model in ctx.in_models
-                ]
-            )
+            inputs.append(TaskResource(id=identifier, value=os.path.join(in_models_dir, input_model["key"])))
 
         inputs.append(
             TaskResource(
@@ -194,10 +186,10 @@ def _get_args(ctx: Context, algo_key: str, is_testtuple_eval: bool) -> List[str]
         )
         for key in task_data["data_sample_keys"]:
             inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
-        outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=pred_path))
+        outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    if rank and task_category != computetask_pb2.TASK_TEST:
+    if rank and task_category != computetask_pb2.TASK_PREDICT:
         command += ["--rank", rank]
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))

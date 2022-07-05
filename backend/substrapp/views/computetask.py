@@ -45,6 +45,7 @@ logger = structlog.get_logger(__name__)
 
 EXTRA_DATA_FIELD = {
     ComputeTaskRep.Category.TASK_TRAIN: "train",
+    ComputeTaskRep.Category.TASK_PREDICT: "predict",
     ComputeTaskRep.Category.TASK_TEST: "test",
     ComputeTaskRep.Category.TASK_AGGREGATE: "aggregate",
     ComputeTaskRep.Category.TASK_COMPOSITE: "composite",
@@ -58,9 +59,8 @@ def _compute_extra_data(orc_task, task_data):
             "data_sample_keys": task_data["train_data_sample_keys"],
         }
 
-    elif orc_task["category"] == ComputeTaskRep.Category.TASK_TEST:
+    elif orc_task["category"] in [ComputeTaskRep.Category.TASK_PREDICT, ComputeTaskRep.Category.TASK_TEST]:
         return {
-            "metric_keys": task_data["metric_keys"],
             "data_manager_key": task_data["data_manager_key"],
             "data_sample_keys": task_data["test_data_sample_keys"],
         }
@@ -94,6 +94,12 @@ def _get_task_outputs(channel, task_data, trunk_permissions, tasks_cache=None):
 
         permissions = permissions_intersect(algo["permissions"]["process"], data_manager["permissions"]["process"])
         return {"model": {"permissions": permissions}}
+
+    elif task_data["category"] == ComputeTaskRep.Category.TASK_PREDICT:
+        # Only give permission to worker
+        with get_orchestrator_client(channel) as client:
+            data_manager = client.query_datamanager(task_data["predict"]["data_manager_key"])
+        return {"predictions": {"permissions": {"public": False, "authorized_ids": [data_manager["owner"]]}}}
 
     elif task_data["category"] == ComputeTaskRep.Category.TASK_TEST:
         # Performances should always be public
@@ -175,7 +181,7 @@ def _compute_parent_task_keys(orc_task, task_data, batch):
             task_data.get(field) for field in ("in_head_model_key", "in_trunk_model_key") if task_data.get(field)
         ]
 
-    if orc_task["category"] == ComputeTaskRep.Category.TASK_TEST:
+    elif orc_task["category"] == ComputeTaskRep.Category.TASK_PREDICT:
         if traintuple_id := task_data.get("traintuple_key"):
             parent_task_keys.append(traintuple_id)
         else:
@@ -191,10 +197,28 @@ def _compute_parent_task_keys(orc_task, task_data, batch):
         if parent_task_data is None:
             parent_task = ComputeTaskRep.objects.get(key=parent_task_keys[0])
             parent_task_data = {
-                "algo_key": str(parent_task.algo_id),
                 "compute_plan_key": str(parent_task.compute_plan_id),
             }
-        orc_task["algo_key"] = parent_task_data["algo_key"]
+        orc_task["compute_plan_key"] = parent_task_data["compute_plan_key"]
+
+    elif orc_task["category"] == ComputeTaskRep.Category.TASK_TEST:
+        if predicttuple_id := task_data.get("predicttuple_key"):
+            parent_task_keys.append(predicttuple_id)
+        else:
+            raise ValidationExceptionError(
+                data=[{"predicttuple_key": ["This field may not be null."]}],
+                key=orc_task["key"],
+                st=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # try to retrieve parent task in current batch
+        parent_task_data = batch.get(parent_task_keys[0])
+        # else query the db
+        if parent_task_data is None:
+            parent_task = ComputeTaskRep.objects.get(key=parent_task_keys[0])
+            parent_task_data = {
+                "compute_plan_key": str(parent_task.compute_plan_id),
+            }
         orc_task["compute_plan_key"] = parent_task_data["compute_plan_key"]
 
     orc_task["parent_task_keys"] = parent_task_keys
@@ -402,7 +426,7 @@ class ComputeTaskViewSetConfig:
             )
         )
         if self.category == ComputeTaskRep.Category.TASK_TEST:
-            queryset = queryset.prefetch_related("performances", "metrics")
+            queryset = queryset.prefetch_related("performances")
         else:
             queryset = queryset.prefetch_related("models")
         return queryset

@@ -23,6 +23,7 @@ CP_BASENAME_PREFIX = "compute_plan_"
 
 TASK_CATEGORY = {
     "traintuple": ComputeTaskRep.Category.TASK_TRAIN,
+    "predicttuple": ComputeTaskRep.Category.TASK_PREDICT,
     "testtuple": ComputeTaskRep.Category.TASK_TEST,
     "aggregatetuple": ComputeTaskRep.Category.TASK_AGGREGATE,
     "composite_traintuple": ComputeTaskRep.Category.TASK_COMPOSITE,

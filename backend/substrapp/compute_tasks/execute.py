@@ -1,5 +1,5 @@
 """
-This file contains the algo/metrics execution part of a compute task.
+This file contains the algo execution part of a compute task.
 
 In these functions, we:
 - Determine the command to execute (train/test/eval)
@@ -13,10 +13,8 @@ import kubernetes
 import structlog
 from django.conf import settings
 
-import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
-from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
@@ -40,37 +38,15 @@ logger = structlog.get_logger(__name__)
 
 @timeit
 def execute_compute_task(ctx: Context) -> None:
-
-    _execute_compute_task(ctx, ctx.algo, is_testtuple_eval=False)
-
-    # Testtuple evaluation
-    #
-    # The execution of compute tasks of type testtuple is split into 2 steps:
-    #
-    # - The "predict" step which happens with is_testtuple_eval=False.
-    # - The "evaluate" step, which happens with is_testtuple_eval=True
-    #
-    # The two steps are executed using different pods:
-    #
-    # - The "predict" step uses the algo container image. It outputs a prediction file.
-    # - The "evaluate" step uses the metrics container image. It uses the prediction file as an input, and outputs
-    #   a performance score. The "evaluate" step doesn't have access to data samples
-    if ctx.task_category == computetask_pb2.TASK_TEST:
-        for metric in ctx.metrics:
-            _execute_compute_task(ctx, metric, is_testtuple_eval=True)
-
-
-@timeit
-def _execute_compute_task(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> None:
+    algo = ctx.algo
     channel_name = ctx.channel_name
-    dirs = ctx.directories
 
     compute_pod = ctx.get_compute_pod(algo.key)
     pod_name = compute_pod.name
 
     env = get_environment(ctx)
     image = get_container_image_name(algo.container_image_tag)
-    exec_command = get_exec_command(ctx, algo, is_testtuple_eval)
+    exec_command = get_exec_command(ctx)
 
     k8s_client = _get_k8s_client()
 
@@ -78,7 +54,7 @@ def _execute_compute_task(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> 
 
     if should_create_pod:
 
-        volume_mounts, volumes = get_volumes(dirs, is_testtuple_eval)
+        volume_mounts, volumes = get_volumes(ctx)
 
         with get_orchestrator_client(channel_name) as client:
             # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
@@ -101,7 +77,7 @@ def _execute_compute_task(ctx: Context, algo: Algo, is_testtuple_eval: bool) -> 
     if not settings.WORKER_PVC_IS_HOSTPATH:
         _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-    _exec(compute_pod, exec_command, is_testtuple_eval)
+    _exec(compute_pod, exec_command)
 
 
 def _get_k8s_client():
@@ -130,7 +106,7 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(compute_pod: ComputePod, exec_command: List[str], is_testtuple_eval: bool):
+def _exec(compute_pod: ComputePod, exec_command: List[str]):
     """Execute a command on a compute pod"""
     logger.debug("Running command", command=exec_command)
 
@@ -138,7 +114,7 @@ def _exec(compute_pod: ComputePod, exec_command: List[str], is_testtuple_eval: b
 
     def print_log(lines):
         for line in filter(None, lines.split("\n")):
-            logger.info(line, eval=is_testtuple_eval)
+            logger.info(line)
 
     container_logs = io.BytesIO()
 

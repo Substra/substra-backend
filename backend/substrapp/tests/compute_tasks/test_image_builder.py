@@ -6,11 +6,11 @@ from unittest import mock
 
 from parameterized import parameterized
 
-import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.image_builder import _get_entrypoint_from_dockerfile
-from substrapp.compute_tasks.image_builder import build_images
+from substrapp.compute_tasks.image_builder import build_image
+from substrapp.tests.test_utils import CHANNEL
 
 DOCKERFILE = """
 FROM ubuntu:16.04
@@ -47,49 +47,21 @@ class GetEntrypointFromDockerfileTests(unittest.TestCase):
 
 
 class TestImageBuilder:
-    @parameterized.expand([("train_task", computetask_pb2.TASK_TRAIN), ("test_task", computetask_pb2.TASK_TEST)])
-    def test_build_images(self, _, task_category):
-
+    def test_build_image(self):
         algo_key = str(uuid.uuid4())
         algo_owner = "algo owner"
         algo_storage_address = "algo storage_address"
         algo_checksum = "algo checksum"
         algo_image_tag = f"algo-{algo_checksum}"
 
-        metric1_key = str(uuid.uuid4())
-        metric1_owner = "metric1 owner"
-        metric1_storage_address = "metric1 storage_address"
-        metric1_checksum = "metric1 checksum"
-        metric1_image_tag = f"algo-{metric1_checksum}"
-
-        metric2_key = str(uuid.uuid4())
-        metric2_owner = "metric2 owner"
-        metric2_storage_address = "metric2 storage_address"
-        metric2_checksum = "metric2 checksum"
-        metric2_image_tag = f"algo-{metric2_checksum}"
-
-        channel_name = "mychannel"
-
-        algo = {
-            "key": algo_key,
-            "owner": algo_owner,
-            "algorithm": {"storage_address": algo_storage_address, "checksum": algo_checksum},
-        }
-        metric1 = {
-            "key": metric1_key,
-            "owner": metric1_owner,
-            "algorithm": {"storage_address": metric1_storage_address, "checksum": metric1_checksum},
-        }
-        metric2 = {
-            "key": metric2_key,
-            "owner": metric2_owner,
-            "algorithm": {"storage_address": metric2_storage_address, "checksum": metric2_checksum},
-        }
-
-        if task_category == computetask_pb2.TASK_TRAIN:
-            all_algos = [Algo(channel_name, algo)]
-        else:
-            all_algos = [Algo(channel_name, algo), Algo(channel_name, metric1), Algo(channel_name, metric2)]
+        algo = Algo(
+            CHANNEL,
+            {
+                "key": algo_key,
+                "owner": algo_owner,
+                "algorithm": {"storage_address": algo_storage_address, "checksum": algo_checksum},
+            },
+        )
 
         with (
             mock.patch("substrapp.compute_tasks.image_builder._build_asset_image") as m_build_asset_image,
@@ -97,23 +69,10 @@ class TestImageBuilder:
         ):
 
             mcontainer_image_exists.return_value = False
-            build_images(all_algos)
+            build_image(algo)
 
-            if task_category == computetask_pb2.TASK_TEST:
+            assert mcontainer_image_exists.call_count == 1
+            mcontainer_image_exists.assert_any_call(algo_image_tag)
 
-                assert mcontainer_image_exists.call_count == 3
-                mcontainer_image_exists.assert_any_call(algo_image_tag)
-                mcontainer_image_exists.assert_any_call(metric1_image_tag)
-                mcontainer_image_exists.assert_any_call(metric2_image_tag)
-
-                assert m_build_asset_image.call_count == 3
-                m_build_asset_image.assert_any_call(all_algos[0])
-                m_build_asset_image.assert_any_call(all_algos[1])
-                m_build_asset_image.assert_any_call(all_algos[2])
-
-            else:
-                assert mcontainer_image_exists.call_count == 1
-                mcontainer_image_exists.assert_any_call(algo_image_tag)
-
-                assert m_build_asset_image.call_count == 1
-                m_build_asset_image.assert_any_call(all_algos[0])
+            assert m_build_asset_image.call_count == 1
+            m_build_asset_image.assert_any_call(algo)

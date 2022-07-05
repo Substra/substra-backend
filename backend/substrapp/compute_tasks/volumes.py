@@ -2,12 +2,14 @@ import os
 
 from django.conf import settings
 
+from orchestrator import computetask_pb2
+from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import SANDBOX_DIR
-from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 
 
-def get_volumes(dirs: Directories, is_testtuple_eval: bool):
+def get_volumes(ctx: Context):
+    dirs = ctx.directories
     volume_mounts = []
 
     # /sandbox/chainkeys
@@ -15,19 +17,17 @@ def get_volumes(dirs: Directories, is_testtuple_eval: bool):
     # ...
     _add(volume_mounts, dirs.task_dir, TaskDirName.Datasamples, read_only=True)
     _add(volume_mounts, dirs.task_dir, TaskDirName.Export)
+    _add(volume_mounts, dirs.task_dir, TaskDirName.InModels, read_only=True)
     _add(volume_mounts, dirs.task_dir, TaskDirName.Openers, read_only=True)
 
-    if is_testtuple_eval:
-        # testtuple "evaluate"
-        _add(volume_mounts, dirs.task_dir, TaskDirName.Pred, read_only=True)
+    if ctx.task_category == computetask_pb2.TASK_TEST:
+        # testtuple
         _add(volume_mounts, dirs.task_dir, TaskDirName.Perf)
     else:
-        # testtuple "predict" and Xtraintuples
+        # predicttuple and Xtraintuples
         _add(volume_mounts, dirs.task_dir, TaskDirName.Chainkeys)
-        _add(volume_mounts, dirs.task_dir, TaskDirName.InModels, read_only=True)
         _add(volume_mounts, dirs.task_dir, TaskDirName.Local)
         _add(volume_mounts, dirs.task_dir, TaskDirName.OutModels)
-        _add(volume_mounts, dirs.task_dir, TaskDirName.Pred)
 
     volumes = [
         {

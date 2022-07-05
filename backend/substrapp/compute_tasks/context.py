@@ -12,6 +12,7 @@ from substrapp.orchestrator import get_orchestrator_client
 
 TASK_DATA_FIELD = {
     computetask_pb2.TASK_TRAIN: "train",
+    computetask_pb2.TASK_PREDICT: "predict",
     computetask_pb2.TASK_TEST: "test",
     computetask_pb2.TASK_AGGREGATE: "aggregate",
     computetask_pb2.TASK_COMPOSITE: "composite",
@@ -37,7 +38,6 @@ class Context:
     _data_manager: Dict
     _directories: Directories
     _algo: Algo
-    _metrics: list[Algo]
     _has_chainkeys: bool
 
     def __init__(
@@ -51,7 +51,6 @@ class Context:
         compute_plan_tag: str,
         in_models: List[Dict],
         algo: dict[str, Any],
-        metrics: list[dict[str, Any]],
         data_manager: Dict,
         directories: Directories,
         has_chainkeys: bool,
@@ -64,7 +63,6 @@ class Context:
         self._compute_plan_key = compute_plan_key
         self._compute_plan_tag = compute_plan_tag
         self._in_models = in_models
-        self._metrics = [Algo(self._channel_name, metric) for metric in metrics]
         self._data_manager = data_manager
         self._directories = directories
         self._has_chainkeys = has_chainkeys
@@ -74,7 +72,6 @@ class Context:
     def from_task(cls, channel_name: str, task: Dict):
         task_key = task["key"]
         compute_plan_key = task["compute_plan_key"]
-        metrics = []
         data_manager = None
 
         task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
@@ -86,10 +83,12 @@ class Context:
             in_models = client.get_computetask_input_models(task["key"])
             algo = client.query_algo(task["algo"]["key"])
 
-            if task_category == computetask_pb2.TASK_TEST:
-                metrics = [client.query_algo(metric_key) for metric_key in task_data["metric_keys"]]
-
-            if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
+            if task_category in [
+                computetask_pb2.TASK_COMPOSITE,
+                computetask_pb2.TASK_TRAIN,
+                computetask_pb2.TASK_PREDICT,
+                computetask_pb2.TASK_TEST,
+            ]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])
 
         directories = Directories(compute_plan_key)
@@ -108,7 +107,6 @@ class Context:
             compute_plan_tag,
             in_models,
             algo,
-            metrics,
             data_manager,
             directories,
             has_chainkeys,
@@ -163,10 +161,6 @@ class Context:
         return self._compute_plan
 
     @property
-    def metrics(self) -> list[Algo]:
-        return self._metrics
-
-    @property
     def data_manager(self) -> Dict:
         return self._data_manager
 
@@ -180,6 +174,7 @@ class Context:
         if self.task_category not in [
             computetask_pb2.TASK_COMPOSITE,
             computetask_pb2.TASK_TRAIN,
+            computetask_pb2.TASK_PREDICT,
             computetask_pb2.TASK_TEST,
         ]:
             return []
@@ -187,9 +182,3 @@ class Context:
 
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
-
-    @property
-    def all_algos(self) -> list[Algo]:
-        all_algos = [self._algo]
-        all_algos.extend(self._metrics)
-        return all_algos

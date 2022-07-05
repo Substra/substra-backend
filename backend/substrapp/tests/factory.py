@@ -21,8 +21,7 @@ Basic example:
 >>> metric = create_algo(category=Algo.Category.ALGO_METRIC)
 >>> test_task = create_computetask(
 ...     compute_plan,
-...     algo,
-...     metrics=[metric],
+...     metric,
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample],
 ...     parent_tasks=[train_task.key],
@@ -317,7 +316,6 @@ def create_computetask(
     parent_tasks: list[uuid.UUID] = None,
     data_manager: DataManager = None,
     data_samples: list[uuid.UUID] = None,
-    metrics: list[Algo] = None,
     key: uuid.UUID = None,
     category: int = ComputeTask.Category.TASK_TRAIN,
     status: int = ComputeTask.Status.STATUS_TODO,
@@ -358,9 +356,6 @@ def create_computetask(
         **get_computetask_permissions(category, owner, public),
         **get_log_permissions(owner, public),
     )
-    if metrics:
-        compute_task.metrics.set(metrics)
-        compute_task.save()
     if data_samples:
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)

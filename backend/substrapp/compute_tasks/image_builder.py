@@ -40,9 +40,8 @@ KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
 
-def build_images(algos: list[Algo]) -> None:
-    for algo in algos:
-        _build_image_if_missing(algo)
+def build_image(algo: Algo) -> None:
+    _build_image_if_missing(algo)
 
 
 def _build_image_if_missing(algo: Algo) -> None:

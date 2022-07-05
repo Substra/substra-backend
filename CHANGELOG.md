@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- BREAKING: Removed the `metric_keys` property of test tasks in favor of the generic `algo` field. (#1091)
+
 ### Added
+
+- Execute predict tasks. (#1091)
 - Backend hostname to the organization view (#1167)
 
 ## [0.21.0] 2022-07-05

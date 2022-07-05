@@ -47,21 +47,20 @@ def _save_test_task_outputs(ctx: Context) -> None:
     """
     logger.info("saving performances")
     with get_orchestrator_client(ctx.channel_name) as client:
-        for metric in ctx.metrics:
-            perf = _get_perf(ctx.directories, metric.key)
-            _register_perf(client, ctx.task_key, metric.key, perf)
+        perf = _get_perf(ctx.directories, ctx.algo.key)
+        _register_perf(client, ctx.task_key, ctx.algo.key, perf)
 
 
-def _register_perf(client: OrchestratorClient, task_key: str, metric_key: str, perf: float) -> None:
+def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float) -> None:
     """Registers the performance on the orchestrator
 
     Args:
         client: An open orchestrator client.
         task_key: The key of the compute task that produced this performances.
-        metric_key: The key of the metric that produced this performance.
+        algo_key: The key of the algo that produced this performance.
         perf: The performance value.
     """
-    performance_obj = {"compute_task_key": task_key, "metric_key": metric_key, "performance_value": perf}
+    performance_obj = {"compute_task_key": task_key, "metric_key": algo_key, "performance_value": perf}
     client.register_performance(performance_obj)
 
 

@@ -11356,9 +11356,11 @@ def get_test_tasks():
             "key": "f7680100-5cc0-4968-b566-2aa2d6f4b76b",
             "category": "TASK_TEST",
             "algo": {
-                "key": "e09766bf-13a0-48ec-b06b-9b28a9f7015b",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11373,16 +11375,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:18:54.612633+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "c44190d482e92a0d88ee7bebc3e42cb3ab9ff28ace76c43850d5258530a46e38",
-                    "storage_address": "http://testserver/algo/e09766bf-13a0-48ec-b06b-9b28a9f7015b/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "c6106f2e02fae8bf6907b8a23a2aa8ffa3f34c784c407c8f5a22c082a1578ba1",
-                    "storage_address": "http://testserver/algo/e09766bf-13a0-48ec-b06b-9b28a9f7015b/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11407,10 +11407,6 @@ def get_test_tasks():
                     "4d8f238d-1b6f-4fb5-bf63-5cc4969334c4",
                     "86de996f-48b2-45cc-abb2-4f8fcdc21b24",
                 ],
-                "metric_keys": [
-                    "b4490c5e-2ae8-420a-9895-55904873d27a"
-                ],
-                "metrics": [],
                 "perfs": {
                     "b4490c5e-2ae8-420a-9895-55904873d27a": 1.0
                 }
@@ -11420,9 +11416,11 @@ def get_test_tasks():
             "key": "9a55e575-914f-4c89-bcb9-a05b1b8c4624",
             "category": "TASK_TEST",
             "algo": {
-                "key": "617e0403-281f-4d05-abf9-b2e89c08f333",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_tuples_execution_on_same_org - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11437,16 +11435,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:18:55.506382+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "c29180e3a085c92867f10497ea9255b890d0f5345018e27159774e99ded6c7c8",
-                    "storage_address": "http://testserver/algo/617e0403-281f-4d05-abf9-b2e89c08f333/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/617e0403-281f-4d05-abf9-b2e89c08f333/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11470,10 +11466,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "fd798ae1-276d-4c93-b449-ae88c0cd2351"
                 ],
-                "metric_keys": [
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7"
-                ],
-                "metrics": [],
                 "perfs": {
                     "580d04d4-8dae-45c7-9be9-5beb4b0037d7": 2.0
                 }
@@ -11483,9 +11475,11 @@ def get_test_tasks():
             "key": "9338cc42-64b6-47db-8ff8-da7f66bf4504",
             "category": "TASK_TEST",
             "algo": {
-                "key": "53e63779-64a2-4cf9-8691-e48546967079",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_traintuple_data_samples_relative_order - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11500,16 +11494,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:18:54.474389+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "d34e5187a37faea97ef14e50715e251c39776d8023900686b796bca96f9d3863",
-                    "storage_address": "http://testserver/algo/53e63779-64a2-4cf9-8691-e48546967079/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "48bba574312b9029b84c0c753c18d9426cf08083352be6d54269755ac7292892",
-                    "storage_address": "http://testserver/algo/53e63779-64a2-4cf9-8691-e48546967079/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11534,10 +11526,6 @@ def get_test_tasks():
                     "390e7d14-8f61-4ddc-a207-8c822631adfc",
                     "32d11d98-03f4-4fa4-ac57-1c31908d413d"
                 ],
-                "metric_keys": [
-                    "b6ac7389-bc92-47ae-8c20-856d5d58995d"
-                ],
-                "metrics": [],
                 "perfs": {
                     "b6ac7389-bc92-47ae-8c20-856d5d58995d": 1.0
                 }
@@ -11547,33 +11535,33 @@ def get_test_tasks():
             "key": "c0eebce0-85e0-412b-8a27-07887df11e5b",
             "category": "TASK_TEST",
             "algo": {
-                "key": "9c160655-9f21-4b67-abe4-acbf3b3f791e",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_tuples_execution_on_different_orgs - Algo 0",
-                "owner": "MyOrg2MSP",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
+                "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
                         "authorized_ids": [
-                            "MyOrg2MSP"
+                            "MyOrg1MSP"
                         ]
                     },
                     "download": {
                         "public": True,
                         "authorized_ids": [
-                            "MyOrg2MSP"
+                            "MyOrg1MSP"
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:20:13.707684+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "755e6c4a1b869bbd0e241fe01856023d81fdb676f192a8b918e343af6abfa53a",
-                    "storage_address": "http://testserver/algo/9c160655-9f21-4b67-abe4-acbf3b3f791e/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/9c160655-9f21-4b67-abe4-acbf3b3f791e/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11597,10 +11585,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "f2b47bf7-ad1a-458b-b119-cb81be02564a"
                 ],
-                "metric_keys": [
-                    "e3986b54-27d7-4e15-ad1f-30f08fc414ee"
-                ],
-                "metrics": [],
                 "perfs": {
                     "e3986b54-27d7-4e15-ad1f-30f08fc414ee": 2.0
                 }
@@ -11610,9 +11594,11 @@ def get_test_tasks():
             "key": "2ec21b20-220a-4756-8c88-5ff138e51505",
             "category": "TASK_TEST",
             "algo": {
-                "key": "b44b91ed-17bb-471b-8660-c1029376aca5",
-                "name": "7782b659d4644558909a6d1671636c11_test_composite_traintuples_execution - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11627,16 +11613,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:19:37.255226+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "606b16024f4fbe1a5601c3fe38dc8e4a64268e13357bff3b1c9c497463eb2af6",
-                    "storage_address": "http://testserver/algo/b44b91ed-17bb-471b-8660-c1029376aca5/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "70ed47c09c81373a0ff9d36de2c5ea8839726f58047af6c85f7f09c4d59fc51e",
-                    "storage_address": "http://testserver/algo/b44b91ed-17bb-471b-8660-c1029376aca5/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11660,10 +11644,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "ed3de293-9d32-4d9b-b70e-fd461b740849"
                 ],
-                "metric_keys": [
-                    "95869305-106e-4fbd-9c58-8889df4d64c9"
-                ],
-                "metrics": [],
                 "perfs": {
                     "95869305-106e-4fbd-9c58-8889df4d64c9": 32.0
                 }
@@ -11673,9 +11653,11 @@ def get_test_tasks():
             "key": "24cf805d-2de7-4ec6-b31a-4efed38328fe",
             "category": "TASK_TEST",
             "algo": {
-                "key": "0ceb05f4-2597-4d66-ad46-09b5272df73e",
-                "name": "7782b659d4644558909a6d1671636c11_test_compute_plan_update - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11690,16 +11672,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:21:28.793747+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "7f1cb0d373685577c6b3a9657bc11253cc158513b93d291472576b3cb3e7906c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11723,10 +11703,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "ed3de293-9d32-4d9b-b70e-fd461b740849"
                 ],
-                "metric_keys": [
-                    "95869305-106e-4fbd-9c58-8889df4d64c9"
-                ],
-                "metrics": [],
                 "perfs": {
                     "95869305-106e-4fbd-9c58-8889df4d64c9": 2.0
                 }
@@ -11736,9 +11712,11 @@ def get_test_tasks():
             "key": "8766167f-0d02-4c55-97bd-960b9586f3f0",
             "category": "TASK_TEST",
             "algo": {
-                "key": "0ceb05f4-2597-4d66-ad46-09b5272df73e",
-                "name": "7782b659d4644558909a6d1671636c11_test_compute_plan_update - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11753,16 +11731,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:21:28.793747+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "7f1cb0d373685577c6b3a9657bc11253cc158513b93d291472576b3cb3e7906c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11788,10 +11764,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "ed3de293-9d32-4d9b-b70e-fd461b740849"
                 ],
-                "metric_keys": [
-                    "95869305-106e-4fbd-9c58-8889df4d64c9"
-                ],
-                "metrics": [],
                 "perfs": {
                     "95869305-106e-4fbd-9c58-8889df4d64c9": 4.0
                 }
@@ -11801,9 +11773,11 @@ def get_test_tasks():
             "key": "397c34fa-f549-4629-a84e-9fdf14f72d56",
             "category": "TASK_TEST",
             "algo": {
-                "key": "0ceb05f4-2597-4d66-ad46-09b5272df73e",
-                "name": "7782b659d4644558909a6d1671636c11_test_compute_plan_update - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11818,16 +11792,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:21:28.793747+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "7f1cb0d373685577c6b3a9657bc11253cc158513b93d291472576b3cb3e7906c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/0ceb05f4-2597-4d66-ad46-09b5272df73e/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11851,10 +11823,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "ed3de293-9d32-4d9b-b70e-fd461b740849"
                 ],
-                "metric_keys": [
-                    "95869305-106e-4fbd-9c58-8889df4d64c9"
-                ],
-                "metrics": [],
                 "perfs": {
                     "95869305-106e-4fbd-9c58-8889df4d64c9": 6.0
                 }
@@ -11864,9 +11832,11 @@ def get_test_tasks():
             "key": "160b5ccf-2a72-4491-8b39-04b0fbe65eed",
             "category": "TASK_TEST",
             "algo": {
-                "key": "91624de2-452d-4bf7-b88f-b1d5d53a9164",
-                "name": "b0e7169a8d5148559371586d844ecf0c_test_compute_plan_aggregate_composite_traintuples - Algo 1",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11881,16 +11851,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_AGGREGATE",
-                "creation_date": "2022-01-20T14:22:42.723553+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "d19fa263e3b5ba2be4ac6a9d93792cadb121e1331d9457844848a3ded0302e83",
-                    "storage_address": "http://testserver/algo/91624de2-452d-4bf7-b88f-b1d5d53a9164/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "9dd83ee0fb33853296969a94835c9c33de467e1ec6edc1abff69263cc2a7dae7",
-                    "storage_address": "http://testserver/algo/91624de2-452d-4bf7-b88f-b1d5d53a9164/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11914,10 +11882,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "00aec80a-f945-4037-b64a-89649106bc6c"
                 ],
-                "metric_keys": [
-                    "79a749ec-32fe-483f-a3fe-4385c6467842"
-                ],
-                "metrics": [],
                 "perfs": {
                     "79a749ec-32fe-483f-a3fe-4385c6467842": 9.0
                 }
@@ -11927,9 +11891,11 @@ def get_test_tasks():
             "key": "6592a568-5fa3-441c-a71d-f6aa2f4a5321",
             "category": "TASK_TEST",
             "algo": {
-                "key": "32556e77-0813-4342-8f52-3d42add88178",
-                "name": "b0e7169a8d5148559371586d844ecf0c_test_compute_plan_aggregate_composite_traintuples - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -11944,16 +11910,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:22:42.433235+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "4d8aa664cb92203c103e61d6aaa3c105a1b3533bf7e065d57eb529c6ea4ba379",
-                    "storage_address": "http://testserver/algo/32556e77-0813-4342-8f52-3d42add88178/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "70ed47c09c81373a0ff9d36de2c5ea8839726f58047af6c85f7f09c4d59fc51e",
-                    "storage_address": "http://testserver/algo/32556e77-0813-4342-8f52-3d42add88178/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -11977,10 +11941,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "5509bb8d-ee5f-443b-922f-6e6e5896bc6f"
                 ],
-                "metric_keys": [
-                    "79a749ec-32fe-483f-a3fe-4385c6467842"
-                ],
-                "metrics": [],
                 "perfs": {
                     "79a749ec-32fe-483f-a3fe-4385c6467842": 33.0
                 }
@@ -11990,9 +11950,11 @@ def get_test_tasks():
             "key": "9e2017cc-0a6a-4ae0-b3cf-9148f5cb8947",
             "category": "TASK_TEST",
             "algo": {
-                "key": "32556e77-0813-4342-8f52-3d42add88178",
-                "name": "b0e7169a8d5148559371586d844ecf0c_test_compute_plan_aggregate_composite_traintuples - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12007,16 +11969,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:22:42.433235+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "4d8aa664cb92203c103e61d6aaa3c105a1b3533bf7e065d57eb529c6ea4ba379",
-                    "storage_address": "http://testserver/algo/32556e77-0813-4342-8f52-3d42add88178/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "70ed47c09c81373a0ff9d36de2c5ea8839726f58047af6c85f7f09c4d59fc51e",
-                    "storage_address": "http://testserver/algo/32556e77-0813-4342-8f52-3d42add88178/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12040,10 +12000,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "00aec80a-f945-4037-b64a-89649106bc6c"
                 ],
-                "metric_keys": [
-                    "85c572a8-0a23-4fea-8f47-0576df3ecedb"
-                ],
-                "metrics": [],
                 "perfs": {
                     "85c572a8-0a23-4fea-8f47-0576df3ecedb": 32.0
                 }
@@ -12053,9 +12009,11 @@ def get_test_tasks():
             "key": "4fb42fc3-72f0-426e-ba5b-dd6656e9f6b7",
             "category": "TASK_TEST",
             "algo": {
-                "key": "ded8c504-ce94-4185-b407-f3eb2e098898",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_compute_plan_single_client_failure - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12070,16 +12028,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:23:48.808875+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "d5e0903570fb9fd6b6f6f93cb5af70c1fa2f01bb064e46f0c333eec9485c84eb",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "8a5b8af50f71cfb19d3de941d79e16a9cd2b6601418a39dd06cedbeeeacf2291",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12103,10 +12059,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "fd798ae1-276d-4c93-b449-ae88c0cd2351"
                 ],
-                "metric_keys": [
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7"
-                ],
-                "metrics": [],
                 "perfs": None
             }
         },
@@ -12114,9 +12066,11 @@ def get_test_tasks():
             "key": "57b3fb19-8705-41f6-b5d0-3a1f9fa49aa2",
             "category": "TASK_TEST",
             "algo": {
-                "key": "ded8c504-ce94-4185-b407-f3eb2e098898",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_compute_plan_single_client_failure - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12131,16 +12085,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:23:48.808875+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "d5e0903570fb9fd6b6f6f93cb5af70c1fa2f01bb064e46f0c333eec9485c84eb",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "8a5b8af50f71cfb19d3de941d79e16a9cd2b6601418a39dd06cedbeeeacf2291",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12164,10 +12116,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "fd798ae1-276d-4c93-b449-ae88c0cd2351"
                 ],
-                "metric_keys": [
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7"
-                ],
-                "metrics": [],
                 "perfs": None
             }
         },
@@ -12175,9 +12123,11 @@ def get_test_tasks():
             "key": "c86a7003-770a-4cb9-b67c-6a8ab06d779c",
             "category": "TASK_TEST",
             "algo": {
-                "key": "ded8c504-ce94-4185-b407-f3eb2e098898",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_compute_plan_single_client_failure - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12192,16 +12142,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:23:48.808875+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "d5e0903570fb9fd6b6f6f93cb5af70c1fa2f01bb064e46f0c333eec9485c84eb",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "8a5b8af50f71cfb19d3de941d79e16a9cd2b6601418a39dd06cedbeeeacf2291",
-                    "storage_address": "http://testserver/algo/ded8c504-ce94-4185-b407-f3eb2e098898/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12225,10 +12173,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "fd798ae1-276d-4c93-b449-ae88c0cd2351"
                 ],
-                "metric_keys": [
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7"
-                ],
-                "metrics": [],
                 "perfs": None
             }
         },
@@ -12236,33 +12180,33 @@ def get_test_tasks():
             "key": "77e61380-a790-4dcb-a44a-10537ab8928d",
             "category": "TASK_TEST",
             "algo": {
-                "key": "24cd88c6-131e-4a95-be60-3347efc93019",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_compute_plan_simple - Algo 0",
-                "owner": "MyOrg2MSP",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
+                "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
                         "authorized_ids": [
-                            "MyOrg2MSP"
+                            "MyOrg1MSP"
                         ]
                     },
                     "download": {
                         "public": True,
                         "authorized_ids": [
-                            "MyOrg2MSP"
+                            "MyOrg1MSP"
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:24:15.688665+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "35a5393195cee3f5c98b856b17386197fb16f0a5013b973f6c490318cef8283b",
-                    "storage_address": "http://testserver/algo/24cd88c6-131e-4a95-be60-3347efc93019/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/24cd88c6-131e-4a95-be60-3347efc93019/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12288,11 +12232,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "f2b47bf7-ad1a-458b-b119-cb81be02564a"
                 ],
-                "metric_keys": [
-                    "e3986b54-27d7-4e15-ad1f-30f08fc414ee",
-                    "024cda63-7492-47fa-9dc4-1b6c7062f9d1"
-                ],
-                "metrics": [],
                 "perfs": {
                     "e3986b54-27d7-4e15-ad1f-30f08fc414ee": 4.0,
                     "024cda63-7492-47fa-9dc4-1b6c7062f9d1": 5.0
@@ -12303,9 +12242,11 @@ def get_test_tasks():
             "key": "9ae02cc6-8cd5-4edd-be7f-4ecfa1027aed",
             "category": "TASK_TEST",
             "algo": {
-                "key": "539dc1e5-bcdf-45cc-85bd-5d65f33fd008",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_aggregate_composite_traintuples - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12320,16 +12261,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:21:09.167298+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "fa7500152958fe36d4fdd618d3a0598bd654aff4c3cee5eb7d7333af6d8e26ee",
-                    "storage_address": "http://testserver/algo/539dc1e5-bcdf-45cc-85bd-5d65f33fd008/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "70ed47c09c81373a0ff9d36de2c5ea8839726f58047af6c85f7f09c4d59fc51e",
-                    "storage_address": "http://testserver/algo/539dc1e5-bcdf-45cc-85bd-5d65f33fd008/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12353,10 +12292,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "a7da1439-7e61-4c8d-96a5-8c07e84ffe91"
                 ],
-                "metric_keys": [
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c"
-                ],
-                "metrics": [],
                 "perfs": {
                     "6a9750f5-76d2-4e6b-839f-eabc0611427c": 32.0
                 }
@@ -12366,9 +12301,11 @@ def get_test_tasks():
             "key": "507155cf-88f2-45d6-aa5d-7fc33a58c4cf",
             "category": "TASK_TEST",
             "algo": {
-                "key": "783974b3-11be-426b-a165-32fda39476eb",
-                "name": "7782b659d4644558909a6d1671636c11_test_compute_plan_local_folder - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12383,16 +12320,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:25:01.131279+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "846e96e7c1619c8637596c52bc1e1314bc5cd4321c034d7a70206052b872968c",
-                    "storage_address": "http://testserver/algo/783974b3-11be-426b-a165-32fda39476eb/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e6430ac7c8686e1edcf25e20beb1a7eb487b1a93c3009ba8d6aea23240699601",
-                    "storage_address": "http://testserver/algo/783974b3-11be-426b-a165-32fda39476eb/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12416,10 +12351,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "ed3de293-9d32-4d9b-b70e-fd461b740849"
                 ],
-                "metric_keys": [
-                    "95869305-106e-4fbd-9c58-8889df4d64c9"
-                ],
-                "metrics": [],
                 "perfs": {
                     "95869305-106e-4fbd-9c58-8889df4d64c9": 20.0
                 }
@@ -12429,9 +12360,11 @@ def get_test_tasks():
             "key": "682a4fa8-9d4e-49b3-944d-c8fb9fe14639",
             "category": "TASK_TEST",
             "algo": {
-                "key": "539dc1e5-bcdf-45cc-85bd-5d65f33fd008",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_aggregate_composite_traintuples - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12446,16 +12379,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_COMPOSITE",
-                "creation_date": "2022-01-20T14:21:09.167298+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "fa7500152958fe36d4fdd618d3a0598bd654aff4c3cee5eb7d7333af6d8e26ee",
-                    "storage_address": "http://testserver/algo/539dc1e5-bcdf-45cc-85bd-5d65f33fd008/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "70ed47c09c81373a0ff9d36de2c5ea8839726f58047af6c85f7f09c4d59fc51e",
-                    "storage_address": "http://testserver/algo/539dc1e5-bcdf-45cc-85bd-5d65f33fd008/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12479,10 +12410,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "833a763c-f20e-4314-b578-6eb08c2cad6b"
                 ],
-                "metric_keys": [
-                    "aa86e900-9268-481b-acdd-07dfe01f21d3"
-                ],
-                "metrics": [],
                 "perfs": {
                     "aa86e900-9268-481b-acdd-07dfe01f21d3": 33.0
                 }
@@ -12492,9 +12419,11 @@ def get_test_tasks():
             "key": "1c97e57a-b99a-4a80-a297-4d9e239fc655",
             "category": "TASK_TEST",
             "algo": {
-                "key": "19a6c536-6047-4bec-90b3-730060f08afa",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_compute_plan_remove_intermediary_model - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12509,16 +12438,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:26:18.014258+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "2f3d0b96695e2c9a29de73ee93a604e517b8885b73c19dffa5d3b26f57cc48af",
-                    "storage_address": "http://testserver/algo/19a6c536-6047-4bec-90b3-730060f08afa/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/19a6c536-6047-4bec-90b3-730060f08afa/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12542,10 +12469,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "f2b47bf7-ad1a-458b-b119-cb81be02564a"
                 ],
-                "metric_keys": [
-                    "e3986b54-27d7-4e15-ad1f-30f08fc414ee"
-                ],
-                "metrics": [],
                 "perfs": {
                     "e3986b54-27d7-4e15-ad1f-30f08fc414ee": 2.0
                 }
@@ -12555,9 +12478,11 @@ def get_test_tasks():
             "key": "b0f12c0c-ecca-4446-8e37-9b736fb118e5",
             "category": "TASK_TEST",
             "algo": {
-                "key": "19a6c536-6047-4bec-90b3-730060f08afa",
-                "name": "63fb55be83d54e41bb7360c1f53630d5_test_compute_plan_remove_intermediary_model - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12572,16 +12497,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:26:18.014258+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "2f3d0b96695e2c9a29de73ee93a604e517b8885b73c19dffa5d3b26f57cc48af",
-                    "storage_address": "http://testserver/algo/19a6c536-6047-4bec-90b3-730060f08afa/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/19a6c536-6047-4bec-90b3-730060f08afa/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12605,10 +12528,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "f2b47bf7-ad1a-458b-b119-cb81be02564a"
                 ],
-                "metric_keys": [
-                    "e3986b54-27d7-4e15-ad1f-30f08fc414ee"
-                ],
-                "metrics": [],
                 "perfs": {
                     "e3986b54-27d7-4e15-ad1f-30f08fc414ee": 4.0
                 }
@@ -12618,9 +12537,11 @@ def get_test_tasks():
             "key": "53dbeadd-8658-4616-aa6b-3b5c79005152",
             "category": "TASK_TEST",
             "algo": {
-                "key": "69845dac-7f57-44ba-ad71-f1220acff59c",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_compute_plan_single_client_success - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12635,16 +12556,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:27:10.971864+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "65ba9ca24547e7a421c35d3229fd6f144a82ac0ee524eecc7f86f8e27caf7b37",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12668,10 +12587,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "a7da1439-7e61-4c8d-96a5-8c07e84ffe91"
                 ],
-                "metric_keys": [
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c"
-                ],
-                "metrics": [],
                 "perfs": {
                     "6a9750f5-76d2-4e6b-839f-eabc0611427c": 2.0
                 }
@@ -12681,9 +12596,11 @@ def get_test_tasks():
             "key": "5c9a0102-0d74-4170-856c-17173b750511",
             "category": "TASK_TEST",
             "algo": {
-                "key": "69845dac-7f57-44ba-ad71-f1220acff59c",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_compute_plan_single_client_success - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12698,16 +12615,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:27:10.971864+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "65ba9ca24547e7a421c35d3229fd6f144a82ac0ee524eecc7f86f8e27caf7b37",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12731,10 +12646,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "a7da1439-7e61-4c8d-96a5-8c07e84ffe91"
                 ],
-                "metric_keys": [
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c"
-                ],
-                "metrics": [],
                 "perfs": {
                     "6a9750f5-76d2-4e6b-839f-eabc0611427c": 6.0
                 }
@@ -12744,9 +12655,11 @@ def get_test_tasks():
             "key": "ae8ce9f8-acfb-45b2-85a9-60654bfbc8a3",
             "category": "TASK_TEST",
             "algo": {
-                "key": "69845dac-7f57-44ba-ad71-f1220acff59c",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_compute_plan_single_client_success - Algo 0",
+                "key": "b4490c5e-2ae8-420a-9895-55904873d27a",
+                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_composite_traintuple_data_samples_relative_order - Metric 0",
+                "category": "ALGO_METRIC",
                 "owner": "MyOrg1MSP",
+                "metadata": {},
                 "permissions": {
                     "process": {
                         "public": True,
@@ -12761,16 +12674,14 @@ def get_test_tasks():
                         ]
                     }
                 },
-                "metadata": {},
-                "category": "ALGO_SIMPLE",
-                "creation_date": "2022-01-20T14:27:10.971864+00:00",
+                "creation_date": "2022-01-20T14:18:54.822837+00:00",
                 "description": {
-                    "checksum": "65ba9ca24547e7a421c35d3229fd6f144a82ac0ee524eecc7f86f8e27caf7b37",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/description/"
+                    "checksum": "e95988e3e5b47125fffefa82a898620285b8421af3c5835167bfbd4148c7d760",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/description/"
                 },
                 "algorithm": {
-                    "checksum": "e0b87f5e9c1cfad14e6de4a4870b33f97a242b5d2d32ba5392c0a9dfd056873c",
-                    "storage_address": "http://testserver/algo/69845dac-7f57-44ba-ad71-f1220acff59c/file/"
+                    "checksum": "6d59e5a01069c10d3bddd271b6a72e90fd5eb1cc2b4b6452e3606f31afd2e9f7",
+                    "storage_address": "http://testserver/algo/b4490c5e-2ae8-420a-9895-55904873d27a/file/"
                 }
             },
             "owner": "MyOrg1MSP",
@@ -12794,10 +12705,6 @@ def get_test_tasks():
                 "data_sample_keys": [
                     "a7da1439-7e61-4c8d-96a5-8c07e84ffe91"
                 ],
-                "metric_keys": [
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c"
-                ],
-                "metrics": [],
                 "perfs": {
                     "6a9750f5-76d2-4e6b-839f-eabc0611427c": 4.0
                 }

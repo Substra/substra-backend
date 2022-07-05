@@ -424,38 +424,30 @@ class TestTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
     DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    METRIC_KEYS_FIELD_NUMBER: builtins.int
     data_manager_key: typing.Text
     @property
     def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    @property
-    def metric_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
     def __init__(self,
         *,
         data_manager_key: typing.Text = ...,
         data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        metric_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys","metric_keys",b"metric_keys"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys"]) -> None: ...
 global___TestTaskData = TestTaskData
 
 class NewTestTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
     DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    METRIC_KEYS_FIELD_NUMBER: builtins.int
     data_manager_key: typing.Text
     @property
     def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    @property
-    def metric_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
     def __init__(self,
         *,
         data_manager_key: typing.Text = ...,
         data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        metric_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys","metric_keys",b"metric_keys"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys"]) -> None: ...
 global___NewTestTaskData = NewTestTaskData
 
 class CompositeTrainTaskData(google.protobuf.message.Message):

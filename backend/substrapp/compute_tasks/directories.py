@@ -59,10 +59,9 @@ class TaskDirName:
     Local = "local"
     Openers = "openers"
     OutModels = "out_models"
-    Pred = "pred"
     Perf = "perf"
 
-    All = [Chainkeys, Datasamples, Export, InModels, Local, Openers, OutModels, Pred, Perf]
+    All = [Chainkeys, Datasamples, Export, InModels, Local, Openers, OutModels, Perf]
 
 
 class Directories:

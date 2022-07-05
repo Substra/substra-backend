@@ -26,7 +26,7 @@ def test_local_folder(compute_job_raises: bool, settings, mocker: MockerFixture,
     mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client", return_value=orchestrator.client)
     mocker.patch("substrapp.tasks.tasks_compute_task.init_asset_buffer")
     mocker.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs")
-    mocker.patch("substrapp.tasks.tasks_compute_task.build_images")
+    mocker.patch("substrapp.tasks.tasks_compute_task.build_image")
     mocker.patch("substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer")
     mocker.patch("substrapp.tasks.tasks_compute_task.add_assets_to_taskdir")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")

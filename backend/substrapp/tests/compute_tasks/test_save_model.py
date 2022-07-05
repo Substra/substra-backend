@@ -48,7 +48,6 @@ class SaveModelTests(APITestCase):
             compute_plan_tag="",
             in_models=[],
             algo={},
-            metrics=[],
             data_manager={},
             directories=FakeDirectories(data_dir),
             has_chainkeys=False,

@@ -435,13 +435,6 @@ def get_test_task_input_models(task: Dict) -> List:
     return res
 
 
-def get_task_metrics(task: Dict) -> dict:
-    res = {}
-    for metric_key in task["test"]["metric_keys"]:
-        res[metric_key] = get_metric(metric_key)
-    return res
-
-
 def internal_server_error_on_exception():
     """Decorator factory to make the Django test client respond with '500 Internal Server Error'
     when an unhandled exception occurs.

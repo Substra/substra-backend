@@ -29,7 +29,6 @@ class CPPerformanceViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.algo = factory.create_algo()
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plan = factory.create_computeplan()
@@ -37,64 +36,66 @@ class CPPerformanceViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("substrapp:compute_plan_perf-list", args=[self.compute_plan.key])
 
-        self.metrics = [factory.create_algo(category=AlgoRep.Category.ALGO_METRIC) for _ in range(3)]
-        self.compute_task = factory.create_computetask(
-            self.compute_plan,
-            algo=self.algo,
-            metrics=self.metrics,
-            data_manager=self.data_manager,
-            data_samples=[self.data_sample.key],
-            category=ComputeTaskRep.Category.TASK_TEST,
-            status=ComputeTaskRep.Status.STATUS_DONE,
-            error_type=None,
-        )
-        self.performances = [factory.create_performance(self.compute_task, self.metrics[i]) for i in range(3)]
+        self.metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
+        self.compute_tasks = [
+            factory.create_computetask(
+                self.compute_plan,
+                algo=self.metric,
+                data_manager=self.data_manager,
+                data_samples=[self.data_sample.key],
+                category=ComputeTaskRep.Category.TASK_TEST,
+                status=ComputeTaskRep.Status.STATUS_DONE,
+                error_type=None,
+            )
+            for _ in range(3)
+        ]
+        self.performances = [factory.create_performance(self.compute_tasks[i], self.metric) for i in range(3)]
         self.expected_results = [
             {
                 "compute_task": {
-                    "key": str(self.compute_task.key),
+                    "key": str(self.compute_tasks[0].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.algo.key),
+                    "algo_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": None,
                     "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
-                    "key": str(self.metrics[0].key),
-                    "name": self.metrics[0].name,
+                    "key": str(self.metric.key),
+                    "name": self.metric.name,
                 },
                 "perf": self.performances[0].value,
             },
             {
                 "compute_task": {
-                    "key": str(self.compute_task.key),
+                    "key": str(self.compute_tasks[1].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.algo.key),
+                    "algo_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": None,
                     "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
-                    "key": str(self.metrics[1].key),
-                    "name": self.metrics[1].name,
+                    "key": str(self.metric.key),
+                    "name": self.metric.name,
                 },
                 "perf": self.performances[1].value,
             },
             {
                 "compute_task": {
-                    "key": str(self.compute_task.key),
+                    "key": str(self.compute_tasks[2].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.algo.key),
+                    "algo_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": None,
                     "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
-                    "key": str(self.metrics[2].key),
-                    "name": self.metrics[2].name,
+                    "key": str(self.metric.key),
+                    "name": self.metric.name,
                 },
                 "perf": self.performances[2].value,
             },
@@ -124,7 +125,6 @@ class PerformanceViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.maxDiff = None
-        self.algo = factory.create_algo()
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plans = [
@@ -141,8 +141,7 @@ class PerformanceViewTests(APITestCase):
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plans[i],
-                algo=self.algo,
-                metrics=self.metrics,
+                algo=self.metrics[i],
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
                 category=ComputeTaskRep.Category.TASK_TEST,

@@ -35,7 +35,7 @@ def test_get_args_train_task(mocker: MockerFixture, orchestrator: Orchestrator):
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, ctx.algo.key, False)
+    actual = _get_args(ctx)
     assert actual == [
         "train",
         "--rank",
@@ -95,7 +95,7 @@ def test_get_args_composite_task(mocker: MockerFixture, orchestrator: Orchestrat
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, ctx.algo.key, False)
+    actual = _get_args(ctx)
     assert actual == [
         "train",
         "--rank",
@@ -107,66 +107,40 @@ def test_get_args_composite_task(mocker: MockerFixture, orchestrator: Orchestrat
     ]
 
 
-def test_get_args_predict_train(mocker: MockerFixture, orchestrator: Orchestrator):
+def test_get_args_predict_after_train(mocker: MockerFixture, orchestrator: Orchestrator):
     mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
 
     cp = orchestrator.create_compute_plan()
     parent_task = orchestrator.create_train_task(compute_plan_key=cp.key)
     orchestrator.create_model(compute_task_key=parent_task.key)
 
-    test_task = orchestrator.create_test_task(parent_task_keys=[parent_task.key])
+    predict_task = orchestrator.create_predict_task(compute_plan_key=cp.key, parent_task_keys=[parent_task.key])
 
-    ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(test_task.key))
+    ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(predict_task.key))
 
     inputs = []
     inputs += [
         {"id": "models", "value": f"/substra_internal/in_models/{m['key']}"}
-        for m in orchestrator.client.get_computetask_input_models(test_task.key)
+        for m in orchestrator.client.get_computetask_input_models(predict_task.key)
     ]
 
-    inputs.append({"id": "opener", "value": f"/substra_internal/openers/{test_task.test.data_manager_key}/__init__.py"})
+    inputs.append(
+        {"id": "opener", "value": f"/substra_internal/openers/{predict_task.predict.data_manager_key}/__init__.py"}
+    )
 
-    for ds_key in test_task.test.data_sample_keys:
+    for ds_key in predict_task.predict.data_sample_keys:
         inputs.append({"id": "datasamples", "value": f"/substra_internal/data_samples/{ds_key}"})
 
     outputs = [
-        {"id": "predictions", "value": "/substra_internal/pred/pred.json"},
+        {"id": "predictions", "value": "/substra_internal/out_models/out-model"},
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, ctx.algo.key, False)
+    actual = _get_args(ctx)
     assert actual == ["predict", "--inputs", f"'{json.dumps(inputs)}'", "--outputs", f"'{json.dumps(outputs)}'"]
 
 
-def test_get_args_eval_train(mocker: MockerFixture, orchestrator: Orchestrator):
-    mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
-
-    cp = orchestrator.create_compute_plan()
-    parent_task = orchestrator.create_train_task(compute_plan_key=cp.key)
-    orchestrator.create_model(compute_task_key=parent_task.key)
-
-    test_task = orchestrator.create_test_task(parent_task_keys=[parent_task.key])
-
-    ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(test_task.key))
-
-    cmd = [
-        "--input-predictions-path",
-        "/substra_internal/pred/pred.json",
-        "--opener-path",
-        f"/substra_internal/openers/{test_task.test.data_manager_key}/__init__.py",
-    ]
-
-    cmd.append("--data-sample-paths")
-    for ds_key in test_task.test.data_sample_keys:
-        cmd.append(f"/substra_internal/data_samples/{ds_key}")
-
-    cmd += ["--output-perf-path", f"/substra_internal/perf/{test_task.test.metric_keys[0]}-perf.json"]
-
-    actual = _get_args(ctx, test_task.test.metric_keys[0], True)
-    assert actual == cmd
-
-
-def test_get_args_predict_composite(mocker: MockerFixture, orchestrator: Orchestrator):
+def test_get_args_predict_after_composite(mocker: MockerFixture, orchestrator: Orchestrator):
     mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
 
     cp = orchestrator.create_compute_plan()
@@ -174,54 +148,59 @@ def test_get_args_predict_composite(mocker: MockerFixture, orchestrator: Orchest
     orchestrator.create_model(compute_task_key=parent_task.key, category=model_pb2.MODEL_HEAD)
     orchestrator.create_model(compute_task_key=parent_task.key, category=model_pb2.MODEL_SIMPLE)
 
-    test_task = orchestrator.create_test_task(parent_task_keys=[parent_task.key])
+    predict_task = orchestrator.create_predict_task(compute_plan_key=cp.key, parent_task_keys=[parent_task.key])
 
-    ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(test_task.key))
+    ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(predict_task.key))
 
     inputs = []
 
-    in_models = orchestrator.client.get_computetask_input_models(test_task.key)
+    in_models = orchestrator.client.get_computetask_input_models(predict_task.key)
     inputs.append({"id": "local", "value": f"/substra_internal/in_models/{in_models[0]['key']}"})
     inputs.append({"id": "shared", "value": f"/substra_internal/in_models/{in_models[1]['key']}"})
 
-    inputs.append({"id": "opener", "value": f"/substra_internal/openers/{test_task.test.data_manager_key}/__init__.py"})
+    inputs.append(
+        {"id": "opener", "value": f"/substra_internal/openers/{predict_task.predict.data_manager_key}/__init__.py"}
+    )
 
-    for ds_key in test_task.test.data_sample_keys:
+    for ds_key in predict_task.predict.data_sample_keys:
         inputs.append({"id": "datasamples", "value": f"/substra_internal/data_samples/{ds_key}"})
 
     outputs = [
-        {"id": "predictions", "value": "/substra_internal/pred/pred.json"},
+        {"id": "predictions", "value": "/substra_internal/out_models/out-model"},
         {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
-    actual = _get_args(ctx, ctx.algo.key, False)
+    actual = _get_args(ctx)
     assert actual == ["predict", "--inputs", f"'{json.dumps(inputs)}'", "--outputs", f"'{json.dumps(outputs)}'"]
 
 
-def test_get_args_eval_composite(mocker: MockerFixture, orchestrator: Orchestrator):
+def test_get_args_test_after_predict(mocker, orchestrator: Orchestrator):
     mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
 
-    cp = orchestrator.create_compute_plan()
-    parent_task = orchestrator.create_composite_train_task(compute_plan_key=cp.key)
-    orchestrator.create_model(compute_task_key=parent_task.key, category=model_pb2.MODEL_HEAD)
-    orchestrator.create_model(compute_task_key=parent_task.key, category=model_pb2.MODEL_SIMPLE)
-
-    test_task = orchestrator.create_test_task(parent_task_keys=[parent_task.key])
+    train_task = orchestrator.create_train_task()
+    orchestrator.create_model(compute_task_key=train_task.key)
+    predict_task = orchestrator.create_predict_task(
+        compute_plan_key=train_task.compute_plan_key, parent_task_keys=[train_task.key]
+    )
+    orchestrator.create_model(compute_task_key=predict_task.key)
+    test_task = orchestrator.create_test_task(
+        compute_plan_key=train_task.compute_plan_key, parent_task_keys=[predict_task.key]
+    )
 
     ctx = Context.from_task(_CHANNEL, orchestrator.client.query_task(test_task.key))
 
+    in_model = orchestrator.client.get_computetask_input_models(test_task.key)
     cmd = [
         "--input-predictions-path",
-        "/substra_internal/pred/pred.json",
+        f"/substra_internal/in_models/{in_model[0]['key']}",
         "--opener-path",
         f"/substra_internal/openers/{test_task.test.data_manager_key}/__init__.py",
+        "--data-sample-paths",
     ]
+    cmd.extend([f"/substra_internal/data_samples/{ds_key}" for ds_key in test_task.test.data_sample_keys])
+    cmd.append("--output-perf-path")
+    cmd.append(f"/substra_internal/perf/{test_task.algo.key}-perf.json")
 
-    cmd.append("--data-sample-paths")
-    for ds_key in test_task.test.data_sample_keys:
-        cmd.append(f"/substra_internal/data_samples/{ds_key}")
+    actual = _get_args(ctx)
 
-    cmd += ["--output-perf-path", f"/substra_internal/perf/{test_task.test.metric_keys[0]}-perf.json"]
-
-    actual = _get_args(ctx, test_task.test.metric_keys[0], True)
     assert actual == cmd

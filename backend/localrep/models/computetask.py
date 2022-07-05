@@ -15,6 +15,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
         TASK_TRAIN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
         TASK_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_AGGREGATE)
         TASK_COMPOSITE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_COMPOSITE)
+        TASK_PREDICT = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_PREDICT)
         TASK_TEST = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST)
 
     class Status(models.TextChoices):
@@ -53,6 +54,12 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     channel = models.CharField(max_length=100)
     metadata = models.JSONField()
 
+    # specific fields for predict tasks
+    prediction_permissions_process_public = models.BooleanField(null=True)
+    prediction_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    prediction_permissions_download_public = models.BooleanField(null=True)
+    prediction_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+
     # specific fields for train, composite and test tasks
     # patch waiting for a solution to preserve related datasample order without sync time overhead
     data_manager = models.ForeignKey(
@@ -65,9 +72,6 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     model_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
     model_permissions_download_public = models.BooleanField(null=True)
     model_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-
-    # specific fields for test tasks
-    metrics = models.ManyToManyField("Algo", related_name="test_tasks")
 
     # specific fields for composite tasks
     head_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)

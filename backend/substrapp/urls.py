@@ -22,6 +22,7 @@ router.register(r"data_manager", views.DataManagerPermissionViewSet, basename="d
 router.register(r"algo", views.AlgoViewSet, basename="algo")
 router.register(r"algo", views.AlgoPermissionViewSet, basename="algo")
 router.register(r"traintuple", views.ComputeTaskViewSet, basename="traintuple")
+router.register(r"predicttuple", views.ComputeTaskViewSet, basename="predicttuple")
 router.register(r"testtuple", views.ComputeTaskViewSet, basename="testtuple")
 router.register(r"aggregatetuple", views.ComputeTaskViewSet, basename="aggregatetuple")
 router.register(r"composite_traintuple", views.ComputeTaskViewSet, basename="composite_traintuple")
@@ -37,6 +38,7 @@ compute_plan_router.register(r"aggregatetuple", views.CPTaskViewSet, basename=f"
 compute_plan_router.register(
     r"composite_traintuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}composite_traintuple"
 )
+compute_plan_router.register(r"predicttuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}predicttuple")
 compute_plan_router.register(r"testtuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}testtuple")
 compute_plan_router.register(r"algos", views.CPAlgoViewSet, basename=f"{CP_BASENAME_PREFIX}algo")
 compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP_BASENAME_PREFIX}perf")

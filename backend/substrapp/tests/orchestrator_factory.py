@@ -538,7 +538,6 @@ class TestTaskDataFactory(factory.Factory):
 
     data_manager_key = factory.Faker("uuid4")
     data_sample_keys = factory.List([factory.Faker("uuid4"), factory.Faker("uuid4")])
-    metric_keys = []
 
 
 class TestTaskFactory(TaskFactory):

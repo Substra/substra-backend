@@ -62,15 +62,15 @@ class ComputeTaskViewTests(APITestCase):
                 ComputeTaskRep.Status.STATUS_FAILED,
                 ComputeTaskRep.Status.STATUS_CANCELED,
             ):
-                metrics = error_type = None
-                if _status == ComputeTaskRep.Status.STATUS_FAILED:
-                    error_type = ComputeTaskRep.ErrorType.ERROR_TYPE_EXECUTION
-                if category == ComputeTaskRep.Category.TASK_TEST:
-                    metrics = [self.metric]
+                algo = self.metric if category == ComputeTaskRep.Category.TASK_TEST else self.algo
+                error_type = (
+                    ComputeTaskRep.ErrorType.ERROR_TYPE_EXECUTION
+                    if _status == ComputeTaskRep.Status.STATUS_FAILED
+                    else None
+                )
                 self.compute_tasks[category][_status] = factory.create_computetask(
                     self.compute_plan,
-                    self.algo,
-                    metrics=metrics,
+                    algo,
                     data_manager=self.data_manager,
                     data_samples=[self.data_sample.key],
                     category=category,
@@ -138,6 +138,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         train_task_key = str(uuid.uuid4())
         aggregate_task_key = str(uuid.uuid4())
         test_task_key = str(uuid.uuid4())
+        predict_task_key = str(uuid.uuid4())
         done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
         data = {
             "tasks": [
@@ -159,10 +160,19 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
                 {
                     "compute_plan_key": self.compute_plan.key,
+                    "category": "TASK_PREDICT",
+                    "traintuple_key": train_task_key,
+                    "key": predict_task_key,
+                    "algo_key": self.algo.key,
+                    "data_manager_key": self.data_manager.key,
+                    "test_data_sample_keys": [self.data_sample.key],
+                },
+                {
+                    "compute_plan_key": self.compute_plan.key,
                     "category": "TASK_TEST",
                     "key": test_task_key,
-                    "traintuple_key": train_task_key,
-                    "metric_keys": [self.metric.key],
+                    "predicttuple_key": predict_task_key,
+                    "algo_key": self.metric.key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
                 },
@@ -245,9 +255,9 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
             },
             {
-                "key": test_task_key,
+                "key": predict_task_key,
                 "algo": self.algo_data,
-                "category": "TASK_TEST",
+                "category": "TASK_PREDICT",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "end_date": None,
@@ -265,10 +275,47 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "start_date": None,
                 "status": "STATUS_WAITING",
                 "tag": None,
+                "predict": {
+                    "data_manager_key": str(self.data_manager.key),
+                    "data_sample_keys": [str(self.data_sample.key)],
+                    "prediction_permissions": {
+                        "download": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                        "process": {
+                            "authorized_ids": None,
+                            "public": None,
+                        },
+                    },
+                    "models": None,
+                },
+                "worker": "MyOrg1MSP",
+            },
+            {
+                "key": test_task_key,
+                "algo": self.metric_data,
+                "category": "TASK_TEST",
+                "compute_plan_key": str(self.compute_plan.key),
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "end_date": None,
+                "error_type": None,
+                "logs_permission": {
+                    "authorized_ids": ["MyOrg1MSP"],
+                    "public": False,
+                },
+                "metadata": {
+                    "__tag__": "",
+                },
+                "owner": "MyOrg1MSP",
+                "parent_task_keys": [predict_task_key],
+                "rank": 0,
+                "start_date": None,
+                "status": "STATUS_WAITING",
+                "tag": None,
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "worker": "MyOrg1MSP",
@@ -789,7 +836,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(todo_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -805,7 +852,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "logs_permission": {
@@ -817,7 +863,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -833,7 +879,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "logs_permission": {
@@ -845,7 +890,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -861,7 +906,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "logs_permission": {
@@ -873,7 +917,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -889,7 +933,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": {str(self.metric.key): self.performance.value},
                 },
                 "logs_permission": {
@@ -901,7 +944,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -917,7 +960,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "logs_permission": {
@@ -929,7 +971,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data,
+                "algo": self.metric_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -945,7 +987,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "metric_keys": [str(self.metric.key)],
                     "perfs": None,
                 },
                 "logs_permission": {
@@ -1069,11 +1110,11 @@ class TestTaskViewTests(ComputeTaskViewTests):
         )
 
     def test_testtask_list_cross_assets_filters(self):
-        """Filter testtask on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
+        """Filter testtask on other asset key such as compute_plan_key, algo_key, dataset_key and data_sample_key"""
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algo.key}),
+            urlencode({"algo_key": self.metric.key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -1151,7 +1192,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(url, **self.extra)
         # patch expected results with extended data
         self.expected_results[0]["test"]["data_manager"] = self.data_manager_data
-        self.expected_results[0]["test"]["metrics"] = [self.metric_data]
         self.expected_results[0]["parent_tasks"] = []
         self.assertEqual(response.json(), self.expected_results[0])
 

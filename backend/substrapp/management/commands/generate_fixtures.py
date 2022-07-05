@@ -97,8 +97,7 @@ class Command(BaseCommand):
         factory.create_model(train_task, category=Model.Category.MODEL_SIMPLE)
         test_task = factory.create_computetask(
             done_cp,
-            simple_algo,
-            metrics=[metric_algo],
+            metric_algo,
             parent_tasks=[train_task.key],
             data_manager=data_manager,
             data_samples=[test_data_sample.key],
@@ -120,8 +119,7 @@ class Command(BaseCommand):
         factory.create_model(composite_task, category=Model.Category.MODEL_HEAD)
         failed_task = factory.create_computetask(
             failed_cp,
-            simple_algo,
-            metrics=[metric_algo],
+            metric_algo,
             parent_tasks=[composite_task.key],
             data_manager=data_manager,
             data_samples=[test_data_sample.key],

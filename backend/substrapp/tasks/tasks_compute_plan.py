@@ -3,8 +3,6 @@ from typing import Any
 import structlog
 from django.conf import settings
 
-import orchestrator.algo_pb2 as algo_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
@@ -49,25 +47,8 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, comput
 def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan: dict[str, Any]) -> None:
     compute_plan_key = compute_plan["key"]
     with get_orchestrator_client(channel_name) as client:
-        algos = client.query_algos(
-            categories=[
-                algo_pb2.AlgoCategory.ALGO_SIMPLE,
-                algo_pb2.AlgoCategory.ALGO_COMPOSITE,
-                algo_pb2.AlgoCategory.ALGO_AGGREGATE,
-            ],
-            compute_plan_key=compute_plan_key,
-        )
-        test_tasks = client.query_tasks(category=computetask_pb2.TASK_TEST, compute_plan_key=compute_plan_key)
+        algos = client.query_algos(compute_plan_key=compute_plan_key)
     algo_keys = [Algo(channel_name, x) for x in algos]
-
-    # TODO: make it possible in the orchestrator to retrieve metrics used in a compute plan similar as above
-    # with other algo kinds
-    metrics: dict[str, Algo] = {}
-    with get_orchestrator_client(channel_name) as client:
-        for task in test_tasks:
-            for key in task["test"]["metric_keys"]:
-                if key not in metrics.keys():
-                    metrics[key] = Algo(channel_name, client.query_algo(key))
 
     # See lock function PyDoc for explanation as to why this lock is necessary
     with acquire_compute_plan_lock(compute_plan_key):
@@ -86,7 +67,6 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan
         teardown_compute_plan_dir(dirs)
 
     _remove_docker_images(algo_keys)
-    _remove_docker_images(list(metrics.values()))
 
 
 def _remove_docker_images(algos: list[Algo]) -> None:
