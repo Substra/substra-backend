@@ -12,51 +12,55 @@ from substrapp.views.utils import validate_key
 logger = structlog.get_logger(__name__)
 
 
+def _get_output_name(task, source_task_category):
+    if source_task_category == "TASK_AGGREGATE":
+        return "out/model"
+    elif source_task_category == "TASK_TRAIN":
+        return "out/model"
+    elif source_task_category == "TASK_COMPOSITE":
+        return "out/trunk_model" if task["category"] == "TASK_AGGREGATE" else "out/head_model"
+    elif source_task_category == "TASK_PREDICT":
+        return "out/predictions"
+
+    raise Exception(
+        (
+            "Failed to build CP workflow graph. Could not build an edge for: "
+            f"task {task['key']} has task {source_task_category} in its parents list."
+        )
+    )
+
+
+def _get_input_name(task, source_task_category):
+    if task["category"] == "TASK_PREDICT":
+        return "in/tested_model"
+    elif task["category"] == "TASK_TEST":
+        return "in/predictions"
+    elif task["category"] == "TASK_TRAIN":
+        return "in/model"
+    elif task["category"] == "TASK_AGGREGATE":
+        return "in/models[]"
+    elif task["category"] == "TASK_COMPOSITE":
+        return "in/trunk_model" if source_task_category == "TASK_AGGREGATE" else "in/head_model"
+
+    raise Exception(
+        (
+            "Failed to build CP workflow graph. Could not build an edge for: "
+            f"task {task['key']} has a category {task['category']}."
+        )
+    )
+
+
 def _compute_task_edges(task, tasks_keys_dict):
     """Computing source output and target input"""
     edges = []
     for source_task_key in task["source_task_keys"]:
         source_task_category = tasks_keys_dict[str(source_task_key)]["category"]
-
-        # Compute the source_output_name
-        if source_task_category == "TASK_AGGREGATE":
-            source_output_name = "out/model"
-        elif source_task_category == "TASK_TRAIN":
-            source_output_name = "out/model"
-        elif source_task_category == "TASK_COMPOSITE":
-            source_output_name = "out/trunk_model" if task["category"] == "TASK_AGGREGATE" else "out/head_model"
-        else:
-            raise Exception(
-                (
-                    "Failed to build CP workflow graph. Could not build an edge for: "
-                    f"task {task['key']} has task {source_task_category} in its parents list."
-                )
-            )
-
-        # Compute the target_input_name
-        if task["category"] == "TASK_TEST":
-            target_input_name = "in/tested_model"
-        elif task["category"] == "TASK_TRAIN":
-            target_input_name = "in/model"
-        elif task["category"] == "TASK_AGGREGATE":
-            target_input_name = "in/models[]"
-        elif task["category"] == "TASK_COMPOSITE":
-            target_input_name = "in/trunk_model" if source_task_category == "TASK_AGGREGATE" else "in/head_model"
-        else:
-            raise Exception(
-                (
-                    "Failed to build CP workflow graph. Could not build an edge for: "
-                    f"task {task['key']} has a category {task['category']}."
-                )
-            )
-
-        # Populate edges
         edges.append(
             {
                 "source_task_key": source_task_key,
                 "target_task_key": task["key"],
-                "source_output_name": source_output_name,
-                "target_input_name": target_input_name,
+                "source_output_name": _get_output_name(task, source_task_category),
+                "target_input_name": _get_input_name(task, source_task_category),
             }
         )
 

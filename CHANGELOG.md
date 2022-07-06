@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Execute predict tasks. (#1091)
 - Backend hostname to the organization view (#1167)
 
+### Fixed
+
+- Compute plan workflow graph endpoint handles predict tasks (#1171)
+
 ## [0.21.0] 2022-07-05
 
 ### Added

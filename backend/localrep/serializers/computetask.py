@@ -336,9 +336,10 @@ class ComputeTaskWithRelationshipsSerializer(ComputeTaskSerializer):
 
 TASK_CATEGORY_INPUTS = {
     ComputeTask.Category.TASK_TRAIN: ["in/model"],
-    ComputeTask.Category.TASK_TEST: ["in/tested_model"],
+    ComputeTask.Category.TASK_TEST: ["in/predictions"],
     ComputeTask.Category.TASK_COMPOSITE: ["in/head_model", "in/trunk_model"],
     ComputeTask.Category.TASK_AGGREGATE: ["in/models[]"],
+    ComputeTask.Category.TASK_PREDICT: ["in/tested_model"],
 }
 
 TASK_CATEGORY_OUTPUTS = {
@@ -346,6 +347,7 @@ TASK_CATEGORY_OUTPUTS = {
     ComputeTask.Category.TASK_TEST: [],
     ComputeTask.Category.TASK_COMPOSITE: ["out/head_model", "out/trunk_model"],
     ComputeTask.Category.TASK_AGGREGATE: ["out/model"],
+    ComputeTask.Category.TASK_PREDICT: ["out/predictions"],
 }
 
 

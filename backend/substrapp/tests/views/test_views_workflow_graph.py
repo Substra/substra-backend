@@ -56,8 +56,11 @@ class WorkflowGraphViewTests(APITestCase):
             algo=algo,
             category=ComputeTaskRep.Category.TASK_TRAIN,
         )
+        predict_task = factory.create_computetask(
+            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_PREDICT, parent_tasks=[train_task.key]
+        )
         test_task = factory.create_computetask(
-            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_TEST, parent_tasks=[train_task.key]
+            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_TEST, parent_tasks=[predict_task.key]
         )
         composite_task = factory.create_computetask(
             compute_plan,
@@ -81,13 +84,23 @@ class WorkflowGraphViewTests(APITestCase):
                     "outputs": ["out/model"],
                 },
                 {
+                    "key": str(predict_task.key),
+                    "rank": 1,
+                    "worker": "MyOrg1MSP",
+                    "status": "STATUS_TODO",
+                    "category": "TASK_PREDICT",
+                    "source_task_keys": [str(train_task.key)],
+                    "inputs": ["in/tested_model"],
+                    "outputs": ["out/predictions"],
+                },
+                {
                     "key": str(test_task.key),
                     "rank": 1,
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_TEST",
-                    "source_task_keys": [str(train_task.key)],
-                    "inputs": ["in/tested_model"],
+                    "source_task_keys": [str(predict_task.key)],
+                    "inputs": ["in/predictions"],
                     "outputs": [],
                 },
                 {
@@ -114,9 +127,15 @@ class WorkflowGraphViewTests(APITestCase):
             "edges": [
                 {
                     "source_task_key": str(train_task.key),
-                    "target_task_key": str(test_task.key),
+                    "target_task_key": str(predict_task.key),
                     "source_output_name": "out/model",
                     "target_input_name": "in/tested_model",
+                },
+                {
+                    "source_task_key": str(predict_task.key),
+                    "target_task_key": str(test_task.key),
+                    "source_output_name": "out/predictions",
+                    "target_input_name": "in/predictions",
                 },
                 {
                     "source_task_key": str(composite_task.key),
@@ -128,5 +147,4 @@ class WorkflowGraphViewTests(APITestCase):
         }
         url = reverse("substrapp:compute_plan_workflow_graph-list", args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
-        print(response.json())
         self.assertEqual(response.json(), expected_results)
