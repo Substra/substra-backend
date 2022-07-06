@@ -48,7 +48,7 @@ from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
 from substrapp.compute_tasks.execute import execute_compute_task
-from substrapp.compute_tasks.image_builder import build_image
+from substrapp.compute_tasks.image_builder import build_image_if_missing
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import save_outputs
@@ -239,7 +239,7 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
         init_compute_plan_dirs(dirs)
         init_task_dirs(dirs)
 
-        build_image(ctx.algo)
+        build_image_if_missing(ctx.algo)
 
         with acquire_compute_plan_lock(compute_plan_key):
 

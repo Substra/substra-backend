@@ -40,11 +40,7 @@ KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
 
-def build_image(algo: Algo) -> None:
-    _build_image_if_missing(algo)
-
-
-def _build_image_if_missing(algo: Algo) -> None:
+def build_image_if_missing(algo: Algo) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """

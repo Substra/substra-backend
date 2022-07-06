@@ -9,7 +9,7 @@ from parameterized import parameterized
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.image_builder import _get_entrypoint_from_dockerfile
-from substrapp.compute_tasks.image_builder import build_image
+from substrapp.compute_tasks.image_builder import build_image_if_missing
 from substrapp.tests.test_utils import CHANNEL
 
 DOCKERFILE = """
@@ -47,7 +47,7 @@ class GetEntrypointFromDockerfileTests(unittest.TestCase):
 
 
 class TestImageBuilder:
-    def test_build_image(self):
+    def test_build_image_if_missing(self):
         algo_key = str(uuid.uuid4())
         algo_owner = "algo owner"
         algo_storage_address = "algo storage_address"
@@ -69,7 +69,7 @@ class TestImageBuilder:
         ):
 
             mcontainer_image_exists.return_value = False
-            build_image(algo)
+            build_image_if_missing(algo)
 
             assert mcontainer_image_exists.call_count == 1
             mcontainer_image_exists.assert_any_call(algo_image_tag)
