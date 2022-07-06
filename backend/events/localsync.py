@@ -92,6 +92,7 @@ def _on_create_computetask_event(event: dict) -> None:
     _create_computetask(channel=event["channel"], data=task_data)
 
     compute_plan = ComputePlan.objects.get(key=task_data["compute_plan_key"])
+    compute_plan.update_dates()
     compute_plan.update_status()
 
 
@@ -136,8 +137,7 @@ def _on_update_computetask_event(event: dict) -> None:
     # update CP dates:
     # - after task status, to ensure proper rules are applied
     # - before CP status, to ensure dates are up-to-date when client wait on status
-    if task["status"] != ComputeTask.Status.STATUS_TODO:
-        compute_plan.update_dates()
+    compute_plan.update_dates()
     compute_plan.update_status()
 
 
@@ -405,9 +405,7 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
 
     for data in computeplans:
         is_created = _create_computeplan(client.channel_name, data)
-        if data["status"] != ComputePlan.Status.PLAN_STATUS_TODO:
-            compute_plan = ComputePlan.objects.get(key=data["key"])
-            compute_plan.update_dates()
+        ComputePlan.objects.get(key=data["key"]).update_dates()
         if is_created:
             logger.debug("Created new computeplan", asset_key=data["key"])
             nb_new_assets += 1
@@ -498,7 +496,9 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
             else:
                 _sync_models(data["key"], client)
 
+    # update CP fields that depend on task fields
     for compute_plan in ComputePlan.objects.all():
+        compute_plan.update_dates()
         compute_plan.update_status()
 
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)

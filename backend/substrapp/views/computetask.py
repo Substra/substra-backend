@@ -289,6 +289,7 @@ def task_bulk_create_view(request):
             localrep_task_data = localrep_serializer.data
         data.append(localrep_task_data)
 
+    compute_plan.update_dates()
     compute_plan.update_status()
     return ApiResponse(data, status=status.HTTP_200_OK)
 
