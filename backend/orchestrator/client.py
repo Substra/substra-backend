@@ -1,4 +1,5 @@
 import time
+from copy import deepcopy
 from functools import wraps
 
 import grpc
@@ -56,7 +57,13 @@ def grpc_retry(func):
         times = 5
         for attempt in range(times):
             try:
-                return func(*args, **kwargs)
+                # We create a copy of the arguments to make sure that mutated arguments are not sent when
+                # performing multiple attempts.
+                # Since we are in a class the first arg is always self and it can't be copied.
+                args_copy = deepcopy(args[1:])
+                kwargs_copy = deepcopy(kwargs)
+
+                return func(args[0], *args_copy, **kwargs_copy)
             except grpc.RpcError as rpc_error:
 
                 err = OrcError()

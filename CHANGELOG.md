@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Compute plan workflow graph endpoint handles predict tasks (#1171)
+- Don't raise an error when retrying certain orchestrator requests - @grpc_retry (#1173)
 
 ## [0.21.0] 2022-07-05
 
