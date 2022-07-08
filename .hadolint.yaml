@@ -1,0 +1,4 @@
+ignored:
+  # DL3008: Pin versions in apt get install (https://github.com/hadolint/hadolint/wiki/DL3008)
+  # apk package will be updated using docker-dependency-updater
+  - DL3008

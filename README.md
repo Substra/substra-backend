@@ -226,6 +226,7 @@ Tested with:
     * python 3.9.4
     * pip 22.0.4
 
+Currently only the dev mode is supported with this architecture.
 
 1. uwsgi
 
@@ -234,6 +235,6 @@ When using pyenv-virtualenv, the python library might not be linked correctly in
 sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9.4/lib/python3.9/config-3.9-darwin <INSERT YOUR NOT-FOUND-PATH HERE WITHOUT libpython3.8.a FILENAME>
 ```
 
-2. Deploy with `skaffold run -p arm64`
+2. Deploy with `skaffold run -p dev,arm64`
 
 3. Run patch `./examples/tools/patch-rabbitmq-arm64.sh`

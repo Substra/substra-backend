@@ -127,6 +127,9 @@ profiles:
         value: true
   - name: arm64
     patches:
+      - op: add
+        path: /build/artifacts/0/docker/target
+        value: arm64  # install psycopg2 dependency to build from wheel for this plateform
       - op: replace
         path: /deploy/helm/releases/0/valuesFiles
         value: [ examples/values/backend-org-1.yaml, examples/values/rabbitmq-arm64.yaml ]

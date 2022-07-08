@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Filtering on compute tasks metadata (#1131)
 - View to build task workflow graph (#1135)
 
+### Fixed
+
+- arm64 stage in the dockerfile to install dependencies and build psycopg2 from source (#1169)
+
 ## [0.20.0] 2022-06-27
 
 ### Added
