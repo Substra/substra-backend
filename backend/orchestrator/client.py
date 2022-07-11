@@ -4,6 +4,7 @@ from functools import wraps
 
 import grpc
 import structlog
+from django.conf import settings
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
 
@@ -75,9 +76,9 @@ def grpc_retry(func):
                     logger.exception(rpc_error)
 
                     if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
-                        sleep_duration = 2 * (attempt + 1)
+                        sleep_duration = 2 * settings.ORCHESTRATOR_RETRY_DELAY * (attempt + 1)
                     else:
-                        sleep_duration = 1
+                        sleep_duration = settings.ORCHESTRATOR_RETRY_DELAY
 
                     logger.info(
                         "grpc.RpcError thrown on orchestrator api request",
