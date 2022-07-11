@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.22.0] 2022-07-11
+
 ### Removed
 
 - BREAKING: Removed the `metric_keys` property of test tasks in favor of the generic `algo` field. (#1091)
