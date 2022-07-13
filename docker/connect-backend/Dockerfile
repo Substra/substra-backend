@@ -32,7 +32,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # libpq is a required dependency to build psycopg2 from source (support for arm64 platform)
     libpq-dev
 RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
-    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.3   
+    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.3
+
+ARG USER_ID=1001
+ARG GROUP_ID=1001
+
+RUN mkdir -p /var/substra/ /tmp/django_cache \
+    && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
+
+USER ${USER_ID}:${GROUP_ID}
 
 # only for `docker build --target dev`
 FROM build AS dev
@@ -41,7 +49,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM python:3.9-slim 
+FROM python:3.9-slim
 
 ARG BACKEND_VERSION
 ENV BACKEND_VERSION=${BACKEND_VERSION:-dev}
