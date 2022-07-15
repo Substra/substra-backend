@@ -42,13 +42,11 @@ compute_plan_router.register(r"predicttuple", views.CPTaskViewSet, basename=f"{C
 compute_plan_router.register(r"testtuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}testtuple")
 compute_plan_router.register(r"algos", views.CPAlgoViewSet, basename=f"{CP_BASENAME_PREFIX}algo")
 compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP_BASENAME_PREFIX}perf")
-compute_plan_router.register(
-    r"workflow_graph", views.CPWorkflowGraphViewSet, basename=f"{CP_BASENAME_PREFIX}workflow_graph"
-)
 
 
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
     path(r"task/bulk_create/", views.task_bulk_create_view, name="task_bulk_create"),
+    path(r"compute_plan/<compute_plan_pk>/workflow_graph/", views.get_cp_graph, name="workflow_graph"),
 ]

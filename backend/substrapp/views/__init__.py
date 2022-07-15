@@ -1,6 +1,7 @@
 from .algo import AlgoPermissionViewSet
 from .algo import AlgoViewSet
 from .algo import CPAlgoViewSet
+from .compute_plan_graph import get_cp_graph
 from .computeplan import ComputePlanViewSet
 from .computetask import ComputeTaskViewSet
 from .computetask import CPTaskViewSet
@@ -15,7 +16,6 @@ from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
 from .performance import CPPerformanceViewSet
 from .performance import PerformanceViewSet
-from .workflow_graph import CPWorkflowGraphViewSet
 
 __all__ = [
     "DataSampleViewSet",
@@ -34,6 +34,6 @@ __all__ = [
     "CPPerformanceViewSet",
     "ComputePlanMetadataViewSet",
     "PerformanceViewSet",
-    "CPWorkflowGraphViewSet",
+    "get_cp_graph",
     "task_bulk_create_view",
 ]

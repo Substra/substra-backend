@@ -18,7 +18,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
 )
-class WorkflowGraphViewTests(APITestCase):
+class ComputePlanGraphViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
@@ -26,13 +26,14 @@ class WorkflowGraphViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        self.base_url = "substrapp:workflow_graph"
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_empty_workflow(self):
+    def test_empty_graph(self):
         compute_plan = factory.create_computeplan()
-        url = reverse("substrapp:compute_plan_workflow_graph-list", args=[compute_plan.key])
+        url = reverse(self.base_url, args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), {"tasks": [], "edges": []})
 
@@ -44,11 +45,11 @@ class WorkflowGraphViewTests(APITestCase):
                 compute_plan,
                 algo=algo,
             )
-        url = reverse("substrapp:compute_plan_workflow_graph-list", args=[compute_plan.key])
+        url = reverse(self.base_url, args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_workflow_graph(self):
+    def test_cp_graph(self):
         compute_plan = factory.create_computeplan()
         algo = factory.create_algo()
         train_task = factory.create_computetask(
@@ -127,24 +128,30 @@ class WorkflowGraphViewTests(APITestCase):
             "edges": [
                 {
                     "source_task_key": str(train_task.key),
+                    "source_task_category": "TASK_TRAIN",
                     "target_task_key": str(predict_task.key),
+                    "target_task_category": "TASK_PREDICT",
                     "source_output_name": "out/model",
                     "target_input_name": "in/tested_model",
                 },
                 {
                     "source_task_key": str(predict_task.key),
+                    "source_task_category": "TASK_PREDICT",
                     "target_task_key": str(test_task.key),
+                    "target_task_category": "TASK_TEST",
                     "source_output_name": "out/predictions",
                     "target_input_name": "in/predictions",
                 },
                 {
                     "source_task_key": str(composite_task.key),
+                    "source_task_category": "TASK_COMPOSITE",
                     "target_task_key": str(aggregate_task.key),
+                    "target_task_category": "TASK_AGGREGATE",
                     "source_output_name": "out/trunk_model",
                     "target_input_name": "in/models[]",
                 },
             ],
         }
-        url = reverse("substrapp:compute_plan_workflow_graph-list", args=[compute_plan.key])
+        url = reverse(self.base_url, args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), expected_results)
