@@ -3,7 +3,7 @@ celery==4.4.7
 checksumdir==1.1.7
 cryptography==3.4.7
 django-cors-headers==3.2.1
-django-celery-results==1.2.1
+django-celery-results==2.4.0
 djangorestframework==3.11.2
 djangorestframework-simplejwt==4.4.0
 drf-spectacular==0.13.0
