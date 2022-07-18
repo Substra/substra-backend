@@ -1,7 +1,9 @@
 import csv
 
 import structlog
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
+from django.db.models import Q
 from django.http import StreamingHttpResponse
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,6 +23,7 @@ from substrapp.views.filters_utils import CharInFilter
 from substrapp.views.filters_utils import ChoiceInFilter
 from substrapp.views.filters_utils import MatchFilter
 from substrapp.views.filters_utils import UUIDInFilter
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -33,13 +36,46 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     ordering = ["compute_task__rank", "compute_task__worker"]
     pagination_class = LargePageNumberPagination
 
+    def _get_cp_ranks_and_rounds(self, compute_plan_pk):
+        return (
+            ComputePlanRep.objects.filter(channel=get_channel_name(self.request), key=compute_plan_pk)
+            .annotate(
+                # List all existing tasks ranks for a given compute plan
+                compute_tasks_distinct_ranks=ArrayAgg(
+                    "compute_tasks__rank", distinct=True, filter=Q(compute_tasks__rank__isnull=False)
+                ),
+                # List all existing tasks round indexes for a given compute plan
+                compute_tasks_distinct_rounds=ArrayAgg(
+                    "compute_tasks__metadata__round_idx",
+                    distinct=True,
+                    filter=Q(compute_tasks__metadata__round_idx__isnull=False),
+                ),
+            )
+            .values("compute_tasks_distinct_ranks", "compute_tasks_distinct_rounds")
+        )
+
     def get_queryset(self):
         return (
             PerformanceRep.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task", "metric")
             .filter(compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk"))
+            .select_related("compute_task", "metric")
             .distinct()
         )
+
+    def list(self, request, compute_plan_pk):
+        queryset = self.filter_queryset(self.get_queryset())
+        cp_stats = self._get_cp_ranks_and_rounds(compute_plan_pk).first()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = {"performances": serializer.data, "compute_plan_statistics": cp_stats}
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        data = {"performances": serializer.data, "compute_plan_statistics": cp_stats}
+
+        return ApiResponse(data)
 
 
 class PerformanceRepFilter(FilterSet):

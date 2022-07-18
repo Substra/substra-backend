@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Compute plan ranks and round_idx list to cp perf view (#1136)
 
 ## [0.22.0] 2022-07-11
 

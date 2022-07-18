@@ -45,61 +45,69 @@ class CPPerformanceViewTests(APITestCase):
                 data_samples=[self.data_sample.key],
                 category=ComputeTaskRep.Category.TASK_TEST,
                 status=ComputeTaskRep.Status.STATUS_DONE,
+                rank=i + 1,
+                metadata={"round_idx": 1},
                 error_type=None,
             )
-            for _ in range(3)
+            for i in range(3)
         ]
         self.performances = [factory.create_performance(self.compute_tasks[i], self.metric) for i in range(3)]
-        self.expected_results = [
-            {
-                "compute_task": {
-                    "key": str(self.compute_tasks[0].key),
-                    "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
-                    "rank": 1,
-                    "round_idx": None,
-                    "data_samples": [str(self.data_sample.key)],
-                    "worker": "MyOrg1MSP",
+        self.expected_results = {
+            "performances": [
+                {
+                    "compute_task": {
+                        "key": str(self.compute_tasks[0].key),
+                        "data_manager_key": str(self.data_manager.key),
+                        "algo_key": str(self.metric.key),
+                        "rank": 1,
+                        "round_idx": 1,
+                        "data_samples": [str(self.data_sample.key)],
+                        "worker": "MyOrg1MSP",
+                    },
+                    "metric": {
+                        "key": str(self.metric.key),
+                        "name": self.metric.name,
+                    },
+                    "perf": self.performances[0].value,
                 },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
+                {
+                    "compute_task": {
+                        "key": str(self.compute_tasks[1].key),
+                        "data_manager_key": str(self.data_manager.key),
+                        "algo_key": str(self.metric.key),
+                        "rank": 2,
+                        "round_idx": 1,
+                        "data_samples": [str(self.data_sample.key)],
+                        "worker": "MyOrg1MSP",
+                    },
+                    "metric": {
+                        "key": str(self.metric.key),
+                        "name": self.metric.name,
+                    },
+                    "perf": self.performances[1].value,
                 },
-                "perf": self.performances[0].value,
+                {
+                    "compute_task": {
+                        "key": str(self.compute_tasks[2].key),
+                        "data_manager_key": str(self.data_manager.key),
+                        "algo_key": str(self.metric.key),
+                        "rank": 3,
+                        "round_idx": 1,
+                        "data_samples": [str(self.data_sample.key)],
+                        "worker": "MyOrg1MSP",
+                    },
+                    "metric": {
+                        "key": str(self.metric.key),
+                        "name": self.metric.name,
+                    },
+                    "perf": self.performances[2].value,
+                },
+            ],
+            "compute_plan_statistics": {
+                "compute_tasks_distinct_ranks": [1, 2, 3],
+                "compute_tasks_distinct_rounds": [1],
             },
-            {
-                "compute_task": {
-                    "key": str(self.compute_tasks[1].key),
-                    "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
-                    "rank": 1,
-                    "round_idx": None,
-                    "data_samples": [str(self.data_sample.key)],
-                    "worker": "MyOrg1MSP",
-                },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                },
-                "perf": self.performances[1].value,
-            },
-            {
-                "compute_task": {
-                    "key": str(self.compute_tasks[2].key),
-                    "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
-                    "rank": 1,
-                    "round_idx": None,
-                    "data_samples": [str(self.data_sample.key)],
-                    "worker": "MyOrg1MSP",
-                },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                },
-                "perf": self.performances[2].value,
-            },
-        ]
+        }
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -107,13 +115,32 @@ class CPPerformanceViewTests(APITestCase):
     def test_performance_list_empty(self):
         PerformanceRep.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
-        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        self.assertEqual(
+            response.json(),
+            {
+                "count": 0,
+                "next": None,
+                "previous": None,
+                "results": {
+                    "compute_plan_statistics": {
+                        "compute_tasks_distinct_ranks": [1, 2, 3],
+                        "compute_tasks_distinct_rounds": [1],
+                    },
+                    "performances": [],
+                },
+            },
+        )
 
     def test_performance_list(self):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
+            {
+                "count": len(self.expected_results.get("performances")),
+                "next": None,
+                "previous": None,
+                "results": self.expected_results,
+            },
         )
 
 
