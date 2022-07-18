@@ -62,10 +62,7 @@ def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pr
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks.tasks_compute_task import prepare_aggregate_task
-    from substrapp.tasks.tasks_compute_task import prepare_composite_training_task
-    from substrapp.tasks.tasks_compute_task import prepare_testing_task
-    from substrapp.tasks.tasks_compute_task import prepare_training_task
+    from substrapp.tasks.tasks_compute_task import process_pending_tasks
     from substrapp.tasks.tasks_docker_registry import clean_old_images_task
     from substrapp.tasks.tasks_docker_registry import docker_registry_garbage_collector_task
 
@@ -74,31 +71,10 @@ def setup_periodic_tasks(sender, **kwargs):
     for channel_name in settings.LEDGER_CHANNELS.keys():
         sender.add_periodic_task(
             period,
-            prepare_training_task.s(),
+            process_pending_tasks.s(),
             queue="scheduler",
             args=[channel_name],
-            name="query Traintuples to prepare train task on todo traintuples",
-        )
-        sender.add_periodic_task(
-            period,
-            prepare_testing_task.s(),
-            queue="scheduler",
-            args=[channel_name],
-            name="query Testuples to prepare test task on todo testuples",
-        )
-        sender.add_periodic_task(
-            period,
-            prepare_aggregate_task.s(),
-            queue="scheduler",
-            args=[channel_name],
-            name="query Aggregatetuples to prepare task on todo aggregatetuples",
-        )
-        sender.add_periodic_task(
-            period,
-            prepare_composite_training_task.s(),
-            queue="scheduler",
-            args=[channel_name],
-            name="query CompositeTraintuples to prepare task on todo composite_traintuples",
+            name=f"execute compute tasks for channel {channel_name}",
         )
 
     from users.tasks import flush_expired_tokens

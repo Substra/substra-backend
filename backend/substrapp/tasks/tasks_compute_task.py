@@ -123,28 +123,9 @@ class ComputeTask(Task):
 
 
 @app.task(ignore_result=True)
-def prepare_training_task(channel_name: str) -> None:
-    prepare_tasks(channel_name, computetask_pb2.TASK_TRAIN)
-
-
-@app.task(ignore_result=True)
-def prepare_testing_task(channel_name: str) -> None:
-    prepare_tasks(channel_name, computetask_pb2.TASK_TEST)
-
-
-@app.task(ignore_result=True)
-def prepare_composite_training_task(channel_name: str) -> None:
-    prepare_tasks(channel_name, computetask_pb2.TASK_COMPOSITE)
-
-
-@app.task(ignore_result=True)
-def prepare_aggregate_task(channel_name: str) -> None:
-    prepare_tasks(channel_name, computetask_pb2.TASK_AGGREGATE)
-
-
-def prepare_tasks(channel_name: str, task_category: computetask_pb2.ComputeTaskCategory.V) -> None:
+def process_pending_tasks(channel_name: str) -> None:
     with get_orchestrator_client(channel_name) as client:
-        tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO, category=task_category)
+        tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO)
 
     for task in tasks:
         queue_compute_task(channel_name, task)

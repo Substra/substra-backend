@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Scheduler worker now processes predict tasks too (#1184)
+
 ### Added
 
 - Local representation of task outputs (#1181)
