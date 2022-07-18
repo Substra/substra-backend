@@ -96,7 +96,6 @@ def get_cp_graph(request, compute_plan_pk):
         "worker",
         "status",
         "category",
-        source_task_keys=F("parent_tasks"),
     )
 
     # Limitation to display at most 300 tasks for performances
