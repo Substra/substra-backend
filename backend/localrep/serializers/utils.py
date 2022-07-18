@@ -72,10 +72,10 @@ class SafeSerializerMixin:
             with transaction.atomic():
                 return self.save()
         except IntegrityError as err:
-            logger.warning("Failed to save asset", error=err.args[0])
             # WARNING: side effect if another field name contains the pk-field name
             if self.primary_key_name in err.args[0]:
                 raise AlreadyExistsError
+            logger.warning("Failed to save asset", error=err.args[0])
             raise
 
 
