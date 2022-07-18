@@ -96,6 +96,8 @@ class ComputeTaskViewTests(APITestCase):
         self.simple_model_data = ModelRepSerializer(instance=self.simple_model).data
         self.head_model_data = ModelRepSerializer(instance=self.head_model).data
 
+        self.input_asset_key = "5f23ae53-6541-45c1-ba78-fdfc56c51a52"
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
@@ -131,6 +133,15 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                         "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
+                    # TODO: hardcode inputs/outputs for now, until they are provided by the client
+                    "outputs": {
+                        "test": {
+                            "permissions": {
+                                "download": {"authorized_ids": [], "public": True},
+                                "process": {"authorized_ids": [], "public": True},
+                            },
+                        },
+                    },
                 }
                 res.append(out_data)
             return res
@@ -149,6 +160,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.algo.key,
                     "data_manager_key": self.data_manager.key,
                     "train_data_sample_keys": [self.data_sample.key],
+                    "outputs": {
+                        "test": {
+                            "permissions": {
+                                "download": {"authorized_ids": [], "public": True},
+                                "process": {"authorized_ids": [], "public": True},
+                            },
+                        },
+                    },
                 },
                 {
                     "compute_plan_key": self.compute_plan.key,
@@ -157,6 +176,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "in_models_keys": [train_task_key, done_train_task.key],
                     "algo_key": self.algo.key,
                     "worker": "MyOrg1MSP",
+                    "outputs": {
+                        "test": {
+                            "permissions": {
+                                "download": {"authorized_ids": [], "public": True},
+                                "process": {"authorized_ids": [], "public": True},
+                            },
+                        },
+                    },
                 },
                 {
                     "compute_plan_key": self.compute_plan.key,
@@ -175,6 +202,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.metric.key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
+                    "outputs": {
+                        "test": {
+                            "permissions": {
+                                "download": {"authorized_ids": [], "public": True},
+                                "process": {"authorized_ids": [], "public": True},
+                            },
+                        },
+                    },
                 },
             ]
         }
@@ -217,6 +252,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": aggregate_task_key,
@@ -253,6 +296,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": predict_task_key,
@@ -291,6 +342,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": test_task_key,
@@ -319,6 +378,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "worker": "MyOrg1MSP",
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
         ]
 
@@ -383,6 +450,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(waiting_train_task.key),
@@ -420,6 +495,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(doing_train_task.key),
@@ -457,6 +540,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(done_train_task.key),
@@ -494,6 +585,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(failed_train_task.key),
@@ -531,6 +630,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(canceled_train_task.key),
@@ -568,6 +675,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
         ]
 
@@ -859,6 +974,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(waiting_test_task.key),
@@ -886,6 +1009,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(doing_test_task.key),
@@ -913,6 +1044,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(done_test_task.key),
@@ -940,6 +1079,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(failed_test_task.key),
@@ -967,6 +1114,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(canceled_test_task.key),
@@ -994,6 +1149,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
         ]
 
@@ -1271,6 +1434,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(waiting_composite_task.key),
@@ -1318,6 +1489,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(doing_composite_task.key),
@@ -1365,6 +1544,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(done_composite_task.key),
@@ -1412,6 +1599,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(failed_composite_task.key),
@@ -1459,6 +1654,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
             {
                 "key": str(canceled_composite_task.key),
@@ -1506,6 +1709,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "outputs": {
+                    "test": {
+                        "permissions": {
+                            "download": {"authorized_ids": [], "public": True},
+                            "process": {"authorized_ids": [], "public": True},
+                        },
+                    },
+                },
             },
         ]
 

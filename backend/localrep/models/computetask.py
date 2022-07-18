@@ -8,6 +8,18 @@ from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 
 
+class ComputeTaskOutput(models.Model):
+    task = models.ForeignKey("ComputeTask", on_delete=models.CASCADE, related_name="outputs")
+    identifier = models.CharField(max_length=100)
+    permissions_download_public = models.BooleanField()
+    permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
+    permissions_process_public = models.BooleanField()
+    permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
+
+    class Meta:
+        unique_together = (("task", "identifier"),)
+
+
 class ComputeTask(models.Model, AssetPermissionMixin):
     """ComputeTask represent a computetask and its associated metadata"""
 

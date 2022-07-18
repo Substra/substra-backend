@@ -278,6 +278,9 @@ def task_bulk_create_view(request):
     data = []
     for localrep_data in registered_tasks_data:
         localrep_data["channel"] = get_channel_name(request)
+        localrep_data["outputs"] = [
+            {"identifier": identifier, **output} for identifier, output in localrep_data["outputs"].items()
+        ]
         localrep_serializer = ComputeTaskRepSerializer(data=localrep_data)
         try:
             localrep_serializer.save_if_not_exists()

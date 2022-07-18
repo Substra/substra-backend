@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Local representation of task outputs (#1181)
+- Compute tasks returned by the API now have the "outputs" field  (#1181)
 - Compute plan ranks and round_idx list to cp perf view (#1136)
 
 ## [0.22.0] 2022-07-11

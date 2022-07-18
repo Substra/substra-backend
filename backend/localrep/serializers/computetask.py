@@ -6,6 +6,7 @@ import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
+from localrep.models import ComputeTaskOutput
 from localrep.models import DataManager
 from localrep.models import DataSample
 from localrep.models.computetask import TaskDataSamples
@@ -27,6 +28,17 @@ TASK_CATEGORY_FIELDS = {
     ComputeTask.Category.TASK_COMPOSITE: "composite",
     ComputeTask.Category.TASK_AGGREGATE: "aggregate",
 }
+
+
+class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    class Meta:
+        model = ComputeTaskOutput
+        fields = [
+            "identifier",
+            "permissions",
+        ]
+
+    permissions = make_download_process_permission_serializer()(source="*")
 
 
 class AlgoField(serializers.Field):
@@ -195,17 +207,24 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     composite = CompositeTaskSerializer(required=False, source="*")
 
     duration = serializers.IntegerField(read_only=True)
+    outputs = ComputeTaskOutputSerializer(many=True)
 
     @transaction.atomic
     def create(self, validated_data):
-        if "data_samples" not in validated_data:
-            # aggregate task do not have data samples
-            return super().create(validated_data)
+        data_samples = []
+        if "data_samples" in validated_data:
+            data_samples = validated_data.pop("data_samples")
 
-        data_samples = validated_data.pop("data_samples")
+        outputs = validated_data.pop("outputs")
+
         compute_task = super().create(validated_data)
+
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
+
+        for output in outputs:
+            ComputeTaskOutput.objects.create(task=compute_task, **output)
+
         compute_task.refresh_from_db()
         return compute_task
 
@@ -232,6 +251,12 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
         # replace storage addresses
         self._replace_storage_addresses(data)
+
+        tmp = {}
+        for output in data["outputs"]:
+            tmp[output["identifier"]] = output
+            del output["identifier"]
+        data["outputs"] = tmp
 
         return data
 
@@ -302,6 +327,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "trunk_permissions",
             "worker",
             "duration",
+            "outputs",
         ]
 
 

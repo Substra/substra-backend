@@ -3,6 +3,7 @@ from .algo import AlgoInput
 from .algo import AlgoOutput
 from .computeplan import ComputePlan
 from .computetask import ComputeTask
+from .computetask import ComputeTaskOutput
 from .datamanager import DataManager
 from .datasample import DataSample
 from .model import Model
@@ -15,6 +16,7 @@ __all__ = [
     "AlgoOutput",
     "ComputePlan",
     "ComputeTask",
+    "ComputeTaskOutput",
     "DataManager",
     "DataSample",
     "Model",

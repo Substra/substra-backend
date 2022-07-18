@@ -115,6 +115,7 @@ def _create_computetask(
     #      the orchestrator and backend used to generate the dumps are both outdated.
     #      We provide a sensible default: logs are private.
     data.setdefault("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})
+    data["outputs"] = [{"identifier": identifier, **output} for identifier, output in data["outputs"].items()]
     serializer = ComputeTaskSerializer(data=data)
     try:
         serializer.save_if_not_exists()
