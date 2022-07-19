@@ -126,21 +126,21 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "status": "STATUS_WAITING",
                     "owner": "MyOrg1MSP",
                     "worker": "MyOrg1MSP",
+                    "outputs": {
+                        identifier: {
+                            "permissions": {
+                                "download": output["permissions"],
+                                "process": output["permissions"],
+                            }
+                        }
+                        for identifier, output in in_data["outputs"].items()
+                    },
                     "creation_date": "2021-11-04T13:54:09.882662Z",
                     extra_data_field: in_data[extra_data_field],
                     "metadata": in_data["metadata"],
                     "logs_permission": {
                         "public": False,
                         "authorized_ids": ["MyOrg1MSP"],
-                    },
-                    # TODO: hardcode inputs/outputs for now, until they are provided by the client
-                    "outputs": {
-                        "test": {
-                            "permissions": {
-                                "download": {"authorized_ids": [], "public": True},
-                                "process": {"authorized_ids": [], "public": True},
-                            },
-                        },
                     },
                 }
                 res.append(out_data)
@@ -161,12 +161,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "data_manager_key": self.data_manager.key,
                     "train_data_sample_keys": [self.data_sample.key],
                     "outputs": {
-                        "test": {
-                            "permissions": {
-                                "download": {"authorized_ids": [], "public": True},
-                                "process": {"authorized_ids": [], "public": True},
-                            },
-                        },
+                        "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
                 },
                 {
@@ -177,12 +172,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.algo.key,
                     "worker": "MyOrg1MSP",
                     "outputs": {
-                        "test": {
-                            "permissions": {
-                                "download": {"authorized_ids": [], "public": True},
-                                "process": {"authorized_ids": [], "public": True},
-                            },
-                        },
+                        "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
                 },
                 {
@@ -193,6 +183,9 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.algo.key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
+                    "outputs": {
+                        "predictions": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
+                    },
                 },
                 {
                     "compute_plan_key": self.compute_plan.key,
@@ -203,12 +196,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
                     "outputs": {
-                        "test": {
-                            "permissions": {
-                                "download": {"authorized_ids": [], "public": True},
-                                "process": {"authorized_ids": [], "public": True},
-                            },
-                        },
+                        "performance": {"permissions": {"public": True, "authorized_ids": []}},
                     },
                 },
             ]
@@ -253,10 +241,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
                 "worker": "MyOrg1MSP",
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                     },
                 },
@@ -297,10 +285,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
                 "worker": "MyOrg1MSP",
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                     },
                 },
@@ -343,10 +331,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
                 "worker": "MyOrg1MSP",
                 "outputs": {
-                    "test": {
+                    "predictions": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                     },
                 },
@@ -379,10 +367,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
                 "worker": "MyOrg1MSP",
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "process": {"public": True, "authorized_ids": []},
+                            "download": {"public": True, "authorized_ids": []},
                         },
                     },
                 },
@@ -390,9 +378,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         ]
 
         url = reverse("substrapp:task_bulk_create")
-        with mock.patch.object(
-            OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task
-        ), mock.patch("substrapp.views.computetask._get_task_outputs"):
+        with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task):
             response = self.client.post(url, data=data, format="json", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.json(), expected_response)

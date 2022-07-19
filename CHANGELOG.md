@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Rule-based logic for compute task output permissions. Instead, permissions are now explicitly provided by the end-user (#1128)
+- The "out_trunk_model_permissions" field was removed from the /task/bulk_create/ endpoint. It is superseded by the "outputs" field. (#1128)
+
 ### Fixed
 
 - Scheduler worker now processes predict tasks too (#1184)
@@ -15,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Local representation of task outputs (#1181)
 - Compute tasks returned by the API now have the "outputs" field  (#1181)
+- The /task/bulk_create/ endpoint now accepts the "outputs" field (#1128)
 - Compute plan ranks and round_idx list to cp perf view (#1136)
 
 ## [0.22.0] 2022-07-11
