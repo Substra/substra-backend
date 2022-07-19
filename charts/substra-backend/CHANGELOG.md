@@ -1,5 +1,10 @@
 # Changelog
 
+## 19.0.0
+
+### Changed
+- BREAKING: the format of `image.pullSecrets`, to match that of other Connect charts
+
 ## 18.3.1
 
 ### Fixed

@@ -29,9 +29,7 @@ spec:
     spec:
       {{- with .Values.scheduler.image.pullSecrets }}
       imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.scheduler.podSecurityContext.enabled }}
       securityContext:

@@ -1,5 +1,19 @@
 ## unreleased
 
+## 19.0.0
+
+Change the format of `image.pullSecrets`:
+```yaml
+# before:
+image:
+  pullSecrets:
+    - docker-secret
+# after:
+image:
+  pullSecrets:
+    - name: docker-secret
+```
+
 ## 18.1.0
 
 Rename the key `addAccountOperator.outgoingNodes` to `addAccountOperator.outgoingOrganizations`.

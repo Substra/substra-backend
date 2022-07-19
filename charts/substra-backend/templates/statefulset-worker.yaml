@@ -52,9 +52,7 @@ spec:
       {{- end }}
       {{- with .Values.worker.image.pullSecrets }}
       imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.worker.rbac.create }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker

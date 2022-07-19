@@ -33,9 +33,7 @@ spec:
       {{- end }}
       {{- with .Values.server.image.pullSecrets }}
       imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
       - name: server

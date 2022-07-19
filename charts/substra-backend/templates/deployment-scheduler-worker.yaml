@@ -35,9 +35,7 @@ spec:
       {{- end }}
       {{- with .Values.schedulerWorker.image.pullSecrets }}
       imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.worker.rbac.enable }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker
