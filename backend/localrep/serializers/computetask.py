@@ -6,6 +6,7 @@ import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
+from localrep.models import ComputeTaskInput
 from localrep.models import ComputeTaskOutput
 from localrep.models import DataManager
 from localrep.models import DataSample
@@ -28,6 +29,17 @@ TASK_CATEGORY_FIELDS = {
     ComputeTask.Category.TASK_COMPOSITE: "composite",
     ComputeTask.Category.TASK_AGGREGATE: "aggregate",
 }
+
+
+class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    class Meta:
+        model = ComputeTaskInput
+        fields = [
+            "identifier",
+            "asset_key",
+            "parent_task_key",
+            "parent_task_output_identifier",
+        ]
 
 
 class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -207,6 +219,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     composite = CompositeTaskSerializer(required=False, source="*")
 
     duration = serializers.IntegerField(read_only=True)
+    inputs = ComputeTaskInputSerializer(many=True)
     outputs = ComputeTaskOutputSerializer(many=True)
 
     @transaction.atomic
@@ -215,12 +228,16 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         if "data_samples" in validated_data:
             data_samples = validated_data.pop("data_samples")
 
+        inputs = validated_data.pop("inputs")
         outputs = validated_data.pop("outputs")
 
         compute_task = super().create(validated_data)
 
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
+
+        for position, input in enumerate(inputs):
+            ComputeTaskInput.objects.create(task=compute_task, position=position, **input)
 
         for output in outputs:
             ComputeTaskOutput.objects.create(task=compute_task, **output)
@@ -327,6 +344,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "trunk_permissions",
             "worker",
             "duration",
+            "inputs",
             "outputs",
         ]
 

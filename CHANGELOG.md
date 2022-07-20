@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Local representation of task outputs (#1181)
+- Local representation of task inputs (#1182)
 - Compute tasks returned by the API now have the "outputs" field  (#1181)
+- Compute tasks returned by the API now have the "inputs" field (#1182)
 - The /task/bulk_create/ endpoint now accepts the "outputs" field (#1128)
 - Compute plan ranks and round_idx list to cp perf view (#1136)
 

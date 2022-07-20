@@ -54,6 +54,7 @@ from localrep.models import AlgoInput
 from localrep.models import AlgoOutput
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
+from localrep.models import ComputeTaskInput
 from localrep.models import ComputeTaskOutput
 from localrep.models import DataManager
 from localrep.models import DataSample
@@ -361,6 +362,10 @@ def create_computetask(
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)
         compute_task.refresh_from_db()
+
+    ComputeTaskInput.objects.create(
+        task=compute_task, identifier="test", position=0, asset_key="5f23ae53-6541-45c1-ba78-fdfc56c51a52"
+    )
 
     ComputeTaskOutput.objects.create(
         task=compute_task,

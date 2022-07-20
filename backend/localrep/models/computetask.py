@@ -8,6 +8,19 @@ from localrep.models.utils import AssetPermissionMixin
 from localrep.models.utils import URLValidatorWithOptionalTLD
 
 
+class ComputeTaskInput(models.Model):
+    task = models.ForeignKey("ComputeTask", on_delete=models.CASCADE, related_name="inputs")
+    identifier = models.CharField(max_length=100)
+    position = models.IntegerField()
+    asset_key = models.UUIDField(null=True, blank=True)
+    parent_task_key = models.ForeignKey("ComputeTask", on_delete=models.SET_NULL, null=True, blank=True)
+    parent_task_output_identifier = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        unique_together = (("task", "identifier", "position"),)
+        ordering = ["position"]
+
+
 class ComputeTaskOutput(models.Model):
     task = models.ForeignKey("ComputeTask", on_delete=models.CASCADE, related_name="outputs")
     identifier = models.CharField(max_length=100)
