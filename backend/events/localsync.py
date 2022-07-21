@@ -25,6 +25,7 @@ from localrep.serializers import DataSampleSerializer
 from localrep.serializers import ModelSerializer
 from localrep.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
+from orchestrator import compute_task_input
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -115,6 +116,7 @@ def _create_computetask(
     #      the orchestrator and backend used to generate the dumps are both outdated.
     #      We provide a sensible default: logs are private.
     data.setdefault("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})
+    data["inputs"] = [compute_task_input.to_localrep_data(input) for input in data["inputs"]]
     data["outputs"] = [{"identifier": identifier, **output} for identifier, output in data["outputs"].items()]
     serializer = ComputeTaskSerializer(data=data)
     try:
