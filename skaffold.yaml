@@ -8,30 +8,9 @@ build:
         dockerfile: docker/connect-backend/Dockerfile
       sync:
         manual:
-        - src: backend/manage.py
-          dest: /usr/src/app/
+        - src: backend/**/*
+          dest: /usr/src/app
           strip: backend/
-        - src: backend/libs/**/*
-          dest: /usr/src/app/libs
-          strip: backend/libs/
-        - src: backend/substrapp/**/*
-          dest: /usr/src/app/substrapp
-          strip: backend/substrapp/
-        - src: backend/events/**/*
-          dest: /usr/src/app/events
-          strip: backend/events/
-        - src: backend/backend/**/*
-          dest: /usr/src/app/backend
-          strip: backend/backend/
-        - src: backend/organization/**/*
-          dest: /usr/src/app/organization
-          strip: backend/organization/
-        - src: backend/organization_register/**/*
-          dest: /usr/src/app/organization_register
-          strip: backend/organization_register/
-        - src: backend/users/**/*
-          dest: /usr/src/app/users
-          strip: backend/users/
 
 deploy:
   statusCheckDeadlineSeconds: 600
