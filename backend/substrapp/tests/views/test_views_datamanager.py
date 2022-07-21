@@ -420,6 +420,9 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_create_fail_rollback(self):
         class MockOrcError(OrcError):
+            def __init__(self) -> None:
+                pass
+
             code = StatusCode.ALREADY_EXISTS
             details = "already exists"
 

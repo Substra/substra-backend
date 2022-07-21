@@ -12,13 +12,13 @@ from substrapp.orchestrator import get_orchestrator_client
 logger = structlog.get_logger(__name__)
 
 
-def _register_organization(channel_name):
+def _register_organization(channel_name: str) -> None:
     log = logger.bind(channel=channel_name)
     # We try until success, if it fails the backend will not start
     while True:
         with get_orchestrator_client(channel_name) as client:
             try:
-                client.register_organization()
+                client.register_organization({"address": settings.DEFAULT_DOMAIN})
             except OrcError as rpc_error:
                 code = rpc_error.code
                 if code == StatusCode.ALREADY_EXISTS:
@@ -33,11 +33,11 @@ def _register_organization(channel_name):
 class OrganizationRegisterConfig(AppConfig):
     name = "organization_register"
 
-    def register_organization(self, channel_name):
-        proc = multiprocessing.Process(target=_register_organization, args=[channel_name])
+    def register_organization(self, channel_name: str) -> None:
+        proc = multiprocessing.Process(target=_register_organization, args=(channel_name,))
         proc.start()
 
-    def ready(self):
+    def ready(self) -> None:
         if not settings.ISOLATED:
             for channel_name in settings.LEDGER_CHANNELS.keys():
                 self.register_organization(channel_name)

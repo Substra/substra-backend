@@ -183,9 +183,9 @@ class OrchestratorClient:
         return self._channel_name
 
     @grpc_retry
-    def register_organization(self):
+    def register_organization(self, args: dict):
         data = self._organization_client.RegisterOrganization(
-            organization_pb2.RegisterOrganizationParam(), metadata=self._metadata
+            organization_pb2.RegisterOrganizationParam(**args), metadata=self._metadata
         )
         MessageToDict(data, **CONVERT_SETTINGS)
 

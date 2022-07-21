@@ -1,3 +1,5 @@
+from typing import Optional
+
 from grpc import StatusCode
 from rest_framework import status
 
@@ -29,6 +31,7 @@ class OrcError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
         self.details = ""
+        self.code: Optional[StatusCode] = None
 
     @property
     def http_status(self):

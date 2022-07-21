@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The /task/bulk_create/ endpoint now accepts the "outputs" field (#1128)
 - Compute plan ranks and round_idx list to cp perf view (#1136)
 
+### Changed
+
+- `python manage.py get_outgoing_organization` can now be used to check inter-org connection. (#1161)
+
 ## [0.22.0] 2022-07-11
 
 ### Removed
