@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Scheduler worker now processes predict tasks too (#1184)
+- Compute plan status is now correctly set to CANCELED (#1193)
 
 ### Added
 

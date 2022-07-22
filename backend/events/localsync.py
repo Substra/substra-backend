@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional
 
 import structlog
@@ -83,6 +84,25 @@ def _create_computeplan(channel: str, data: dict) -> bool:
         return False
     else:
         return True
+
+
+def _on_update_computeplan_event(event: dict) -> None:
+    """Process update compute plan event to update local database."""
+    logger.debug("Syncing compute plan update", asset_key=event["asset_key"], event_id=event["id"])
+    data = event["compute_plan"]
+    _update_computeplan(key=event["asset_key"], cancelation_date=data["cancelation_date"])
+
+
+def _update_computeplan(key: str, cancelation_date: Optional[datetime.datetime]) -> None:
+    """Process update compute plan event to update local database."""
+
+    from localrep.models.computeplan import ComputePlan
+
+    compute_plan = ComputePlan.objects.get(key=key)
+    compute_plan.cancelation_date = cancelation_date
+    compute_plan.save()
+    compute_plan.update_dates()
+    compute_plan.update_status()
 
 
 def _on_create_computetask_event(event: dict) -> None:
@@ -294,6 +314,7 @@ def _on_create_failure_report(event: dict) -> None:
 EVENT_CALLBACKS = {
     common_pb2.ASSET_COMPUTE_PLAN: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computeplan_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_computeplan_event,
     },
     common_pb2.ASSET_ALGO: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_algo_event,

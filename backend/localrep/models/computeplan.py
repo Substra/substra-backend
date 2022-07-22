@@ -28,6 +28,7 @@ class ComputePlan(models.Model):
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
+    cancelation_date = models.DateTimeField(null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     metadata = models.JSONField(null=True)
@@ -78,7 +79,7 @@ class ComputePlan(models.Model):
             compute_plan_status = self.Status.PLAN_STATUS_DONE
         elif stats["failed_count"] > 0:
             compute_plan_status = self.Status.PLAN_STATUS_FAILED
-        elif stats["canceled_count"] > 0:
+        elif self.cancelation_date or stats["canceled_count"] > 0:
             compute_plan_status = self.Status.PLAN_STATUS_CANCELED
         elif stats["waiting_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_WAITING
@@ -121,8 +122,11 @@ class ComputePlan(models.Model):
                 ComputeTask.Status.STATUS_CANCELED,
             )
         ).exists()
-        # some tasks could remain in waiting status without end date
-        if ongoing_tasks and not failed_or_canceled_tasks:
+
+        if self.cancelation_date is not None:
+            self.end_date = self.cancelation_date
+        elif ongoing_tasks and not failed_or_canceled_tasks:
+            # some tasks could remain in waiting status without end date
             self.end_date = None  # end date could be reset when cp is updated with new tasks
         else:
             last_ended_task = self.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
