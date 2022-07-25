@@ -1,6 +1,7 @@
 import argparse
 import ast
 import difflib
+from os import name
 import pathlib
 import tempfile
 from dataclasses import dataclass
@@ -99,12 +100,18 @@ def load_settings_from_file(filename: pathlib.Path) -> List[Setting]:
                     setting.default_value = ast.literal_eval(node.args[1])
                 except ValueError:
                     # default value is an expression, evaluate it to get a valid input
-                    setting.default_value = eval(ast.unparse(node.args[1]))
+                    setting.default_value = eval(ast.unparse(node.args[1]))  # nosec
                     setting.default_value_comment = ast.unparse(node.args[1])
 
             # get same-line comment
             if node.lineno and "#" in settings_file_lines[node.lineno - 1]:
                 setting.comment = settings_file_lines[node.lineno - 1].split("#", 1)[1].strip()
+
+            # get previous-line comment
+            previous_line = settings_file_lines[node.lineno - 2].strip()
+            comment_header = f"# @{setting.name}:"
+            if previous_line.startswith(comment_header):
+                setting.comment = previous_line.removeprefix(comment_header).strip()
 
             settings[setting.name] = setting  # use dict to eliminate duplicates
 
@@ -124,7 +131,7 @@ def load_true_values_from_file(filename: pathlib.Path):
                 and isinstance(node.targets[0], ast.Name)
                 and node.targets[0].id == "TRUE_VALUES"
             ):
-                true_values = eval(ast.unparse(node.value))
+                true_values = eval(ast.unparse(node.value))  # nosec
                 return sorted({str(it) for it in true_values}, key=lambda it: (it.lower(), it))
                 # sets are by definition unordered but we don't want values jumping around
                 # we also want to eliminate duplicate values (eg 1-the-int vs 1-the-string)
