@@ -520,6 +520,7 @@ orchestrator:
       ##
       enabled: false
       ## @param orchestrator.tls.mtls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
+      ## This certificate should be the same as orchestrator.rabbitmq.tls.clientCertificate.
       ##
       clientCertificate:
   rabbitmq:
@@ -540,6 +541,7 @@ orchestrator:
       ##
       enabled: false
       ## @param orchestrator.rabbitmq.tls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
+      ## This certificate should be the same as orchestrator.tls.mtls.clientCertificate.
       ##
       clientCertificate:
   ## @param orchestrator.mspID current organization name on the Orchestrator
