@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] 2022-07-25
+
 ### Removed
 
 - Rule-based logic for compute task output permissions. Instead, permissions are now explicitly provided by the end-user (#1128)

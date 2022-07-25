@@ -1,5 +1,10 @@
 # Changelog
 
+## 20.0.0
+
+### Changed
+- use the latest image tag for connect-backend `0.23.0`
+
 ## 19.0.0
 
 ### Changed
