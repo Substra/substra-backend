@@ -13,6 +13,11 @@ rabbitmq:
   auth:
     erlangCookie: rabbitmqErlangCookie
 
+postgresql:
+  primary:
+    persistence:
+      enabled: false
+
 docker-registry:
   service:
     type: NodePort

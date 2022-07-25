@@ -1,5 +1,9 @@
 ## unreleased
 
+## 21.0.0
+
+If you want to keep persistence disabled for postgresql you will need to set the key `postgresql.primary.persistence.enabled` to `false` in your values.
+
 ## 19.0.0
 
 Change the format of `image.pullSecrets`:

@@ -1,5 +1,10 @@
 # Changelog
 
+## 21.0.0
+
+### Removed
+- value disabling postgresql persistence.
+
 ## 20.0.0
 
 ### Changed

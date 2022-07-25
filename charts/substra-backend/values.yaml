@@ -629,9 +629,6 @@ postgresql:
     username: postgres
     password: postgres
     database: substra
-  primary:
-    persistence:
-      enabled: false
 
 ## @skip rabbitmq
 ##
