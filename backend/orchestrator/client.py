@@ -211,8 +211,8 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_algos(self, categories=None, compute_plan_key=None):
-        algo_filter = algo_pb2.AlgoQueryFilter(categories=categories, compute_plan_key=compute_plan_key)
+    def query_algos(self, compute_plan_key=None):
+        algo_filter = algo_pb2.AlgoQueryFilter(compute_plan_key=compute_plan_key)
         res = []
         page_token = ""  # nosec
         while True:

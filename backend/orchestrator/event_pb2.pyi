@@ -210,3 +210,16 @@ class QueryEventsResponse(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["events",b"events","next_page_token",b"next_page_token"]) -> None: ...
 global___QueryEventsResponse = QueryEventsResponse
+
+class SubscribeToEventsParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    START_EVENT_ID_FIELD_NUMBER: builtins.int
+    start_event_id: typing.Text
+    """Start streaming events from this ID (excluding)"""
+
+    def __init__(self,
+        *,
+        start_event_id: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["start_event_id",b"start_event_id"]) -> None: ...
+global___SubscribeToEventsParam = SubscribeToEventsParam

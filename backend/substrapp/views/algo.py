@@ -18,13 +18,11 @@ from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
-from substrapp import exceptions
 from substrapp.models import Algo
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import CharInFilter
-from substrapp.views.filters_utils import ChoiceInFilter
 from substrapp.views.filters_utils import MatchFilter
 from substrapp.views.filters_utils import ProcessPermissionFilter
 from substrapp.views.utils import ApiResponse
@@ -34,14 +32,6 @@ from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
-
-ALGO_CATEGORIES = [
-    AlgoRep.Category.ALGO_SIMPLE,
-    AlgoRep.Category.ALGO_AGGREGATE,
-    AlgoRep.Category.ALGO_COMPOSITE,
-    AlgoRep.Category.ALGO_PREDICT,
-    AlgoRep.Category.ALGO_METRIC,
-]
 
 
 def _register_in_orchestrator(request, basename, instance):
@@ -137,22 +127,8 @@ def create(request, basename, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-def validate_category(key, values):
-    if key == "category":
-        try:
-            for value in values:
-                getattr(AlgoRep.Category, value)
-        except AttributeError as e:
-            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
-    return key, values
-
-
 class AlgoRepFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    category = ChoiceInFilter(
-        field_name="category",
-        choices=AlgoRep.Category.choices,
-    )
 
     compute_plan_key = CharInFilter(field_name="compute_tasks__compute_plan__key", label="compute_plan_key")
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
@@ -186,17 +162,13 @@ class AlgoRepFilter(FilterSet):
 class AlgoViewSetConfig:
     serializer_class = AlgoRepSerializer
     filter_backends = (OrderingFilter, MatchFilter, DjangoFilterBackend, ProcessPermissionFilter)
-    ordering_fields = ["creation_date", "key", "name", "owner", "category"]
+    ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     filterset_class = AlgoRepFilter
 
-    @property
-    def categories(self):
-        return ALGO_CATEGORIES
-
     def get_queryset(self):
-        return AlgoRep.objects.filter(channel=get_channel_name(self.request), category__in=self.categories)
+        return AlgoRep.objects.filter(channel=get_channel_name(self.request))
 
 
 class AlgoViewSet(

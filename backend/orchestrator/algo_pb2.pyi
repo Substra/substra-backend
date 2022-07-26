@@ -279,17 +279,13 @@ global___QueryAlgosResponse = QueryAlgosResponse
 
 class AlgoQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    CATEGORIES_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
-    @property
-    def categories(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[global___AlgoCategory.ValueType]: ...
     compute_plan_key: typing.Text
     def __init__(self,
         *,
-        categories: typing.Optional[typing.Iterable[global___AlgoCategory.ValueType]] = ...,
         compute_plan_key: typing.Text = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["categories",b"categories","compute_plan_key",b"compute_plan_key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_plan_key",b"compute_plan_key"]) -> None: ...
 global___AlgoQueryFilter = AlgoQueryFilter
 
 class QueryAlgosParam(google.protobuf.message.Message):

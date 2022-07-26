@@ -85,6 +85,7 @@ class ComputePlan(google.protobuf.message.Message):
     TAG_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
+    CANCELATION_DATE_FIELD_NUMBER: builtins.int
     key: typing.Text
     owner: typing.Text
     waiting_count: builtins.int
@@ -118,6 +119,8 @@ class ComputePlan(google.protobuf.message.Message):
     name: typing.Text
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[typing.Text, typing.Text]: ...
+    @property
+    def cancelation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     def __init__(self,
         *,
         key: typing.Text = ...,
@@ -135,9 +138,10 @@ class ComputePlan(google.protobuf.message.Message):
         tag: typing.Text = ...,
         name: typing.Text = ...,
         metadata: typing.Optional[typing.Mapping[typing.Text, typing.Text]] = ...,
+        cancelation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["creation_date",b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["canceled_count",b"canceled_count","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","doing_count",b"doing_count","done_count",b"done_count","failed_count",b"failed_count","key",b"key","metadata",b"metadata","name",b"name","owner",b"owner","status",b"status","tag",b"tag","task_count",b"task_count","todo_count",b"todo_count","waiting_count",b"waiting_count"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["cancelation_date",b"cancelation_date","creation_date",b"creation_date"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date",b"cancelation_date","canceled_count",b"canceled_count","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","doing_count",b"doing_count","done_count",b"done_count","failed_count",b"failed_count","key",b"key","metadata",b"metadata","name",b"name","owner",b"owner","status",b"status","tag",b"tag","task_count",b"task_count","todo_count",b"todo_count","waiting_count",b"waiting_count"]) -> None: ...
 global___ComputePlan = ComputePlan
 
 class NewComputePlan(google.protobuf.message.Message):
