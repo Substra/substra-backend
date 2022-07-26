@@ -23,7 +23,6 @@ from substrapp.views.filters_utils import CharInFilter
 from substrapp.views.filters_utils import ChoiceInFilter
 from substrapp.views.filters_utils import MatchFilter
 from substrapp.views.filters_utils import UUIDInFilter
-from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -67,15 +66,10 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
         cp_stats = self._get_cp_ranks_and_rounds(compute_plan_pk).first()
 
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            data = {"performances": serializer.data, "compute_plan_statistics": cp_stats}
-            return self.get_paginated_response(data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        data = {"performances": serializer.data, "compute_plan_statistics": cp_stats}
-
-        return ApiResponse(data)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data["compute_plan_statistics"] = cp_stats
+        return response
 
 
 class PerformanceRepFilter(FilterSet):
