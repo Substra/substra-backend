@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
-from localrep.models import Algo as AlgoRep
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from substrapp.tests import factory
@@ -52,7 +51,6 @@ class NewsFeedViewTests(APITestCase):
         done_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
-        metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
 
         # we expect items to be sorted from the latest to the earliest
         expected_results = [
@@ -117,15 +115,6 @@ class NewsFeedViewTests(APITestCase):
                 "name": str(doing_cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": doing_cp.start_date.isoformat().replace("+00:00", "Z"),
-                "detail": {},
-            },
-            # METRIC
-            {
-                "asset_kind": "ASSET_METRIC",
-                "asset_key": str(metric.key),
-                "name": str(metric.name),
-                "status": "STATUS_CREATED",
-                "timestamp": metric.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             # DATAMANAGER
@@ -199,17 +188,8 @@ class NewsFeedViewTests(APITestCase):
         cp = factory.create_computeplan()
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
-        metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
 
         expected_results = [
-            {
-                "asset_kind": "ASSET_METRIC",
-                "asset_key": str(metric.key),
-                "name": str(metric.name),
-                "status": "STATUS_CREATED",
-                "timestamp": metric.creation_date.isoformat().replace("+00:00", "Z"),
-                "detail": {},
-            },
             {
                 "asset_kind": "ASSET_DATA_MANAGER",
                 "asset_key": str(datamanager.key),
@@ -249,11 +229,11 @@ class NewsFeedViewTests(APITestCase):
             {"count": 3, "next": None, "previous": None, "results": expected_results[:3]},
         )
 
-        params = urlencode({"timestamp_before": expected_results[1]["timestamp"]})
+        params = urlencode({"timestamp_before": expected_results[0]["timestamp"]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
-            {"count": 2, "next": None, "previous": None, "results": expected_results[2:]},
+            {"count": 2, "next": None, "previous": None, "results": expected_results[1:]},
         )
 
         params = urlencode(
@@ -328,7 +308,6 @@ class NewsFeedViewTests(APITestCase):
         cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
-        metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
 
         expected_results = [
             {
@@ -345,14 +324,6 @@ class NewsFeedViewTests(APITestCase):
                 "name": str(cp.name),
                 "status": "STATUS_DOING",
                 "timestamp": cp.start_date.isoformat().replace("+00:00", "Z"),
-                "detail": {},
-            },
-            {
-                "asset_kind": "ASSET_METRIC",
-                "asset_key": str(metric.key),
-                "name": str(metric.name),
-                "status": "STATUS_CREATED",
-                "timestamp": metric.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {

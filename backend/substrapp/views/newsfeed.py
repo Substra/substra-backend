@@ -97,16 +97,9 @@ class NewsFeedViewSet(GenericViewSet):
         channel = get_channel_name(self.request)
 
         for algo in AlgoRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
-
-            # This block will be removed once metric concept is fully merged into algo
-            if algo.category == AlgoRep.Category.ALGO_METRIC:
-                asset_kind = "ASSET_METRIC"
-            else:
-                asset_kind = common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO)
-
             items.append(
                 {
-                    "asset_kind": asset_kind,
+                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO),
                     "asset_key": algo.key,
                     "name": algo.name,
                     "status": "STATUS_CREATED",
@@ -141,8 +134,8 @@ class NewsFeedViewSet(GenericViewSet):
                 - STATUS_DOING with computeplan start_date
                 - STATUS_DONE/FAILED/CANCELED with computeplan end_date
             - ASSET_ALGO:
-                - STATUS_CREATED with algo/metric creation_date
-            - ASSET_DATAMANGER:
+                - STATUS_CREATED with algo creation_date
+            - ASSET_DATAMANAGER:
                 - STATUS_CREATED with datamanager creation_date
 
         Important newsfeed items include:

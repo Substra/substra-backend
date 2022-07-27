@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Category filter from /algos/ route (#1199)
 
+### Fixed
+
+- Removed invalid metric asset kind from newsfeed (#1200)
+
 ## [0.23.1] 2022-07-26
 
 ### Changed
