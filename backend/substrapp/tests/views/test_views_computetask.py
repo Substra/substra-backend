@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -41,8 +42,16 @@ class ComputeTaskViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        self.algo = factory.create_algo()
-        self.metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
+        self.algos = {
+            category: factory.create_algo(category=category)
+            for category in [
+                AlgoRep.Category.ALGO_SIMPLE,
+                AlgoRep.Category.ALGO_COMPOSITE,
+                AlgoRep.Category.ALGO_AGGREGATE,
+                AlgoRep.Category.ALGO_PREDICT,
+                AlgoRep.Category.ALGO_METRIC,
+            ]
+        }
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plan = factory.create_computeplan()
@@ -62,7 +71,6 @@ class ComputeTaskViewTests(APITestCase):
                 ComputeTaskRep.Status.STATUS_FAILED,
                 ComputeTaskRep.Status.STATUS_CANCELED,
             ):
-                algo = self.metric if category == ComputeTaskRep.Category.TASK_TEST else self.algo
                 error_type = (
                     ComputeTaskRep.ErrorType.ERROR_TYPE_EXECUTION
                     if _status == ComputeTaskRep.Status.STATUS_FAILED
@@ -70,7 +78,7 @@ class ComputeTaskViewTests(APITestCase):
                 )
                 self.compute_tasks[category][_status] = factory.create_computetask(
                     self.compute_plan,
-                    algo,
+                    self.algos[factory.TASK_CATEGORY_TO_ALGO_CATEGORY[category]],
                     data_manager=self.data_manager,
                     data_samples=[self.data_sample.key],
                     category=category,
@@ -87,16 +95,25 @@ class ComputeTaskViewTests(APITestCase):
         self.head_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
 
         done_failed_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST][ComputeTaskRep.Status.STATUS_DONE]
-        self.performance = factory.create_performance(done_failed_task, self.metric)
+        self.performance = factory.create_performance(done_failed_task, self.algos[AlgoRep.Category.ALGO_METRIC])
 
         # we don't explicit serialized relationships as this test module is focused on computetask
-        self.algo_data = AlgoRepSerializer(instance=self.algo).data
-        self.metric_data = AlgoRepSerializer(instance=self.metric).data
+
+        self.algo_data = {
+            # use JSON serializer to convert OrderDicts to dicts, making diffs easier to read
+            category: json.loads(json.dumps(AlgoRepSerializer(instance=self.algos[category]).data))
+            for category in [
+                AlgoRep.Category.ALGO_SIMPLE,
+                AlgoRep.Category.ALGO_COMPOSITE,
+                AlgoRep.Category.ALGO_AGGREGATE,
+                AlgoRep.Category.ALGO_PREDICT,
+                AlgoRep.Category.ALGO_METRIC,
+            ]
+        }
+
         self.data_manager_data = DataManagerRepSerializer(instance=self.data_manager).data
         self.simple_model_data = ModelRepSerializer(instance=self.simple_model).data
         self.head_model_data = ModelRepSerializer(instance=self.head_model).data
-
-        self.input_asset_key = "5f23ae53-6541-45c1-ba78-fdfc56c51a52"
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -127,14 +144,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "owner": "MyOrg1MSP",
                     "worker": "MyOrg1MSP",
                     # TODO: hardcode inputs for now, until they are provided by the client
-                    "inputs": [
-                        {
-                            "asset_key": self.input_asset_key,
-                            "identifier": "test",
-                            "parent_task_key": None,
-                            "parent_task_output_identifier": None,
-                        }
-                    ],
+                    "inputs": _build_inputs(in_data["category"]),
                     "outputs": {
                         identifier: {
                             "permissions": {
@@ -166,17 +176,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "compute_plan_key": self.compute_plan.key,
                     "category": "TASK_TRAIN",
                     "key": train_task_key,
-                    "algo_key": self.algo.key,
+                    "algo_key": self.algos[AlgoRep.Category.ALGO_SIMPLE].key,
                     "data_manager_key": self.data_manager.key,
                     "train_data_sample_keys": [self.data_sample.key],
-                    "inputs": [
-                        {
-                            "asset_key": self.input_asset_key,
-                            "identifier": "test",
-                            "parent_task_key": None,
-                            "parent_task_output_identifier": None,
-                        }
-                    ],
+                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -186,28 +189,22 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "category": "TASK_AGGREGATE",
                     "key": aggregate_task_key,
                     "in_models_keys": [train_task_key, done_train_task.key],
-                    "algo_key": self.algo.key,
+                    "algo_key": self.algos[AlgoRep.Category.ALGO_AGGREGATE].key,
                     "worker": "MyOrg1MSP",
+                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_AGGREGATE),
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
-                    "inputs": [
-                        {
-                            "asset_key": self.input_asset_key,
-                            "identifier": "test",
-                            "parent_task_key": None,
-                            "parent_task_output_identifier": None,
-                        }
-                    ],
                 },
                 {
                     "compute_plan_key": self.compute_plan.key,
                     "category": "TASK_PREDICT",
                     "traintuple_key": train_task_key,
                     "key": predict_task_key,
-                    "algo_key": self.algo.key,
+                    "algo_key": self.algos[AlgoRep.Category.ALGO_PREDICT].key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
+                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_PREDICT),
                     "outputs": {
                         "predictions": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -217,17 +214,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "category": "TASK_TEST",
                     "key": test_task_key,
                     "predicttuple_key": predict_task_key,
-                    "algo_key": self.metric.key,
+                    "algo_key": self.algos[AlgoRep.Category.ALGO_METRIC].key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
-                    "inputs": [
-                        {
-                            "asset_key": self.input_asset_key,
-                            "identifier": "test",
-                            "parent_task_key": None,
-                            "parent_task_output_identifier": None,
-                        }
-                    ],
+                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                     "outputs": {
                         "performance": {"permissions": {"public": True, "authorized_ids": []}},
                     },
@@ -238,7 +228,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         expected_response = [
             {
                 "key": train_task_key,
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "category": "TASK_TRAIN",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -261,26 +251,13 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
                     "model_permissions": {
-                        "download": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
-                        "process": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
+                        "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                        "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                     },
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -292,7 +269,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": aggregate_task_key,
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_AGGREGATE],
                 "category": "TASK_AGGREGATE",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -313,26 +290,13 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "tag": None,
                 "aggregate": {
                     "model_permissions": {
-                        "download": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
-                        "process": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
+                        "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                        "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                     },
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_AGGREGATE),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -344,7 +308,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": predict_task_key,
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_PREDICT],
                 "category": "TASK_PREDICT",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -367,26 +331,13 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
                     "prediction_permissions": {
-                        "download": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
-                        "process": {
-                            "authorized_ids": None,
-                            "public": None,
-                        },
+                        "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                        "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                     },
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_PREDICT),
                 "outputs": {
                     "predictions": {
                         "permissions": {
@@ -398,7 +349,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": test_task_key,
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "category": "TASK_TEST",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -423,14 +374,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -441,7 +385,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 },
             },
         ]
-
+        self.maxDiff = None
         url = reverse("substrapp:task_bulk_create")
         with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task):
             response = self.client.post(url, data=data, format="json", **self.extra)
@@ -468,7 +412,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(todo_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -501,19 +445,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -521,7 +458,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -554,19 +491,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -574,7 +504,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -607,19 +537,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -627,7 +550,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -660,19 +583,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -680,7 +596,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -713,19 +629,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -733,7 +642,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -766,19 +675,12 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
                 "outputs": {
-                    "test": {
+                    "model": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -971,7 +873,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algo.key}),
+            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_SIMPLE].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -1050,7 +952,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(todo_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1073,19 +975,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1093,7 +988,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1116,19 +1011,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1136,7 +1024,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1159,19 +1047,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1179,7 +1060,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1195,26 +1076,19 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "perfs": {str(self.metric.key): self.performance.value},
+                    "perfs": {str(self.algos[AlgoRep.Category.ALGO_METRIC].key): self.performance.value},
                 },
                 "logs_permission": {
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1222,7 +1096,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1245,19 +1119,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1265,7 +1132,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.metric_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1288,19 +1155,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "identifier": "test",
-                        "asset_key": self.input_asset_key,
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
                 "outputs": {
-                    "test": {
+                    "performance": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1317,6 +1177,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(self.url, **self.extra)
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
+        self.maxDiff = None
         for task in response.json().get("results"):
             if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
                 task["duration"] = 3600
@@ -1424,7 +1285,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.metric.key}),
+            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_METRIC].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -1538,7 +1399,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(todo_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1581,19 +1442,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1601,7 +1461,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1644,19 +1504,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1664,7 +1523,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1707,19 +1566,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1727,7 +1585,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1770,19 +1628,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1790,7 +1647,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1833,19 +1690,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -1853,7 +1709,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data,
+                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1896,19 +1752,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": [
-                    {
-                        "asset_key": self.input_asset_key,
-                        "identifier": "test",
-                        "parent_task_key": None,
-                        "parent_task_output_identifier": None,
-                    }
-                ],
+                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
                 "outputs": {
-                    "test": {
+                    "local": {
                         "permissions": {
-                            "download": {"authorized_ids": [], "public": True},
-                            "process": {"authorized_ids": [], "public": True},
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                        },
+                    },
+                    "shared": {
+                        "permissions": {
+                            "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                            "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                     },
                 },
@@ -2018,7 +1873,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algo.key}),
+            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_COMPOSITE].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -2110,3 +1965,26 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         url = reverse("substrapp:composite_traintuple-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _build_inputs(category: str) -> list[dict]:
+    # match the factory: create one input for each identifier, ordered alphabetically
+    if category == ComputeTaskRep.Category.TASK_TRAIN:
+        return [_build_input("datasamples"), _build_input("model"), _build_input("opener")]
+    elif category == ComputeTaskRep.Category.TASK_COMPOSITE:
+        return [_build_input("datasamples"), _build_input("local"), _build_input("opener"), _build_input("shared")]
+    elif category == ComputeTaskRep.Category.TASK_AGGREGATE:
+        return [_build_input("model")]
+    elif category == ComputeTaskRep.Category.TASK_PREDICT:
+        return [_build_input("datasamples"), _build_input("model"), _build_input("opener"), _build_input("shared")]
+    elif category == ComputeTaskRep.Category.TASK_TEST:
+        return [_build_input("datasamples"), _build_input("opener"), _build_input("predictions")]
+
+
+def _build_input(identifier):
+    return {
+        "asset_key": factory.INPUT_ASSET_KEY,
+        "identifier": identifier,
+        "parent_task_key": None,
+        "parent_task_output_identifier": None,
+    }

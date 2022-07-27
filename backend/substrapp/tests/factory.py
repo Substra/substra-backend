@@ -66,7 +66,7 @@ DEFAULT_OWNER = "MyOrg1MSP"
 DEFAULT_WORKER = "MyOrg1MSP"
 DEFAULT_CHANNEL = "mychannel"
 DUMMY_CHECKSUM = "dummy-checksum"
-
+INPUT_ASSET_KEY = "5f23ae53-6541-45c1-ba78-fdfc56c51a52"
 
 # This logic belongs to the SDK but we replicate the mapping to generate realistic assets
 ALGO_INPUTS_PER_CATEGORY = {
@@ -116,6 +116,15 @@ ALGO_OUTPUTS_PER_CATEGORY = {
 }
 
 
+TASK_CATEGORY_TO_ALGO_CATEGORY = {
+    ComputeTask.Category.TASK_TRAIN: Algo.Category.ALGO_SIMPLE,
+    ComputeTask.Category.TASK_COMPOSITE: Algo.Category.ALGO_COMPOSITE,
+    ComputeTask.Category.TASK_AGGREGATE: Algo.Category.ALGO_AGGREGATE,
+    ComputeTask.Category.TASK_PREDICT: Algo.Category.ALGO_PREDICT,
+    ComputeTask.Category.TASK_TEST: Algo.Category.ALGO_METRIC,
+}
+
+
 def get_storage_address(asset_kind: str, key: str, field: str) -> str:
     return f"http://testserver/{asset_kind}/{key}/{field}/"
 
@@ -134,29 +143,6 @@ def get_log_permissions(owner: str, public: bool) -> dict:
         "logs_permission_public": public,
         "logs_permission_authorized_ids": [owner],
     }
-
-
-def get_computetask_permissions(category: int, owner: str, public: bool) -> dict:
-    if category in (ComputeTask.Category.TASK_TRAIN, ComputeTask.Category.TASK_AGGREGATE):
-        return {
-            "model_permissions_download_public": public,
-            "model_permissions_download_authorized_ids": [owner],
-            "model_permissions_process_public": public,
-            "model_permissions_process_authorized_ids": [owner],
-        }
-    elif category == ComputeTask.Category.TASK_COMPOSITE:
-        return {
-            "head_permissions_download_public": public,
-            "head_permissions_download_authorized_ids": [owner],
-            "head_permissions_process_public": public,
-            "head_permissions_process_authorized_ids": [owner],
-            "trunk_permissions_download_public": public,
-            "trunk_permissions_download_authorized_ids": [owner],
-            "trunk_permissions_process_public": public,
-            "trunk_permissions_process_authorized_ids": [owner],
-        }
-    else:  # ComputeTask.Category.TASK_TEST
-        return {}
 
 
 def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime]:
@@ -355,7 +341,6 @@ def create_computetask(
         creation_date=creation_date,
         owner=owner,
         channel=channel,
-        **get_computetask_permissions(category, owner, public),
         **get_log_permissions(owner, public),
     )
     if data_samples:
@@ -363,18 +348,23 @@ def create_computetask(
             TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)
         compute_task.refresh_from_db()
 
-    ComputeTaskInput.objects.create(
-        task=compute_task, identifier="test", position=0, asset_key="5f23ae53-6541-45c1-ba78-fdfc56c51a52"
-    )
+    for position, input in enumerate(compute_task.algo.inputs.all().order_by("identifier")):
+        ComputeTaskInput.objects.create(
+            task=compute_task,
+            identifier=input.identifier,
+            asset_key=INPUT_ASSET_KEY,
+            position=position,
+        )
 
-    ComputeTaskOutput.objects.create(
-        task=compute_task,
-        identifier="test",
-        permissions_download_public=True,
-        permissions_download_authorized_ids=[],
-        permissions_process_public=True,
-        permissions_process_authorized_ids=[],
-    )
+    for output in compute_task.algo.outputs.all().order_by("identifier"):
+        ComputeTaskOutput.objects.create(
+            task=compute_task,
+            identifier=output.identifier,
+            permissions_download_public=public,
+            permissions_download_authorized_ids=[owner],
+            permissions_process_public=public,
+            permissions_process_authorized_ids=[owner],
+        )
 
     return compute_task
 

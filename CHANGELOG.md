@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Category filter from /algos/ route (#1199)
+- Legacy compute task permission fields (#1203)
 
 ### Fixed
 

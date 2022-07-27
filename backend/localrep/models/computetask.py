@@ -79,34 +79,12 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     channel = models.CharField(max_length=100)
     metadata = models.JSONField()
 
-    # specific fields for predict tasks
-    prediction_permissions_process_public = models.BooleanField(null=True)
-    prediction_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    prediction_permissions_download_public = models.BooleanField(null=True)
-    prediction_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-
     # specific fields for train, composite and test tasks
     # patch waiting for a solution to preserve related datasample order without sync time overhead
     data_manager = models.ForeignKey(
         "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
     )
     data_samples = models.ManyToManyField(DataSample, through="TaskDataSamples", related_name="compute_tasks")
-
-    # specific fields for train and aggregate tasks
-    model_permissions_process_public = models.BooleanField(null=True)
-    model_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    model_permissions_download_public = models.BooleanField(null=True)
-    model_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-
-    # specific fields for composite tasks
-    head_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    head_permissions_process_public = models.BooleanField(null=True)
-    head_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    head_permissions_download_public = models.BooleanField(null=True)
-    trunk_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    trunk_permissions_process_public = models.BooleanField(null=True)
-    trunk_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
-    trunk_permissions_download_public = models.BooleanField(null=True)
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations

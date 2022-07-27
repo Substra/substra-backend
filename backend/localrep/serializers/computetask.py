@@ -80,11 +80,10 @@ class PredictTaskSerializer(serializers.Serializer):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    prediction_permissions = make_download_process_permission_serializer("prediction_")(source="*", required=False)
     models = ModelSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "prediction_permissions", "models"]
+        fields = ["data_manager_key", "data_sample_keys", "models"]
 
 
 class TestTaskSerializer(serializers.Serializer):
@@ -131,11 +130,10 @@ class TrainTaskSerializer(serializers.Serializer):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
     models = ModelSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "model_permissions", "models"]
+        fields = ["data_manager_key", "data_sample_keys", "models"]
 
 
 class AggregateTaskSerializer(serializers.Serializer):
@@ -144,11 +142,10 @@ class AggregateTaskSerializer(serializers.Serializer):
         data["models"] = data["models"] or None  # sdk does not support empty list
         return data
 
-    model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
     models = ModelSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ["model_permissions", "models"]
+        fields = ["models"]
 
 
 class CompositeTaskSerializer(serializers.Serializer):
@@ -172,11 +169,9 @@ class CompositeTaskSerializer(serializers.Serializer):
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
     models = ModelSerializer(many=True, read_only=True)
-    head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
-    trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
 
     class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "models", "head_permissions", "trunk_permissions"]
+        fields = ["data_manager_key", "data_sample_keys", "models"]
 
 
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -207,10 +202,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         required=False,
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-
-    model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
-    head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
-    trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
 
     predict = PredictTaskSerializer(required=False, source="*")
     test = TestTaskSerializer(required=False, source="*")
@@ -254,9 +245,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
         del data["data_manager_key"]
         del data["data_sample_keys"]
-        del data["model_permissions"]
-        del data["head_permissions"]
-        del data["trunk_permissions"]
         del data["logs_address"]
         del data["logs_owner"]
 
@@ -274,6 +262,20 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             tmp[output["identifier"]] = output
             del output["identifier"]
         data["outputs"] = tmp
+
+        # Fill the legacy permission fields.
+        # This block will be deleted once all clients have stopped using these legacy permissions fields.
+        if instance.category in [ComputeTask.Category.TASK_TRAIN, ComputeTask.Category.TASK_AGGREGATE]:
+            data[TASK_CATEGORY_FIELDS[instance.category]]["model_permissions"] = data["outputs"]["model"]["permissions"]
+        elif instance.category == ComputeTask.Category.TASK_COMPOSITE:
+            data[TASK_CATEGORY_FIELDS[instance.category]]["head_permissions"] = data["outputs"]["local"]["permissions"]
+            data[TASK_CATEGORY_FIELDS[instance.category]]["trunk_permissions"] = data["outputs"]["shared"][
+                "permissions"
+            ]
+        elif instance.category == ComputeTask.Category.TASK_PREDICT:
+            data[TASK_CATEGORY_FIELDS[instance.category]]["prediction_permissions"] = data["outputs"]["predictions"][
+                "permissions"
+            ]
 
         return data
 
@@ -325,13 +327,11 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "data_sample_keys",
             "end_date",
             "error_type",
-            "head_permissions",
             "key",
             "logs_address",
             "logs_owner",
             "logs_permission",
             "metadata",
-            "model_permissions",
             "owner",
             "parent_task_keys",
             "rank",
@@ -341,7 +341,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "predict",
             "test",
             "train",
-            "trunk_permissions",
             "worker",
             "duration",
             "inputs",
