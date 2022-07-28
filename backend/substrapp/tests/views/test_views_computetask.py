@@ -143,8 +143,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "status": "STATUS_WAITING",
                     "owner": "MyOrg1MSP",
                     "worker": "MyOrg1MSP",
-                    # TODO: hardcode inputs for now, until they are provided by the client
-                    "inputs": _build_inputs(in_data["category"]),
+                    "inputs": in_data["inputs"],
                     "outputs": {
                         identifier: {
                             "permissions": {

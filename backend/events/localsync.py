@@ -26,7 +26,7 @@ from localrep.serializers import DataSampleSerializer
 from localrep.serializers import ModelSerializer
 from localrep.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
-from orchestrator import compute_task_input
+from orchestrator import computetask
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -121,28 +121,23 @@ def _create_computetask(
     channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
 ) -> bool:
 
-    data["channel"] = channel
+    localrep_data = computetask.orc_to_localrep(data)
+    localrep_data["channel"] = channel
     if start_date is not None:
-        data["start_date"] = parse_datetime(start_date)
+        localrep_data["start_date"] = parse_datetime(start_date)
     if end_date is not None:
-        data["end_date"] = parse_datetime(end_date)
+        localrep_data["end_date"] = parse_datetime(end_date)
     if failure_report is not None:
-        data["error_type"] = failure_report["error_type"]
+        localrep_data["error_type"] = failure_report["error_type"]
         if "logs_address" in failure_report:
-            data["logs_address"] = failure_report["logs_address"]
+            localrep_data["logs_address"] = failure_report["logs_address"]
         if "owner" in failure_report:
-            data["logs_owner"] = failure_report["owner"]
-    # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
-    #      the orchestrator and backend used to generate the dumps are both outdated.
-    #      We provide a sensible default: logs are private.
-    data.setdefault("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})
-    data["inputs"] = [compute_task_input.to_localrep_data(input) for input in data["inputs"]]
-    data["outputs"] = [{"identifier": identifier, **output} for identifier, output in data["outputs"].items()]
-    serializer = ComputeTaskSerializer(data=data)
+            localrep_data["logs_owner"] = failure_report["owner"]
+    serializer = ComputeTaskSerializer(data=localrep_data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
-        logger.debug("Computetask already exists", asset_key=data["key"])
+        logger.debug("Computetask already exists", asset_key=localrep_data["key"])
         return False
     else:
         return True

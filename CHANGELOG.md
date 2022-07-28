@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The /task/bulk_create/ endpoint now accepts the "inputs" field (#1111)
+
 ### Removed
 
 - Category filter from /algos/ route (#1199)

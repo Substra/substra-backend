@@ -23,6 +23,7 @@ from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import ComputeTaskWithRelationshipsSerializer as ComputeTaskWithRelationshipsRepSerializer
+from orchestrator import computetask
 from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.filters_utils import CharInFilter
@@ -139,6 +140,7 @@ def _register_in_orchestrator(tasks_data, channel_name):
             "category": task_data["category"],
             "algo_key": task_data.get("algo_key"),
             "compute_plan_key": task_data["compute_plan_key"],
+            "inputs": task_data.get("inputs", []),
             "outputs": task_data.get("outputs", {}),
             "metadata": task_data.get("metadata") or {},
         }
@@ -176,15 +178,13 @@ def task_bulk_create_view(request):
     if len(compute_plans) > 1:
         raise exceptions.BadRequestError("All tasks should have the same compute plan key")
     compute_plan = compute_plans[0]
-    registered_tasks_data = _register_in_orchestrator(request.data["tasks"], get_channel_name(request))
+    orc_data = _register_in_orchestrator(request.data["tasks"], get_channel_name(request))
 
     # Step2: save metadata in local database
     data = []
-    for localrep_data in registered_tasks_data:
+    for task in orc_data:
+        localrep_data = computetask.orc_to_localrep(task)
         localrep_data["channel"] = get_channel_name(request)
-        localrep_data["outputs"] = [
-            {"identifier": identifier, **output} for identifier, output in localrep_data["outputs"].items()
-        ]
         localrep_serializer = ComputeTaskRepSerializer(data=localrep_data)
         try:
             localrep_serializer.save_if_not_exists()
