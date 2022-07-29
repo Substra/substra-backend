@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Removed invalid metric asset kind from newsfeed (#1200)
+- Add missing compute task outputs data migration (#1205)
 
 ## [0.23.1] 2022-07-26
 
