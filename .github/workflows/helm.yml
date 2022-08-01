@@ -85,7 +85,6 @@ jobs:
         id: install
       - name: Install tools
         run: |
-          sudo snap install yq
           helm plugin install https://github.com/chartmuseum/helm-push
       - name: Add dependencies repo
         run: |
@@ -100,4 +99,4 @@ jobs:
           helm dep build charts/substra-backend
           helm package charts/substra-backend
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
-          helm cm-push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
+          helm cm-push substra-backend-$(grep -e "^version" charts/substra-backend/Chart.yaml | cut -c10-).tgz owkin-priv
