@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] 2022-08-01
+
 ### Added
 - The /task/bulk_create/ endpoint now accepts the "inputs" field (#1111)
 

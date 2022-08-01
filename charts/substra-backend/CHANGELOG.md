@@ -1,9 +1,14 @@
 # Changelog
 
+## 21.0.2
+
+### Changed
+- Update connect-backend image tag to `0.24.0`
+
 ## 21.0.1
 
 ### Changed
-- use the latest image tag for connect-backend `0.23.1`
+- Update connect-backend image tag to `0.23.1`
 
 ## 21.0.0
 
@@ -13,7 +18,7 @@
 ## 20.0.0
 
 ### Changed
-- use the latest image tag for connect-backend `0.23.0`
+- Update connect-backend image tag to `0.23.0`
 
 ## 19.0.0
 
