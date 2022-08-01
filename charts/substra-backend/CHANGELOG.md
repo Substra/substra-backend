@@ -1,5 +1,10 @@
 # Changelog
 
+## 21.1.0
+
+### Removed
+- settings for orchestrator rabbitmq
+
 ## 21.0.2
 
 ### Changed

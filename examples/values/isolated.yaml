@@ -25,9 +25,6 @@ privateCa:
 orchestrator:
   tls:
     enabled: false
-  rabbitmq:
-    tls:
-      enabled: false
 
 events:
   enabled: false

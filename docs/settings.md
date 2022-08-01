@@ -77,14 +77,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `ORCHESTRATOR_HOST` | nil |  |
 | bool | `ORCHESTRATOR_MTLS_ENABLED` | nil |  |
 | string | `ORCHESTRATOR_PORT` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_AUTH_USER` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_HOST` | nil |  |
-| int | `ORCHESTRATOR_RABBITMQ_PORT` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH` | nil |  |
-| string | `ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH` | nil |  |
-| bool | `ORCHESTRATOR_RABBITMQ_TLS_ENABLED` | nil |  |
 | string | `ORCHESTRATOR_TLS_CLIENT_CERT_PATH` | nil |  |
 | string | `ORCHESTRATOR_TLS_CLIENT_KEY_PATH` | nil |  |
 | bool | `ORCHESTRATOR_TLS_ENABLED` | nil |  |

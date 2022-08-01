@@ -3,13 +3,14 @@ from django.conf import settings
 from orchestrator.client import OrchestratorClient
 
 
-def get_orchestrator_client(channel_name: str) -> OrchestratorClient:
+def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:
 
     host = f"{settings.ORCHESTRATOR_HOST}:{settings.ORCHESTRATOR_PORT}"
 
     cacert = None
     client_key = None
     client_cert = None
+    chaincode = None
 
     if settings.ORCHESTRATOR_TLS_ENABLED:
         cacert = settings.ORCHESTRATOR_TLS_SERVER_CACERT_PATH
@@ -19,6 +20,8 @@ def get_orchestrator_client(channel_name: str) -> OrchestratorClient:
         client_cert = settings.ORCHESTRATOR_TLS_CLIENT_CERT_PATH
 
     mspid = settings.LEDGER_MSP_ID
-    chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
+
+    if channel_name is not None:
+        chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
 
     return OrchestratorClient(host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=None)

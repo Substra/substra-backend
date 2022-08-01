@@ -520,28 +520,6 @@ orchestrator:
       ##
       enabled: false
       ## @param orchestrator.tls.mtls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
-      ## This certificate should be the same as orchestrator.rabbitmq.tls.clientCertificate.
-      ##
-      clientCertificate:
-  rabbitmq:
-    ## @param orchestrator.rabbitmq.host The orchestrator RabbitMQ endpoint hostname
-    ##
-    host: events.orchestrator.local
-    ## @param orchestrator.rabbitmq.port The orchestrator RabbitMQ port
-    ##
-    port: 5672
-    ## @param orchestrator.rabbitmq.auth.username The orchestrator RabbitMQ username
-    ## @param orchestrator.rabbitmq.auth.password The orchestrator RabbitMQ password
-    ##
-    auth:
-      username: user
-      password: password
-    tls:
-      ## @param orchestrator.rabbitmq.tls.enabled Enable TLS for the orchestrator RabbitMQ endpoint
-      ##
-      enabled: false
-      ## @param orchestrator.rabbitmq.tls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
-      ## This certificate should be the same as orchestrator.tls.mtls.clientCertificate.
       ##
       clientCertificate:
   ## @param orchestrator.mspID current organization name on the Orchestrator

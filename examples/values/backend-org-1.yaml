@@ -96,15 +96,6 @@ orchestrator:
     mtls:
       enabled: true
       clientCertificate: orchestrator-tls-client-pair
-  rabbitmq:
-    host: owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local
-    port: 5671
-    auth:
-      username: MyOrg1MSP
-      password: password1
-    tls:
-      enabled: true
-      clientCertificate: orchestrator-tls-client-pair
   mspID: MyOrg1MSP
   channels:
     - mychannel:

@@ -149,28 +149,29 @@ class OrchestratorClient:
                     client_cert = f.read()
 
         if root_cert is None:
-            self._channel = grpc.insecure_channel(target, opts)
+            self.grpc_channel = grpc.insecure_channel(target, opts)
         else:
             if client_cert and client_key:
                 creds = grpc.ssl_channel_credentials(root_cert, private_key=client_key, certificate_chain=client_cert)
             else:
                 creds = grpc.ssl_channel_credentials(root_cert)
 
-            self._channel = grpc.secure_channel(target, creds, opts)
+            self.grpc_channel = grpc.secure_channel(target, creds, opts)
 
-        self._organization_client = OrganizationServiceStub(self._channel)
-        self._algo_client = AlgoServiceStub(self._channel)
-        self._datasample_client = DataSampleServiceStub(self._channel)
-        self._datamanager_client = DataManagerServiceStub(self._channel)
-        self._dataset_client = DatasetServiceStub(self._channel)
-        self._computetask_client = ComputeTaskServiceStub(self._channel)
-        self._computeplan_client = ComputePlanServiceStub(self._channel)
-        self._model_client = ModelServiceStub(self._channel)
-        self._performance_client = PerformanceServiceStub(self._channel)
-        self._event_client = EventServiceStub(self._channel)
-        self._info_client = InfoServiceStub(self._channel)
-        self._failure_report_client = FailureReportServiceStub(self._channel)
+        self._organization_client = OrganizationServiceStub(self.grpc_channel)
+        self._algo_client = AlgoServiceStub(self.grpc_channel)
+        self._datasample_client = DataSampleServiceStub(self.grpc_channel)
+        self._datamanager_client = DataManagerServiceStub(self.grpc_channel)
+        self._dataset_client = DatasetServiceStub(self.grpc_channel)
+        self._computetask_client = ComputeTaskServiceStub(self.grpc_channel)
+        self._computeplan_client = ComputePlanServiceStub(self.grpc_channel)
+        self._model_client = ModelServiceStub(self.grpc_channel)
+        self._performance_client = PerformanceServiceStub(self.grpc_channel)
+        self._event_client = EventServiceStub(self.grpc_channel)
+        self._info_client = InfoServiceStub(self.grpc_channel)
+        self._failure_report_client = FailureReportServiceStub(self.grpc_channel)
         self._channel_name = channel_name
+        self._mspid = mspid
 
         self._metadata = (
             ("mspid", mspid),
@@ -630,6 +631,24 @@ class OrchestratorClient:
         )
         return next(event_generator, None)
 
+    def subscribe_to_events(self, channel_name=None, start_event_id=""):
+
+        if channel_name is not None:
+            metadata = (
+                ("mspid", self._mspid),
+                ("channel", channel_name),
+                ("chaincode", settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]),
+            )
+        else:
+            metadata = self.metadata
+
+        events_stream = self._event_client.SubscribeToEvents(
+            event_pb2.SubscribeToEventsParam(start_event_id=start_event_id),
+            metadata=metadata,
+        )
+
+        return (MessageToDict(event, **CONVERT_SETTINGS) for event in events_stream)
+
     def query_version(
         self,
     ):
@@ -644,7 +663,7 @@ class OrchestratorClient:
         return self
 
     def __exit__(self, type, value, traceback):
-        self._channel.close()
+        self.grpc_channel.close()
 
     @grpc_retry
     def register_failure_report(self, args):

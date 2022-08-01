@@ -2,14 +2,12 @@ import datetime
 from typing import Optional
 
 import structlog
-from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
-from events.dynamic_fields import fetch_failure_report_from_event
 from events.dynamic_fields import parse_computetask_dates_from_event
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan
@@ -27,7 +25,6 @@ from localrep.serializers import ModelSerializer
 from localrep.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
-from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 
@@ -40,6 +37,7 @@ def _on_create_organization_event(event: dict) -> None:
 
 def _create_organization(channel: str, data: dict) -> bool:
     data["channel"] = channel
+
     serializer = ChannelOrganizationSerializer(data=data)
     try:
         serializer.save_if_not_exists()
@@ -344,7 +342,7 @@ EVENT_CALLBACKS = {
 @transaction.atomic
 def sync_on_event_message(event: dict) -> None:
     """Handler to consume event.
-    This function is idempotent (can be called in sync and resync mode)
+    This function is idempotent
     """
     event_kind = event_pb2.EventKind.Value(event["event_kind"])
     asset_kind = common_pb2.AssetKind.Value(event["asset_kind"])
@@ -358,201 +356,3 @@ def sync_on_event_message(event: dict) -> None:
         callback(event)
     else:
         logger.debug("Nothing to sync", event_kind=event["event_kind"], asset_kind=event["asset_kind"])
-
-
-def resync_algos(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing algos")
-    algos = client.query_algos()  # TODO: Add filter on last_modification_date
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in algos:
-        is_created = _create_algo(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new algo", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped algo", asset_key=data["key"])
-            nb_skipped_assets += 1
-
-    logger.info("Done resync algos", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
-
-
-def resync_datamanagers(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing datamanagers")
-    datamanagers = client.query_datamanagers()  # TODO: Add filter on last_modification_date
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in datamanagers:
-        is_created = _create_datamanager(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new datamanager", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped datamanager", asset_key=data["key"])
-            nb_skipped_assets += 1
-
-    logger.info("Done resync datamanagers", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
-
-
-def resync_datasamples(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing datasamples")
-    datasamples = client.query_datasamples()  # TODO: Add filter on last_modification_date
-    nb_new_assets = 0
-    nb_updated_assets = 0
-
-    for data in datasamples:
-        is_created = _create_datasample(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new datasample", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            _update_datasample(data["key"], data["data_manager_keys"])
-            logger.debug("Updated datasample", asset_key=data["key"])
-            nb_updated_assets += 1
-
-    logger.info("Done resync datasamples", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
-
-
-def resync_computeplans(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing computeplans")
-
-    computeplans = client.query_compute_plans()  # TODO: Add filter on last_modification_date
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in computeplans:
-        is_created = _create_computeplan(client.channel_name, data)
-        ComputePlan.objects.get(key=data["key"]).update_dates()
-        if is_created:
-            logger.debug("Created new computeplan", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped computeplan", asset_key=data["key"])
-            nb_skipped_assets += 1
-    logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
-
-
-def _sync_performances(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
-    logger.info("Syncing performances ", task_key=compute_task_key)
-    performances = client.get_compute_task_performances(compute_task_key)
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in performances:
-        is_created = _create_performance(client.channel_name, data)
-        if is_created:
-            logger.debug(
-                "Created new performance", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
-            )
-            nb_new_assets += 1
-        else:
-            logger.debug(
-                "Skipped performance", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
-            )
-            nb_skipped_assets += 1
-
-    logger.info(
-        "Done creating performances for task",
-        task_key=compute_task_key,
-        nb_new_assets=nb_new_assets,
-        nb_skipped_assets=nb_skipped_assets,
-    )
-
-
-def _sync_models(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
-    logger.info("Syncing models ", task_key=compute_task_key)
-    models = client.get_computetask_output_models(compute_task_key)
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in models:
-        is_created = _create_model(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new model", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped model", asset_key=data["key"])
-            nb_skipped_assets += 1
-
-
-def resync_computetasks(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing computetasks")
-    computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
-    nb_new_assets = 0
-    nb_updated_assets = 0
-
-    for data in computetasks:
-        start_date, end_date, failure_report = None, None, None
-        events = client.query_events(
-            asset_key=data["key"],
-            asset_kind=common_pb2.ASSET_COMPUTE_TASK,
-            event_kind=event_pb2.EVENT_ASSET_UPDATED,
-        )
-        for event in events:
-            candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
-            # The computetask start/end date is the timestamp of the first event related to the new status
-            if start_date is None and candidate_start_date is not None:
-                start_date = candidate_start_date
-            if end_date is None and candidate_end_date is not None:
-                end_date = candidate_end_date
-            if failure_report is None:
-                failure_report = fetch_failure_report_from_event(event, client)
-
-        is_created = _create_computetask(client.channel_name, data, start_date, end_date, failure_report)
-        if is_created:
-            logger.debug("Created new computetask", asset_key=data["key"])
-            nb_new_assets += 1
-        else:
-            _update_computetask(data["key"], data["status"], start_date, end_date, failure_report)
-            logger.debug("Updated computetask", asset_key=data["key"])
-            nb_updated_assets += 1
-
-        if data["status"] == ComputeTask.Status.STATUS_DONE:
-            if data["category"] == ComputeTask.Category.TASK_TEST:
-                _sync_performances(data["key"], client)
-            else:
-                _sync_models(data["key"], client)
-
-    # update CP fields that depend on task fields
-    for compute_plan in ComputePlan.objects.all():
-        compute_plan.update_dates()
-        compute_plan.update_status()
-
-    logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
-
-
-def resync_organizations(client: orc_client.OrchestratorClient):
-    logger.info("Resyncing organizations")
-    organizations = client.query_organizations()
-    nb_new_assets = 0
-    nb_skipped_assets = 0
-
-    for data in organizations:
-        is_created = _create_organization(client.channel_name, data)
-        if is_created:
-            logger.debug("Created new organization", organization_id=data["id"])
-            nb_new_assets += 1
-        else:
-            logger.debug("Skipped organization", organization_id=data["id"])
-            nb_skipped_assets += 1
-
-    logger.info("Done resync organizations", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
-
-
-def resync() -> None:
-    """Resync the local asset representation.
-    Fetch all assets from the orchestrator that are not present locally in the backend.
-    """
-    logger.info("Resyncing local representation")
-
-    for channel_name in settings.LEDGER_CHANNELS.keys():
-        logger.info("Resyncing for channel", channel=channel_name)
-        with get_orchestrator_client(channel_name) as client:
-            resync_organizations(client)
-            resync_algos(client)
-            resync_datamanagers(client)
-            resync_datasamples(client)
-            resync_computeplans(client)
-            resync_computetasks(client)

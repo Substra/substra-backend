@@ -1,7 +1,6 @@
 from typing import Optional
 
 from localrep.models.computetask import ComputeTask
-from orchestrator import client as orc_client
 
 
 def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Optional[str]]:
@@ -20,8 +19,3 @@ def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Opti
     ):
         end_date = event["timestamp"]
     return start_date, end_date
-
-
-def fetch_failure_report_from_event(event: dict, client: orc_client.OrchestratorClient) -> Optional[str]:
-    if event["compute_task"]["status"] == ComputeTask.Status.STATUS_FAILED:
-        return client.get_failure_report({"compute_task_key": event["asset_key"]})

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use gRPC stream to listen to events (#1188)
+
+### Removed
+
+- BREAKING: Orchestrator RabbitMQ connection to listen to events (#1188)
+
 ## [0.24.0] 2022-08-01
 
 ### Added

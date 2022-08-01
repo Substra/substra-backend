@@ -1,9 +1,5 @@
-import json
-import ssl
-import time
-from contextlib import closing
+import threading
 
-import pika
 import structlog
 from django.conf import settings
 from django.db import close_old_connections
@@ -14,14 +10,14 @@ import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from events import health
 from events import localsync
+from localrep.models import LastEvent
+from orchestrator.client import OrchestratorClient
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
 from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
 from substrapp.utils import get_owner
-
-ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT = 30
 
 logger = structlog.get_logger("events")
 
@@ -118,80 +114,68 @@ def on_message_compute_engine(payload):
         logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
 
 
-def on_message(channel, method_frame, header_frame, body):
+def on_event(payload):
     try:
-        payload = json.loads(body.decode())
         logger.debug("Received payload", payload=payload)
         localsync.sync_on_event_message(payload)
         on_message_compute_engine(payload)
+
     except Exception as e:
         logger.exception("Error processing message", e=e)
-        # we choose to requeue the message on error
-        channel.basic_reject(delivery_tag=method_frame.delivery_tag, requeue=True)
         raise
-    else:
-        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     finally:
         # we are not sure that, in a django context, all db connection are closed automatically
         # when the function ends
         close_old_connections()
 
 
-def get_rabbitmq_connection():
-    credentials = pika.credentials.PlainCredentials(
-        username=settings.ORCHESTRATOR_RABBITMQ_AUTH_USER, password=settings.ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD
-    )
+def consume_channel(client: OrchestratorClient, channel_name: str, exception_raised: threading.Event):
+    try:
 
-    ssl_options = None
-    if settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED:
-        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-        context.load_verify_locations(settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH)
-        context.verify_mode = ssl.CERT_REQUIRED
-        context.load_cert_chain(
-            settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH,
-            settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH,
-        )
-        ssl_options = pika.SSLOptions(context, settings.ORCHESTRATOR_RABBITMQ_HOST)
+        log = logger.bind(channel_name=channel_name)
+        log.info("Attempting to connect to orchestrator gRPC stream")
 
-    return pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host=settings.ORCHESTRATOR_RABBITMQ_HOST,
-            port=settings.ORCHESTRATOR_RABBITMQ_PORT,
-            credentials=credentials,
-            ssl_options=ssl_options,
-            blocked_connection_timeout=ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT,
-            heartbeat=60,
-        )
-    )
+        last_event, _ = LastEvent.objects.get_or_create(channel=channel_name)
+
+        log.info("Starting to consume messages from orchestrator gRPC stream", start_event_id=last_event.event_id)
+        for event in client.subscribe_to_events(channel_name=channel_name, start_event_id=last_event.event_id):
+            on_event(event)
+            last_event.event_id = event["id"]
+            last_event.save()
+
+    except Exception as e:
+        if not exception_raised.is_set():
+            log.exception("Error during events consumption", e=e)
+            exception_raised.set()
+            raise
 
 
 def consume(health_service: health.HealthService):
-    # Queues are defined by the orchestrator and are named according user login
-    queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
 
-    log = logger.bind(queue=queue_name)
+    client = get_orchestrator_client()
+    exception_raised = threading.Event()
 
-    log.info("Attempting to connect to orchestrator RabbitMQ")
+    consumers = [
+        threading.Thread(
+            target=consume_channel,
+            args=(
+                client,
+                channel_name,
+                exception_raised,
+            ),
+        )
+        for channel_name in settings.LEDGER_CHANNELS.keys()
+    ]
 
-    # It's not necessary to disconnect the channel as connection close will do it for us
-    # close will be called by the closing contextlib function
-    # https://pika.readthedocs.io/en/stable/modules/connection.html#pika.connection.Connection.close
-    with closing(get_rabbitmq_connection()) as connection:
-        log.info("Connected to orchestrator RabbitMQ")
-        channel = connection.channel()  # Creating channel
-        channel.queue_declare(queue=queue_name, passive=True)  # Declaring queue
-        health_service.ready()
-        channel.basic_consume(queue=queue_name, on_message_callback=on_message, auto_ack=False)
-        log.info("Starting to consume messages from orchestrator RabbitMQ")
-        channel.start_consuming()
+    for consumer in consumers:
+        consumer.start()
 
+    health_service.ready()
 
-def resync():
-    while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
-        try:
-            localsync.resync()
-        except Exception as e:
-            time.sleep(30)
-            logger.exception("Retry connecting to orchestrator GRPC api", e=e)
-        else:
-            break
+    exception_raised.wait()
+    client.grpc_channel.close()
+
+    for consumer in consumers:
+        consumer.join()
+
+    raise RuntimeError("Orchestrator gRPC streams consumption interrupted")

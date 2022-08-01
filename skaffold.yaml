@@ -129,9 +129,6 @@ profiles:
         path: /deploy/helm/releases/1/setValues/orchestrator.host
         value: owkin-orchestrator-org-2-server.org-2.svc.cluster.local
       - op: add
-        path: /deploy/helm/releases/1/setValues/orchestrator.rabbitmq.host
-        value: owkin-orchestrator-org-2-rabbitmq.org-2.svc.cluster.local
-      - op: add
         path: /deploy/helm/releases/0/setValues/server.livenessProbe.timeoutSeconds
         value: 30
       - op: add

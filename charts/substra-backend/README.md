@@ -206,24 +206,18 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Orchestrator settings
 
-| Name                                                      | Description                                                                                                                    | Value                       |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
-| `orchestrator.host`                                       | The orchestrator gRPC endpoint                                                                                                 | `orchestrator.local`        |
-| `orchestrator.port`                                       | The orchestrator gRPC port                                                                                                     | `9000`                      |
-| `orchestrator.tls.enabled`                                | Enable TLS for the gRPC endpoint                                                                                               | `false`                     |
-| `orchestrator.tls.cacert`                                 | A configmap containing the orchestrator CA certificate. Use this if your orchestrator uses a private CA.                       | `nil`                       |
-| `orchestrator.tls.mtls.enabled`                           | Enable client verification for the orchestrator gRPC endpoint                                                                  | `false`                     |
-| `orchestrator.tls.mtls.clientCertificate`                 | A secret containing the client certificate `tls.crt` and private key `tls.key`                                                 | `nil`                       |
-| `orchestrator.rabbitmq.host`                              | The orchestrator RabbitMQ endpoint hostname                                                                                    | `events.orchestrator.local` |
-| `orchestrator.rabbitmq.port`                              | The orchestrator RabbitMQ port                                                                                                 | `5672`                      |
-| `orchestrator.rabbitmq.auth.username`                     | The orchestrator RabbitMQ username                                                                                             | `user`                      |
-| `orchestrator.rabbitmq.auth.password`                     | The orchestrator RabbitMQ password                                                                                             | `password`                  |
-| `orchestrator.rabbitmq.tls.enabled`                       | Enable TLS for the orchestrator RabbitMQ endpoint                                                                              | `false`                     |
-| `orchestrator.rabbitmq.tls.clientCertificate`             | A secret containing the client certificate `tls.crt` and private key `tls.key`                                                 | `nil`                       |
-| `orchestrator.mspID`                                      | current organization name on the Orchestrator                                                                                  | `OwkinPeerMSP`              |
-| `orchestrator.channels[0].mychannel.restricted`           | Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel | `false`                     |
-| `orchestrator.channels[0].mychannel.model_export_enabled` | Allow logged-in users to download models trained on this organization                                                          | `false`                     |
-| `orchestrator.channels[0].mychannel.chaincode.name`       | The name of the chaincode instantiated on this channel                                                                         | `mycc`                      |
+| Name                                                      | Description                                                                                                                    | Value                |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| `orchestrator.host`                                       | The orchestrator gRPC endpoint                                                                                                 | `orchestrator.local` |
+| `orchestrator.port`                                       | The orchestrator gRPC port                                                                                                     | `9000`               |
+| `orchestrator.tls.enabled`                                | Enable TLS for the gRPC endpoint                                                                                               | `false`              |
+| `orchestrator.tls.cacert`                                 | A configmap containing the orchestrator CA certificate. Use this if your orchestrator uses a private CA.                       | `nil`                |
+| `orchestrator.tls.mtls.enabled`                           | Enable client verification for the orchestrator gRPC endpoint                                                                  | `false`              |
+| `orchestrator.tls.mtls.clientCertificate`                 | A secret containing the client certificate `tls.crt` and private key `tls.key`                                                 | `nil`                |
+| `orchestrator.mspID`                                      | current organization name on the Orchestrator                                                                                  | `OwkinPeerMSP`       |
+| `orchestrator.channels[0].mychannel.restricted`           | Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel | `false`              |
+| `orchestrator.channels[0].mychannel.model_export_enabled` | Allow logged-in users to download models trained on this organization                                                          | `false`              |
+| `orchestrator.channels[0].mychannel.chaincode.name`       | The name of the chaincode instantiated on this channel                                                                         | `mycc`               |
 
 
 ### Kaniko settings

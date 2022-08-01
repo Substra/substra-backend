@@ -79,10 +79,6 @@ spec:
             - mountPath: /etc/ssl/certs
               name: ssl-certs
             {{- end }}
-            {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}
-            - name: orchestrator-rabbitmq-tls-client-pair
-              mountPath: /var/substra/orchestrator_rabbitmq/tls/client
-            {{ end }}
             {{ if $.Values.orchestrator.tls.enabled }}
             - name: orchestrator-tls-cacert
               mountPath: /var/substra/orchestrator/tls/server
@@ -155,11 +151,6 @@ spec:
         secret:
           secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
-      {{ end }}
-      {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}
-      - name: orchestrator-rabbitmq-tls-client-pair
-        secret:
-          secretName: {{ $.Values.orchestrator.rabbitmq.tls.clientCertificate }}
       {{ end }}
     {{- with .Values.events.nodeSelector }}
       nodeSelector:
