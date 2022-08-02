@@ -35,3 +35,11 @@ class Algo:
     @property
     def archive(self) -> bytes:
         return organization_client.get(self._channel, self._owner, self._storage_address, self.checksum)
+
+    @property
+    def inputs(self) -> dict[str, dict]:
+        return self._algo["inputs"]
+
+    @property
+    def outputs(self) -> dict[str, dict]:
+        return self._algo["outputs"]

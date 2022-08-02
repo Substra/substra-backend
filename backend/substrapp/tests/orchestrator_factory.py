@@ -11,6 +11,9 @@ import orchestrator.model_pb2 as model_pb2
 from orchestrator.client import CONVERT_SETTINGS
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from substrapp.tests import common
+from substrapp.tests.common import InputIdentifiers
+from substrapp.tests.compute_tasks.utils import get_inputs_by_kind
 from substrapp.tests.factory import DEFAULT_OWNER
 from substrapp.tests.factory import DEFAULT_WORKER
 from substrapp.tests.factory import get_storage_address
@@ -20,55 +23,8 @@ OPEN_PERMISSIONS = common_pb2.Permissions(
     process=common_pb2.Permission(public=True, authorized_ids=[]),
 )
 
-
-# TODO: refactor with factory.py
-ALGO_INPUTS_PER_CATEGORY = {
-    algo_pb2.ALGO_SIMPLE: {
-        "datasamples": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        "model": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=True),
-        "opener": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_MANAGER, multiple=False, optional=False),
-    },
-    algo_pb2.ALGO_AGGREGATE: {
-        "model": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=True, optional=False),
-    },
-    algo_pb2.ALGO_COMPOSITE: {
-        "datasamples": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        "local": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=True),
-        "opener": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_MANAGER, multiple=False, optional=False),
-        "shared": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=True),
-    },
-    algo_pb2.ALGO_METRIC: {
-        "datasamples": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        "opener": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_MANAGER, multiple=False, optional=False),
-        "predictions": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=False),
-    },
-    algo_pb2.ALGO_PREDICT: {
-        "datasamples": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        "opener": algo_pb2.AlgoInput(kind=common_pb2.ASSET_DATA_MANAGER, multiple=False, optional=False),
-        "model": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=False),
-        "shared": algo_pb2.AlgoInput(kind=common_pb2.ASSET_MODEL, multiple=False, optional=True),
-    },
-}
-
-# TODO: refactor with factory.py
-ALGO_OUTPUTS_PER_CATEGORY = {
-    algo_pb2.ALGO_SIMPLE: {
-        "model": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_MODEL, multiple=False),
-    },
-    algo_pb2.ALGO_AGGREGATE: {
-        "model": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_MODEL, multiple=False),
-    },
-    algo_pb2.ALGO_COMPOSITE: {
-        "local": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_MODEL, multiple=False),
-        "shared": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_MODEL, multiple=False),
-    },
-    algo_pb2.ALGO_METRIC: {
-        "performance": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_PERFORMANCE, multiple=False),
-    },
-    algo_pb2.ALGO_PREDICT: {
-        "predictions": algo_pb2.AlgoOutput(kind=common_pb2.ASSET_MODEL, multiple=False),
-    },
-}
+ALGO_INPUTS_PER_CATEGORY = common.ALGO_INPUTS_PER_CATEGORY
+ALGO_OUTPUTS_PER_CATEGORY = common.ALGO_OUTPUTS_PER_CATEGORY
 
 
 class Orchestrator:
@@ -98,6 +54,24 @@ class Orchestrator:
         self.client.models[model.key] = model
         return model
 
+    def build_task_inputs(
+        self, input_models: list[computetask_pb2.ComputeTaskInput] = None, with_data=True
+    ) -> list[computetask_pb2.ComputeTaskInput]:
+        inputs = input_models or []
+        if with_data:
+            inputs += [
+                self.create_task_input(identifier=InputIdentifiers.OPENER, asset_key=self.create_data_manager().key)
+            ]
+            inputs += [self.create_task_input(identifier=InputIdentifiers.DATASAMPLES) for _ in range(3)]
+        return inputs
+
+    def create_task_input(self, parent_task_key: str = None, parent_task_output_identifier: str = None, **kwargs):
+        if parent_task_key:
+            kwargs["parent_task_output"] = computetask_pb2.ParentTaskOutputRef(
+                parent_task_key=parent_task_key, output_identifier=parent_task_output_identifier
+            )
+        return ComputeTaskInputFactory(**kwargs)
+
     def _create_common_task_dependencies(self, task: computetask_pb2.ComputeTask):
         if task.algo.key not in self.client.algos.keys():
             self.client.algos[task.algo.key] = task.algo
@@ -110,39 +84,6 @@ class Orchestrator:
 
         self._create_common_task_dependencies(compute_task)
 
-        if compute_task.train.data_manager_key not in self.client.data_managers.keys():
-            self.create_data_manager(key=compute_task.train.data_manager_key)
-
-        if len(compute_task.parent_task_keys) > 1:
-            raise OrcError()
-
-        compute_task.inputs.append(
-            computetask_pb2.ComputeTaskInput(identifier="data_manager", asset_key=compute_task.train.data_manager_key)
-        )
-
-        compute_task.inputs.extend(
-            [
-                computetask_pb2.ComputeTaskInput(identifier="datasamples", asset_key=key)
-                for key in compute_task.train.data_sample_keys
-            ]
-        )
-
-        for parent_task_key in compute_task.parent_task_keys:
-            parent_task = self.client.tasks.get(parent_task_key)
-            if not parent_task:
-                raise OrcError()
-            if parent_task.category == computetask_pb2.TASK_TRAIN:
-                compute_task.inputs.append(
-                    computetask_pb2.ComputeTaskInput(
-                        identifier="model",
-                        parent_task_output=computetask_pb2.ParentTaskOutputRef(
-                            output_identifier="model", parent_task_key=parent_task_key
-                        ),
-                    )
-                )
-            else:
-                raise OrcError()
-
         self.client.tasks[compute_task.key] = compute_task
         return compute_task
 
@@ -150,31 +91,6 @@ class Orchestrator:
         compute_task = CompositeTaskFactory(**kwargs)
 
         self._create_common_task_dependencies(compute_task)
-
-        if compute_task.composite.data_manager_key not in self.client.data_managers.keys():
-            self.create_data_manager(key=compute_task.composite.data_manager_key)
-
-        if len(compute_task.parent_task_keys) > 2:
-            raise OrcError()
-
-        if len(compute_task.parent_task_keys) != 0 and len(compute_task.inputs) != 2:
-            raise OrcError()
-
-        if len(compute_task.parent_task_keys) == 0 and len(compute_task.inputs) != 0:
-            raise OrcError()
-
-        compute_task.inputs.append(
-            computetask_pb2.ComputeTaskInput(
-                identifier="data_manager", asset_key=compute_task.composite.data_manager_key
-            )
-        )
-
-        compute_task.inputs.extend(
-            [
-                computetask_pb2.ComputeTaskInput(identifier="datasamples", asset_key=key)
-                for key in compute_task.composite.data_sample_keys
-            ]
-        )
 
         self.client.tasks[compute_task.key] = compute_task
         return compute_task
@@ -184,103 +100,15 @@ class Orchestrator:
 
         self._create_common_task_dependencies(compute_task)
 
-        if compute_task.predict.data_manager_key not in self.client.data_managers.keys():
-            self.create_data_manager(key=compute_task.predict.data_manager_key)
-
-        compute_task.inputs.append(
-            computetask_pb2.ComputeTaskInput(identifier="data_manager", asset_key=compute_task.predict.data_manager_key)
-        )
-
-        compute_task.inputs.extend(
-            [
-                computetask_pb2.ComputeTaskInput(identifier="datasamples", asset_key=key)
-                for key in compute_task.predict.data_sample_keys
-            ]
-        )
-
-        if len(compute_task.parent_task_keys) != 1:
-            raise OrcError()
-
-        parent_task = self.client.tasks.get(compute_task.parent_task_keys[0])
-        if not parent_task:
-            raise OrcError()
-
-        if parent_task.category == computetask_pb2.TASK_TRAIN:
-            compute_task.inputs.append(
-                computetask_pb2.ComputeTaskInput(
-                    identifier="model",
-                    parent_task_output=computetask_pb2.ParentTaskOutputRef(
-                        output_identifier="model", parent_task_key=parent_task.key
-                    ),
-                )
-            )
-        elif parent_task.category == computetask_pb2.TASK_COMPOSITE:
-            compute_task.inputs.append(
-                computetask_pb2.ComputeTaskInput(
-                    identifier="shared",
-                    parent_task_output=computetask_pb2.ParentTaskOutputRef(
-                        output_identifier="shared", parent_task_key=parent_task.key
-                    ),
-                )
-            )
-            compute_task.inputs.append(
-                computetask_pb2.ComputeTaskInput(
-                    identifier="local",
-                    parent_task_output=computetask_pb2.ParentTaskOutputRef(
-                        output_identifier="local", parent_task_key=parent_task.key
-                    ),
-                )
-            )
-        else:
-            raise OrcError()
-
         self.client.tasks[compute_task.key] = compute_task
         return compute_task
 
     def create_test_task(self, **kwargs):
-        if "parent_task_keys" not in kwargs:
-            raise OrcError()
-
-        parent_task = self.client.tasks.get(kwargs["parent_task_keys"][0])
-        if not parent_task:
-            raise OrcError()
-
-        # TODO: remove this when splitting predict & test
-        if parent_task.category in [computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_COMPOSITE]:
-            metric = self.create_algo(category=algo_pb2.ALGO_METRIC)
-            kwargs["test"] = TestTaskDataFactory(metric_keys=[metric.key])
-            kwargs["algo"] = parent_task.algo
+        kwargs["algo"] = self.create_algo(category=algo_pb2.ALGO_METRIC)
 
         compute_task = TestTaskFactory(**kwargs)
 
         self._create_common_task_dependencies(compute_task)
-
-        if compute_task.test.data_manager_key not in self.client.data_managers.keys():
-            self.create_data_manager(key=compute_task.test.data_manager_key)
-
-        compute_task.inputs.append(
-            computetask_pb2.ComputeTaskInput(identifier="data_manager", asset_key=compute_task.test.data_manager_key)
-        )
-
-        compute_task.inputs.extend(
-            [
-                computetask_pb2.ComputeTaskInput(identifier="datasamples", asset_key=key)
-                for key in compute_task.test.data_sample_keys
-            ]
-        )
-
-        if len(compute_task.parent_task_keys) != 1:
-            raise OrcError()
-
-        if parent_task.category == computetask_pb2.TASK_PREDICT:
-            compute_task.inputs.append(
-                computetask_pb2.ComputeTaskInput(
-                    identifier="predictions",
-                    parent_task_output=computetask_pb2.ParentTaskOutputRef(
-                        output_identifier="predictions", parent_task_key=parent_task.key
-                    ),
-                )
-            )
 
         self.client.tasks[compute_task.key] = compute_task
         return compute_task
@@ -348,8 +176,17 @@ class MockOrchestratorClient(OrchestratorClient):
         task = self.tasks.get(compute_task_key)
         if not task:
             raise OrcError()
-
-        models = [model for model in self.models.values() if model.compute_task_key in task.parent_task_keys]
+        model_inputs = get_inputs_by_kind(task, common_pb2.ASSET_MODEL)
+        models = [
+            model
+            for model in self.models.values()
+            if [
+                model_input
+                for model_input in model_inputs
+                if model_input.parent_task_output.parent_task_key == model.compute_task_key
+                # TODO: add predicate on the "identifier" property
+            ]
+        ]
         res = model_pb2.GetComputeTaskModelsResponse(models=models)
         return MessageToDict(res, **CONVERT_SETTINGS).get("models", [])
 
@@ -396,7 +233,9 @@ class DataManagerFactory(factory.Factory):
         lambda obj: AddressableFactory(storage_address=get_storage_address("data_manager", obj.key, "description"))
     )
     opener = factory.LazyAttribute(
-        lambda obj: AddressableFactory(storage_address=get_storage_address("data_manager", obj.key, "opener"))
+        lambda obj: AddressableFactory(
+            storage_address=get_storage_address("data_manager", obj.key, InputIdentifiers.OPENER)
+        )
     )
     type = "test"
     creation_date = Timestamp()
@@ -412,7 +251,9 @@ class ModelFactory(factory.Factory):
     category = model_pb2.MODEL_SIMPLE
     compute_task_key = factory.Faker("uuid4")
     address = factory.LazyAttribute(
-        lambda obj: AddressableFactory(storage_address=get_storage_address("model", obj.key, "model"))
+        lambda obj: AddressableFactory(
+            storage_address=get_storage_address(InputIdentifiers.MODEL, obj.key, InputIdentifiers.MODEL)
+        )
     )
     permissions = OPEN_PERMISSIONS
     owner = DEFAULT_WORKER
@@ -468,6 +309,13 @@ class ComputeTaskOutputFactory(factory.Factory):
     permissions = OPEN_PERMISSIONS
 
 
+class ComputeTaskInputFactory(factory.Factory):
+    class Meta:
+        model = computetask_pb2.ComputeTaskInput
+
+    asset_key = factory.Faker("uuid4")
+
+
 class TaskFactory(factory.Factory):
     class Meta:
         model = computetask_pb2.ComputeTask
@@ -475,7 +323,6 @@ class TaskFactory(factory.Factory):
     key = factory.Faker("uuid4")
     owner = DEFAULT_OWNER
     compute_plan_key = factory.Faker("uuid4")
-    parent_task_keys = []
     rank = 0
     status = computetask_pb2.STATUS_WAITING
     worker = DEFAULT_WORKER
@@ -484,65 +331,29 @@ class TaskFactory(factory.Factory):
     metadata = {}
 
 
-class TrainTaskDataFactory(factory.Factory):
-    class Meta:
-        model = computetask_pb2.TrainTaskData
-
-    data_manager_key = factory.Faker("uuid4")
-    data_sample_keys = factory.List([factory.Faker("uuid4"), factory.Faker("uuid4")])
-
-
 class TrainTaskFactory(TaskFactory):
     category = computetask_pb2.TASK_TRAIN
     algo = factory.SubFactory(AlgoFactory, category=algo_pb2.ALGO_SIMPLE)
-    train = factory.SubFactory(TrainTaskDataFactory)
     inputs = []
-    outputs = {"model": ComputeTaskOutputFactory()}
-
-
-class CompositeTaskDataFactory(factory.Factory):
-    class Meta:
-        model = computetask_pb2.CompositeTrainTaskData
-
-    data_manager_key = factory.Faker("uuid4")
-    data_sample_keys = factory.List([factory.Faker("uuid4"), factory.Faker("uuid4")])
+    outputs = {InputIdentifiers.MODEL: ComputeTaskOutputFactory()}
 
 
 class CompositeTaskFactory(TaskFactory):
     category = computetask_pb2.TASK_COMPOSITE
     algo = factory.SubFactory(AlgoFactory, category=algo_pb2.ALGO_COMPOSITE)
-    composite = factory.SubFactory(CompositeTaskDataFactory)
     inputs = []
-    outputs = {"head": ComputeTaskOutputFactory(), "trunk": ComputeTaskOutputFactory()}
-
-
-class PredictTaskDataFactory(factory.Factory):
-    class Meta:
-        model = computetask_pb2.PredictTaskData
-
-    data_manager_key = factory.Faker("uuid4")
-    data_sample_keys = factory.List([factory.Faker("uuid4"), factory.Faker("uuid4")])
+    outputs = {InputIdentifiers.LOCAL: ComputeTaskOutputFactory(), InputIdentifiers.SHARED: ComputeTaskOutputFactory()}
 
 
 class PredictTaskFactory(TaskFactory):
     category = computetask_pb2.TASK_PREDICT
     algo = factory.SubFactory(AlgoFactory, category=algo_pb2.ALGO_PREDICT)
-    predict = factory.SubFactory(PredictTaskDataFactory)
     inputs = []
-    outputs = {"predictions": ComputeTaskOutputFactory()}
-
-
-class TestTaskDataFactory(factory.Factory):
-    class Meta:
-        model = computetask_pb2.TestTaskData
-
-    data_manager_key = factory.Faker("uuid4")
-    data_sample_keys = factory.List([factory.Faker("uuid4"), factory.Faker("uuid4")])
+    outputs = {InputIdentifiers.PREDICTIONS: ComputeTaskOutputFactory()}
 
 
 class TestTaskFactory(TaskFactory):
     category = computetask_pb2.TASK_TEST
     algo = factory.SubFactory(AlgoFactory, category=algo_pb2.ALGO_METRIC)
-    test = factory.SubFactory(TestTaskDataFactory)
     inputs = []
-    outputs = {"performance": ComputeTaskOutputFactory()}
+    outputs = {InputIdentifiers.PERFORMANCE: ComputeTaskOutputFactory()}

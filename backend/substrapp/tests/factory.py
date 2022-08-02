@@ -61,6 +61,7 @@ from localrep.models import DataSample
 from localrep.models import Model
 from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
+from substrapp.tests import common
 
 DEFAULT_OWNER = "MyOrg1MSP"
 DEFAULT_WORKER = "MyOrg1MSP"
@@ -68,52 +69,9 @@ DEFAULT_CHANNEL = "mychannel"
 DUMMY_CHECKSUM = "dummy-checksum"
 INPUT_ASSET_KEY = "5f23ae53-6541-45c1-ba78-fdfc56c51a52"
 
-# This logic belongs to the SDK but we replicate the mapping to generate realistic assets
-ALGO_INPUTS_PER_CATEGORY = {
-    "ALGO_SIMPLE": {
-        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "multiple": True, "optional": False},
-        "model": {"kind": "ASSET_MODEL", "multiple": False, "optional": True},
-        "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
-    },
-    "ALGO_AGGREGATE": {
-        "model": {"kind": "ASSET_MODEL", "multiple": True, "optional": False},
-    },
-    "ALGO_COMPOSITE": {
-        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "multiple": True, "optional": False},
-        "local": {"kind": "ASSET_MODEL", "multiple": False, "optional": True},
-        "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
-        "shared": {"kind": "ASSET_MODEL", "multiple": False, "optional": True},
-    },
-    "ALGO_METRIC": {
-        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "multiple": True, "optional": False},
-        "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
-        "predictions": {"kind": "ASSET_MODEL", "multiple": False, "optional": False},
-    },
-    "ALGO_PREDICT": {
-        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "multiple": True, "optional": False},
-        "opener": {"kind": "ASSET_DATA_MANAGER", "multiple": False, "optional": False},
-        "model": {"kind": "ASSET_MODEL", "multiple": False, "optional": False},
-        "shared": {"kind": "ASSET_MODEL", "multiple": False, "optional": True},
-    },
-}
 
-
-ALGO_OUTPUTS_PER_CATEGORY = {
-    "ALGO_SIMPLE": {
-        "model": {"kind": "ASSET_MODEL", "multiple": False},
-    },
-    "ALGO_AGGREGATE": {
-        "model": {"kind": "ASSET_MODEL", "multiple": False},
-    },
-    "ALGO_COMPOSITE": {
-        "local": {"kind": "ASSET_MODEL", "multiple": False},
-        "shared": {"kind": "ASSET_MODEL", "multiple": False},
-    },
-    "ALGO_METRIC": {
-        "performance": {"kind": "ASSET_PERFORMANCE", "multiple": False},
-    },
-    "ALGO_PREDICT": {"predictions": {"kind": "ASSET_MODEL", "multiple": False}},
-}
+ALGO_INPUTS_PER_CATEGORY = common.ALGO_INPUTS_PER_CATEGORY_DICT
+ALGO_OUTPUTS_PER_CATEGORY = common.ALGO_OUTPUTS_PER_CATEGORY_DICT
 
 
 TASK_CATEGORY_TO_ALGO_CATEGORY = {

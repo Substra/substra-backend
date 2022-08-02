@@ -1,6 +1,7 @@
 import base64
 import os
 import urllib
+from dataclasses import dataclass
 from http.cookies import SimpleCookie
 from io import BytesIO
 from io import StringIO
@@ -11,10 +12,24 @@ from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from google.protobuf.json_format import MessageToDict
 from rest_framework.test import APIClient
 
+import orchestrator.algo_pb2 as algo_pb2
 from orchestrator import computetask_pb2 as computetask_pb2
 from orchestrator import model_pb2 as model_pb2
+from orchestrator.algo_pb2 import ALGO_AGGREGATE
+from orchestrator.algo_pb2 import ALGO_COMPOSITE
+from orchestrator.algo_pb2 import ALGO_METRIC
+from orchestrator.algo_pb2 import ALGO_PREDICT
+from orchestrator.algo_pb2 import ALGO_SIMPLE
+from orchestrator.algo_pb2 import AlgoInput
+from orchestrator.algo_pb2 import AlgoOutput
+from orchestrator.client import CONVERT_SETTINGS
+from orchestrator.common_pb2 import ASSET_DATA_MANAGER
+from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
+from orchestrator.common_pb2 import ASSET_MODEL
+from orchestrator.common_pb2 import ASSET_PERFORMANCE
 
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
@@ -28,6 +43,86 @@ _TASK_CATEGORY_NAME_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(compute
 
 _MODEL_CATEGORY_NAME_SIMPLE = model_pb2.ModelCategory.Name(model_pb2.MODEL_SIMPLE)
 _MODEL_CATEGORY_NAME_HEAD = model_pb2.ModelCategory.Name(model_pb2.MODEL_HEAD)
+
+
+@dataclass
+class InputIdentifiers:
+    DATASAMPLES = "datasamples"
+    LOCAL = "local"
+    MODEL = "model"
+    OPENER = "opener"
+    PERFORMANCE = "performance"
+    PREDICTIONS = "predictions"
+    SHARED = "shared"
+
+
+# Algo inputs, protobuf format
+ALGO_INPUTS_PER_CATEGORY = {
+    ALGO_SIMPLE: {
+        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+    },
+    ALGO_AGGREGATE: {
+        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=True, optional=False),
+    },
+    ALGO_COMPOSITE: {
+        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.LOCAL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    },
+    ALGO_METRIC: {
+        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.PREDICTIONS: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
+    },
+    ALGO_PREDICT: {
+        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
+        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    },
+}
+
+
+# Algo outputs, protobuf format
+ALGO_OUTPUTS_PER_CATEGORY = {
+    ALGO_SIMPLE: {
+        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    },
+    ALGO_AGGREGATE: {
+        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    },
+    ALGO_COMPOSITE: {
+        InputIdentifiers.LOCAL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+        InputIdentifiers.SHARED: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    },
+    ALGO_METRIC: {
+        InputIdentifiers.PERFORMANCE: AlgoOutput(kind=ASSET_PERFORMANCE, multiple=False),
+    },
+    ALGO_PREDICT: {
+        InputIdentifiers.PREDICTIONS: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    },
+}
+
+# Algo inputs, dictionary format
+ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+    algo_pb2.AlgoCategory.Name(category): {
+        identifier: MessageToDict(input_proto, **CONVERT_SETTINGS)
+        for identifier, input_proto in inputs_by_identifier.items()
+    }
+    for category, inputs_by_identifier in ALGO_INPUTS_PER_CATEGORY.items()
+}
+
+# Algo outputs, dictionary format
+ALGO_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+    algo_pb2.AlgoCategory.Name(category): {
+        identifier: MessageToDict(output_proto, **CONVERT_SETTINGS)
+        for identifier, output_proto in outputs_by_identifier.items()
+    }
+    for category, outputs_by_identifier in ALGO_OUTPUTS_PER_CATEGORY.items()
+}
 
 
 def generate_basic_auth_header(username, password):

@@ -78,7 +78,6 @@ class TaskResource(dict):
 def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task_category
-    task_data = ctx.task_data
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
@@ -93,10 +92,8 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     if ctx.task_category == computetask_pb2.TASK_TEST:
         perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
         command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.in_models[0]["key"])]
-        command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
-        command += ["--data-sample-paths"] + [
-            os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
-        ]
+        command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener)]
+        command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
         command += ["--output-perf-path", perf_path]
         return command
 
@@ -118,11 +115,9 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
             )
 
         inputs.append(
-            TaskResource(
-                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
-            )
+            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
         )
-        for key in task_data["data_sample_keys"]:
+        for key in ctx.data_sample_keys:
             inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
@@ -141,11 +136,9 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
                 )
 
         inputs.append(
-            TaskResource(
-                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
-            )
+            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
         )
-        for key in task_data["data_sample_keys"]:
+        for key in ctx.data_sample_keys:
             inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
         outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
@@ -180,11 +173,9 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
             inputs.append(TaskResource(id=identifier, value=os.path.join(in_models_dir, input_model["key"])))
 
         inputs.append(
-            TaskResource(
-                id=TASK_IO_OPENER, value=os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)
-            )
+            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
         )
-        for key in task_data["data_sample_keys"]:
+        for key in ctx.data_sample_keys:
             inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))

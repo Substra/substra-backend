@@ -4,7 +4,8 @@ from typing import List
 
 from django.conf import settings
 
-import orchestrator.computetask_pb2 as computetask_pb2
+from orchestrator import common_pb2
+from orchestrator import computetask_pb2
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import Directories
@@ -50,7 +51,7 @@ class Context:
         compute_plan_key: str,
         compute_plan_tag: str,
         in_models: List[Dict],
-        algo: dict[str, Any],
+        algo: Algo,
         data_manager: Dict,
         directories: Directories,
         has_chainkeys: bool,
@@ -66,30 +67,26 @@ class Context:
         self._data_manager = data_manager
         self._directories = directories
         self._has_chainkeys = has_chainkeys
-        self._algo = Algo(self._channel_name, algo)
+        self._algo = algo
 
     @classmethod
-    def from_task(cls, channel_name: str, task: Dict):
+    def from_task(cls, channel_name: str, task: dict):
         task_key = task["key"]
         compute_plan_key = task["compute_plan_key"]
         data_manager = None
-
         task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
-        task_data = task[TASK_DATA_FIELD[task_category]]
 
         # fetch more information from the orchestrator
         with get_orchestrator_client(channel_name) as client:
             compute_plan = client.query_compute_plan(compute_plan_key)
             in_models = client.get_computetask_input_models(task["key"])
             algo = client.query_algo(task["algo"]["key"])
+            algo = Algo(channel_name, algo)
 
-            if task_category in [
-                computetask_pb2.TASK_COMPOSITE,
-                computetask_pb2.TASK_TRAIN,
-                computetask_pb2.TASK_PREDICT,
-                computetask_pb2.TASK_TEST,
-            ]:
-                data_manager = client.query_datamanager(task_data["data_manager_key"])
+            for input in task["inputs"]:
+                if _input_has_kind(input, common_pb2.ASSET_DATA_MANAGER, algo):
+                    data_manager = client.query_datamanager(input["asset_key"])
+                    break
 
         directories = Directories(compute_plan_key)
 
@@ -165,20 +162,16 @@ class Context:
         return self._data_manager
 
     @property
-    def task_data(self) -> Dict:
-        task_data_field = TASK_DATA_FIELD[self.task_category]
-        return self.task[task_data_field]
-
-    @property
-    def data_sample_keys(self) -> List[str]:
-        if self.task_category not in [
-            computetask_pb2.TASK_COMPOSITE,
-            computetask_pb2.TASK_TRAIN,
-            computetask_pb2.TASK_PREDICT,
-            computetask_pb2.TASK_TEST,
-        ]:
-            return []
-        return self.task_data["data_sample_keys"]
+    def data_sample_keys(self) -> list[str]:
+        return [
+            input["asset_key"]
+            for input in self.task["inputs"]
+            if _input_has_kind(input, common_pb2.ASSET_DATA_SAMPLE, self.algo)
+        ]
 
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
+
+
+def _input_has_kind(input: dict, asset_kind: int, algo: Algo) -> bool:
+    return algo.inputs[input["identifier"]]["kind"] == common_pb2.AssetKind.Name(asset_kind)
