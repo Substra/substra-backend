@@ -32,9 +32,9 @@ Basic example:
 
 Customized example:
 
->>> algo_file = substrapp.models.Algo(...)
+>>> algo_data = create_algo_data()
 >>> algo = create_algo(
-...     key=algo_file.key,
+...     key=algo_data.key,
 ...     name="Random forest",
 ...     category=Algo.Category.ALGO_SIMPLE,
 ...     metadata={"foo": "bar"},
@@ -45,8 +45,11 @@ Customized example:
 """
 
 import datetime
+import io
 import uuid
+import zipfile
 
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import timezone
 
 from localrep.models import Algo
@@ -61,7 +64,9 @@ from localrep.models import DataSample
 from localrep.models import Model
 from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
+from substrapp.models import Algo as AlgoData
 from substrapp.tests import common
+from substrapp.utils import get_hash
 
 DEFAULT_OWNER = "MyOrg1MSP"
 DEFAULT_WORKER = "MyOrg1MSP"
@@ -362,4 +367,36 @@ def create_performance(
         channel=channel,
         metric=metric,
         compute_task=compute_task,
+    )
+
+
+def _create_file(
+    type_: str = "text",
+    name: str = "name",
+    content: bytes = b"dummy content",
+):
+    buffer = io.BytesIO()
+    if type_ == "text":
+        size = buffer.write(content)
+    elif type_ == "zip":
+        with zipfile.ZipFile(buffer, "w") as zip_file:
+            size = zip_file.writestr("filename", content)
+    else:
+        raise ValueError("Invalid type")
+
+    file = InMemoryUploadedFile(buffer, None, name, type_, size, None)
+    file.seek(0)
+    return file
+
+
+def create_algo_data(key: uuid.UUID = None) -> AlgoData:
+    if key is None:
+        key = uuid.uuid4()
+
+    file = _create_file(type_="zip", name="algo.zip")
+    return AlgoData.objects.create(
+        key=key,
+        file=file,
+        description=_create_file(type_="text", name="description.md"),
+        checksum=get_hash(file),
     )

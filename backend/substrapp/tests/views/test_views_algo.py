@@ -17,6 +17,7 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from orchestrator.error import StatusCode
 from substrapp.tests import factory
+from substrapp.utils import compute_hash
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -24,7 +25,7 @@ from ..common import internal_server_error_on_exception
 MEDIA_ROOT = tempfile.mkdtemp()
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/algos/algo3")
+FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/algos/algo0")
 
 
 @override_settings(
@@ -385,15 +386,22 @@ class AlgoViewTests(APITestCase):
 
     @parameterized.expand(
         [
-            ("ALGO_SIMPLE",),
-            ("ALGO_AGGREGATE",),
-            ("ALGO_COMPOSITE",),
-            ("ALGO_METRIC",),
-            ("ALGO_PREDICT"),
-            ("ALGO_XXX",),  # invalid
+            (category, filename)
+            for category in [
+                "ALGO_SIMPLE",
+                "ALGO_AGGREGATE",
+                "ALGO_COMPOSITE",
+                "ALGO_METRIC",
+                "ALGO_PREDICT",
+                "ALGO_XXX",
+            ]
+            for filename in [
+                "algo.tar.gz",
+                "algo.zip",
+            ]
         ]
     )
-    def test_algo_create(self, category):
+    def test_algo_create(self, category, filename):
         def mock_orc_response(data):
             """Build orchestrator register response from request data."""
             return {
@@ -413,7 +421,7 @@ class AlgoViewTests(APITestCase):
                 "outputs": data["outputs"],
             }
 
-        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        algorithm_path = os.path.join(FIXTURE_PATH, filename)
         description_path = os.path.join(FIXTURE_PATH, "description.md")
         data = {
             "json": json.dumps(
@@ -546,3 +554,24 @@ class AlgoViewTests(APITestCase):
         url = reverse("substrapp:algo-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_algo_download_file(self):
+        algo_data = factory.create_algo_data()
+        algo = factory.create_algo(key=algo_data.key)
+        url = reverse("substrapp:algo-file", args=[algo.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=algo.owner):
+            response = self.client.get(url, **self.extra)
+        content = response.getvalue()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content, algo_data.file.read())
+        self.assertEqual(compute_hash(content), algo_data.checksum)
+
+    def test_algo_download_description(self):
+        algo_data = factory.create_algo_data()
+        algo = factory.create_algo(key=algo_data.key)
+        url = reverse("substrapp:algo-description", args=[algo.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=algo.owner):
+            response = self.client.get(url, **self.extra)
+        content = response.getvalue()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content, algo_data.description.read())
