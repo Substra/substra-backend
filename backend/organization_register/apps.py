@@ -13,7 +13,7 @@ logger = structlog.get_logger(__name__)
 
 
 def _register_organization(channel_name: str) -> None:
-    log = logger.bind(channel=channel_name)
+    structlog.contextvars.bind_contextvars(channel=channel_name)
     # We try until success, if it fails the backend will not start
     while True:
         with get_orchestrator_client(channel_name) as client:
@@ -26,7 +26,7 @@ def _register_organization(channel_name: str) -> None:
                 time.sleep(1)
                 logger.info("Retry registering the organization on the orchestrator", exc_info=rpc_error)
             else:
-                log.info("Organization registered on the orchestrator")
+                logger.info("Organization registered on the orchestrator")
                 break
 
 

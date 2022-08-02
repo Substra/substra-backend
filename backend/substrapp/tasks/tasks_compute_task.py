@@ -192,7 +192,9 @@ def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], com
 def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:  # noqa: C901
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
     task_key = task["key"]
-    logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt)
+    structlog.contextvars.bind_contextvars(
+        compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt
+    )
 
     # In case of retries: only execute the compute task if it is not in a final state
     with get_orchestrator_client(channel_name) as client:

@@ -132,12 +132,12 @@ def on_event(payload):
 def consume_channel(client: OrchestratorClient, channel_name: str, exception_raised: threading.Event):
     try:
 
-        log = logger.bind(channel_name=channel_name)
-        log.info("Attempting to connect to orchestrator gRPC stream")
+        structlog.contextvars.bind_contextvars(channel_name=channel_name)
+        logger.info("Attempting to connect to orchestrator gRPC stream")
 
         last_event, _ = LastEvent.objects.get_or_create(channel=channel_name)
 
-        log.info("Starting to consume messages from orchestrator gRPC stream", start_event_id=last_event.event_id)
+        logger.info("Starting to consume messages from orchestrator gRPC stream", start_event_id=last_event.event_id)
         for event in client.subscribe_to_events(channel_name=channel_name, start_event_id=last_event.event_id):
             on_event(event)
             last_event.event_id = event["id"]
@@ -145,7 +145,7 @@ def consume_channel(client: OrchestratorClient, channel_name: str, exception_rai
 
     except Exception as e:
         if not exception_raised.is_set():
-            log.exception("Error during events consumption", e=e)
+            logger.exception("Error during events consumption", e=e)
             exception_raised.set()
             raise
 
