@@ -12,7 +12,7 @@ db:  ## Set up test database
 		-e POSTGRES_DB=substra \
 		-e POSTGRES_USER=postgres \
 		-e POSTGRES_PASSWORD=postgres \
-		-p 5432:5432 -d postgres:11
+		-p 5432:5432 -d postgres:latest
 
 .PHONY: test
 test:  ## Run tests
