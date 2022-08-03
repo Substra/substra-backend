@@ -65,6 +65,7 @@ from localrep.models import Model
 from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
 from substrapp.models import Algo as AlgoData
+from substrapp.models import DataManager as DataManagerData
 from substrapp.tests import common
 from substrapp.utils import get_hash
 
@@ -399,4 +400,21 @@ def create_algo_data(key: uuid.UUID = None) -> AlgoData:
         file=file,
         description=_create_file(type_="text", name="description.md"),
         checksum=get_hash(file),
+    )
+
+
+def create_datamanager_data(
+    key: uuid.UUID = None,
+    name: str = "datamanager",
+) -> DataManagerData:
+    if key is None:
+        key = uuid.uuid4()
+
+    opener = _create_file(type_="text", name="opener.py")
+    return DataManagerData.objects.create(
+        key=key,
+        name=name,
+        data_opener=opener,
+        description=_create_file(type_="text", name="description.md"),
+        checksum=get_hash(opener),
     )

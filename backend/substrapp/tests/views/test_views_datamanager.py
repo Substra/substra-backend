@@ -17,6 +17,7 @@ from localrep.models import DataManager as DataManagerRep
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.tests import factory
+from substrapp.utils import compute_hash
 
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
@@ -522,3 +523,24 @@ class DataManagerViewTests(APITestCase):
         url = reverse("substrapp:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_datamanager_download_opener(self):
+        data_manager_data = factory.create_datamanager_data()
+        data_manager = factory.create_datamanager(key=data_manager_data.key)
+        url = reverse("substrapp:data_manager-opener", args=[data_manager.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=data_manager.owner):
+            response = self.client.get(url, **self.extra)
+        content = response.getvalue()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content, data_manager_data.data_opener.read())
+        self.assertEqual(compute_hash(content), data_manager_data.checksum)
+
+    def test_datamanager_download_description(self):
+        data_manager_data = factory.create_datamanager_data()
+        data_manager = factory.create_datamanager(key=data_manager_data.key)
+        url = reverse("substrapp:data_manager-description", args=[data_manager.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=data_manager.owner):
+            response = self.client.get(url, **self.extra)
+        content = response.getvalue()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content, data_manager_data.description.read())
