@@ -21,13 +21,6 @@ class FailedTaskSerializer(serializers.Serializer):
 
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
-    task_count = serializers.IntegerField(read_only=True)
-    done_count = serializers.IntegerField(read_only=True)
-    waiting_count = serializers.IntegerField(read_only=True)
-    todo_count = serializers.IntegerField(read_only=True)
-    doing_count = serializers.IntegerField(read_only=True)
-    canceled_count = serializers.IntegerField(read_only=True)
-    failed_count = serializers.IntegerField(read_only=True)
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
     duration = serializers.IntegerField(read_only=True)
 
@@ -77,12 +70,5 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "metadata",
             "channel",
             "failed_task",
-            "task_count",
-            "done_count",
-            "waiting_count",
-            "todo_count",
-            "doing_count",
-            "canceled_count",
-            "failed_count",
             "status",
         ]
