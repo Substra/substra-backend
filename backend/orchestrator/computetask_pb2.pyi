@@ -121,27 +121,33 @@ global___ComputeTaskInput = ComputeTaskInput
 class ComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
+    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.Permissions: ...
+    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.Permissions] = ...,
+        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
 global___ComputeTaskOutput = ComputeTaskOutput
 
 class NewComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
+    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.NewPermissions: ...
+    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.NewPermissions] = ...,
+        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
 global___NewComputeTaskOutput = NewComputeTaskOutput
 
 class ComputeTask(google.protobuf.message.Message):
@@ -350,22 +356,15 @@ class TrainTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
     DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    MODEL_PERMISSIONS_FIELD_NUMBER: builtins.int
     data_manager_key: typing.Text
     @property
     def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    @property
-    def model_permissions(self) -> common_pb2.Permissions:
-        """deprecated field, use permissions from task output instead"""
-        pass
     def __init__(self,
         *,
         data_manager_key: typing.Text = ...,
         data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        model_permissions: typing.Optional[common_pb2.Permissions] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["model_permissions",b"model_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys","model_permissions",b"model_permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys"]) -> None: ...
 global___TrainTaskData = TrainTaskData
 
 class NewTrainTaskData(google.protobuf.message.Message):
@@ -387,22 +386,15 @@ class PredictTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
     DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    PREDICTION_PERMISSIONS_FIELD_NUMBER: builtins.int
     data_manager_key: typing.Text
     @property
     def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    @property
-    def prediction_permissions(self) -> common_pb2.Permissions:
-        """deprecated field, use permissions from task output instead"""
-        pass
     def __init__(self,
         *,
         data_manager_key: typing.Text = ...,
         data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        prediction_permissions: typing.Optional[common_pb2.Permissions] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["prediction_permissions",b"prediction_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys","prediction_permissions",b"prediction_permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys"]) -> None: ...
 global___PredictTaskData = PredictTaskData
 
 class NewPredictTaskData(google.protobuf.message.Message):
@@ -454,28 +446,15 @@ class CompositeTrainTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
     DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    HEAD_PERMISSIONS_FIELD_NUMBER: builtins.int
-    TRUNK_PERMISSIONS_FIELD_NUMBER: builtins.int
     data_manager_key: typing.Text
     @property
     def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    @property
-    def head_permissions(self) -> common_pb2.Permissions:
-        """deprecated field, use permissions from task output instead"""
-        pass
-    @property
-    def trunk_permissions(self) -> common_pb2.Permissions:
-        """deprecated field, use permissions from task output instead"""
-        pass
     def __init__(self,
         *,
         data_manager_key: typing.Text = ...,
         data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        head_permissions: typing.Optional[common_pb2.Permissions] = ...,
-        trunk_permissions: typing.Optional[common_pb2.Permissions] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["head_permissions",b"head_permissions","trunk_permissions",b"trunk_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys","head_permissions",b"head_permissions","trunk_permissions",b"trunk_permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key",b"data_manager_key","data_sample_keys",b"data_sample_keys"]) -> None: ...
 global___CompositeTrainTaskData = CompositeTrainTaskData
 
 class NewCompositeTrainTaskData(google.protobuf.message.Message):
@@ -495,17 +474,8 @@ global___NewCompositeTrainTaskData = NewCompositeTrainTaskData
 
 class AggregateTrainTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    MODEL_PERMISSIONS_FIELD_NUMBER: builtins.int
-    @property
-    def model_permissions(self) -> common_pb2.Permissions:
-        """deprecated field, use permissions from task output instead"""
-        pass
     def __init__(self,
-        *,
-        model_permissions: typing.Optional[common_pb2.Permissions] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["model_permissions",b"model_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["model_permissions",b"model_permissions"]) -> None: ...
 global___AggregateTrainTaskData = AggregateTrainTaskData
 
 class NewAggregateTrainTaskData(google.protobuf.message.Message):
