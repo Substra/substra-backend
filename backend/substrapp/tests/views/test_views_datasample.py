@@ -246,7 +246,7 @@ class DataSampleViewTests(APITestCase):
 
         data["file"].close()
 
-    def test_data_create_bulk_upload(self):
+    def test_datasample_create_bulk_upload(self):
         """Upload multiple datasamples."""
         data_path1 = os.path.join(FIXTURE_PATH, "datasample1/0024700.zip")
         data_path2 = os.path.join(FIXTURE_PATH, "datasample0/0024899.zip")
@@ -279,7 +279,7 @@ class DataSampleViewTests(APITestCase):
             data[x].close()
 
     @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
-    def test_data_create_path(self):
+    def test_datasample_create_path(self):
         """Send datasample path."""
         source_path = os.path.join(FIXTURE_PATH, "datasample1/0024700.zip")
         target_path = os.path.join(MEDIA_ROOT, "0024700")
@@ -303,7 +303,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 1)
 
     @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
-    def test_data_create_parent_path(self):
+    def test_datasample_create_parent_path(self):
         """Send multiple datasamples parent path."""
         parent_path = os.path.join(MEDIA_ROOT, "data_samples")
         source_path1 = os.path.join(FIXTURE_PATH, "datasample1/0024700.zip")
@@ -355,7 +355,7 @@ class DataSampleViewTests(APITestCase):
         self.assertIn("File too large", response.data["message"])
         data["file"].close()
 
-    def test_data_create_fail_rollback(self):
+    def test_datasample_create_fail_rollback(self):
         class MockOrcError(OrcError):
             def __init__(self) -> None:
                 pass
@@ -387,18 +387,32 @@ class DataSampleViewTests(APITestCase):
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.datasample.DataSampleViewSet.create", side_effect=Exception("Unexpected error"))
-    def test_data_create_fail_internal_server_error(self, _):
-        response = self.client.post(self.url, data={}, format="json")
+    def test_datasample_create_fail(self, _):
+        response = self.client.post(self.url, data={}, format="json", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.datasample.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_datasamples_bulk_update_fail_internal_server_error(self, get_channel_name: mock.Mock):
+    def test_datasample_bulk_update_fail(self, get_channel_name: mock.Mock):
         url = django.urls.reverse("substrapp:data_sample-bulk-update")
-        response = self.client.post(url, data={}, format="json")
+        response = self.client.post(url, data={}, format="json", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         get_channel_name.assert_called_once()
+
+    def test_datasample_bulk_update(self):
+        data_manager_1 = factory.create_datamanager()
+        data_manager_2 = factory.create_datamanager()
+        data = {
+            "data_manager_keys": [str(data_manager_1.key), str(data_manager_2.key)],
+            "data_sample_keys": [data_sample["key"] for data_sample in self.expected_results],
+        }
+        url = django.urls.reverse("substrapp:data_sample-bulk-update")
+        with mock.patch.object(OrchestratorClient, "update_datasample", return_value={}):
+            response = self.client.post(url, data=data, format="json", **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {})
 
 
 def path_leaf(path):
