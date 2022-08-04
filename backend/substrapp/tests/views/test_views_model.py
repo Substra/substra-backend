@@ -16,6 +16,7 @@ import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models import Model as ModelRep
 from organization.authentication import OrganizationUser
 from substrapp.tests import factory
+from substrapp.utils import compute_hash
 from substrapp.views.model import ModelPermissionViewSet
 from substrapp.views.utils import AssetPermissionError
 
@@ -391,3 +392,47 @@ class ModelViewTests(APITestCase):
                 factory.create_model(self.train_task, public=True),
                 is_proxied_request=False,
             )
+
+    def test_model_download_file(self):
+        model_data = factory.create_model_data()
+        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        url = reverse("substrapp:model-file", args=[model.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=model.owner), mock.patch(
+            "substrapp.views.model.type", return_value=OrganizationUser
+        ):
+            response = self.client.get(url, **self.extra)
+        content = response.getvalue()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(content, model_data.file.read())
+        self.assertEqual(compute_hash(content), model_data.checksum)
+
+    def test_model_download_file_wrong_user(self):
+        model_data = factory.create_model_data()
+        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        url = reverse("substrapp:model-file", args=[model.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=model.owner):
+            response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_model_download_file_wrong_owner(self):
+        model_data = factory.create_model_data()
+        model = factory.create_model(self.train_task, key=model_data.key, owner="owkin")
+        url = reverse("substrapp:model-file", args=[model.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=model.owner), mock.patch(
+            "substrapp.views.model.type", return_value=OrganizationUser
+        ):
+            response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_model_download_file_deleted(self):
+        model_data = factory.create_model_data()
+        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        # delete intermediary model
+        model.model_address = None
+        model.save()
+        url = reverse("substrapp:model-file", args=[model.key])
+        with mock.patch("substrapp.views.utils.get_owner", return_value=model.owner), mock.patch(
+            "substrapp.views.model.type", return_value=OrganizationUser
+        ):
+            response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_410_GONE)
