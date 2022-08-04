@@ -65,6 +65,7 @@ from localrep.models import Model
 from localrep.models import Performance
 from localrep.models.computetask import TaskDataSamples
 from substrapp.models import Algo as AlgoData
+from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerData
 from substrapp.models import DataSample as DataSampleData
 from substrapp.models import Model as ModelData
@@ -448,4 +449,16 @@ def create_model_data(
         key=key,
         file=file,
         checksum=get_hash(file),
+    )
+
+
+def create_computetask_logs(
+    compute_task_key: uuid.UUID,
+) -> ComputeTaskLogs:
+    logs = _create_file(type_="text", name="report.log")
+    return ComputeTaskLogs.objects.create(
+        compute_task_key=compute_task_key,
+        logs=logs,
+        logs_checksum=get_hash(logs),
+        creation_date=timezone.now(),
     )

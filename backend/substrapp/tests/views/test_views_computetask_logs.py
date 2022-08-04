@@ -1,11 +1,9 @@
-import io
 import uuid
 
 import pytest
 import responses
 from django import conf
 from django import urls
-from django.core import files
 from rest_framework import response as drf_response
 from rest_framework import status
 from rest_framework import test
@@ -13,7 +11,6 @@ from rest_framework import test
 from localrep.models import ComputeTask
 from organization import authentication as organization_auth
 from organization import models as organization_models
-from substrapp import utils
 from substrapp.models import ComputeTaskFailureReport
 from substrapp.tests import factory
 from substrapp.views import utils as view_utils
@@ -21,22 +18,13 @@ from substrapp.views import utils as view_utils
 
 @pytest.fixture
 def compute_task_failure_report() -> tuple[ComputeTask, ComputeTaskFailureReport]:
-    file = files.File(io.BytesIO(b"Hello, World!"))
-    compute_task_key = uuid.uuid4()
-    failure_report = ComputeTaskFailureReport(
-        compute_task_key=compute_task_key,
-        logs_checksum=utils.get_hash(file),
-    )
-    failure_report.logs.save(name=compute_task_key, content=file, save=True)
-
-    # create computetask metadata in localrep
     compute_task = factory.create_computetask(
         factory.create_computeplan(),
         factory.create_algo(),
-        key=compute_task_key,
         public=False,
         owner=conf.settings.LEDGER_MSP_ID,
     )
+    failure_report = factory.create_computetask_logs(compute_task.key)
     return compute_task, failure_report
 
 
