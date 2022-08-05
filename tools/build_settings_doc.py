@@ -1,10 +1,10 @@
 import argparse
 import ast
 import difflib
-from os import name
 import pathlib
 import tempfile
 from dataclasses import dataclass
+from os import name
 from typing import Collection
 from typing import Dict
 from typing import List

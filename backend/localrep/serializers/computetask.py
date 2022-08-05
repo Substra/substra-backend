@@ -30,6 +30,13 @@ TASK_CATEGORY_FIELDS = {
     ComputeTask.Category.TASK_AGGREGATE: "aggregate",
 }
 
+OUTPUT_MODEL_CATEGORY = {
+    "model": "MODEL_SIMPLE",
+    "predictions": "MODEL_SIMPLE",
+    "shared": "MODEL_SIMPLE",
+    "local": "MODEL_HEAD",
+}
+
 
 class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
@@ -237,7 +244,9 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         compute_task.refresh_from_db()
         return compute_task
 
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # noqa: C901
+        # TODO: Rework this function which is too complex according to C901
+        # It will be soon rewritten with generic task and the removing of the legacy fields
         data = super().to_representation(instance)
 
         for category, field in TASK_CATEGORY_FIELDS.items():
@@ -278,7 +287,41 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 "permissions"
             ]
 
+        def find_output_kind(output_id):
+            return data["algo"]["outputs"][output_id]["kind"]
+
+        # Include output models/performances in output field
+        # TODO: Move this in ComputeTaskOutputSerializer
+        #  + Use the actual asset<->output association to find the assets
+        #  (should be done once generic task is done)
+        for output_id, output in data["outputs"].items():
+            output_kind = find_output_kind(output_id)
+            if output_kind == "ASSET_MODEL":
+                output["value"] = self._find_output_model(instance.category, data, output_id, data["key"])
+            elif output_kind == "ASSET_PERFORMANCE":
+                perfs = data["test"]["perfs"]
+                if perfs:
+                    if len(perfs) != 1:  # performance output cannot be multiple
+                        raise Exception(
+                            f"Couldn't associate a performance to output '{output_id}' of task '{data['key']}'"
+                        )
+                    (value,) = perfs.values()
+                else:
+                    value = None
+                output["value"] = value
+
         return data
+
+    def _find_output_model(self, instance_category, data, output_identifier, task_key):
+        task_category_field = TASK_CATEGORY_FIELDS[instance_category]
+        model_category = OUTPUT_MODEL_CATEGORY[output_identifier]
+        models = data[task_category_field]["models"]
+        if models:  # return None in case the output model is not computed yet
+            matching_models = [model for model in models if model["category"] == model_category]
+            if len(matching_models) != 1:  # performance output cannot be multiple
+                raise Exception(f"Couldn't associate a model to output '{output_identifier}' of task '{task_key}'")
+            model = matching_models[0]
+            return model
 
     def _replace_storage_addresses(self, task):
         request = self.context.get("request")

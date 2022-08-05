@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `transient` field to task outputs (#1236)
+- Include tasks output models and performances in output fields in task endpoint response (#1201)
 
 ### Changed
 

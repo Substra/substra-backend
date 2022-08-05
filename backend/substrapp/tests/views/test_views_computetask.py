@@ -87,12 +87,13 @@ class ComputeTaskViewTests(APITestCase):
                 )
 
         done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
-        self.simple_model = factory.create_model(done_train_task, category=ModelRep.Category.MODEL_SIMPLE)
+        self.train_model = factory.create_model(done_train_task, category=ModelRep.Category.MODEL_SIMPLE)
 
         done_composite_task = self.compute_tasks[ComputeTaskRep.Category.TASK_COMPOSITE][
             ComputeTaskRep.Status.STATUS_DONE
         ]
-        self.head_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
+        self.local_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
+        self.shared_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_SIMPLE)
 
         done_failed_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST][ComputeTaskRep.Status.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.algos[AlgoRep.Category.ALGO_METRIC])
@@ -112,8 +113,9 @@ class ComputeTaskViewTests(APITestCase):
         }
 
         self.data_manager_data = DataManagerRepSerializer(instance=self.data_manager).data
-        self.simple_model_data = ModelRepSerializer(instance=self.simple_model).data
-        self.head_model_data = ModelRepSerializer(instance=self.head_model).data
+        self.train_model_data = ModelRepSerializer(instance=self.train_model).data
+        self.local_model_data = ModelRepSerializer(instance=self.local_model).data
+        self.shared_model_data = ModelRepSerializer(instance=self.shared_model).data
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -265,6 +267,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                             "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                         "transient": True,
+                        "value": None,
                     },
                 },
             },
@@ -305,6 +308,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                             "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -347,6 +351,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                             "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -385,6 +390,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                             "download": {"public": True, "authorized_ids": []},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -457,6 +463,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -504,6 +511,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -551,6 +559,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -583,7 +592,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "authorized_ids": ["MyOrg1MSP"],
                         },
                     },
-                    "models": [self.simple_model_data],
+                    "models": [self.train_model_data],
                 },
                 "logs_permission": {
                     "public": False,
@@ -598,6 +607,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": self.train_model_data,
                     },
                 },
             },
@@ -645,6 +655,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -692,6 +703,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -993,6 +1005,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1030,6 +1043,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1067,6 +1081,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1104,6 +1119,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": self.performance.value,
                     },
                 },
             },
@@ -1141,6 +1157,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1178,6 +1195,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1350,6 +1368,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         for task in response.json().get("results"):
             if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
                 task["duration"] = 3600
+                self.maxDiff = None
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -1466,6 +1485,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                     "shared": {
                         "permissions": {
@@ -1473,6 +1493,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1530,6 +1551,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                     "shared": {
                         "permissions": {
@@ -1537,6 +1559,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1594,6 +1617,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                     "shared": {
                         "permissions": {
@@ -1601,6 +1625,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1643,7 +1668,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "authorized_ids": ["MyOrg1MSP"],
                         },
                     },
-                    "models": [self.head_model_data],
+                    "models": [self.local_model_data, self.shared_model_data],
                 },
                 "logs_permission": {
                     "public": False,
@@ -1658,6 +1683,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": self.local_model_data,
                     },
                     "shared": {
                         "permissions": {
@@ -1665,6 +1691,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": self.shared_model_data,
                     },
                 },
             },
@@ -1722,6 +1749,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                     "shared": {
                         "permissions": {
@@ -1729,6 +1757,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
@@ -1786,6 +1815,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                     "shared": {
                         "permissions": {
@@ -1793,6 +1823,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                             "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
                         },
                         "transient": False,
+                        "value": None,
                     },
                 },
             },
