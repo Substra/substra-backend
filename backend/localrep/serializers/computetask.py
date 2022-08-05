@@ -48,6 +48,7 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
         fields = [
             "identifier",
             "permissions",
+            "transient",
         ]
 
     permissions = make_download_process_permission_serializer()(source="*")

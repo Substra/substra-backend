@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `transient` field to task outputs (#1236)
+
 ### Changed
 
 - Use gRPC stream to listen to events (#1188)

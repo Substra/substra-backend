@@ -28,6 +28,7 @@ class ComputeTaskOutput(models.Model):
     permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     permissions_process_public = models.BooleanField()
     permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
+    transient = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (("task", "identifier"),)
