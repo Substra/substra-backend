@@ -72,13 +72,6 @@ class ComputePlan(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
-    WAITING_COUNT_FIELD_NUMBER: builtins.int
-    TODO_COUNT_FIELD_NUMBER: builtins.int
-    DOING_COUNT_FIELD_NUMBER: builtins.int
-    CANCELED_COUNT_FIELD_NUMBER: builtins.int
-    FAILED_COUNT_FIELD_NUMBER: builtins.int
-    DONE_COUNT_FIELD_NUMBER: builtins.int
-    TASK_COUNT_FIELD_NUMBER: builtins.int
     STATUS_FIELD_NUMBER: builtins.int
     DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
@@ -88,27 +81,6 @@ class ComputePlan(google.protobuf.message.Message):
     CANCELATION_DATE_FIELD_NUMBER: builtins.int
     key: typing.Text
     owner: typing.Text
-    waiting_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    todo_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    doing_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    canceled_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    failed_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    done_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
-    task_count: builtins.int
-    """Dynamic data, not persisted and set on query"""
-
     status: global___ComputePlanStatus.ValueType
     """Dynamic data, not persisted and set on query"""
 
@@ -125,13 +97,6 @@ class ComputePlan(google.protobuf.message.Message):
         *,
         key: typing.Text = ...,
         owner: typing.Text = ...,
-        waiting_count: builtins.int = ...,
-        todo_count: builtins.int = ...,
-        doing_count: builtins.int = ...,
-        canceled_count: builtins.int = ...,
-        failed_count: builtins.int = ...,
-        done_count: builtins.int = ...,
-        task_count: builtins.int = ...,
         status: global___ComputePlanStatus.ValueType = ...,
         delete_intermediary_models: builtins.bool = ...,
         creation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
@@ -141,7 +106,7 @@ class ComputePlan(google.protobuf.message.Message):
         cancelation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["cancelation_date",b"cancelation_date","creation_date",b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date",b"cancelation_date","canceled_count",b"canceled_count","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","doing_count",b"doing_count","done_count",b"done_count","failed_count",b"failed_count","key",b"key","metadata",b"metadata","name",b"name","owner",b"owner","status",b"status","tag",b"tag","task_count",b"task_count","todo_count",b"todo_count","waiting_count",b"waiting_count"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date",b"cancelation_date","creation_date",b"creation_date","delete_intermediary_models",b"delete_intermediary_models","key",b"key","metadata",b"metadata","name",b"name","owner",b"owner","status",b"status","tag",b"tag"]) -> None: ...
 global___ComputePlan = ComputePlan
 
 class NewComputePlan(google.protobuf.message.Message):

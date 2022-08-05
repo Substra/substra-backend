@@ -16,7 +16,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x63omputeplan.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x84\x04\n\x0b\x43omputePlan\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05owner\x18\x02 \x01(\t\x12\x15\n\rwaiting_count\x18\x08 \x01(\r\x12\x12\n\ntodo_count\x18\t \x01(\r\x12\x13\n\x0b\x64oing_count\x18\n \x01(\r\x12\x16\n\x0e\x63\x61nceled_count\x18\x0b \x01(\r\x12\x14\n\x0c\x66\x61iled_count\x18\x0c \x01(\r\x12\x12\n\ndone_count\x18\x03 \x01(\r\x12\x12\n\ntask_count\x18\x04 \x01(\r\x12/\n\x06status\x18\x05 \x01(\x0e\x32\x1f.orchestrator.ComputePlanStatus\x12\"\n\x1a\x64\x65lete_intermediary_models\x18\x06 \x01(\x08\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0b\n\x03tag\x18\x10 \x01(\t\x12\x0c\n\x04name\x18\x13 \x01(\t\x12\x39\n\x08metadata\x18\x11 \x03(\x0b\x32\'.orchestrator.ComputePlan.MetadataEntry\x12\x34\n\x10\x63\x61ncelation_date\x18\x12 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xcb\x01\n\x0eNewComputePlan\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03tag\x18\x10 \x01(\t\x12\x0c\n\x04name\x18\x13 \x01(\t\x12<\n\x08metadata\x18\x11 \x03(\x0b\x32*.orchestrator.NewComputePlan.MetadataEntry\x12\"\n\x1a\x64\x65lete_intermediary_models\x18\x12 \x01(\x08\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetComputePlanParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"T\n\x14\x41pplyPlanActionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputePlanAction\"\x19\n\x17\x41pplyPlanActionResponse\" \n\x0fPlanQueryFilter\x12\r\n\x05owner\x18\x01 \x01(\t\"g\n\x0fQueryPlansParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.PlanQueryFilter\"W\n\x12QueryPlansResponse\x12(\n\x05plans\x18\x01 \x03(\x0b\x32\x19.orchestrator.ComputePlan\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t*\xd1\x01\n\x11\x43omputePlanStatus\x12\x17\n\x13PLAN_STATUS_UNKNOWN\x10\x00\x12\x17\n\x13PLAN_STATUS_WAITING\x10\x01\x12\x14\n\x10PLAN_STATUS_TODO\x10\x02\x12\x15\n\x11PLAN_STATUS_DOING\x10\x03\x12\x14\n\x10PLAN_STATUS_DONE\x10\x04\x12\x18\n\x14PLAN_STATUS_CANCELED\x10\x05\x12\x16\n\x12PLAN_STATUS_FAILED\x10\x06\x12\x15\n\x11PLAN_STATUS_EMPTY\x10\x07*F\n\x11\x43omputePlanAction\x12\x17\n\x13PLAN_ACTION_UNKNOWN\x10\x00\x12\x18\n\x14PLAN_ACTION_CANCELED\x10\x01\x32\xd3\x02\n\x12\x43omputePlanService\x12G\n\x0cRegisterPlan\x12\x1c.orchestrator.NewComputePlan\x1a\x19.orchestrator.ComputePlan\x12G\n\x07GetPlan\x12!.orchestrator.GetComputePlanParam\x1a\x19.orchestrator.ComputePlan\x12\\\n\x0f\x41pplyPlanAction\x12\".orchestrator.ApplyPlanActionParam\x1a%.orchestrator.ApplyPlanActionResponse\x12M\n\nQueryPlans\x12\x1d.orchestrator.QueryPlansParam\x1a .orchestrator.QueryPlansResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x63omputeplan.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf6\x03\n\x0b\x43omputePlan\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05owner\x18\x02 \x01(\t\x12/\n\x06status\x18\x05 \x01(\x0e\x32\x1f.orchestrator.ComputePlanStatus\x12\"\n\x1a\x64\x65lete_intermediary_models\x18\x06 \x01(\x08\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0b\n\x03tag\x18\x10 \x01(\t\x12\x0c\n\x04name\x18\x13 \x01(\t\x12\x39\n\x08metadata\x18\x11 \x03(\x0b\x32\'.orchestrator.ComputePlan.MetadataEntry\x12\x34\n\x10\x63\x61ncelation_date\x18\x12 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01J\x04\x08\x08\x10\tJ\x04\x08\t\x10\nJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\x03\x10\x04J\x04\x08\x04\x10\x05R\rwaiting_countR\ntodo_countR\x0b\x64oing_countR\x0e\x63\x61nceled_countR\x0c\x66\x61iled_countR\ndone_countR\ntask_count\"\xcb\x01\n\x0eNewComputePlan\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03tag\x18\x10 \x01(\t\x12\x0c\n\x04name\x18\x13 \x01(\t\x12<\n\x08metadata\x18\x11 \x03(\x0b\x32*.orchestrator.NewComputePlan.MetadataEntry\x12\"\n\x1a\x64\x65lete_intermediary_models\x18\x12 \x01(\x08\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetComputePlanParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"T\n\x14\x41pplyPlanActionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputePlanAction\"\x19\n\x17\x41pplyPlanActionResponse\" \n\x0fPlanQueryFilter\x12\r\n\x05owner\x18\x01 \x01(\t\"g\n\x0fQueryPlansParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.PlanQueryFilter\"W\n\x12QueryPlansResponse\x12(\n\x05plans\x18\x01 \x03(\x0b\x32\x19.orchestrator.ComputePlan\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t*\xd1\x01\n\x11\x43omputePlanStatus\x12\x17\n\x13PLAN_STATUS_UNKNOWN\x10\x00\x12\x17\n\x13PLAN_STATUS_WAITING\x10\x01\x12\x14\n\x10PLAN_STATUS_TODO\x10\x02\x12\x15\n\x11PLAN_STATUS_DOING\x10\x03\x12\x14\n\x10PLAN_STATUS_DONE\x10\x04\x12\x18\n\x14PLAN_STATUS_CANCELED\x10\x05\x12\x16\n\x12PLAN_STATUS_FAILED\x10\x06\x12\x15\n\x11PLAN_STATUS_EMPTY\x10\x07*F\n\x11\x43omputePlanAction\x12\x17\n\x13PLAN_ACTION_UNKNOWN\x10\x00\x12\x18\n\x14PLAN_ACTION_CANCELED\x10\x01\x32\xd3\x02\n\x12\x43omputePlanService\x12G\n\x0cRegisterPlan\x12\x1c.orchestrator.NewComputePlan\x1a\x19.orchestrator.ComputePlan\x12G\n\x07GetPlan\x12!.orchestrator.GetComputePlanParam\x1a\x19.orchestrator.ComputePlan\x12\\\n\x0f\x41pplyPlanAction\x12\".orchestrator.ApplyPlanActionParam\x1a%.orchestrator.ApplyPlanActionResponse\x12M\n\nQueryPlans\x12\x1d.orchestrator.QueryPlansParam\x1a .orchestrator.QueryPlansResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 _COMPUTEPLANSTATUS = DESCRIPTOR.enum_types_by_name['ComputePlanStatus']
 ComputePlanStatus = enum_type_wrapper.EnumTypeWrapper(_COMPUTEPLANSTATUS)
@@ -125,30 +125,30 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _COMPUTEPLAN_METADATAENTRY._serialized_options = b'8\001'
   _NEWCOMPUTEPLAN_METADATAENTRY._options = None
   _NEWCOMPUTEPLAN_METADATAENTRY._serialized_options = b'8\001'
-  _COMPUTEPLANSTATUS._serialized_start=1171
-  _COMPUTEPLANSTATUS._serialized_end=1380
-  _COMPUTEPLANACTION._serialized_start=1382
-  _COMPUTEPLANACTION._serialized_end=1452
+  _COMPUTEPLANSTATUS._serialized_start=1157
+  _COMPUTEPLANSTATUS._serialized_end=1366
+  _COMPUTEPLANACTION._serialized_start=1368
+  _COMPUTEPLANACTION._serialized_end=1438
   _COMPUTEPLAN._serialized_start=69
-  _COMPUTEPLAN._serialized_end=585
-  _COMPUTEPLAN_METADATAENTRY._serialized_start=538
-  _COMPUTEPLAN_METADATAENTRY._serialized_end=585
-  _NEWCOMPUTEPLAN._serialized_start=588
-  _NEWCOMPUTEPLAN._serialized_end=791
-  _NEWCOMPUTEPLAN_METADATAENTRY._serialized_start=538
-  _NEWCOMPUTEPLAN_METADATAENTRY._serialized_end=585
-  _GETCOMPUTEPLANPARAM._serialized_start=793
-  _GETCOMPUTEPLANPARAM._serialized_end=827
-  _APPLYPLANACTIONPARAM._serialized_start=829
-  _APPLYPLANACTIONPARAM._serialized_end=913
-  _APPLYPLANACTIONRESPONSE._serialized_start=915
-  _APPLYPLANACTIONRESPONSE._serialized_end=940
-  _PLANQUERYFILTER._serialized_start=942
-  _PLANQUERYFILTER._serialized_end=974
-  _QUERYPLANSPARAM._serialized_start=976
-  _QUERYPLANSPARAM._serialized_end=1079
-  _QUERYPLANSRESPONSE._serialized_start=1081
-  _QUERYPLANSRESPONSE._serialized_end=1168
-  _COMPUTEPLANSERVICE._serialized_start=1455
-  _COMPUTEPLANSERVICE._serialized_end=1794
+  _COMPUTEPLAN._serialized_end=571
+  _COMPUTEPLAN_METADATAENTRY._serialized_start=388
+  _COMPUTEPLAN_METADATAENTRY._serialized_end=435
+  _NEWCOMPUTEPLAN._serialized_start=574
+  _NEWCOMPUTEPLAN._serialized_end=777
+  _NEWCOMPUTEPLAN_METADATAENTRY._serialized_start=388
+  _NEWCOMPUTEPLAN_METADATAENTRY._serialized_end=435
+  _GETCOMPUTEPLANPARAM._serialized_start=779
+  _GETCOMPUTEPLANPARAM._serialized_end=813
+  _APPLYPLANACTIONPARAM._serialized_start=815
+  _APPLYPLANACTIONPARAM._serialized_end=899
+  _APPLYPLANACTIONRESPONSE._serialized_start=901
+  _APPLYPLANACTIONRESPONSE._serialized_end=926
+  _PLANQUERYFILTER._serialized_start=928
+  _PLANQUERYFILTER._serialized_end=960
+  _QUERYPLANSPARAM._serialized_start=962
+  _QUERYPLANSPARAM._serialized_end=1065
+  _QUERYPLANSRESPONSE._serialized_start=1067
+  _QUERYPLANSRESPONSE._serialized_end=1154
+  _COMPUTEPLANSERVICE._serialized_start=1441
+  _COMPUTEPLANSERVICE._serialized_end=1780
 # @@protoc_insertion_point(module_scope)

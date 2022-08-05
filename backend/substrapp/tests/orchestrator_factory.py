@@ -135,37 +135,35 @@ class MockOrchestratorClient(OrchestratorClient):
     def query_compute_plan(self, key):  # noqa: C901
         cp = self.compute_plans.get(key)
 
+        status_counts = {
+            computetask_pb2.STATUS_WAITING: 0,
+            computetask_pb2.STATUS_TODO: 0,
+            computetask_pb2.STATUS_DOING: 0,
+            computetask_pb2.STATUS_CANCELED: 0,
+            computetask_pb2.STATUS_FAILED: 0,
+            computetask_pb2.STATUS_DONE: 0,
+        }
+        total_count = 0
+
         if not cp:
             raise OrcError()
 
         for task in self.tasks.values():
             if task.compute_plan_key == cp.key:
-                if task.status == computetask_pb2.STATUS_WAITING:
-                    cp.waiting_count = cp.waiting_count + 1
-                elif task.status == computetask_pb2.STATUS_TODO:
-                    cp.todo_count = cp.todo_count + 1
-                elif task.status == computetask_pb2.STATUS_DOING:
-                    cp.doing_count = cp.doing_count + 1
-                elif task.status == computetask_pb2.STATUS_CANCELED:
-                    cp.canceled_count = cp.canceled_count + 1
-                elif task.status == computetask_pb2.STATUS_FAILED:
-                    cp.failed_count = cp.failed_count + 1
-                elif task.status == computetask_pb2.STATUS_DONE:
-                    cp.done_count = cp.done_count + 1
+                status_counts[task.status] += 1
+                total_count += 1
 
-                cp.task_count = cp.task_count + 1
-
-        if cp.task_count == 0:
+        if total_count == 0:
             cp.status = computeplan_pb2.PLAN_STATUS_EMPTY
-        elif cp.failed_count > 0:
+        elif status_counts[computetask_pb2.STATUS_FAILED] > 0:
             cp.status = computeplan_pb2.PLAN_STATUS_FAILED
-        elif cp.canceled_count > 0:
+        elif status_counts[computetask_pb2.STATUS_FAILED] > 0:
             cp.status = computeplan_pb2.PLAN_STATUS_CANCELED
-        elif cp.doing_count > 0:
+        elif status_counts[computetask_pb2.STATUS_DOING] > 0:
             cp.status = computeplan_pb2.PLAN_STATUS_DOING
-        elif cp.todo_count > 0:
+        elif status_counts[computetask_pb2.STATUS_TODO] > 0:
             cp.status = computeplan_pb2.PLAN_STATUS_TODO
-        elif cp.waiting_count > 0:
+        elif status_counts[computetask_pb2.STATUS_WAITING] > 0:
             cp.status = computeplan_pb2.PLAN_STATUS_WAITING
         else:
             cp.status = computeplan_pb2.PLAN_STATUS_DONE
@@ -266,13 +264,6 @@ class ComputePlanFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     owner = DEFAULT_OWNER
-    waiting_count = 0
-    todo_count = 0
-    doing_count = 0
-    canceled_count = 0
-    failed_count = 0
-    done_count = 0
-    task_count = 0
     status = computeplan_pb2.PLAN_STATUS_EMPTY
     delete_intermediary_models = False
     creation_date = Timestamp()

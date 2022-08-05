@@ -121,33 +121,27 @@ global___ComputeTaskInput = ComputeTaskInput
 class ComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
-    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.Permissions: ...
-    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.Permissions] = ...,
-        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
 global___ComputeTaskOutput = ComputeTaskOutput
 
 class NewComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
-    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.NewPermissions: ...
-    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.NewPermissions] = ...,
-        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
 global___NewComputeTaskOutput = NewComputeTaskOutput
 
 class ComputeTask(google.protobuf.message.Message):
