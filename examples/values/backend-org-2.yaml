@@ -88,7 +88,7 @@ privateCa:
     fileName: ca.crt
 
 orchestrator:
-  host: owkin-orchestrator-org-1-server.org-1.svc.cluster.local
+  host: orchestrator-org-1-server.org-1.svc.cluster.local
   port: 9000
   tls:
     enabled: true
