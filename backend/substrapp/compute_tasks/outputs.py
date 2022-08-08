@@ -47,11 +47,15 @@ def _save_test_task_outputs(ctx: Context) -> None:
     """
     logger.info("saving performances")
     with get_orchestrator_client(ctx.channel_name) as client:
-        perf = _get_perf(ctx.directories, ctx.algo.key)
-        _register_perf(client, ctx.task_key, ctx.algo.key, perf)
+        perf_path = os.path.join(
+            ctx.directories.task_dir, directories.TaskDirName.Perf, command.get_performance_filename(ctx.algo.key)
+        )
+        identifier = ctx.get_output_identifier(perf_path)
+        perf = _get_perf(perf_path)
+        _register_perf(client, ctx.task_key, ctx.algo.key, perf, identifier)
 
 
-def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float) -> None:
+def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float, identifier: str) -> None:
     """Registers the performance on the orchestrator
 
     Args:
@@ -60,11 +64,16 @@ def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, per
         algo_key: The key of the algo that produced this performance.
         perf: The performance value.
     """
-    performance_obj = {"compute_task_key": task_key, "metric_key": algo_key, "performance_value": perf}
+    performance_obj = {
+        "compute_task_key": task_key,
+        "metric_key": algo_key,
+        "performance_value": perf,
+        "compute_task_output_identifier": identifier,
+    }
     client.register_performance(performance_obj)
 
 
-def _get_perf(dirs: directories.Directories, metric_key: str) -> float:
+def _get_perf(perf_path: str) -> float:
     """Retrieves the performance from the performance file produced by the task
 
     Args:
@@ -74,7 +83,6 @@ def _get_perf(dirs: directories.Directories, metric_key: str) -> float:
     Returns:
         The performance as a floating point value.
     """
-    perf_path = os.path.join(dirs.task_dir, directories.TaskDirName.Perf, command.get_performance_filename(metric_key))
     with open(perf_path, "r") as perf_file:
         perf = json.load(perf_file)["all"]
         return float(perf)

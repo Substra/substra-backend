@@ -27,6 +27,7 @@ class _AssetKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enum
     ASSET_MODEL: _AssetKind.ValueType  # 8
     ASSET_PERFORMANCE: _AssetKind.ValueType  # 9
     ASSET_FAILURE_REPORT: _AssetKind.ValueType  # 10
+    ASSET_COMPUTE_TASK_OUTPUT_ASSET: _AssetKind.ValueType  # 11
 class AssetKind(_AssetKind, metaclass=_AssetKindEnumTypeWrapper):
     pass
 
@@ -40,6 +41,7 @@ ASSET_COMPUTE_PLAN: AssetKind.ValueType  # 7
 ASSET_MODEL: AssetKind.ValueType  # 8
 ASSET_PERFORMANCE: AssetKind.ValueType  # 9
 ASSET_FAILURE_REPORT: AssetKind.ValueType  # 10
+ASSET_COMPUTE_TASK_OUTPUT_ASSET: AssetKind.ValueType  # 11
 global___AssetKind = AssetKind
 
 

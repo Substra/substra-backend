@@ -7,6 +7,7 @@ import structlog
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
 from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.context import TaskResource
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.models.image_entrypoint import ImageEntrypoint
@@ -67,13 +68,6 @@ def get_exec_command(ctx: Context) -> List[str]:
     return command + args
 
 
-class TaskResource(dict):
-
-    # By inheriting from dict, we get JSON serialization for free
-    def __init__(self, id: str, value: str):
-        dict.__init__(self, id=id, value=value)
-
-
 # TODO: '_get_args' is too complex, consider refactoring
 def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     task = ctx.task
@@ -95,6 +89,8 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
         command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
         command += ["--output-perf-path", perf_path]
+        # use a fake TaskResource until everything is properly passed as a generic output
+        ctx.set_outputs([TaskResource(id="performance", value=perf_path)])
         return command
 
     compute_plan_key = None
@@ -184,6 +180,8 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
         command += ["--rank", rank]
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
+
+    ctx.set_outputs(outputs)
 
     command += ["--inputs", f"'{json.dumps(inputs)}'"]
     command += ["--outputs", f"'{json.dumps(outputs)}'"]

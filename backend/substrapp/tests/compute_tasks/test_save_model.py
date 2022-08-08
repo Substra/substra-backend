@@ -13,6 +13,8 @@ import orchestrator.computetask_pb2 as compute_task_pb2
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.context import TaskResource
+from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.save_models import save_models
 
@@ -55,6 +57,10 @@ class SaveModelTests(APITestCase):
         model_dir = os.path.join(data_dir, TaskDirName.OutModels)
         os.makedirs(model_dir)
         model_src = os.path.join(model_dir, Filenames.OutModel)
+        fake_context.set_outputs(
+            [TaskResource(id="model", value=os.path.join(SANDBOX_DIR, TaskDirName.OutModels, Filenames.OutModel))]
+        )
+        print(fake_context._outputs)
 
         with open(model_src, "w") as f:
             f.write("model content")

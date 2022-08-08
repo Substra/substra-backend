@@ -48,14 +48,16 @@ def save_models(ctx: Context) -> None:
         raise SaveModelsError(f"Cannot save models for task category {task_category}")
 
     model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutModel)
-    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key)
+    output_identifier = ctx.get_output_identifier(model_path)
+    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key, output_identifier)
     models.append(simple_model)
 
     if task_category == computetask_pb2.TASK_COMPOSITE:
         # If we have a composite task we have two outputs, a MODEL_HEAD and a MODEL_SIMPLE model
         # so we need to register the head part separately
         head_model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutHeadModel)
-        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key)
+        output_identifier = ctx.get_output_identifier(head_model_path)
+        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key, output_identifier)
         models.append(head_model)
 
     try:
@@ -80,7 +82,7 @@ def save_models(ctx: Context) -> None:
 
 
 @timeit
-def _save_model_to_local_storage(category: int, src_path: str, task_key: str) -> UUID:
+def _save_model_to_local_storage(category: int, src_path: str, task_key: str, task_output_identifier: str) -> UUID:
     """Saves a model to the orchestrator and in the data storage
 
     Args:
@@ -107,6 +109,7 @@ def _save_model_to_local_storage(category: int, src_path: str, task_key: str) ->
         "key": str(instance.key),
         "category": category,
         "compute_task_key": task_key,
+        "compute_task_output_identifier": task_output_identifier,
         "address": {
             "checksum": checksum,
             "storage_address": storage_address,

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use gRPC stream to listen to events (#1188)
 - Update orchestrator protobuf definitions
+- Pass output identifier when registering assets
 
 ### Removed
 

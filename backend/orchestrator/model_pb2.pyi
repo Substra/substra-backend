@@ -69,10 +69,12 @@ class NewModel(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     CATEGORY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
     ADDRESS_FIELD_NUMBER: builtins.int
     key: typing.Text
     category: global___ModelCategory.ValueType
     compute_task_key: typing.Text
+    compute_task_output_identifier: typing.Text
     @property
     def address(self) -> common_pb2.Addressable: ...
     def __init__(self,
@@ -80,10 +82,11 @@ class NewModel(google.protobuf.message.Message):
         key: typing.Text = ...,
         category: global___ModelCategory.ValueType = ...,
         compute_task_key: typing.Text = ...,
+        compute_task_output_identifier: typing.Text = ...,
         address: typing.Optional[common_pb2.Addressable] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["address",b"address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["address",b"address","category",b"category","compute_task_key",b"compute_task_key","key",b"key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address",b"address","category",b"category","compute_task_key",b"compute_task_key","compute_task_output_identifier",b"compute_task_output_identifier","key",b"key"]) -> None: ...
 global___NewModel = NewModel
 
 class RegisterModelsParam(google.protobuf.message.Message):

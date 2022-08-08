@@ -121,27 +121,33 @@ global___ComputeTaskInput = ComputeTaskInput
 class ComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
+    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.Permissions: ...
+    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.Permissions] = ...,
+        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
 global___ComputeTaskOutput = ComputeTaskOutput
 
 class NewComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     PERMISSIONS_FIELD_NUMBER: builtins.int
+    TRANSIENT_FIELD_NUMBER: builtins.int
     @property
     def permissions(self) -> common_pb2.NewPermissions: ...
+    transient: builtins.bool
     def __init__(self,
         *,
         permissions: typing.Optional[common_pb2.NewPermissions] = ...,
+        transient: builtins.bool = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["permissions",b"permissions","transient",b"transient"]) -> None: ...
 global___NewComputeTaskOutput = NewComputeTaskOutput
 
 class ComputeTask(google.protobuf.message.Message):
@@ -574,6 +580,29 @@ class GetTaskParam(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["key",b"key"]) -> None: ...
 global___GetTaskParam = GetTaskParam
+
+class ComputeTaskOutputAsset(google.protobuf.message.Message):
+    """ComputeTaskOutputAsset links an asset to a task output.
+    It is not exposed through gRPC methods, but will be sent as event.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
+    ASSET_KIND_FIELD_NUMBER: builtins.int
+    ASSET_KEY_FIELD_NUMBER: builtins.int
+    compute_task_key: typing.Text
+    compute_task_output_identifier: typing.Text
+    asset_kind: common_pb2.AssetKind.ValueType
+    asset_key: typing.Text
+    def __init__(self,
+        *,
+        compute_task_key: typing.Text = ...,
+        compute_task_output_identifier: typing.Text = ...,
+        asset_kind: common_pb2.AssetKind.ValueType = ...,
+        asset_key: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset_key",b"asset_key","asset_kind",b"asset_kind","compute_task_key",b"compute_task_key","compute_task_output_identifier",b"compute_task_output_identifier"]) -> None: ...
+global___ComputeTaskOutputAsset = ComputeTaskOutputAsset
 
 class ApplyTaskActionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
