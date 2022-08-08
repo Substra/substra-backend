@@ -318,10 +318,12 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         models = data[task_category_field]["models"]
         if models:  # return None in case the output model is not computed yet
             matching_models = [model for model in models if model["category"] == model_category]
-            if len(matching_models) != 1:  # performance output cannot be multiple
-                raise Exception(f"Couldn't associate a model to output '{output_identifier}' of task '{task_key}'")
-            model = matching_models[0]
-            return model
+            # Due to how sync works it is possible that one model is present but not the other for composite tasks
+            if matching_models:
+                if len(matching_models) > 1:  # No task can output more than one model of each category
+                    raise Exception(f"Couldn't associate a model to output '{output_identifier}' of task '{task_key}'")
+                model = matching_models[0]
+                return model
 
     def _replace_storage_addresses(self, task):
         request = self.context.get("request")
