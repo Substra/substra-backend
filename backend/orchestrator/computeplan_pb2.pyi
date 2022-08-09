@@ -221,3 +221,23 @@ class QueryPlansResponse(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["next_page_token",b"next_page_token","plans",b"plans"]) -> None: ...
 global___QueryPlansResponse = QueryPlansResponse
+
+class UpdateComputePlanParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    KEY_FIELD_NUMBER: builtins.int
+    NAME_FIELD_NUMBER: builtins.int
+    key: typing.Text
+    name: typing.Text
+    def __init__(self,
+        *,
+        key: typing.Text = ...,
+        name: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key",b"key","name",b"name"]) -> None: ...
+global___UpdateComputePlanParam = UpdateComputePlanParam
+
+class UpdateComputePlanResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___UpdateComputePlanResponse = UpdateComputePlanResponse

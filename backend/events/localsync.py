@@ -1,4 +1,3 @@
-import datetime
 from typing import Optional
 
 import structlog
@@ -66,6 +65,22 @@ def _create_algo(channel: str, data: dict) -> bool:
         return True
 
 
+def _on_update_algo_event(event: dict) -> None:
+    """Process update algo event to update local database."""
+    logger.debug("Syncing algo update", asset_key=event["asset_key"], event_id=event["id"])
+    _update_algo(key=event["asset_key"], data=event["algo"])
+
+
+def _update_algo(key: str, data: dict) -> None:
+    """Process update algo event to update local database."""
+
+    from localrep.models.algo import Algo
+
+    algo = Algo.objects.get(key=key)
+    algo.name = data["name"]
+    algo.save()
+
+
 def _on_create_computeplan_event(event: dict) -> None:
     """Process create computeplan event to update local database."""
     logger.debug("Syncing computeplan", asset_key=event["asset_key"], event_id=event["id"])
@@ -87,17 +102,17 @@ def _create_computeplan(channel: str, data: dict) -> bool:
 def _on_update_computeplan_event(event: dict) -> None:
     """Process update compute plan event to update local database."""
     logger.debug("Syncing compute plan update", asset_key=event["asset_key"], event_id=event["id"])
-    data = event["compute_plan"]
-    _update_computeplan(key=event["asset_key"], cancelation_date=data["cancelation_date"])
+    _update_computeplan(key=event["asset_key"], data=event["compute_plan"])
 
 
-def _update_computeplan(key: str, cancelation_date: Optional[datetime.datetime]) -> None:
+def _update_computeplan(key: str, data: dict) -> None:
     """Process update compute plan event to update local database."""
 
     from localrep.models.computeplan import ComputePlan
 
     compute_plan = ComputePlan.objects.get(key=key)
-    compute_plan.cancelation_date = cancelation_date
+    compute_plan.cancelation_date = data.get("cancelation_date")
+    compute_plan.name = data.get("name")
     compute_plan.save()
     compute_plan.update_dates()
     compute_plan.update_status()
@@ -214,6 +229,22 @@ def _create_datamanager(channel: str, data: dict) -> bool:
         return True
 
 
+def _on_update_datamanager_event(event: dict) -> None:
+    """Process update datamanager event to update local database."""
+    logger.debug("Syncing datamanager update", asset_key=event["asset_key"], event_id=event["id"])
+    _update_datamanager(key=event["asset_key"], data=event["data_manager"])
+
+
+def _update_datamanager(key: str, data: dict) -> None:
+    """Process update datamanager event to update local database."""
+
+    from localrep.models.datamanager import DataManager
+
+    datamanager = DataManager.objects.get(key=key)
+    datamanager.name = data["name"]
+    datamanager.save()
+
+
 def _on_create_datasample_event(event: dict) -> None:
     """Process create datasample event to update local database."""
     logger.debug("Syncing datasample create", asset_key=event["asset_key"], event_id=event["id"])
@@ -311,6 +342,7 @@ EVENT_CALLBACKS = {
     },
     common_pb2.ASSET_ALGO: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_algo_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_algo_event,
     },
     common_pb2.ASSET_COMPUTE_TASK: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computetask_event,
@@ -318,6 +350,7 @@ EVENT_CALLBACKS = {
     },
     common_pb2.ASSET_DATA_MANAGER: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_datamanager_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_datamanager_event,
     },
     common_pb2.ASSET_DATA_SAMPLE: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_datasample_event,

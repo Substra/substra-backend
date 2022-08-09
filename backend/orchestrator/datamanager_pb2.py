@@ -16,7 +16,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\x98\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"3\n\x16UpdateDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x1b\n\x19UpdateDataManagerResponse2\xfc\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponse\x12\x62\n\x11UpdateDataManager\x12$.orchestrator.UpdateDataManagerParam\x1a\'.orchestrator.UpdateDataManagerResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -27,6 +27,8 @@ _NEWDATAMANAGER_METADATAENTRY = _NEWDATAMANAGER.nested_types_by_name['MetadataEn
 _GETDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['GetDataManagerParam']
 _QUERYDATAMANAGERSPARAM = DESCRIPTOR.message_types_by_name['QueryDataManagersParam']
 _QUERYDATAMANAGERSRESPONSE = DESCRIPTOR.message_types_by_name['QueryDataManagersResponse']
+_UPDATEDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['UpdateDataManagerParam']
+_UPDATEDATAMANAGERRESPONSE = DESCRIPTOR.message_types_by_name['UpdateDataManagerResponse']
 DataManager = _reflection.GeneratedProtocolMessageType('DataManager', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
@@ -78,6 +80,20 @@ QueryDataManagersResponse = _reflection.GeneratedProtocolMessageType('QueryDataM
   })
 _sym_db.RegisterMessage(QueryDataManagersResponse)
 
+UpdateDataManagerParam = _reflection.GeneratedProtocolMessageType('UpdateDataManagerParam', (_message.Message,), {
+  'DESCRIPTOR' : _UPDATEDATAMANAGERPARAM,
+  '__module__' : 'datamanager_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.UpdateDataManagerParam)
+  })
+_sym_db.RegisterMessage(UpdateDataManagerParam)
+
+UpdateDataManagerResponse = _reflection.GeneratedProtocolMessageType('UpdateDataManagerResponse', (_message.Message,), {
+  'DESCRIPTOR' : _UPDATEDATAMANAGERRESPONSE,
+  '__module__' : 'datamanager_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.UpdateDataManagerResponse)
+  })
+_sym_db.RegisterMessage(UpdateDataManagerResponse)
+
 _DATAMANAGERSERVICE = DESCRIPTOR.services_by_name['DataManagerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
@@ -101,6 +117,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _QUERYDATAMANAGERSPARAM._serialized_end=974
   _QUERYDATAMANAGERSRESPONSE._serialized_start=976
   _QUERYDATAMANAGERSRESPONSE._serialized_end=1078
-  _DATAMANAGERSERVICE._serialized_start=1081
-  _DATAMANAGERSERVICE._serialized_end=1361
+  _UPDATEDATAMANAGERPARAM._serialized_start=1080
+  _UPDATEDATAMANAGERPARAM._serialized_end=1131
+  _UPDATEDATAMANAGERRESPONSE._serialized_start=1133
+  _UPDATEDATAMANAGERRESPONSE._serialized_end=1160
+  _DATAMANAGERSERVICE._serialized_start=1163
+  _DATAMANAGERSERVICE._serialized_end=1543
 # @@protoc_insertion_point(module_scope)

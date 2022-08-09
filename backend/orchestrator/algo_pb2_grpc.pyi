@@ -20,6 +20,10 @@ class AlgoServiceStub:
         algo_pb2.QueryAlgosParam,
         algo_pb2.QueryAlgosResponse]
 
+    UpdateAlgo: grpc.UnaryUnaryMultiCallable[
+        algo_pb2.UpdateAlgoParam,
+        algo_pb2.UpdateAlgoResponse]
+
 
 class AlgoServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -39,6 +43,12 @@ class AlgoServiceServicer(metaclass=abc.ABCMeta):
         request: algo_pb2.QueryAlgosParam,
         context: grpc.ServicerContext,
     ) -> algo_pb2.QueryAlgosResponse: ...
+
+    @abc.abstractmethod
+    def UpdateAlgo(self,
+        request: algo_pb2.UpdateAlgoParam,
+        context: grpc.ServicerContext,
+    ) -> algo_pb2.UpdateAlgoResponse: ...
 
 
 def add_AlgoServiceServicer_to_server(servicer: AlgoServiceServicer, server: grpc.Server) -> None: ...

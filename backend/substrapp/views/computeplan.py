@@ -189,6 +189,22 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
 
+    def update(self, request, *args, **kwargs):
+        compute_plan = self.get_object()
+        name = request.data.get("name")
+
+        orc_compute_plan = {
+            "key": str(compute_plan.key),
+            "name": name,
+        }
+
+        # send update to orchestrator
+        # the modification in local db will be done upon corresponding event reception
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.update_compute_plan(orc_compute_plan)
+
+        return ApiResponse({}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=["POST"])
     def cancel(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field

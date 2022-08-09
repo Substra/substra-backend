@@ -161,3 +161,23 @@ class QueryDataManagersResponse(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["data_managers",b"data_managers","next_page_token",b"next_page_token"]) -> None: ...
 global___QueryDataManagersResponse = QueryDataManagersResponse
+
+class UpdateDataManagerParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    KEY_FIELD_NUMBER: builtins.int
+    NAME_FIELD_NUMBER: builtins.int
+    key: typing.Text
+    name: typing.Text
+    def __init__(self,
+        *,
+        key: typing.Text = ...,
+        name: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key",b"key","name",b"name"]) -> None: ...
+global___UpdateDataManagerParam = UpdateDataManagerParam
+
+class UpdateDataManagerResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___UpdateDataManagerResponse = UpdateDataManagerResponse

@@ -29,6 +29,11 @@ class AlgoServiceStub(object):
                 request_serializer=algo__pb2.QueryAlgosParam.SerializeToString,
                 response_deserializer=algo__pb2.QueryAlgosResponse.FromString,
                 )
+        self.UpdateAlgo = channel.unary_unary(
+                '/orchestrator.AlgoService/UpdateAlgo',
+                request_serializer=algo__pb2.UpdateAlgoParam.SerializeToString,
+                response_deserializer=algo__pb2.UpdateAlgoResponse.FromString,
+                )
 
 
 class AlgoServiceServicer(object):
@@ -52,6 +57,12 @@ class AlgoServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateAlgo(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AlgoServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +80,11 @@ def add_AlgoServiceServicer_to_server(servicer, server):
                     servicer.QueryAlgos,
                     request_deserializer=algo__pb2.QueryAlgosParam.FromString,
                     response_serializer=algo__pb2.QueryAlgosResponse.SerializeToString,
+            ),
+            'UpdateAlgo': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateAlgo,
+                    request_deserializer=algo__pb2.UpdateAlgoParam.FromString,
+                    response_serializer=algo__pb2.UpdateAlgoResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -128,5 +144,22 @@ class AlgoService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/QueryAlgos',
             algo__pb2.QueryAlgosParam.SerializeToString,
             algo__pb2.QueryAlgosResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def UpdateAlgo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/UpdateAlgo',
+            algo__pb2.UpdateAlgoParam.SerializeToString,
+            algo__pb2.UpdateAlgoResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

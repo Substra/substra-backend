@@ -306,3 +306,23 @@ class QueryAlgosParam(google.protobuf.message.Message):
     def HasField(self, field_name: typing_extensions.Literal["filter",b"filter"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["filter",b"filter","page_size",b"page_size","page_token",b"page_token"]) -> None: ...
 global___QueryAlgosParam = QueryAlgosParam
+
+class UpdateAlgoParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    KEY_FIELD_NUMBER: builtins.int
+    NAME_FIELD_NUMBER: builtins.int
+    key: typing.Text
+    name: typing.Text
+    def __init__(self,
+        *,
+        key: typing.Text = ...,
+        name: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key",b"key","name",b"name"]) -> None: ...
+global___UpdateAlgoParam = UpdateAlgoParam
+
+class UpdateAlgoResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___UpdateAlgoResponse = UpdateAlgoResponse

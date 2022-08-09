@@ -20,6 +20,10 @@ class DataManagerServiceStub:
         datamanager_pb2.QueryDataManagersParam,
         datamanager_pb2.QueryDataManagersResponse]
 
+    UpdateDataManager: grpc.UnaryUnaryMultiCallable[
+        datamanager_pb2.UpdateDataManagerParam,
+        datamanager_pb2.UpdateDataManagerResponse]
+
 
 class DataManagerServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -39,6 +43,12 @@ class DataManagerServiceServicer(metaclass=abc.ABCMeta):
         request: datamanager_pb2.QueryDataManagersParam,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.QueryDataManagersResponse: ...
+
+    @abc.abstractmethod
+    def UpdateDataManager(self,
+        request: datamanager_pb2.UpdateDataManagerParam,
+        context: grpc.ServicerContext,
+    ) -> datamanager_pb2.UpdateDataManagerResponse: ...
 
 
 def add_DataManagerServiceServicer_to_server(servicer: DataManagerServiceServicer, server: grpc.Server) -> None: ...

@@ -177,6 +177,22 @@ class AlgoViewSet(
     def create(self, request, *args, **kwargs):
         return create(request, self.basename, lambda data: self.get_success_headers(data))
 
+    def update(self, request, *args, **kwargs):
+        algo = self.get_object()
+        name = request.data.get("name")
+
+        orc_algo = {
+            "key": str(algo.key),
+            "name": name,
+        }
+
+        # send update to orchestrator
+        # the modification in local db will be done upon corresponding event reception
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.update_algo(orc_algo)
+
+        return ApiResponse({}, status=status.HTTP_200_OK)
+
 
 class CPAlgoViewSet(AlgoViewSetConfig, mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):

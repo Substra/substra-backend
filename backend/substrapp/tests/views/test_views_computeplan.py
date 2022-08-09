@@ -9,6 +9,7 @@ from unittest import mock
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
+from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -16,6 +17,7 @@ from rest_framework.test import APITestCase
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
@@ -242,6 +244,37 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertIsNotNone(response.data["key"])
         # asset created in local db
         self.assertEqual(ComputePlanRep.objects.count(), len(self.expected_results) + 1)
+
+    def test_compute_plan_update(self):
+        key = str(uuid.uuid4())
+        data = {
+            "key": key,
+            "tag": "foo",
+            "name": "Bar",
+        }
+
+        with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
+            response = self.client.post(self.url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = {
+            "key": key,
+            "name": "Foo",
+        }
+
+        url = reverse("substrapp:compute_plan-detail", args=[key])
+        compute_plan = response.data
+        compute_plan["name"] = data["name"]
+        with mock.patch.object(OrchestratorClient, "update_compute_plan", side_effect=compute_plan):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        error = OrcError()
+        error.code = StatusCode.INTERNAL
+
+        with mock.patch.object(OrchestratorClient, "update_compute_plan", side_effect=error):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.create", side_effect=Exception("Unexpected error"))

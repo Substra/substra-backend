@@ -24,6 +24,10 @@ class ComputePlanServiceStub:
         computeplan_pb2.QueryPlansParam,
         computeplan_pb2.QueryPlansResponse]
 
+    UpdatePlan: grpc.UnaryUnaryMultiCallable[
+        computeplan_pb2.UpdateComputePlanParam,
+        computeplan_pb2.UpdateComputePlanResponse]
+
 
 class ComputePlanServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -49,6 +53,12 @@ class ComputePlanServiceServicer(metaclass=abc.ABCMeta):
         request: computeplan_pb2.QueryPlansParam,
         context: grpc.ServicerContext,
     ) -> computeplan_pb2.QueryPlansResponse: ...
+
+    @abc.abstractmethod
+    def UpdatePlan(self,
+        request: computeplan_pb2.UpdateComputePlanParam,
+        context: grpc.ServicerContext,
+    ) -> computeplan_pb2.UpdateComputePlanResponse: ...
 
 
 def add_ComputePlanServiceServicer_to_server(servicer: ComputePlanServiceServicer, server: grpc.Server) -> None: ...

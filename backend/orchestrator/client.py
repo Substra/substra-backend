@@ -207,6 +207,11 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
+    def update_algo(self, args):
+        data = self._algo_client.UpdateAlgo(algo_pb2.UpdateAlgoParam(**args), metadata=self._metadata)
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
     def query_algo(self, key):
         data = self._algo_client.GetAlgo(algo_pb2.GetAlgoParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
@@ -277,6 +282,13 @@ class OrchestratorClient:
     def register_datamanager(self, args):
         data = self._datamanager_client.RegisterDataManager(
             datamanager_pb2.NewDataManager(**args), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
+    def update_datamanager(self, args):
+        data = self._datamanager_client.UpdateDataManager(
+            datamanager_pb2.UpdateDataManagerParam(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
@@ -402,6 +414,13 @@ class OrchestratorClient:
         data = MessageToDict(data, **CONVERT_SETTINGS)
 
         return data
+
+    @grpc_retry
+    def update_compute_plan(self, args):
+        data = self._computeplan_client.UpdatePlan(
+            computeplan_pb2.UpdateComputePlanParam(**args), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def query_compute_plan(self, key):

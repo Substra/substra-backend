@@ -575,3 +575,25 @@ class AlgoViewTests(APITestCase):
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content, algo_data.description.read())
+
+    def test_algo_update(self):
+        algo = self.expected_algos[0]
+        data = {
+            "key": algo["key"],
+            "name": "Bar",
+        }
+
+        url = reverse("substrapp:algo-detail", args=[algo["key"]])
+        algo["name"] = data["name"]
+
+        with mock.patch.object(OrchestratorClient, "update_algo", side_effect=algo):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        error = OrcError()
+        error.code = StatusCode.INTERNAL
+
+        with mock.patch.object(OrchestratorClient, "update_algo", side_effect=error):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

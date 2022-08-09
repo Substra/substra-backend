@@ -186,6 +186,22 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
 
+    def update(self, request, *args, **kwargs):
+        datamanager = self.get_object()
+        name = request.data.get("name")
+
+        orc_algo = {
+            "key": str(datamanager.key),
+            "name": name,
+        }
+
+        # send update to orchestrator
+        # the modification in local db will be done upon corresponding event reception
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.update_datamanager(orc_algo)
+
+        return ApiResponse({}, status=status.HTTP_200_OK)
+
 
 class DataManagerPermissionViewSet(PermissionMixin, GenericViewSet):
     queryset = DataManager.objects.all()

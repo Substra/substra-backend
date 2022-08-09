@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add method to update algo, compute_plan and data manager name (#1137)
+
 ## [0.25.0] 2022-08-09
 
 ### Added
 
 - `transient` field to task outputs (#1236)
 - Include tasks output models and performances in output fields in task endpoint response (#1201)
+- Add method to update algo, compute_plan and data manager name (#1137)
 
 ### Changed
 
@@ -27,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.24.0] 2022-08-01
 
 ### Added
+
 - The /task/bulk_create/ endpoint now accepts the "inputs" field (#1111)
 
 ### Removed
