@@ -3,9 +3,11 @@ import tempfile
 import zipfile
 from unittest import mock
 
+import pytest
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
+from substrapp import utils
 from substrapp.utils import get_hash
 from substrapp.utils import uncompress_content
 
@@ -56,3 +58,18 @@ class UtilsTests(APITestCase):
                 uncompress_content(content.read(), os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
+
+
+def test_retry():
+    @utils.retry(raise_exception=True)
+    def test_raise():
+        raise Exception("failure")
+
+    @utils.retry()
+    def test_do_not_raise():
+        raise Exception("failure")
+
+    with pytest.raises(Exception):
+        test_raise()
+
+    test_do_not_raise()

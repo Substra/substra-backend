@@ -10,6 +10,7 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from google.protobuf.json_format import MessageToDict
+from requests import auth
 from rest_framework.test import APIClient
 
 import orchestrator.algo_pb2 as algo_pb2
@@ -27,6 +28,7 @@ from orchestrator.common_pb2 import ASSET_DATA_MANAGER
 from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
+from organization.models import IncomingOrganization
 
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
@@ -149,6 +151,21 @@ class AuthenticatedClient(APIClient):
         jwt_auth_header = generate_jwt_auth_header(".".join(access_token.split(".")[0:2]))
         self.credentials(HTTP_AUTHORIZATION=jwt_auth_header)
         self.cookies = SimpleCookie({"signature": access_token.split(".")[2]})
+
+        return super().request(**kwargs)
+
+
+class AuthenticatedBackendClient(APIClient):
+    def request(self, **kwargs):
+
+        username = "MyTestOrg"
+        password = "p@sswr0d44"
+        try:
+            IncomingOrganization.objects.get(organization_id=username)
+        except IncomingOrganization.DoesNotExist:
+            IncomingOrganization.objects.create(organization_id=username, secret=password)
+
+        self.credentials(HTTP_AUTHORIZATION=auth._basic_auth_str(username, password))
 
         return super().request(**kwargs)
 

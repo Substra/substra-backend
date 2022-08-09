@@ -10,6 +10,7 @@ from .organization import ChannelOrganizationSerializer
 from .performance import CPPerformanceSerializer
 from .performance import ExportPerformanceSerializer
 from .performance import PerformanceSerializer
+from .task_profiling import TaskProfilingSerializer
 
 __all__ = [
     "AlgoSerializer",
@@ -24,4 +25,5 @@ __all__ = [
     "PerformanceSerializer",
     "CPPerformanceSerializer",
     "ExportPerformanceSerializer",
+    "TaskProfilingSerializer",
 ]

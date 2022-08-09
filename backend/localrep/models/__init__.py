@@ -11,6 +11,8 @@ from .events import LastEvent
 from .model import Model
 from .organization import ChannelOrganization
 from .performance import Performance
+from .task_profiling import ProfilingStep
+from .task_profiling import TaskProfiling
 
 __all__ = [
     "Algo",
@@ -26,4 +28,6 @@ __all__ = [
     "ChannelOrganization",
     "Performance",
     "LastEvent",
+    "TaskProfiling",
+    "ProfilingStep",
 ]

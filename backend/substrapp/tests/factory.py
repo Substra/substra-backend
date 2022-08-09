@@ -63,6 +63,8 @@ from localrep.models import DataManager
 from localrep.models import DataSample
 from localrep.models import Model
 from localrep.models import Performance
+from localrep.models import ProfilingStep
+from localrep.models import TaskProfiling
 from localrep.models.computetask import TaskDataSamples
 from substrapp.models import Algo as AlgoData
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
@@ -462,3 +464,11 @@ def create_computetask_logs(
         logs_checksum=get_hash(logs),
         creation_date=timezone.now(),
     )
+
+
+def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:
+    profile = TaskProfiling.objects.create(compute_task=compute_task)
+    ProfilingStep.objects.create(
+        compute_task_profile=profile, step="step 1", duration=str(datetime.timedelta(seconds=10))
+    )
+    return profile

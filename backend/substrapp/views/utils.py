@@ -7,9 +7,13 @@ import django.http
 from django.conf import settings
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import SAFE_METHODS
+from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework.viewsets import ViewSet
 
 from localrep.models import ComputeTask as ComputeTaskRep
 from organization.authentication import OrganizationUser
@@ -255,3 +259,15 @@ def permissions_union(x, y):
         "public": False,
         "authorized_ids": list(set(x["authorized_ids"]).union(set(y["authorized_ids"]))),
     }
+
+
+class IsCurrentBackendOrReadOnly(BasePermission):
+    def has_permission(self, request: Request, view: ViewSet) -> bool:
+        if request.method in SAFE_METHODS:
+            return True
+        elif (
+            request.method == "POST" and type(request.user) is OrganizationUser and request.user.username == get_owner()
+        ):
+            return True
+        else:
+            return False

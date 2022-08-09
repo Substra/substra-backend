@@ -1,3 +1,4 @@
+import datetime
 import functools
 import hashlib
 import io
@@ -7,8 +8,13 @@ import shutil
 import tarfile
 import time
 import zipfile
+from functools import wraps
 from os.path import isdir
 from os.path import isfile
+from typing import Any
+from typing import Callable
+from typing import Tuple
+from typing import Union
 
 import structlog
 from checksumdir import dirhash
@@ -212,3 +218,42 @@ def _path_to_dict(path):
     else:
         d["type"] = "file"
     return d
+
+
+class Timer:
+    def __init__(self) -> None:
+        self._start_time: Union[float, None] = None
+
+    def start(self) -> None:
+        """Start a new timer"""
+        self._start_time = time.perf_counter()
+
+    def stop(self) -> datetime.timedelta:
+        """Stop the timer, and report the elapsed time"""
+        if self._start_time is None:
+            raise RuntimeError("Timer is not running. Use .start() to start it")
+
+        elapsed_time = time.perf_counter() - self._start_time
+        self._start_time = None
+
+        return datetime.timedelta(seconds=elapsed_time)
+
+
+def retry(raise_exception: bool = False) -> Callable:
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args: Tuple[Any], **kwargs: dict[str, Any]) -> Any:
+            times = 5
+            retry_exception = None
+            for attempt in range(times):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as exc:
+                    logger.exception(exc, attempt=(attempt + 1))
+                    retry_exception = exc
+            if raise_exception and retry_exception is not None:
+                raise retry_exception
+
+        return wrapper
+
+    return decorator

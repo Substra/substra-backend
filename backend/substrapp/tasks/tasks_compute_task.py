@@ -14,6 +14,8 @@ We also handle the retry logic here.
 
 from __future__ import annotations
 
+import datetime
+import enum
 import errno
 import os
 from typing import Any
@@ -27,11 +29,13 @@ from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
 from django.core import files
+from django.urls import reverse
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp import models
 from substrapp import utils
+from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
@@ -54,10 +58,19 @@ from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import save_outputs
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import Timer
 from substrapp.utils import get_owner
 from substrapp.utils import list_dir
+from substrapp.utils import retry
 
 logger = structlog.get_logger(__name__)
+
+
+class ComputeTaskSteps(enum.Enum):
+    BUILD_IMAGE = "build_image"
+    PREPARE_INPUTS = "prepare_inputs"
+    TASK_EXECUTION = "task_execution"
+    SAVE_OUTPUTS = "save_outputs"
 
 
 class ComputeTask(Task):
@@ -188,8 +201,27 @@ def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], com
         raise compute_task_errors.CeleryRetryError() from exception
 
 
+@retry()
+def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
+    url = settings.DEFAULT_DOMAIN + reverse("substrapp:task_profiling-list")
+    return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url, {"compute_task_key": compute_task_key})
+
+
+@retry()
+def _create_task_profiling_step(
+    channel_name: str, compute_task_key: str, field: ComputeTaskSteps, duration: datetime.timedelta
+) -> bytes:
+    url = settings.DEFAULT_DOMAIN + reverse("substrapp:step-list", args=[compute_task_key])
+    return organization_client.post(
+        channel_name, settings.LEDGER_MSP_ID, url, {"step": field.value, "duration": duration}
+    )
+
+
 # TODO: function too complex, consider refactoring
 def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:  # noqa: C901
+    timer = Timer()
+    _create_task_profiling(channel_name, task["key"])
+
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
     task_key = task["key"]
     structlog.contextvars.bind_contextvars(
@@ -222,7 +254,13 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
         init_compute_plan_dirs(dirs)
         init_task_dirs(dirs)
 
+        # start build_image timer
+        timer.start()
+
         build_image_if_missing(ctx.algo)
+
+        # stop build_image timer
+        _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.BUILD_IMAGE, timer.stop())
 
         with acquire_compute_plan_lock(compute_plan_key):
 
@@ -230,6 +268,9 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
             with get_orchestrator_client(channel_name) as client:
                 # Set allow_doing=True to allow celery retries.
                 task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
+
+            # start inputs loading timer
+            timer.start()
 
             with lock_resource("asset-buffer", "global", timeout=MAX_TASK_DURATION):
                 add_task_assets_to_buffer(ctx)
@@ -243,15 +284,30 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
 
             restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
 
+            # stop inputs loading timer
+            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
+
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
+
+            # start task_execution timer
+            timer.start()
 
             # Command execution
             execute_compute_task(ctx)
+
+            # stop task_execution timer
+            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.TASK_EXECUTION, timer.stop())
+
+            # start outputs saving timer
+            timer.start()
 
             # Collect results
             save_outputs(ctx)
             with get_orchestrator_client(channel_name) as client:
                 task_utils.mark_as_done(ctx.task_key, client)
+
+            # stop outputs saving timer
+            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())
 
     except OSError as e:
         if e.errno == errno.ENOSPC:

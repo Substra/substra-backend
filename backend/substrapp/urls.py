@@ -31,6 +31,10 @@ router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, base
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
 router.register(r"performance", views.PerformanceViewSet, basename="performance")
 router.register(compute_task_failure_report.LOGS_BASE_PATH, views.ComputeTaskLogsViewSet, basename="logs")
+router.register(r"task_profiling", views.TaskProfilingViewSet, basename="task_profiling")
+
+task_profiling_router = routers.NestedDefaultRouter(router, r"task_profiling", lookup="task_profiling")
+task_profiling_router.register(r"step", views.TaskProfilingStepViewSet, basename="step")
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
 compute_plan_router.register(r"traintuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}traintuple")
@@ -47,6 +51,7 @@ compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
+    path("", include(task_profiling_router.urls)),
     path(r"task/bulk_create/", views.task_bulk_create_view, name="task_bulk_create"),
     path(r"compute_plan/<compute_plan_pk>/workflow_graph/", views.get_cp_graph, name="workflow_graph"),
 ]

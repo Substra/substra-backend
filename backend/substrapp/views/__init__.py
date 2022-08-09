@@ -16,6 +16,8 @@ from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
 from .performance import CPPerformanceViewSet
 from .performance import PerformanceViewSet
+from .task_profiling import TaskProfilingStepViewSet
+from .task_profiling import TaskProfilingViewSet
 
 __all__ = [
     "DataSampleViewSet",
@@ -36,4 +38,6 @@ __all__ = [
     "PerformanceViewSet",
     "get_cp_graph",
     "task_bulk_create_view",
+    "TaskProfilingViewSet",
+    "TaskProfilingStepViewSet",
 ]

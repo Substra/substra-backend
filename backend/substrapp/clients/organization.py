@@ -72,6 +72,45 @@ def http_get(
     return response
 
 
+def http_post(
+    channel: str,
+    organization_id: str,
+    url: str,
+    data: dict,
+    headers: typing.Optional[dict[str, str]] = None,
+) -> requests.Response:
+    """Low level helper to get asset and return successful HTTP response."""
+    secret = _fetch_secret(organization_id)
+
+    headers = headers or {}
+    headers.update(
+        {
+            "Accept": "application/json;version=0.0",
+            "Substra-Channel-Name": channel,
+        }
+    )
+
+    try:
+        response = requests.post(
+            url,
+            data=data,
+            headers=headers,
+            auth=HTTPBasicAuth(settings.LEDGER_MSP_ID, secret),
+            verify=not settings.DEBUG,
+            timeout=settings.HTTP_CLIENT_TIMEOUT_SECONDS,
+        )
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        logger.exception("Post asset failure", url=url, e=e)
+        raise OrganizationError(f"Failed to post to {url}") from e
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        logger.error("Post asset failure", url=url, status=response.status_code, text=response.text)
+        raise OrganizationError(f"Url: {url} returned status code: {response.status_code}")
+    return response
+
+
 def download(
     channel: str,
     organization_id: str,
@@ -108,4 +147,16 @@ def get(
     new_checksum = compute_hash(content, key=salt)
     if new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
+    return content
+
+
+def post(
+    channel: str,
+    organization_id: str,
+    url: str,
+    data: dict,
+) -> bytes:
+    """Post asset data."""
+    response = http_post(channel, organization_id, url, data)
+    content = response.content
     return content
