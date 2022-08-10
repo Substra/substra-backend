@@ -349,7 +349,9 @@ class OrchestratorClient:
         for task in args["tasks"]:
             task["inputs"] = [self._get_task_input(input) for input in task["inputs"]]
             task["outputs"] = {
-                identifier: computetask_pb2.NewComputeTaskOutput(permissions=output["permissions"])
+                identifier: computetask_pb2.NewComputeTaskOutput(
+                    permissions=output["permissions"], transient=output.get("transient")
+                )
                 for identifier, output in task["outputs"].items()
             }
         data = self._computetask_client.RegisterTasks(
