@@ -14,7 +14,6 @@ import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
 import orchestrator.datasample_pb2 as datasample_pb2
-import orchestrator.dataset_pb2 as dataset_pb2
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 import orchestrator.info_pb2 as info_pb2
@@ -249,29 +248,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_datasamples(self, keys=None):
-        res = []
-        page_token = ""  # nosec
-        filter = datasample_pb2.DataSampleQueryFilter(
-            keys=keys,
-        )
-        while True:
-            data = self._datasample_client.QueryDataSamples(
-                datasample_pb2.QueryDataSamplesParam(page_token=page_token, filter=filter),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            data_samples = data.get("data_samples", [])
-            page_token = data.get("next_page_token")
-            # For now do not expose sample checksum
-            for sample in data_samples:
-                del sample["checksum"]
-            res.extend(data_samples)
-            if page_token == "" or not data_samples:  # nosec
-                break
-        return res
-
-    @grpc_retry
     def query_datasample(self, key):
         data = self._datasample_client.GetDataSample(
             datasample_pb2.GetDataSampleParam(key=key), metadata=self._metadata
@@ -298,34 +274,6 @@ class OrchestratorClient:
             datamanager_pb2.GetDataManagerParam(key=key), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def query_dataset(self, key):
-        data = self._dataset_client.GetDataset(dataset_pb2.GetDatasetParam(key=key), metadata=self._metadata)
-        data = MessageToDict(data, **CONVERT_SETTINGS)
-
-        # process dataset result to have data_manager attibutes at
-        # top level
-        data.update(data["data_manager"])
-        del data["data_manager"]
-        return data
-
-    @grpc_retry
-    def query_datamanagers(self):
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._datamanager_client.QueryDataManagers(
-                datamanager_pb2.QueryDataManagersParam(page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            data_managers = data.get("data_managers", [])
-            page_token = data.get("next_page_token")
-            res.extend(data_managers)
-            if page_token == "" or not data_managers:  # nosec
-                break
-        return res
 
     def _get_task_input(self, input: dict) -> computetask_pb2.ComputeTaskInput:
         """Convert a dict into a computetask_pb2.ComputeTaskInput"""
@@ -438,46 +386,9 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_compute_plans(self, owner=None):
-        plan_filter = computeplan_pb2.PlanQueryFilter(owner=owner)
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._computeplan_client.QueryPlans(
-                computeplan_pb2.QueryPlansParam(filter=plan_filter, page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            plans = data.get("plans", [])
-            page_token = data.get("next_page_token")
-
-            res.extend(plans)
-            if page_token == "" or not plans:  # nosec
-                break
-        return res
-
-    @grpc_retry
     def query_model(self, key):
         data = self._model_client.GetModel(model_pb2.GetModelParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def query_models(self, category=algo_pb2.ALGO_UNKNOWN):
-
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._model_client.QueryModels(
-                model_pb2.QueryModelsParam(category=category, page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            models = data.get("models", [])
-            page_token = data.get("next_page_token")
-            res.extend(models)
-            if page_token == "" or not models:  # nosec
-                break
-        return res
 
     @grpc_retry
     def get_computetask_input_models(self, compute_task_key):
@@ -525,28 +436,6 @@ class OrchestratorClient:
             performance_pb2.NewPerformance(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def get_compute_task_performances(self, compute_task_key, metric_key=""):
-        performance_filter = performance_pb2.PerformanceQueryFilter(
-            compute_task_key=compute_task_key, metric_key=metric_key
-        )
-
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._performance_client.QueryPerformances(
-                performance_pb2.QueryPerformancesParam(filter=performance_filter, page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            performances = data.get("Performances", [])
-            page_token = data.get("next_page_token")
-            res.extend(performances)
-            if page_token == "" or not performances:  # nosec
-                break
-
-        return res
 
     @grpc_retry
     def is_compute_plan_doing(self, key):
@@ -639,19 +528,6 @@ class OrchestratorClient:
             if page_token == "" or not events:  # nosec
                 return
 
-    def query_single_event(
-        self,
-        asset_key="",
-        asset_kind=common_pb2.ASSET_UNKNOWN,
-        event_kind=event_pb2.EVENT_UNKNOWN,
-        sort=common_pb2.ASCENDING,
-        metadata=None,
-    ):
-        event_generator = self.query_events_generator(
-            asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind, sort=sort, metadata=metadata, page_size=1
-        )
-        return next(event_generator, None)
-
     def subscribe_to_events(self, channel_name=None, start_event_id=""):
 
         if channel_name is not None:
@@ -690,12 +566,5 @@ class OrchestratorClient:
     def register_failure_report(self, args):
         data = self._failure_report_client.RegisterFailureReport(
             failure_report_pb2.NewFailureReport(**args), metadata=self._metadata
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def get_failure_report(self, args):
-        data = self._failure_report_client.GetFailureReport(
-            failure_report_pb2.GetFailureReportParam(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
