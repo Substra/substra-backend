@@ -23,6 +23,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
     duration = serializers.IntegerField(read_only=True)
+    status = serializers.ChoiceField(choices=ComputePlan.Status.choices, read_only=True)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
