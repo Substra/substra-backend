@@ -386,11 +386,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_model(self, key):
-        data = self._model_client.GetModel(model_pb2.GetModelParam(key=key), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
     def get_computetask_input_models(self, compute_task_key):
         data = self._model_client.GetComputeTaskInputModels(
             model_pb2.GetComputeTaskModelsParam(compute_task_key=compute_task_key),
@@ -405,11 +400,6 @@ class OrchestratorClient:
             metadata=self._metadata,
         )
         return MessageToDict(data, **CONVERT_SETTINGS).get("models", [])
-
-    @grpc_retry
-    def register_model(self, args):
-        data = self._model_client.RegisterModel(model_pb2.NewModel(**args), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def register_models(self, args):
