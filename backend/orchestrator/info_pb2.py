@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t\x12\x11\n\tchaincode\x18\x02 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t\x12\x11\n\tchaincode\x18\x02 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -38,7 +38,7 @@ _INFOSERVICE = DESCRIPTOR.services_by_name['InfoService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  DESCRIPTOR._serialized_options = b'Z)github.com/substra/orchestrator/lib/asset'
   _QUERYVERSIONPARAM._serialized_start=28
   _QUERYVERSIONPARAM._serialized_end=47
   _QUERYVERSIONRESPONSE._serialized_start=49

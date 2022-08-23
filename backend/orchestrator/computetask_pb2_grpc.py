@@ -34,6 +34,16 @@ class ComputeTaskServiceStub(object):
                 request_serializer=computetask__pb2.ApplyTaskActionParam.SerializeToString,
                 response_deserializer=computetask__pb2.ApplyTaskActionResponse.FromString,
                 )
+        self.GetTaskInputAssets = channel.unary_unary(
+                '/orchestrator.ComputeTaskService/GetTaskInputAssets',
+                request_serializer=computetask__pb2.GetTaskInputAssetsParam.SerializeToString,
+                response_deserializer=computetask__pb2.GetTaskInputAssetsResponse.FromString,
+                )
+        self.DisableOutput = channel.unary_unary(
+                '/orchestrator.ComputeTaskService/DisableOutput',
+                request_serializer=computetask__pb2.DisableOutputParam.SerializeToString,
+                response_deserializer=computetask__pb2.DisableOutputResponse.FromString,
+                )
 
 
 class ComputeTaskServiceServicer(object):
@@ -63,6 +73,18 @@ class ComputeTaskServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetTaskInputAssets(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DisableOutput(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ComputeTaskServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +107,16 @@ def add_ComputeTaskServiceServicer_to_server(servicer, server):
                     servicer.ApplyTaskAction,
                     request_deserializer=computetask__pb2.ApplyTaskActionParam.FromString,
                     response_serializer=computetask__pb2.ApplyTaskActionResponse.SerializeToString,
+            ),
+            'GetTaskInputAssets': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTaskInputAssets,
+                    request_deserializer=computetask__pb2.GetTaskInputAssetsParam.FromString,
+                    response_serializer=computetask__pb2.GetTaskInputAssetsResponse.SerializeToString,
+            ),
+            'DisableOutput': grpc.unary_unary_rpc_method_handler(
+                    servicer.DisableOutput,
+                    request_deserializer=computetask__pb2.DisableOutputParam.FromString,
+                    response_serializer=computetask__pb2.DisableOutputResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -161,5 +193,39 @@ class ComputeTaskService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.ComputeTaskService/ApplyTaskAction',
             computetask__pb2.ApplyTaskActionParam.SerializeToString,
             computetask__pb2.ApplyTaskActionResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetTaskInputAssets(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.ComputeTaskService/GetTaskInputAssets',
+            computetask__pb2.GetTaskInputAssetsParam.SerializeToString,
+            computetask__pb2.GetTaskInputAssetsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DisableOutput(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.ComputeTaskService/DisableOutput',
+            computetask__pb2.DisableOutputParam.SerializeToString,
+            computetask__pb2.DisableOutputResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

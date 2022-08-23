@@ -17,7 +17,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14\x66\x61ilure_report.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xc9\x01\n\rFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x31\n\rcreation_date\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\r\n\x05owner\x18\x05 \x01(\t\"\x8a\x01\n\x10NewFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\"1\n\x15GetFailureReportParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t*p\n\tErrorType\x12\x1a\n\x16\x45RROR_TYPE_UNSPECIFIED\x10\x00\x12\x14\n\x10\x45RROR_TYPE_BUILD\x10\x01\x12\x18\n\x14\x45RROR_TYPE_EXECUTION\x10\x02\x12\x17\n\x13\x45RROR_TYPE_INTERNAL\x10\x03\x32\xc2\x01\n\x14\x46\x61ilureReportService\x12T\n\x15RegisterFailureReport\x12\x1e.orchestrator.NewFailureReport\x1a\x1b.orchestrator.FailureReport\x12T\n\x10GetFailureReport\x12#.orchestrator.GetFailureReportParam\x1a\x1b.orchestrator.FailureReportB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14\x66\x61ilure_report.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xc9\x01\n\rFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x31\n\rcreation_date\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\r\n\x05owner\x18\x05 \x01(\t\"\x8a\x01\n\x10NewFailureReport\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12+\n\nerror_type\x18\x02 \x01(\x0e\x32\x17.orchestrator.ErrorType\x12/\n\x0clogs_address\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\"1\n\x15GetFailureReportParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t*p\n\tErrorType\x12\x1a\n\x16\x45RROR_TYPE_UNSPECIFIED\x10\x00\x12\x14\n\x10\x45RROR_TYPE_BUILD\x10\x01\x12\x18\n\x14\x45RROR_TYPE_EXECUTION\x10\x02\x12\x17\n\x13\x45RROR_TYPE_INTERNAL\x10\x03\x32\xc2\x01\n\x14\x46\x61ilureReportService\x12T\n\x15RegisterFailureReport\x12\x1e.orchestrator.NewFailureReport\x1a\x1b.orchestrator.FailureReport\x12T\n\x10GetFailureReport\x12#.orchestrator.GetFailureReportParam\x1a\x1b.orchestrator.FailureReportB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 _ERRORTYPE = DESCRIPTOR.enum_types_by_name['ErrorType']
 ErrorType = enum_type_wrapper.EnumTypeWrapper(_ERRORTYPE)
@@ -55,7 +55,7 @@ _FAILUREREPORTSERVICE = DESCRIPTOR.services_by_name['FailureReportService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'Z\'github.com/owkin/orchestrator/lib/asset'
+  DESCRIPTOR._serialized_options = b'Z)github.com/substra/orchestrator/lib/asset'
   _ERRORTYPE._serialized_start=481
   _ERRORTYPE._serialized_end=593
   _FAILUREREPORT._serialized_start=86

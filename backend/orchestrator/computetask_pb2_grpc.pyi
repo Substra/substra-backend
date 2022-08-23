@@ -24,6 +24,14 @@ class ComputeTaskServiceStub:
         computetask_pb2.ApplyTaskActionParam,
         computetask_pb2.ApplyTaskActionResponse]
 
+    GetTaskInputAssets: grpc.UnaryUnaryMultiCallable[
+        computetask_pb2.GetTaskInputAssetsParam,
+        computetask_pb2.GetTaskInputAssetsResponse]
+
+    DisableOutput: grpc.UnaryUnaryMultiCallable[
+        computetask_pb2.DisableOutputParam,
+        computetask_pb2.DisableOutputResponse]
+
 
 class ComputeTaskServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -49,6 +57,18 @@ class ComputeTaskServiceServicer(metaclass=abc.ABCMeta):
         request: computetask_pb2.ApplyTaskActionParam,
         context: grpc.ServicerContext,
     ) -> computetask_pb2.ApplyTaskActionResponse: ...
+
+    @abc.abstractmethod
+    def GetTaskInputAssets(self,
+        request: computetask_pb2.GetTaskInputAssetsParam,
+        context: grpc.ServicerContext,
+    ) -> computetask_pb2.GetTaskInputAssetsResponse: ...
+
+    @abc.abstractmethod
+    def DisableOutput(self,
+        request: computetask_pb2.DisableOutputParam,
+        context: grpc.ServicerContext,
+    ) -> computetask_pb2.DisableOutputResponse: ...
 
 
 def add_ComputeTaskServiceServicer_to_server(servicer: ComputeTaskServiceServicer, server: grpc.Server) -> None: ...

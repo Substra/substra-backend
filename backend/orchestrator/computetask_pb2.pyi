@@ -5,11 +5,14 @@ isort:skip_file
 import algo_pb2
 import builtins
 import common_pb2
+import datamanager_pb2
+import datasample_pb2
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
+import model_pb2
 import typing
 import typing_extensions
 
@@ -626,3 +629,71 @@ class ApplyTaskActionResponse(google.protobuf.message.Message):
     def __init__(self,
         ) -> None: ...
 global___ApplyTaskActionResponse = ApplyTaskActionResponse
+
+class ComputeTaskInputAsset(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    IDENTIFIER_FIELD_NUMBER: builtins.int
+    MODEL_FIELD_NUMBER: builtins.int
+    DATA_MANAGER_FIELD_NUMBER: builtins.int
+    DATA_SAMPLE_FIELD_NUMBER: builtins.int
+    identifier: typing.Text
+    @property
+    def model(self) -> model_pb2.Model: ...
+    @property
+    def data_manager(self) -> datamanager_pb2.DataManager: ...
+    @property
+    def data_sample(self) -> datasample_pb2.DataSample: ...
+    def __init__(self,
+        *,
+        identifier: typing.Text = ...,
+        model: typing.Optional[model_pb2.Model] = ...,
+        data_manager: typing.Optional[datamanager_pb2.DataManager] = ...,
+        data_sample: typing.Optional[datasample_pb2.DataSample] = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["asset",b"asset","data_manager",b"data_manager","data_sample",b"data_sample","model",b"model"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset",b"asset","data_manager",b"data_manager","data_sample",b"data_sample","identifier",b"identifier","model",b"model"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["asset",b"asset"]) -> typing.Optional[typing_extensions.Literal["model","data_manager","data_sample"]]: ...
+global___ComputeTaskInputAsset = ComputeTaskInputAsset
+
+class GetTaskInputAssetsParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    compute_task_key: typing.Text
+    def __init__(self,
+        *,
+        compute_task_key: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key",b"compute_task_key"]) -> None: ...
+global___GetTaskInputAssetsParam = GetTaskInputAssetsParam
+
+class GetTaskInputAssetsResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    ASSETS_FIELD_NUMBER: builtins.int
+    @property
+    def assets(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ComputeTaskInputAsset]: ...
+    def __init__(self,
+        *,
+        assets: typing.Optional[typing.Iterable[global___ComputeTaskInputAsset]] = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["assets",b"assets"]) -> None: ...
+global___GetTaskInputAssetsResponse = GetTaskInputAssetsResponse
+
+class DisableOutputParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    IDENTIFIER_FIELD_NUMBER: builtins.int
+    compute_task_key: typing.Text
+    identifier: typing.Text
+    def __init__(self,
+        *,
+        compute_task_key: typing.Text = ...,
+        identifier: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key",b"compute_task_key","identifier",b"identifier"]) -> None: ...
+global___DisableOutputParam = DisableOutputParam
+
+class DisableOutputResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___DisableOutputResponse = DisableOutputResponse
