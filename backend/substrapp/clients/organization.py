@@ -3,6 +3,7 @@
 This module provides various helpers to access assets stored in remote Organizations.
 It verifies as well the integrity of downloaded asset when possible.
 """
+import enum
 import os
 import typing
 
@@ -18,11 +19,31 @@ from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
 
-CHUNK_SIZE = 1024 * 1024
+
+class _Method(enum.Enum):
+    POST = enum.auto()
+    GET = enum.auto()
+
+
+_LEDGER_MSP_ID: str = settings.LEDGER_MSP_ID
+_HTTP_VERIFY: bool = not settings.DEBUG
+_HTTP_TIMEOUT: int = settings.HTTP_CLIENT_TIMEOUT_SECONDS
+_HTTP_STREAM_CHUNK_SIZE: int = 1024 * 1024  # in bytes, equivalent to 1 megabyte
+_HTTP_METHOD_TO_FUNC: dict[_Method, typing.Callable[..., requests.Response]] = {
+    _Method.GET: requests.get,
+    _Method.POST: requests.post,
+}
 
 
 def _fetch_secret(organization_id: str) -> str:
-    """Find credentials to authenticate with remote organization."""
+    """Find credentials to authenticate with remote organization.
+
+    Args:
+        organization_id (str): MSPID of the organization we want to communicate with.
+
+    Returns:
+        str: password used to communicate with that organization.
+    """
     from organization.models import OutgoingOrganization
 
     try:
@@ -33,81 +54,87 @@ def _fetch_secret(organization_id: str) -> str:
     return outgoing.secret
 
 
-def http_get(
-    channel: str,
-    organization_id: str,
-    url: str,
-    stream: typing.Optional[bool] = False,
-    headers: typing.Optional[dict[str, str]] = None,
-) -> requests.Response:
-    """Low level helper to get asset and return successful HTTP response."""
-    secret = _fetch_secret(organization_id)
+def _add_mandatory_headers(headers: dict[str, str], channel: str) -> dict[str, str]:
+    """Adds the required headers for org to org communication to the headers dict.
 
-    headers = headers or {}
-    headers.update(
+    Args:
+        headers (dict[str, str]): user provided headers
+        channel (str): channel name
+
+    Returns:
+        dict[str, str]: updated headers with the Accept and Channel header set
+    """
+    complete_headers = {}
+    complete_headers.update(headers)
+    complete_headers.update(
         {
             "Accept": "application/json;version=0.0",
             "Substra-Channel-Name": channel,
         }
     )
-
-    try:
-        response = requests.get(
-            url,
-            headers=headers,
-            stream=stream,
-            auth=HTTPBasicAuth(settings.LEDGER_MSP_ID, secret),
-            verify=not settings.DEBUG,
-            timeout=settings.HTTP_CLIENT_TIMEOUT_SECONDS,
-        )
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-        logger.exception("Get asset failure", url=url, e=e)
-        raise OrganizationError(f"Failed to fetch {url}") from e
-
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError:
-        logger.error("Get asset failure", url=url, status=response.status_code, text=response.text)
-        raise OrganizationError(f"Url: {url} returned status code: {response.status_code}")
-    return response
+    return complete_headers
 
 
-def http_post(
+def _http_request_kwargs(data: typing.Optional[dict], stream: bool) -> dict:
+    """builds a dict with extra request arguments
+
+    Args:
+        data (typing.Optional[dict]): potential data that can be set if the request is a POST
+        stream (bool): whether the response should be streamed or not
+
+    Returns:
+        dict: a dict of requests keyword arguments
+    """
+    kwargs = {}
+    if stream:
+        kwargs["stream"] = True
+    if data is not None:
+        kwargs["data"] = data
+    return kwargs
+
+
+def _http_request(
+    method: _Method,
     channel: str,
     organization_id: str,
     url: str,
-    data: dict,
     headers: typing.Optional[dict[str, str]] = None,
+    data: typing.Optional[dict] = None,
+    stream: bool = False,
 ) -> requests.Response:
-    """Low level helper to get asset and return successful HTTP response."""
+    """A low level http request builder
+
+    Args:
+        method (_Method): http method
+        channel (str): substra channel name
+        organization_id (str): name of the organization we are trying to query
+        url (str): url to which we should make the request
+        headers (typing.Optional[dict[str, str]], optional): user provided headers. Defaults to None.
+        data (typing.Optional[dict], optional): user provided data for the request. Defaults to None.
+        stream (bool, optional): whether the response should be streamed or not. Defaults to False.
+
+    Returns:
+        requests.Response: a requests response object with a successful http response code
+    """
+    headers = headers or {}
     secret = _fetch_secret(organization_id)
 
-    headers = headers or {}
-    headers.update(
-        {
-            "Accept": "application/json;version=0.0",
-            "Substra-Channel-Name": channel,
-        }
-    )
-
+    response = None
     try:
-        response = requests.post(
+        response = _HTTP_METHOD_TO_FUNC[method](
             url,
-            data=data,
-            headers=headers,
-            auth=HTTPBasicAuth(settings.LEDGER_MSP_ID, secret),
-            verify=not settings.DEBUG,
-            timeout=settings.HTTP_CLIENT_TIMEOUT_SECONDS,
+            headers=_add_mandatory_headers(headers, channel),
+            auth=HTTPBasicAuth(_LEDGER_MSP_ID, secret),
+            verify=_HTTP_VERIFY,
+            timeout=_HTTP_TIMEOUT,
+            **_http_request_kwargs(data, stream),
         )
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-        logger.exception("Post asset failure", url=url, e=e)
-        raise OrganizationError(f"Failed to post to {url}") from e
-
-    try:
         response.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
+        raise OrganizationError(f"Failed to connect to {organization_id}") from exc
     except requests.exceptions.HTTPError:
-        logger.error("Post asset failure", url=url, status=response.status_code, text=response.text)
-        raise OrganizationError(f"Url: {url} returned status code: {response.status_code}")
+        raise OrganizationError(f"URL: {url} returned status code {response.status_code if response else 'unknown'}")
+
     return response
 
 
@@ -120,10 +147,10 @@ def download(
     salt: typing.Optional[str] = None,
 ) -> None:
     """Download an asset data to a file (not atomic)."""
-    response = http_get(channel, organization_id, url, stream=True)
+    response = _http_request(_Method.GET, channel, organization_id, url, stream=True)
     try:
         with open(destination, "wb") as fp:
-            for chunk in response.iter_content(CHUNK_SIZE):
+            for chunk in response.iter_content(_HTTP_STREAM_CHUNK_SIZE):
                 fp.write(chunk)
     finally:
         response.close()
@@ -142,8 +169,7 @@ def get(
     salt: typing.Optional[str] = None,
 ) -> bytes:
     """Get asset data."""
-    response = http_get(channel, organization_id, url)
-    content = response.content
+    content = _http_request(_Method.GET, channel, organization_id, url).content
     new_checksum = compute_hash(content, key=salt)
     if new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
@@ -157,6 +183,9 @@ def post(
     data: dict,
 ) -> bytes:
     """Post asset data."""
-    response = http_post(channel, organization_id, url, data)
-    content = response.content
-    return content
+    return _http_request(_Method.POST, channel, organization_id, url, data).content
+
+
+def streamed_get(channel: str, organization_id: str, url: str, headers: dict[str, str]) -> requests.Response:
+    """Query another backend and return a streamed response object"""
+    return _http_request(_Method.GET, channel, organization_id, url, stream=True, headers=headers)

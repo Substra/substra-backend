@@ -134,11 +134,10 @@ class PermissionMixin(object):
         return response
 
     def _download_remote_file(self, channel_name: str, owner: str, url: str) -> django.http.FileResponse:
-        proxy_response = organization_client.http_get(
+        proxy_response = organization_client.streamed_get(
             channel=channel_name,
             organization_id=owner,
             url=url,
-            stream=True,
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
         )
         response = CustomFileResponse(
