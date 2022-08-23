@@ -45,11 +45,9 @@ Customized example:
 """
 
 import datetime
-import io
 import uuid
-import zipfile
 
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core import files
 from django.utils import timezone
 
 from localrep.models import Algo
@@ -376,94 +374,98 @@ def create_performance(
     )
 
 
-def _create_file(
-    type_: str = "text",
-    name: str = "name",
-    content: bytes = b"dummy content",
-):
-    buffer = io.BytesIO()
-    if type_ == "text":
-        size = buffer.write(content)
-    elif type_ == "zip":
-        with zipfile.ZipFile(buffer, "w") as zip_file:
-            size = zip_file.writestr("filename", content)
-    else:
-        raise ValueError("Invalid type")
-
-    file = InMemoryUploadedFile(buffer, None, name, type_, size, None)
-    file.seek(0)
-    return file
-
-
-def create_algo_data(key: uuid.UUID = None) -> AlgoData:
+def create_algo_data(
+    key: uuid.UUID = None,
+    file: files.File = None,
+    description: files.File = None,
+) -> AlgoData:
     if key is None:
         key = uuid.uuid4()
+    if file is None:
+        file = files.base.ContentFile("dummy content")
+    if description is None:
+        description = files.base.ContentFile("dummy content")
 
-    file = _create_file(type_="zip", name="algo.zip")
-    return AlgoData.objects.create(
+    algo_data = AlgoData.objects.create(
         key=key,
-        file=file,
-        description=_create_file(type_="text", name="description.md"),
         checksum=get_hash(file),
     )
+    algo_data.file.save("algo", file)
+    algo_data.description.save("description", description)
+    return algo_data
 
 
 def create_datamanager_data(
     key: uuid.UUID = None,
     name: str = "datamanager",
+    opener: files.File = None,
+    description: files.File = None,
 ) -> DataManagerData:
     if key is None:
         key = uuid.uuid4()
+    if opener is None:
+        opener = files.base.ContentFile("dummy content")
+    if description is None:
+        description = files.base.ContentFile("dummy content")
 
-    opener = _create_file(type_="text", name="opener.py")
-    return DataManagerData.objects.create(
+    data_manager_data = DataManagerData.objects.create(
         key=key,
         name=name,
-        data_opener=opener,
-        description=_create_file(type_="text", name="description.md"),
         checksum=get_hash(opener),
     )
+    data_manager_data.data_opener.save("opener", opener)
+    data_manager_data.description.save("description", description)
+    return data_manager_data
 
 
 def create_datasample_data(
     key: uuid.UUID = None,
-    name: str = "datasample",
+    file: files.File = None,
 ) -> DataSampleData:
     if key is None:
         key = uuid.uuid4()
+    if file is None:
+        file = files.base.ContentFile("dummy content")
 
-    file = _create_file(type_="zip", name="sample.zip")
-    return DataSampleData.objects.create(
+    data_sample_data = DataSampleData.objects.create(
         key=key,
-        file=file,
         checksum=get_hash(file),
     )
+    data_sample_data.file.save("datasample", file)
+    return data_sample_data
 
 
 def create_model_data(
     key: uuid.UUID = None,
+    file: files.File = None,
 ) -> ModelData:
     if key is None:
         key = uuid.uuid4()
+    if file is None:
+        file = files.base.ContentFile("dummy content")
 
-    file = _create_file(type_="text", name="model.bin")
-    return ModelData.objects.create(
+    model_data = ModelData.objects.create(
         key=key,
-        file=file,
         checksum=get_hash(file),
     )
+    model_data.file.save("model", file)
+    return model_data
 
 
 def create_computetask_logs(
     compute_task_key: uuid.UUID,
+    logs: files.File = None,
 ) -> ComputeTaskLogs:
-    logs = _create_file(type_="text", name="report.log")
-    return ComputeTaskLogs.objects.create(
+    if logs is None:
+        logs = files.base.ContentFile("dummy content")
+
+    compute_task_logs = ComputeTaskLogs.objects.create(
         compute_task_key=compute_task_key,
-        logs=logs,
         logs_checksum=get_hash(logs),
         creation_date=timezone.now(),
     )
+    compute_task_logs.logs.save("logs", logs)
+    return compute_task_logs
 
 
 def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:
