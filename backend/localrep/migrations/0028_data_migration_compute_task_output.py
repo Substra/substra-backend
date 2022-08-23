@@ -8,17 +8,15 @@
 
 from django.db import migrations
 
-from localrep.models.computetask import ComputeTask
-from localrep.models.computetask import ComputeTaskOutput
-from localrep.models.model import Model
-
 
 def add_missing_compute_task_outputs(apps, schema_editor):
+    compute_task_model = apps.get_model("localrep", "computetask")
+    model_model = apps.get_model("localrep", "model")
 
-    for task in ComputeTask.objects.filter(outputs__isnull=True):
+    for task in compute_task_model.objects.filter(outputs__isnull=True):
 
         # TRAIN / AGGREGATE
-        if task.category in [ComputeTask.Category.TASK_TRAIN, ComputeTask.Category.TASK_AGGREGATE]:
+        if task.category in [compute_task_model.Category.TASK_TRAIN, compute_task_model.Category.TASK_AGGREGATE]:
             permission_public = True
             permission_authorized_ids = []
 
@@ -31,7 +29,7 @@ def add_missing_compute_task_outputs(apps, schema_editor):
             output.save()
 
         # COMPOSITE
-        elif task.category in ComputeTask.Category.TASK_COMPOSITE:
+        elif task.category in compute_task_model.Category.TASK_COMPOSITE:
             models = task.models.all()
 
             trunk_permission_public = True
@@ -40,22 +38,22 @@ def add_missing_compute_task_outputs(apps, schema_editor):
             head_permission_authorized_ids = []
 
             if models:
-                head_model = [model for model in models if model.category == Model.Category.MODEL_HEAD][0]
+                head_model = [model for model in models if model.category == model_model.Category.MODEL_HEAD][0]
                 head_permission_public = head_model.permissions_process_public
                 head_permission_authorized_ids = head_model.permissions_process_authorized_ids
 
-                trunk_model = [model for model in models if model.category == Model.Category.MODEL_SIMPLE][0]
+                trunk_model = [model for model in models if model.category == model_model.Category.MODEL_SIMPLE][0]
                 trunk_permission_public = trunk_model.permissions_process_public
                 trunk_permission_authorized_ids = trunk_model.permissions_process_authorized_ids
 
-            output_trunk = create_output(task, "shared", trunk_permission_public, trunk_permission_authorized_ids)
+            output_trunk = create_output(apps, task, "shared", trunk_permission_public, trunk_permission_authorized_ids)
             output_trunk.save()
 
-            output_head = create_output(task, "local", head_permission_public, head_permission_authorized_ids)
+            output_head = create_output(apps, task, "local", head_permission_public, head_permission_authorized_ids)
             output_head.save()
 
         # PREDICT
-        elif task.category in ComputeTask.Category.TASK_PREDICT:
+        elif task.category in compute_task_model.Category.TASK_PREDICT:
             permission_public = True
             permission_authorized_ids = []
 
@@ -64,18 +62,20 @@ def add_missing_compute_task_outputs(apps, schema_editor):
                 permission_public = models[0].permissions_process_public
                 permission_authorized_ids = models[0].permissions_process_authorized_ids
 
-            output = create_output(task, "predictions", permission_public, permission_authorized_ids)
+            output = create_output(apps, task, "predictions", permission_public, permission_authorized_ids)
             output.save()
 
         # TEST
-        elif task.category in ComputeTask.Category.TASK_TEST:
+        elif task.category in compute_task_model.Category.TASK_TEST:
             # perfs are always public
             output = create_output(task, "performance", True, [])
             output.save()
 
 
-def create_output(task, identifier, permissions_public, permissions_authorized_ids):
-    return ComputeTaskOutput(
+def create_output(apps, task, identifier, permissions_public, permissions_authorized_ids):
+    compute_task_output_model = apps.get_model("localrep", "computetaskoutput")
+
+    return compute_task_output_model(
         task=task,
         identifier=identifier,
         permissions_download_public=permissions_public,
