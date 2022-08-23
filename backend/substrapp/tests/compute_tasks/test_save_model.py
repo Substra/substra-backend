@@ -48,9 +48,8 @@ class SaveModelTests(APITestCase):
             compute_plan={},
             compute_plan_key=str(uuid.uuid4()),
             compute_plan_tag="",
-            in_models=[],
+            input_assets=[],
             algo={},
-            data_manager={},
             directories=FakeDirectories(data_dir),
             has_chainkeys=False,
         )

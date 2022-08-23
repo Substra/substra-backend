@@ -1,6 +1,7 @@
 import time
 from copy import deepcopy
 from functools import wraps
+from typing import List
 
 import grpc
 import structlog
@@ -33,6 +34,7 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.resources import ComputeTaskInputAsset
 
 logger = structlog.get_logger(__name__)
 
@@ -101,8 +103,6 @@ CONVERT_SETTINGS = {
     "preserving_proto_field_name": True,
     "including_default_value_fields": True,
 }
-
-SORT_ORDER = {"asc": common_pb2.ASCENDING, "desc": common_pb2.DESCENDING}
 
 
 class OrchestratorClient:
@@ -386,14 +386,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def get_computetask_input_models(self, compute_task_key):
-        data = self._model_client.GetComputeTaskInputModels(
-            model_pb2.GetComputeTaskModelsParam(compute_task_key=compute_task_key),
-            metadata=self._metadata,
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS).get("models", [])
-
-    @grpc_retry
     def get_computetask_output_models(self, compute_task_key):
         data = self._model_client.GetComputeTaskOutputModels(
             model_pb2.GetComputeTaskModelsParam(compute_task_key=compute_task_key),
@@ -558,3 +550,11 @@ class OrchestratorClient:
             failure_report_pb2.NewFailureReport(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
+    def get_task_input_assets(self, task_key: str) -> List[ComputeTaskInputAsset]:
+        assets = self._computetask_client.GetTaskInputAssets(
+            computetask_pb2.GetTaskInputAssetsParam(compute_task_key=task_key),
+            metadata=self._metadata,
+        )
+        return [ComputeTaskInputAsset(asset) for asset in assets.assets]

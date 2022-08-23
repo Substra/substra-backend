@@ -93,3 +93,9 @@ def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType:
         error_type = ComputeTaskErrorType.INTERNAL_ERROR
 
     return error_type.value
+
+
+class InvalidContextError(_ComputeTaskError, CeleryNoRetryError):
+    """Error due to invalid task Context"""
+
+    error_type = ComputeTaskErrorType.INTERNAL_ERROR

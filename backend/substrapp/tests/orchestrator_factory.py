@@ -1,3 +1,5 @@
+from typing import List
+
 import factory
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -7,13 +9,14 @@ import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
+import orchestrator.datasample_pb2 as datasample_pb2
 import orchestrator.model_pb2 as model_pb2
 from orchestrator.client import CONVERT_SETTINGS
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from orchestrator.resources import ComputeTaskInputAsset
 from substrapp.tests import common
 from substrapp.tests.common import InputIdentifiers
-from substrapp.tests.compute_tasks.utils import get_inputs_by_kind
 from substrapp.tests.factory import DEFAULT_OWNER
 from substrapp.tests.factory import DEFAULT_WORKER
 from substrapp.tests.factory import get_storage_address
@@ -53,6 +56,9 @@ class Orchestrator:
 
         self.client.models[model.key] = model
         return model
+
+    def set_input_assets(self, task_key: str, inputs: List[ComputeTaskInputAsset]):
+        self.client.input_assets[task_key] = inputs
 
     def build_task_inputs(
         self, input_models: list[computetask_pb2.ComputeTaskInput] = None, with_data=True
@@ -122,6 +128,7 @@ class MockOrchestratorClient(OrchestratorClient):
         self.models: dict[str, model_pb2.Model] = {}
         self.algos: dict[str, algo_pb2.Algo] = {}
         self.data_managers: dict[str, datamanager_pb2.DataManager] = {}
+        self.input_assets: dict[str, List[computetask_pb2.ComputeTaskInputAsset]] = {}
 
     def __exit__(self, *args):
         del args
@@ -170,24 +177,6 @@ class MockOrchestratorClient(OrchestratorClient):
 
         return MessageToDict(cp, **CONVERT_SETTINGS)
 
-    def get_computetask_input_models(self, compute_task_key):
-        task = self.tasks.get(compute_task_key)
-        if not task:
-            raise OrcError()
-        model_inputs = get_inputs_by_kind(task, common_pb2.ASSET_MODEL)
-        models = [
-            model
-            for model in self.models.values()
-            if [
-                model_input
-                for model_input in model_inputs
-                if model_input.parent_task_output.parent_task_key == model.compute_task_key
-                # TODO: add predicate on the "identifier" property
-            ]
-        ]
-        res = model_pb2.GetComputeTaskModelsResponse(models=models)
-        return MessageToDict(res, **CONVERT_SETTINGS).get("models", [])
-
     def query_algo(self, key):
         algo = self.algos.get(key)
         if not algo:
@@ -209,6 +198,9 @@ class MockOrchestratorClient(OrchestratorClient):
             raise OrcError()
         action_to_status = {computetask_pb2.TASK_ACTION_DONE: computetask_pb2.STATUS_DONE}
         task.status = action_to_status[action]
+
+    def get_task_input_assets(self, task_key: str) -> List[ComputeTaskInputAsset]:
+        return self.input_assets.get(task_key, [])
 
 
 class AddressableFactory(factory.Factory):
@@ -239,6 +231,18 @@ class DataManagerFactory(factory.Factory):
     creation_date = Timestamp()
     logs_permission = common_pb2.Permission(public=True, authorized_ids=[])
     metadata = {}
+
+
+class DataSampleFactory(factory.Factory):
+    class Meta:
+        model = datasample_pb2.DataSample
+
+    key = factory.Faker("uuid4")
+    owner = DEFAULT_OWNER
+    checksum = factory.Faker("sha256")
+    creation_date = Timestamp()
+    test_only = False
+    data_manager_keys = []
 
 
 class ModelFactory(factory.Factory):

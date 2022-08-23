@@ -14,6 +14,9 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from orchestrator.resources import Address
+from orchestrator.resources import DataManager
+from orchestrator.resources import Model
 from substrapp import models
 from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import _add_datasample_to_buffer
@@ -156,13 +159,9 @@ class AssetBufferTests(APITestCase):
         self.opener_checksum = get_hash(self.opener_path)
         self.opener_storage_address = "some storage address"
         self.data_manager_key = "some_data_manager_key"
-        self.data_manager = {
-            "key": self.data_manager_key,
-            "opener": {
-                "storage_address": self.opener_storage_address,
-                "checksum": self.opener_checksum,
-            },
-        }
+        self.data_manager = DataManager(
+            key=self.data_manager_key, opener=Address(uri=self.opener_storage_address, checksum=self.opener_checksum)
+        )
 
     def _setup_data_samples(self):
         # half are registered in the db by a path
@@ -285,15 +284,14 @@ class AssetBufferTests(APITestCase):
         init_asset_buffer()
         dest = os.path.join(ASSET_BUFFER_DIR_3, AssetBufferDirName.Models, self.model_key)
 
-        model = {
-            "key": self.model_key,
-            "compute_task_key": self.model_compute_task_key,
-        }
+        model = Model(
+            key=self.model_key,
+            compute_task_key=self.model_compute_task_key,
+            address=Address(uri="some storage address", checksum=self.model_checksum),
+        )
 
         organization_id = "organization 1"
         storage_address = "some storage address"
-
-        model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
             _add_model_to_buffer(CHANNEL, model, organization_id)
@@ -336,11 +334,11 @@ class AssetBufferTests(APITestCase):
 
         # populate the buffer
         init_asset_buffer()
-        model = {
-            "key": self.model_key,
-            "compute_task_key": self.model_compute_task_key,
-            "address": {"storage_address": "some storage address", "checksum": self.model_checksum},
-        }
+        model = Model(
+            key=self.model_key,
+            compute_task_key=self.model_compute_task_key,
+            address=Address(uri="some storage address", checksum=self.model_checksum),
+        )
 
         def download_model(channel, organization_id, storage_address, dest, checksum, salt):
             shutil.copyfile(self.model_path, dest)

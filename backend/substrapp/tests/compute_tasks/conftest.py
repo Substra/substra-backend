@@ -63,9 +63,8 @@ def testtuple_context(orc_metric) -> Context:
         compute_plan={},
         compute_plan_key=cp_key,
         compute_plan_tag="",
-        in_models=[],
+        input_assets=[],
         algo=orc_metric,
-        data_manager={"name": "test data_manager"},
         directories=Directories(cp_key),
         has_chainkeys=False,
     )

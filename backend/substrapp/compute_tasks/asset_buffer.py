@@ -2,13 +2,15 @@ import os
 import shutil
 from functools import wraps
 from typing import Callable
-from typing import Dict
 from typing import List
 
 import structlog
 from billiard import Process
 from django.conf import settings
 
+from orchestrator.resources import Address
+from orchestrator.resources import DataManager
+from orchestrator.resources import Model
 from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
@@ -126,13 +128,13 @@ def add_task_assets_to_buffer(ctx: Context) -> None:
 
     # Openers
     if ctx.data_manager:
-        with lock_resource("opener", ctx.data_manager["key"], ttl=LOCK_FETCH_ASSET_TTL):
+        with lock_resource("opener", ctx.data_manager.key, ttl=LOCK_FETCH_ASSET_TTL):
             _add_opener_to_buffer(ctx.channel_name, ctx.data_manager)
 
     # In-models
-    if ctx.in_models:
+    if ctx.input_models:
         # As models are downloaded in subprocesses, the lock is done in the subprocess directly
-        _add_models_to_buffer(ctx.channel_name, ctx.in_models)
+        _add_models_to_buffer(ctx.channel_name, ctx.input_models)
 
 
 def add_model_from_path(model_path: str, model_key: str) -> None:
@@ -153,11 +155,11 @@ def add_assets_to_taskdir(ctx: Context) -> None:
     _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, ctx.data_sample_keys)
 
     if ctx.data_manager:
-        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [ctx.data_manager["key"]])
+        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [ctx.data_manager.key])
 
-    if ctx.in_models:
+    if ctx.input_models:
         _add_assets_to_taskdir(
-            dirs, AssetBufferDirName.Models, TaskDirName.InModels, [model["key"] for model in ctx.in_models]
+            dirs, AssetBufferDirName.Models, TaskDirName.InModels, [model.key for model in ctx.input_models]
         )
 
 
@@ -204,22 +206,22 @@ def _add_datasample_to_buffer_internal(data_sample_key: str, dst: str) -> None:
         raise Exception(f"Data Sample ({data_sample_key}) checksum in tuple is not the same as in local db")
 
 
-def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
+def _add_opener_to_buffer(channel_name: str, data_manager: DataManager) -> None:
     """Copy opener to the asset buffer"""
 
-    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager["key"])
-    _add_opener_to_buffer_internal(channel_name, data_manager["opener"], dst=dst)
+    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager.key)
+    _add_opener_to_buffer_internal(channel_name, data_manager.opener, dst=dst)
 
 
 @add_to_buffer_safe
-def _add_opener_to_buffer_internal(channel_name: str, opener: Dict, dst: str) -> None:
+def _add_opener_to_buffer_internal(channel_name: str, opener: Address, dst: str) -> None:
     os.mkdir(dst)
     organization_client.download(
-        channel_name, get_owner(), opener["storage_address"], os.path.join(dst, Filenames.Opener), opener["checksum"]
+        channel_name, get_owner(), opener.uri, os.path.join(dst, Filenames.Opener), opener.checksum
     )
 
 
-def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
+def _add_models_to_buffer(channel_name: str, models: List[Model]) -> None:
     """Copy/Download models to the asset buffer"""
 
     # Close django connection to force each Process to create its own as
@@ -233,7 +235,7 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
 
     for model in models:
         with get_orchestrator_client(channel_name) as client:
-            parent_task = client.query_task(model["compute_task_key"])
+            parent_task = client.query_task(model.compute_task_key)
         args = (channel_name, model, parent_task["worker"])
         proc = Process(target=_add_model_to_buffer_with_lock, args=args)
         procs.append((proc, args))
@@ -248,29 +250,29 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
     db.close_old_connections()
     if exceptions:
         # avoid partial model download
-        delete_models_from_buffer([model["key"] for model in models])
+        delete_models_from_buffer([model.key for model in models])
         raise Exception(exceptions)
 
 
-def _add_model_to_buffer(channel_name: str, model: Dict, organization_id: str) -> None:
-    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model["key"])
+def _add_model_to_buffer(channel_name: str, model: Model, organization_id: str) -> None:
+    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model.key)
     _add_model_to_buffer_internal(channel_name, model, organization_id, dst=dst)
 
 
 @add_to_buffer_safe
-def _add_model_to_buffer_internal(channel_name: str, model: Dict, organization_id: str, dst: str) -> None:
+def _add_model_to_buffer_internal(channel_name: str, model: Model, organization_id: str, dst: str) -> None:
     organization_client.download(
         channel_name,
         organization_id,
-        model["address"]["storage_address"],
+        model.address.uri,
         dst,
-        model["address"]["checksum"],
-        salt=model["compute_task_key"],
+        model.address.checksum,
+        salt=model.compute_task_key,
     )
 
 
-def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, organization_id: str) -> None:
-    with lock_resource("model", model["key"], ttl=LOCK_FETCH_ASSET_TTL):
+def _add_model_to_buffer_with_lock(channel_name: str, model: Model, organization_id: str) -> None:
+    with lock_resource("model", model.key, ttl=LOCK_FETCH_ASSET_TTL):
         return _add_model_to_buffer(channel_name, model, organization_id)
 
 

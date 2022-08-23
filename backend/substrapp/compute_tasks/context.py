@@ -2,16 +2,24 @@ import os
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
+import structlog
 from django.conf import settings
 
-from orchestrator import common_pb2
 from orchestrator import computetask_pb2
+from orchestrator.resources import AssetKind
+from orchestrator.resources import ComputeTaskInputAsset
+from orchestrator.resources import DataManager
+from orchestrator.resources import Model
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.errors import InvalidContextError
 from substrapp.orchestrator import get_orchestrator_client
+
+logger = structlog.get_logger(__name__)
 
 TASK_DATA_FIELD = {
     computetask_pb2.TASK_TRAIN: "train",
@@ -47,8 +55,7 @@ class Context:
     _compute_plan_key: str
     _compute_plan_tag: str
     _compute_plan: Dict
-    _in_models: List[Dict]
-    _data_manager: Dict
+    _input_assets: List[ComputeTaskInputAsset]
     _directories: Directories
     _algo: Algo
     _has_chainkeys: bool
@@ -63,9 +70,8 @@ class Context:
         compute_plan: Dict,
         compute_plan_key: str,
         compute_plan_tag: str,
-        in_models: List[Dict],
+        input_assets: List[ComputeTaskInputAsset],
         algo: Algo,
-        data_manager: Dict,
         directories: Directories,
         has_chainkeys: bool,
     ):
@@ -76,8 +82,7 @@ class Context:
         self._task_key = task_key
         self._compute_plan_key = compute_plan_key
         self._compute_plan_tag = compute_plan_tag
-        self._in_models = in_models
-        self._data_manager = data_manager
+        self._input_assets = input_assets
         self._directories = directories
         self._has_chainkeys = has_chainkeys
         self._algo = algo
@@ -87,20 +92,16 @@ class Context:
     def from_task(cls, channel_name: str, task: dict):
         task_key = task["key"]
         compute_plan_key = task["compute_plan_key"]
-        data_manager = None
         task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
 
         # fetch more information from the orchestrator
         with get_orchestrator_client(channel_name) as client:
             compute_plan = client.query_compute_plan(compute_plan_key)
-            in_models = client.get_computetask_input_models(task["key"])
+            input_assets = client.get_task_input_assets(task["key"])
             algo = client.query_algo(task["algo"]["key"])
             algo = Algo(channel_name, algo)
 
-            for input in task["inputs"]:
-                if _input_has_kind(input, common_pb2.ASSET_DATA_MANAGER, algo):
-                    data_manager = client.query_datamanager(input["asset_key"])
-                    break
+        logger.debug("retrieved input assets from orchestrator", input_assets=input_assets)
 
         directories = Directories(compute_plan_key)
 
@@ -116,9 +117,8 @@ class Context:
             compute_plan,
             compute_plan_key,
             compute_plan_tag,
-            in_models,
+            input_assets,
             algo,
-            data_manager,
             directories,
             has_chainkeys,
         )
@@ -160,8 +160,13 @@ class Context:
         return self._has_chainkeys
 
     @property
-    def in_models(self) -> List[Dict]:
-        return self._in_models
+    def input_assets(self) -> List[ComputeTaskInputAsset]:
+        return self._input_assets
+
+    @property
+    def input_models(self) -> List[Model]:
+        """Return the models passed as task inputs"""
+        return [input.model for input in self._input_assets if input.kind == AssetKind.ASSET_MODEL]
 
     @property
     def algo(self) -> Algo:
@@ -172,16 +177,15 @@ class Context:
         return self._compute_plan
 
     @property
-    def data_manager(self) -> Dict:
-        return self._data_manager
+    def data_manager(self) -> Optional[DataManager]:
+        dm = [input.data_manager for input in self._input_assets if input.kind == AssetKind.ASSET_DATA_MANAGER]
+        if len(dm) > 1:
+            raise InvalidContextError("there are too many datamanagers")
+        return dm[0] if dm else None
 
     @property
-    def data_sample_keys(self) -> list[str]:
-        return [
-            input["asset_key"]
-            for input in self.task["inputs"]
-            if _input_has_kind(input, common_pb2.ASSET_DATA_SAMPLE, self.algo)
-        ]
+    def data_sample_keys(self) -> List[str]:
+        return [input.data_sample.key for input in self._input_assets if input.kind == AssetKind.ASSET_DATA_SAMPLE]
 
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
@@ -196,7 +200,3 @@ class Context:
         for output in outputs:
             path = os.path.relpath(output["value"], SANDBOX_DIR)
             self._outputs[path] = output["id"]
-
-
-def _input_has_kind(input: dict, asset_kind: int, algo: Algo) -> bool:
-    return algo.inputs[input["identifier"]]["kind"] == common_pb2.AssetKind.Name(asset_kind)

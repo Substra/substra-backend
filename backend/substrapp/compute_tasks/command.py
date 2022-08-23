@@ -5,7 +5,7 @@ from typing import List
 import structlog
 
 import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.model_pb2 as model_pb2
+from orchestrator.resources import AssetKind
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.context import TaskResource
 from substrapp.compute_tasks.directories import SANDBOX_DIR
@@ -85,8 +85,8 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
 
     if ctx.task_category == computetask_pb2.TASK_TEST:
         perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
-        command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.in_models[0]["key"])]
-        command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener)]
+        command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.input_models[0].key)]
+        command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
         command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
         command += ["--output-perf-path", perf_path]
         # use a fake TaskResource until everything is properly passed as a generic output
@@ -100,79 +100,43 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
 
     command = [TASK_COMMANDS[task_category]]
 
+    # TODO: refactor path handling in context to iterate over all inputs at once
+    inputs.extend(
+        [
+            TaskResource(id=input.identifier, value=os.path.join(in_models_dir, input.model.key))
+            for input in ctx.input_assets
+            if input.kind == AssetKind.ASSET_MODEL
+        ]
+    )
+    inputs.extend(
+        [
+            TaskResource(id=input.identifier, value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener))
+            for input in ctx.input_assets
+            if input.kind == AssetKind.ASSET_DATA_MANAGER
+        ]
+    )
+    inputs.extend(
+        [
+            TaskResource(id=input.identifier, value=os.path.join(datasamples_dir, input.data_sample.key))
+            for input in ctx.input_assets
+            if input.kind == AssetKind.ASSET_DATA_SAMPLE
+        ]
+    )
+
     if task_category == computetask_pb2.TASK_TRAIN:
-
-        if ctx.in_models:
-            inputs.extend(
-                [
-                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, model["key"]))
-                    for model in ctx.in_models
-                ]
-            )
-
-        inputs.append(
-            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
-        )
-        for key in ctx.data_sample_keys:
-            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_COMPOSITE:
-
-        for input_model in ctx.in_models:
-            cat = model_pb2.ModelCategory.Value(input_model["category"])
-            if cat == model_pb2.MODEL_HEAD:
-                inputs.append(
-                    TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(in_models_dir, input_model["key"]))
-                )
-            elif cat == model_pb2.MODEL_SIMPLE:
-                inputs.append(
-                    TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(in_models_dir, input_model["key"]))
-                )
-
-        inputs.append(
-            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
-        )
-        for key in ctx.data_sample_keys:
-            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
         outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_AGGREGATE:
-        if ctx.in_models:
-            inputs.extend(
-                [
-                    TaskResource(id=TRAIN_IO_MODELS, value=os.path.join(in_models_dir, model["key"]))
-                    for model in ctx.in_models
-                ]
-            )
-
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == computetask_pb2.TASK_PREDICT:
-        for input_model in ctx.in_models:
-            model_category = model_pb2.ModelCategory.Value(input_model["category"])
-            identifier = None
-
-            if model_category == model_pb2.MODEL_HEAD:
-                identifier = COMPOSITE_IO_LOCAL
-            elif model_category == model_pb2.MODEL_SIMPLE and len(ctx.in_models) == 2:
-                identifier = COMPOSITE_IO_SHARED
-            elif model_category == model_pb2.MODEL_SIMPLE:
-                identifier = TRAIN_IO_MODELS
-            else:
-                raise ValueError(f"Invalid model category for predict task: {model_category}")
-
-            inputs.append(TaskResource(id=identifier, value=os.path.join(in_models_dir, input_model["key"])))
-
-        inputs.append(
-            TaskResource(id=TASK_IO_OPENER, value=os.path.join(openers_dir, ctx.data_manager["key"], Filenames.Opener))
-        )
-        for key in ctx.data_sample_keys:
-            inputs.append(TaskResource(id=TASK_IO_DATASAMPLES, value=os.path.join(datasamples_dir, key)))
         outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
