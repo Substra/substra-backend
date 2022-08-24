@@ -34,7 +34,6 @@ def _save_training_task_outputs(ctx: Context) -> None:
     """
     logger.info("saving models and local folder")
     save_models(ctx)
-    directories.commit_dir(ctx.directories, directories.TaskDirName.Local, directories.CPDirName.Local)
     if ctx.has_chainkeys:
         directories.commit_dir(ctx.directories, directories.TaskDirName.Chainkeys, directories.CPDirName.Chainkeys)
 

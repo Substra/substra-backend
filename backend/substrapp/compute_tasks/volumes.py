@@ -32,7 +32,6 @@ def get_volumes(ctx: Context):
         volume_mounts.extend(
             [
                 _create_mount(dirs.task_dir, TaskDirName.Chainkeys),
-                _create_mount(dirs.task_dir, TaskDirName.Local),
                 _create_mount(dirs.task_dir, TaskDirName.OutModels),
             ]
         )

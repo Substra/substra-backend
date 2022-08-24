@@ -267,8 +267,6 @@ def _run(
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
 
-            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
-
             # stop inputs loading timer
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
 

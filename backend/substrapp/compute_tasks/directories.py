@@ -22,13 +22,11 @@ SANDBOX_DIR = "/substra_internal"
 #
 # └── <compute_plan_key>           <- compute_plan_dir
 #     ├── chainkeys
-#     ├── local
 #     └── task                     <- task_dir
 #         ├── chainkeys
 #         ├── data_samples
 #         ├── export
 #         ├── in_models
-#         ├── local
 #         ├── openers
 #         ├── out_models
 #         ├── perf
@@ -45,10 +43,9 @@ class AssetBufferDirName:
 
 class CPDirName:
     Chainkeys = "chainkeys"
-    Local = "local"
     Task = "task"
 
-    All = [Chainkeys, Local, Task]
+    All = [Chainkeys, Task]
 
 
 class TaskDirName:
@@ -56,12 +53,11 @@ class TaskDirName:
     Datasamples = "data_samples"
     Export = "export"
     InModels = "in_models"
-    Local = "local"
     Openers = "openers"
     OutModels = "out_models"
     Perf = "perf"
 
-    All = [Chainkeys, Datasamples, Export, InModels, Local, Openers, OutModels, Perf]
+    All = [Chainkeys, Datasamples, Export, InModels, Openers, OutModels, Perf]
 
 
 class Directories:

@@ -15,7 +15,6 @@ logger = structlog.get_logger(__name__)
 # These constants are shared with connect-tools.
 # These constants will disappear once the inputs/outputs are exposed by the orchestrator.
 TASK_IO_PREDICTIONS = "predictions"
-TASK_IO_LOCALFOLDER = "localfolder"
 TASK_IO_CHAINKEYS = "chainkeys"
 TRAIN_IO_MODEL = "model"
 COMPOSITE_IO_SHARED = "shared"
@@ -72,7 +71,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
-    local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
 
     inputs = []
@@ -115,20 +113,16 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
 
     if task_category == orchestrator.ComputeTaskCategory.TASK_TRAIN:
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
         outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
         outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
-        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == orchestrator.ComputeTaskCategory.TASK_AGGREGATE:
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     elif task_category == orchestrator.ComputeTaskCategory.TASK_PREDICT:
         outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
-        outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
     rank = str(task.rank)
     if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:

@@ -58,7 +58,6 @@ def test_get_args_train_task():
 
     expected_outputs = [
         {"id": InputIdentifiers.MODEL, "value": "/substra_internal/out_models/out-model"},
-        {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
     actual = _get_args(ctx)
@@ -124,7 +123,6 @@ def test_get_args_composite_task():
     expected_outputs = [
         {"id": InputIdentifiers.LOCAL, "value": "/substra_internal/out_models/out-head-model"},
         {"id": InputIdentifiers.SHARED, "value": "/substra_internal/out_models/out-model"},
-        {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
     actual = _get_args(ctx)
@@ -184,7 +182,6 @@ def test_get_args_predict_after_train():
 
     expected_outputs = [
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model"},
-        {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
     actual = _get_args(ctx)
@@ -247,7 +244,6 @@ def test_get_args_predict_after_composite():
 
     expected_outputs = [
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model"},
-        {"id": "localfolder", "value": "/substra_internal/local"},
     ]
 
     actual = _get_args(ctx)
