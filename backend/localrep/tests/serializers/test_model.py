@@ -4,7 +4,6 @@ from uuid import uuid4
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
-from events.localsync import _create_model
 from localrep.models import Model
 from localrep.serializers import ModelSerializer
 from substrapp.tests import factory
@@ -36,13 +35,13 @@ class ModelSerializerTests(TestCase):
         assert serializer.data["address"]["storage_address"] == model.model_address
 
     def test_sync_disabled_model(self):
-        """Disabled models should be syncable without address"""
+        """Disabled models should be valid without address"""
 
         algo = factory.create_algo()
         compute_plan = factory.create_computeplan()
         compute_task = factory.create_computetask(compute_plan, algo)
 
-        orc_output_model = {
+        data = {
             "key": str(uuid4()),
             "category": "MODEL_SIMPLE",
             "compute_task_key": str(compute_task.key),
@@ -58,9 +57,9 @@ class ModelSerializerTests(TestCase):
             },
             "owner": "MyOrg1MSP",
             "creation_date": "2022-01-20T14:18:55.354089+00:00",
+            "channel": "mychannel",
         }
 
-        try:
-            self.assertTrue(_create_model("mychannel", orc_output_model))
-        except Exception as e:
-            self.fail(f"_create_model raised {e} unexpectedly")
+        serializer = ModelSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()

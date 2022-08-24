@@ -34,7 +34,7 @@ def _on_create_organization_event(event: dict) -> None:
     _create_organization(channel=event["channel"], data=event["organization"])
 
 
-def _create_organization(channel: str, data: dict) -> bool:
+def _create_organization(channel: str, data: dict) -> None:
     data["channel"] = channel
 
     serializer = ChannelOrganizationSerializer(data=data)
@@ -42,9 +42,6 @@ def _create_organization(channel: str, data: dict) -> bool:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Organization already exists", organization_id=data["id"], channel=data["channel"])
-        return False
-    else:
-        return True
 
 
 def _on_create_algo_event(event: dict) -> None:
@@ -53,16 +50,13 @@ def _on_create_algo_event(event: dict) -> None:
     _create_algo(channel=event["channel"], data=event["algo"])
 
 
-def _create_algo(channel: str, data: dict) -> bool:
+def _create_algo(channel: str, data: dict) -> None:
     data["channel"] = channel
     serializer = AlgoSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Algo already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_update_algo_event(event: dict) -> None:
@@ -87,16 +81,13 @@ def _on_create_computeplan_event(event: dict) -> None:
     _create_computeplan(channel=event["channel"], data=event["compute_plan"])
 
 
-def _create_computeplan(channel: str, data: dict) -> bool:
+def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
     serializer = ComputePlanSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("ComputePlan already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_update_computeplan_event(event: dict) -> None:
@@ -132,7 +123,7 @@ def _on_create_computetask_event(event: dict) -> None:
 
 def _create_computetask(
     channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
-) -> bool:
+) -> None:
 
     localrep_data = computetask.orc_to_localrep(data)
     localrep_data["channel"] = channel
@@ -151,9 +142,6 @@ def _create_computetask(
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Computetask already exists", asset_key=localrep_data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_update_computetask_event(event: dict) -> None:
@@ -213,7 +201,7 @@ def _on_create_datamanager_event(event: dict) -> None:
     _create_datamanager(channel=event["channel"], data=event["data_manager"])
 
 
-def _create_datamanager(channel: str, data: dict) -> bool:
+def _create_datamanager(channel: str, data: dict) -> None:
     data["channel"] = channel
     # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
     #      the orchestrator and backend used to generate the dumps are both outdated.
@@ -224,9 +212,6 @@ def _create_datamanager(channel: str, data: dict) -> bool:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("DataManager already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_update_datamanager_event(event: dict) -> None:
@@ -237,8 +222,6 @@ def _on_update_datamanager_event(event: dict) -> None:
 
 def _update_datamanager(key: str, data: dict) -> None:
     """Process update datamanager event to update local database."""
-
-    from localrep.models.datamanager import DataManager
 
     datamanager = DataManager.objects.get(key=key)
     datamanager.name = data["name"]
@@ -251,16 +234,13 @@ def _on_create_datasample_event(event: dict) -> None:
     _create_datasample(channel=event["channel"], data=event["data_sample"])
 
 
-def _create_datasample(channel: str, data: dict) -> bool:
+def _create_datasample(channel: str, data: dict) -> None:
     data["channel"] = channel
     serializer = DataSampleSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Datasample already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_update_datasample_event(event: dict) -> None:
@@ -283,7 +263,7 @@ def _on_create_performance_event(event: dict) -> None:
     _create_performance(channel=event["channel"], data=event["performance"])
 
 
-def _create_performance(channel: str, data: dict) -> bool:
+def _create_performance(channel: str, data: dict) -> None:
     data["channel"] = channel
     serializer = PerformanceSerializer(data=data)
     try:
@@ -292,9 +272,6 @@ def _create_performance(channel: str, data: dict) -> bool:
         logger.debug(
             "Performance already exists", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
         )
-        return False
-    else:
-        return True
 
 
 def _on_create_model_event(event: dict) -> None:
@@ -303,16 +280,13 @@ def _on_create_model_event(event: dict) -> None:
     _create_model(channel=event["channel"], data=event["model"])
 
 
-def _create_model(channel: str, data: dict) -> bool:
+def _create_model(channel: str, data: dict) -> None:
     data["channel"] = channel
     serializer = ModelSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Model already exists", asset_key=data["key"])
-        return False
-    else:
-        return True
 
 
 def _on_disable_model_event(event: dict) -> None:
