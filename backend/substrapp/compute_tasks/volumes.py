@@ -2,7 +2,7 @@ import os
 
 from django.conf import settings
 
-from orchestrator import computetask_pb2
+import orchestrator
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
@@ -24,7 +24,7 @@ def get_volumes(ctx: Context):
         ]
     )
 
-    if ctx.task_category == computetask_pb2.TASK_TEST:
+    if ctx.task.category == orchestrator.ComputeTaskCategory.TASK_TEST:
         # testtuple
         volume_mounts.append(_create_mount(dirs.task_dir, TaskDirName.Perf))
     else:

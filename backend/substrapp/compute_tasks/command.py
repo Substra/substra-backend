@@ -4,8 +4,7 @@ from typing import List
 
 import structlog
 
-import orchestrator.computetask_pb2 as computetask_pb2
-from orchestrator.resources import AssetKind
+import orchestrator
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.context import TaskResource
 from substrapp.compute_tasks.directories import SANDBOX_DIR
@@ -17,11 +16,8 @@ logger = structlog.get_logger(__name__)
 # These constants are shared with connect-tools.
 # These constants will disappear once the inputs/outputs are exposed by the orchestrator.
 TASK_IO_PREDICTIONS = "predictions"
-TASK_IO_OPENER = "opener"
 TASK_IO_LOCALFOLDER = "localfolder"
 TASK_IO_CHAINKEYS = "chainkeys"
-TASK_IO_DATASAMPLES = "datasamples"
-TRAIN_IO_MODELS = "models"
 TRAIN_IO_MODEL = "model"
 COMPOSITE_IO_SHARED = "shared"
 COMPOSITE_IO_LOCAL = "local"
@@ -36,10 +32,10 @@ class Filenames:
 
 
 TASK_COMMANDS = {
-    computetask_pb2.TASK_TRAIN: "train",
-    computetask_pb2.TASK_PREDICT: "predict",
-    computetask_pb2.TASK_COMPOSITE: "train",
-    computetask_pb2.TASK_AGGREGATE: "aggregate",
+    orchestrator.ComputeTaskCategory.TASK_TRAIN: "train",
+    orchestrator.ComputeTaskCategory.TASK_PREDICT: "predict",
+    orchestrator.ComputeTaskCategory.TASK_COMPOSITE: "train",
+    orchestrator.ComputeTaskCategory.TASK_AGGREGATE: "aggregate",
 }
 
 
@@ -71,7 +67,7 @@ def get_exec_command(ctx: Context) -> List[str]:
 # TODO: '_get_args' is too complex, consider refactoring
 def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     task = ctx.task
-    task_category = ctx.task_category
+    task_category = ctx.task.category
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
@@ -83,7 +79,7 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
     inputs = []
     outputs = []
 
-    if ctx.task_category == computetask_pb2.TASK_TEST:
+    if task_category == orchestrator.ComputeTaskCategory.TASK_TEST:
         perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
         command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.input_models[0].key)]
         command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
@@ -93,11 +89,6 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
         ctx.set_outputs([TaskResource(id="performance", value=perf_path)])
         return command
 
-    compute_plan_key = None
-    if "compute_plan_key" in task and task["compute_plan_key"]:
-        compute_plan_key = task["compute_plan_key"]
-    rank = str(task["rank"]) if compute_plan_key else None
-
     command = [TASK_COMMANDS[task_category]]
 
     # TODO: refactor path handling in context to iterate over all inputs at once
@@ -105,42 +96,43 @@ def _get_args(ctx: Context) -> List[str]:  # noqa: C901
         [
             TaskResource(id=input.identifier, value=os.path.join(in_models_dir, input.model.key))
             for input in ctx.input_assets
-            if input.kind == AssetKind.ASSET_MODEL
+            if input.kind == orchestrator.AssetKind.ASSET_MODEL
         ]
     )
     inputs.extend(
         [
             TaskResource(id=input.identifier, value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener))
             for input in ctx.input_assets
-            if input.kind == AssetKind.ASSET_DATA_MANAGER
+            if input.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER
         ]
     )
     inputs.extend(
         [
             TaskResource(id=input.identifier, value=os.path.join(datasamples_dir, input.data_sample.key))
             for input in ctx.input_assets
-            if input.kind == AssetKind.ASSET_DATA_SAMPLE
+            if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE
         ]
     )
 
-    if task_category == computetask_pb2.TASK_TRAIN:
+    if task_category == orchestrator.ComputeTaskCategory.TASK_TRAIN:
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    elif task_category == computetask_pb2.TASK_COMPOSITE:
+    elif task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
         outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
         outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    elif task_category == computetask_pb2.TASK_AGGREGATE:
+    elif task_category == orchestrator.ComputeTaskCategory.TASK_AGGREGATE:
         outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    elif task_category == computetask_pb2.TASK_PREDICT:
+    elif task_category == orchestrator.ComputeTaskCategory.TASK_PREDICT:
         outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
         outputs.append(TaskResource(id=TASK_IO_LOCALFOLDER, value=local_folder))
 
-    if rank and task_category != computetask_pb2.TASK_PREDICT:
+    rank = str(task.rank)
+    if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:
         command += ["--rank", rank]
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))

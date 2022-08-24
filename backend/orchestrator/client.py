@@ -34,6 +34,7 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
 
 logger = structlog.get_logger(__name__)
@@ -325,7 +326,7 @@ class OrchestratorClient:
         status=computetask_pb2.STATUS_UNKNOWN,
         category=computetask_pb2.TASK_UNKNOWN,
         compute_plan_key=None,
-    ):
+    ) -> List[ComputeTask]:
         task_filter = computetask_pb2.TaskQueryFilter(
             worker=worker,
             status=status,
@@ -343,20 +344,15 @@ class OrchestratorClient:
             data = MessageToDict(data, **CONVERT_SETTINGS)
             tasks = data.get("tasks", [])
             page_token = data.get("next_page_token")
-            # handle tag
-            for datum in tasks:
-                add_tag_from_metadata(datum)
-            res.extend(tasks)
+            res.extend(ComputeTask.from_grpc(t) for t in tasks)
             if page_token == "" or not tasks:  # nosec
                 break
         return res
 
     @grpc_retry
-    def query_task(self, key):
+    def query_task(self, key) -> ComputeTask:
         data = self._computetask_client.GetTask(computetask_pb2.GetTaskParam(key=key), metadata=self._metadata)
-        data = MessageToDict(data, **CONVERT_SETTINGS)
-        add_tag_from_metadata(data)
-        return data
+        return ComputeTask.from_grpc(data)
 
     @grpc_retry
     def register_compute_plan(self, args):
@@ -557,4 +553,4 @@ class OrchestratorClient:
             computetask_pb2.GetTaskInputAssetsParam(compute_task_key=task_key),
             metadata=self._metadata,
         )
-        return [ComputeTaskInputAsset(asset) for asset in assets.assets]
+        return [ComputeTaskInputAsset.from_grpc(asset) for asset in assets.assets]

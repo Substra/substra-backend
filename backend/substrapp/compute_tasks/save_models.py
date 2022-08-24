@@ -5,7 +5,7 @@ import structlog
 from django.conf import settings
 from django.urls import reverse
 
-import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator
 import orchestrator.model_pb2 as model_pb2
 from localrep.errors import AlreadyExistsError
 from localrep.serializers import ModelSerializer as ModelRepSerializer
@@ -34,16 +34,16 @@ def save_models(ctx: Context) -> None:
         SaveModelsError: Raised if we can't save a model for this task kind
     """
 
-    task_category = ctx.task_category
+    task_category = ctx.task.category
     dirs = ctx.directories
-    task_key = ctx.task_key
+    task_key = ctx.task.key
     models = []
 
     if task_category not in [
-        computetask_pb2.TASK_AGGREGATE,
-        computetask_pb2.TASK_TRAIN,
-        computetask_pb2.TASK_COMPOSITE,
-        computetask_pb2.TASK_PREDICT,
+        orchestrator.ComputeTaskCategory.TASK_AGGREGATE,
+        orchestrator.ComputeTaskCategory.TASK_TRAIN,
+        orchestrator.ComputeTaskCategory.TASK_COMPOSITE,
+        orchestrator.ComputeTaskCategory.TASK_PREDICT,
     ]:
         raise SaveModelsError(f"Cannot save models for task category {task_category}")
 
@@ -52,7 +52,7 @@ def save_models(ctx: Context) -> None:
     simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key, output_identifier)
     models.append(simple_model)
 
-    if task_category == computetask_pb2.TASK_COMPOSITE:
+    if task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
         # If we have a composite task we have two outputs, a MODEL_HEAD and a MODEL_SIMPLE model
         # so we need to register the head part separately
         head_model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutHeadModel)
@@ -77,7 +77,7 @@ def save_models(ctx: Context) -> None:
             pass
 
     add_model_from_path(model_path, str(simple_model["key"]))
-    if task_category == computetask_pb2.TASK_COMPOSITE:
+    if task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
         add_model_from_path(head_model_path, str(head_model["key"]))
 
 

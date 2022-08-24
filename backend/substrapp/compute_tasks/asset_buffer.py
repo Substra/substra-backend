@@ -236,7 +236,7 @@ def _add_models_to_buffer(channel_name: str, models: List[Model]) -> None:
     for model in models:
         with get_orchestrator_client(channel_name) as client:
             parent_task = client.query_task(model.compute_task_key)
-        args = (channel_name, model, parent_task["worker"])
+        args = (channel_name, model, parent_task.worker)
         proc = Process(target=_add_model_to_buffer_with_lock, args=args)
         procs.append((proc, args))
         proc.start()

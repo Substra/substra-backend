@@ -59,7 +59,7 @@ def execute_compute_task(ctx: Context) -> None:
         with get_orchestrator_client(channel_name) as client:
             # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
             # We use allow_doing=True to allow celery retries.
-            task_utils.abort_task_if_not_runnable(ctx.task_key, client, allow_doing=True)
+            task_utils.abort_task_if_not_runnable(ctx.task.key, client, allow_doing=True)
 
         create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
         try:

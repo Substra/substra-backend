@@ -1,5 +1,4 @@
 import os
-from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -7,11 +6,7 @@ from typing import Optional
 import structlog
 from django.conf import settings
 
-from orchestrator import computetask_pb2
-from orchestrator.resources import AssetKind
-from orchestrator.resources import ComputeTaskInputAsset
-from orchestrator.resources import DataManager
-from orchestrator.resources import Model
+import orchestrator
 from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import SANDBOX_DIR
@@ -20,14 +15,6 @@ from substrapp.compute_tasks.errors import InvalidContextError
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
-
-TASK_DATA_FIELD = {
-    computetask_pb2.TASK_TRAIN: "train",
-    computetask_pb2.TASK_PREDICT: "predict",
-    computetask_pb2.TASK_TEST: "test",
-    computetask_pb2.TASK_AGGREGATE: "aggregate",
-    computetask_pb2.TASK_COMPOSITE: "composite",
-}
 
 
 class TaskResource(dict):
@@ -49,13 +36,10 @@ class Context:
     """
 
     _channel_name: str
-    _task: Dict[str, Any]
-    _task_category: "computetask_pb2.ComputeTaskCategory.ValueType"
-    _task_key: str
-    _compute_plan_key: str
+    _task: orchestrator.ComputeTask
     _compute_plan_tag: str
     _compute_plan: Dict
-    _input_assets: List[ComputeTaskInputAsset]
+    _input_assets: List[orchestrator.ComputeTaskInputAsset]
     _directories: Directories
     _algo: Algo
     _has_chainkeys: bool
@@ -64,13 +48,10 @@ class Context:
     def __init__(
         self,
         channel_name: str,
-        task: Dict[str, Any],
-        task_category: "computetask_pb2.ComputeTaskCategory.ValueType",
-        task_key: str,
+        task: orchestrator.ComputeTask,
         compute_plan: Dict,
-        compute_plan_key: str,
         compute_plan_tag: str,
-        input_assets: List[ComputeTaskInputAsset],
+        input_assets: List[orchestrator.ComputeTaskInputAsset],
         algo: Algo,
         directories: Directories,
         has_chainkeys: bool,
@@ -78,9 +59,6 @@ class Context:
         self._channel_name = channel_name
         self._task = task
         self._compute_plan = compute_plan
-        self._task_category = task_category
-        self._task_key = task_key
-        self._compute_plan_key = compute_plan_key
         self._compute_plan_tag = compute_plan_tag
         self._input_assets = input_assets
         self._directories = directories
@@ -89,16 +67,14 @@ class Context:
         self._outputs = {}
 
     @classmethod
-    def from_task(cls, channel_name: str, task: dict):
-        task_key = task["key"]
-        compute_plan_key = task["compute_plan_key"]
-        task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
+    def from_task(cls, channel_name: str, task: orchestrator.ComputeTask):
+        compute_plan_key = task.compute_plan_key
 
         # fetch more information from the orchestrator
         with get_orchestrator_client(channel_name) as client:
             compute_plan = client.query_compute_plan(compute_plan_key)
-            input_assets = client.get_task_input_assets(task["key"])
-            algo = client.query_algo(task["algo"]["key"])
+            input_assets = client.get_task_input_assets(task.key)
+            algo = client.query_algo(task.algo_key)
             algo = Algo(channel_name, algo)
 
         logger.debug("retrieved input assets from orchestrator", input_assets=input_assets)
@@ -112,10 +88,7 @@ class Context:
         return cls(
             channel_name,
             task,
-            task_category,
-            task_key,
             compute_plan,
-            compute_plan_key,
             compute_plan_tag,
             input_assets,
             algo,
@@ -128,24 +101,12 @@ class Context:
         return self._channel_name
 
     @property
-    def task(self) -> Dict[str, Any]:
+    def task(self) -> orchestrator.ComputeTask:
         return self._task
 
     @property
-    def task_category(self) -> "computetask_pb2.ComputeTaskCategory.ValueType":
-        return self._task_category
-
-    @property
-    def task_key(self) -> str:
-        return self._task_key
-
-    @property
-    def task_rank(self) -> int:
-        return self.task["rank"]
-
-    @property
     def compute_plan_key(self) -> str:
-        return self._compute_plan_key
+        return self._task.compute_plan_key
 
     @property
     def compute_plan_tag(self) -> str:
@@ -160,13 +121,13 @@ class Context:
         return self._has_chainkeys
 
     @property
-    def input_assets(self) -> List[ComputeTaskInputAsset]:
+    def input_assets(self) -> List[orchestrator.ComputeTaskInputAsset]:
         return self._input_assets
 
     @property
-    def input_models(self) -> List[Model]:
+    def input_models(self) -> List[orchestrator.Model]:
         """Return the models passed as task inputs"""
-        return [input.model for input in self._input_assets if input.kind == AssetKind.ASSET_MODEL]
+        return [input.model for input in self._input_assets if input.kind == orchestrator.AssetKind.ASSET_MODEL]
 
     @property
     def algo(self) -> Algo:
@@ -177,15 +138,23 @@ class Context:
         return self._compute_plan
 
     @property
-    def data_manager(self) -> Optional[DataManager]:
-        dm = [input.data_manager for input in self._input_assets if input.kind == AssetKind.ASSET_DATA_MANAGER]
+    def data_manager(self) -> Optional[orchestrator.DataManager]:
+        dm = [
+            input.data_manager
+            for input in self._input_assets
+            if input.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER
+        ]
         if len(dm) > 1:
             raise InvalidContextError("there are too many datamanagers")
         return dm[0] if dm else None
 
     @property
     def data_sample_keys(self) -> List[str]:
-        return [input.data_sample.key for input in self._input_assets if input.kind == AssetKind.ASSET_DATA_SAMPLE]
+        return [
+            input.data_sample.key
+            for input in self._input_assets
+            if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE
+        ]
 
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)

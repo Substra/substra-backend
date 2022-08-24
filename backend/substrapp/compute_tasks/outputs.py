@@ -3,7 +3,7 @@ import os
 
 import structlog
 
-import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks import command
 from substrapp.compute_tasks import directories
@@ -20,7 +20,7 @@ def save_outputs(ctx: Context) -> None:
     Args:
         ctx: A task context.
     """
-    if ctx.task_category == computetask_pb2.TASK_TEST:
+    if ctx.task.category == orchestrator.ComputeTaskCategory.TASK_TEST:
         _save_test_task_outputs(ctx)
     else:
         _save_training_task_outputs(ctx)
@@ -52,7 +52,7 @@ def _save_test_task_outputs(ctx: Context) -> None:
         )
         identifier = ctx.get_output_identifier(perf_path)
         perf = _get_perf(perf_path)
-        _register_perf(client, ctx.task_key, ctx.algo.key, perf, identifier)
+        _register_perf(client, ctx.task.key, ctx.algo.key, perf, identifier)
 
 
 def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float, identifier: str) -> None:

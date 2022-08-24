@@ -31,6 +31,7 @@ from django.conf import settings
 from django.core import files
 from django.urls import reverse
 
+import orchestrator
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp import models
@@ -93,7 +94,7 @@ class ComputeTask(Task):
     def on_retry(self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources
-        delete_compute_plan_pods(task["compute_plan_key"])
+        delete_compute_plan_pods(task.compute_plan_key)
         logger.info(
             "Retrying task",
             celery_task_id=task_id,
@@ -109,7 +110,7 @@ class ComputeTask(Task):
         close_old_connections()
 
         channel_name, task = self.split_args(args)
-        compute_task_key = task["key"]
+        compute_task_key = task.key
 
         failure_report = _store_failure(exc, compute_task_key)
         error_type = compute_task_errors.get_error_type(exc)
@@ -131,7 +132,7 @@ class ComputeTask(Task):
 
     def split_args(self, celery_args: Tuple) -> Tuple[str, dict[str, Any]]:
         channel_name = celery_args[0]
-        task = celery_args[1]
+        task = orchestrator.ComputeTask.parse_raw(celery_args[1])
         return channel_name, task
 
 
@@ -144,34 +145,32 @@ def process_pending_tasks(channel_name: str) -> None:
         queue_compute_task(channel_name, task)
 
 
-def queue_compute_task(channel_name: str, task: dict[str, Any]) -> None:
+def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> None:
     from substrapp.task_routing import get_worker_queue
 
-    task_key = task["key"]
-
     # Verify that celery task does not already exist
-    if AsyncResult(task_key).state != "PENDING":
+    if AsyncResult(task.key).state != "PENDING":
         logger.info(
             "skipping this task because is already exists",
-            compute_task_key=task_key,
-            celery_task_key=task_key,
+            compute_task_key=task.key,
+            celery_task_key=task.key,
         )
         return
 
     with get_orchestrator_client(channel_name) as client:
-        if not task_utils.is_task_runnable(task_key, client):
+        if not task_utils.is_task_runnable(task.key, client):
             return  # avoid creating a Celery task
 
     # get mapping cp to worker or create a new one
-    worker_queue = get_worker_queue(task["compute_plan_key"])
+    worker_queue = get_worker_queue(task.compute_plan_key)
     logger.info(
         "Assigned compute plan to worker queue",
-        compute_task_key=task_key,
-        compute_plan_key=task["compute_plan_key"],
+        compute_task_key=task.key,
+        compute_plan_key=task.compute_plan_key,
         worker_queue=worker_queue,
     )
 
-    compute_task.apply_async((channel_name, task, task["compute_plan_key"]), queue=worker_queue, task_id=task_key)
+    compute_task.apply_async((channel_name, task, task.compute_plan_key), queue=worker_queue, task_id=task.key)
 
 
 @app.task(
@@ -184,7 +183,8 @@ def queue_compute_task(channel_name: str, task: dict[str, Any]) -> None:
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:
+def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, compute_plan_key: str) -> None:
+    task = orchestrator.ComputeTask.parse_raw(serialized_task)
     try:
         _run(self, channel_name, task, compute_plan_key)
     except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
@@ -218,30 +218,28 @@ def _create_task_profiling_step(
 
 
 # TODO: function too complex, consider refactoring
-def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_plan_key: str) -> None:  # noqa: C901
+def _run(
+    self: ComputeTask, channel_name: str, task: orchestrator.ComputeTask, compute_plan_key: str
+) -> None:  # noqa: C901
     timer = Timer()
-    _create_task_profiling(channel_name, task["key"])
+    _create_task_profiling(channel_name, task.key)
 
-    task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
-    task_key = task["key"]
     structlog.contextvars.bind_contextvars(
-        compute_task_key=task_key, compute_plan_key=compute_plan_key, attempt=self.attempt
+        compute_task_key=task.key, compute_plan_key=compute_plan_key, attempt=self.attempt
     )
 
     # In case of retries: only execute the compute task if it is not in a final state
     with get_orchestrator_client(channel_name) as client:
-        task = client.query_task(task_key)
+        task = client.query_task(task.key)
         # Set allow_doing=True to allow celery retries.
-        task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True, task=task)
+        task_utils.abort_task_if_not_runnable(task.key, client, allow_doing=True, task=task)
         # Try to set the tasks status to DOING if it is not already the case
         task_utils.start_task_if_not_started(task, client)
 
     logger.info(
         "Computing task",
-        task_category=computetask_pb2.ComputeTaskCategory.Name(task_category),
         task=task,
     )
-    ctx = None
     dirs = None
 
     try:
@@ -260,14 +258,14 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
         build_image_if_missing(ctx.algo)
 
         # stop build_image timer
-        _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.BUILD_IMAGE, timer.stop())
+        _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
 
         with acquire_compute_plan_lock(compute_plan_key):
 
             # Check the task/cp status again, as the task/cp may not be in a runnable state anymore
             with get_orchestrator_client(channel_name) as client:
                 # Set allow_doing=True to allow celery retries.
-                task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
+                task_utils.abort_task_if_not_runnable(task.key, client, allow_doing=True)
 
             # start inputs loading timer
             timer.start()
@@ -277,7 +275,7 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
 
             add_assets_to_taskdir(ctx)
 
-            if task_category != computetask_pb2.TASK_TEST:
+            if task.category != orchestrator.ComputeTaskCategory.TASK_TEST:
                 if ctx.has_chainkeys:
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
@@ -285,7 +283,7 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
             restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
 
             # stop inputs loading timer
-            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
+            _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
 
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
 
@@ -296,7 +294,7 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
             execute_compute_task(ctx)
 
             # stop task_execution timer
-            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.TASK_EXECUTION, timer.stop())
+            _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.TASK_EXECUTION, timer.stop())
 
             # start outputs saving timer
             timer.start()
@@ -304,10 +302,10 @@ def _run(self: ComputeTask, channel_name: str, task: dict[str, Any], compute_pla
             # Collect results
             save_outputs(ctx)
             with get_orchestrator_client(channel_name) as client:
-                task_utils.mark_as_done(ctx.task_key, client)
+                task_utils.mark_as_done(ctx.task.key, client)
 
             # stop outputs saving timer
-            _create_task_profiling_step(channel_name, task["key"], ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())
+            _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())
 
     except OSError as e:
         if e.errno == errno.ENOSPC:

@@ -1,54 +1,52 @@
 import json
 
+import orchestrator
 import orchestrator.algo_pb2 as algo_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.mock as orc_mock
 from orchestrator.resources import ComputeTaskInputAsset
 from substrapp.compute_tasks.command import _get_args
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import Directories
 from substrapp.tests.common import InputIdentifiers
 from substrapp.tests.orchestrator_factory import AlgoFactory
-from substrapp.tests.orchestrator_factory import DataManagerFactory
-from substrapp.tests.orchestrator_factory import DataSampleFactory
-from substrapp.tests.orchestrator_factory import ModelFactory
 
 _CHANNEL = "mychannel"
 
 
 def test_get_args_train_task():
-    model = ModelFactory()
-    data_manager = DataManagerFactory()
-    ds1 = DataSampleFactory()
-    ds2 = DataSampleFactory()
+    model = orc_mock.ModelFactory()
+    data_manager = orc_mock.DataManagerFactory()
+    ds1 = orc_mock.DataSampleFactory()
+    ds2 = orc_mock.DataSampleFactory()
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
+        rank=0,
+    )
 
     input_assets = [
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.MODEL, model=model)),
+        ComputeTaskInputAsset(identifier=InputIdentifiers.MODEL, kind=orchestrator.AssetKind.ASSET_MODEL, model=model),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.OPENER, data_manager=data_manager)
+            identifier=InputIdentifiers.OPENER,
+            kind=orchestrator.AssetKind.ASSET_DATA_MANAGER,
+            data_manager=data_manager,
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds1)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds1
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds2)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds2
         ),
     ]
 
     ctx = Context(
         channel_name=_CHANNEL,
-        task={
-            "compute_plan_key": "cpkey",
-            "rank": "0",
-        },
-        task_category=computetask_pb2.ComputeTaskCategory.TASK_TRAIN,
+        task=task,
         compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
         compute_plan={},
-        compute_plan_key="cpkey",
-        task_key="taskkey",
-        directories=Directories("cpkey"),
+        directories=Directories(task.key),
     )
 
     expected_inputs = [
@@ -76,41 +74,43 @@ def test_get_args_train_task():
 
 
 def test_get_args_composite_task():
-    shared = ModelFactory()
-    local = ModelFactory()
-    data_manager = DataManagerFactory()
-    ds1 = DataSampleFactory()
-    ds2 = DataSampleFactory()
+    shared = orc_mock.ModelFactory()
+    local = orc_mock.ModelFactory()
+    data_manager = orc_mock.DataManagerFactory()
+    ds1 = orc_mock.DataSampleFactory()
+    ds2 = orc_mock.DataSampleFactory()
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_COMPOSITE,
+        rank=0,
+    )
 
     input_assets = [
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.SHARED, model=shared)),
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.LOCAL, model=local)),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.OPENER, data_manager=data_manager)
+            identifier=InputIdentifiers.SHARED, kind=orchestrator.AssetKind.ASSET_MODEL, model=shared
+        ),
+        ComputeTaskInputAsset(identifier=InputIdentifiers.LOCAL, kind=orchestrator.AssetKind.ASSET_MODEL, model=local),
+        ComputeTaskInputAsset(
+            identifier=InputIdentifiers.OPENER,
+            kind=orchestrator.AssetKind.ASSET_DATA_MANAGER,
+            data_manager=data_manager,
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds1)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds1
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds2)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds2
         ),
     ]
 
     ctx = Context(
         channel_name=_CHANNEL,
-        task={
-            "compute_plan_key": "cpkey",
-            "rank": "0",
-        },
-        task_category=computetask_pb2.ComputeTaskCategory.TASK_COMPOSITE,
+        task=task,
         compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
         compute_plan={},
-        compute_plan_key="cpkey",
-        task_key="taskkey",
-        directories=Directories("cpkey"),
+        directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
@@ -140,39 +140,39 @@ def test_get_args_composite_task():
 
 
 def test_get_args_predict_after_train():
-    model = ModelFactory()
-    data_manager = DataManagerFactory()
-    ds1 = DataSampleFactory()
-    ds2 = DataSampleFactory()
+    model = orc_mock.ModelFactory()
+    data_manager = orc_mock.DataManagerFactory()
+    ds1 = orc_mock.DataSampleFactory()
+    ds2 = orc_mock.DataSampleFactory()
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_PREDICT,
+        rank=0,
+    )
 
     input_assets = [
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.MODEL, model=model)),
+        ComputeTaskInputAsset(identifier=InputIdentifiers.MODEL, kind=orchestrator.AssetKind.ASSET_MODEL, model=model),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.OPENER, data_manager=data_manager)
+            identifier=InputIdentifiers.OPENER,
+            kind=orchestrator.AssetKind.ASSET_DATA_MANAGER,
+            data_manager=data_manager,
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds1)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds1
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds2)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds2
         ),
     ]
 
     ctx = Context(
         channel_name=_CHANNEL,
-        task={
-            "compute_plan_key": "cpkey",
-            "rank": "0",
-        },
-        task_category=computetask_pb2.ComputeTaskCategory.TASK_PREDICT,
+        task=task,
         compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
         compute_plan={},
-        compute_plan_key="cpkey",
-        task_key="taskkey",
-        directories=Directories("cpkey"),
+        directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
@@ -198,41 +198,43 @@ def test_get_args_predict_after_train():
 
 
 def test_get_args_predict_after_composite():
-    local = ModelFactory()
-    shared = ModelFactory()
-    data_manager = DataManagerFactory()
-    ds1 = DataSampleFactory()
-    ds2 = DataSampleFactory()
+    local = orc_mock.ModelFactory()
+    shared = orc_mock.ModelFactory()
+    data_manager = orc_mock.DataManagerFactory()
+    ds1 = orc_mock.DataSampleFactory()
+    ds2 = orc_mock.DataSampleFactory()
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_PREDICT,
+        rank=0,
+    )
 
     input_assets = [
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.LOCAL, model=local)),
-        ComputeTaskInputAsset(computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.SHARED, model=shared)),
+        ComputeTaskInputAsset(identifier=InputIdentifiers.LOCAL, kind=orchestrator.AssetKind.ASSET_MODEL, model=local),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.OPENER, data_manager=data_manager)
+            identifier=InputIdentifiers.SHARED, kind=orchestrator.AssetKind.ASSET_MODEL, model=shared
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds1)
+            identifier=InputIdentifiers.OPENER,
+            kind=orchestrator.AssetKind.ASSET_DATA_MANAGER,
+            data_manager=data_manager,
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds2)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds1
+        ),
+        ComputeTaskInputAsset(
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds2
         ),
     ]
 
     ctx = Context(
         channel_name=_CHANNEL,
-        task={
-            "compute_plan_key": "cpkey",
-            "rank": "0",
-        },
-        task_category=computetask_pb2.ComputeTaskCategory.TASK_PREDICT,
+        task=task,
         compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
         compute_plan={},
-        compute_plan_key="cpkey",
-        task_key="taskkey",
-        directories=Directories("cpkey"),
+        directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
@@ -260,41 +262,41 @@ def test_get_args_predict_after_composite():
 
 def test_get_args_test_after_predict():
     algo = AlgoFactory(category=algo_pb2.AlgoCategory.ALGO_METRIC)
-    pred = ModelFactory()
-    data_manager = DataManagerFactory()
-    ds1 = DataSampleFactory()
-    ds2 = DataSampleFactory()
+    pred = orc_mock.ModelFactory()
+    data_manager = orc_mock.DataManagerFactory()
+    ds1 = orc_mock.DataSampleFactory()
+    ds2 = orc_mock.DataSampleFactory()
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_TEST,
+        rank=0,
+    )
 
     input_assets = [
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.PREDICTIONS, model=pred)
+            identifier=InputIdentifiers.PREDICTIONS, kind=orchestrator.AssetKind.ASSET_MODEL, model=pred
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.OPENER, data_manager=data_manager)
+            identifier=InputIdentifiers.OPENER,
+            kind=orchestrator.AssetKind.ASSET_DATA_MANAGER,
+            data_manager=data_manager,
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds1)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds1
         ),
         ComputeTaskInputAsset(
-            computetask_pb2.ComputeTaskInputAsset(identifier=InputIdentifiers.DATASAMPLES, data_sample=ds2)
+            identifier=InputIdentifiers.DATASAMPLES, kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, data_sample=ds2
         ),
     ]
 
     ctx = Context(
         channel_name=_CHANNEL,
-        task={
-            "compute_plan_key": "cpkey",
-            "rank": "0",
-        },
-        task_category=computetask_pb2.ComputeTaskCategory.TASK_TEST,
+        task=task,
         compute_plan_tag="",
         input_assets=input_assets,
         algo=algo,
         has_chainkeys=False,
         compute_plan={},
-        compute_plan_key="cpkey",
-        task_key="taskkey",
-        directories=Directories("cpkey"),
+        directories=Directories(task.compute_plan_key),
     )
 
     cmd = [

@@ -3,7 +3,9 @@ import threading
 import structlog
 from django.conf import settings
 from django.db import close_old_connections
+from google.protobuf import json_format
 
+import orchestrator
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -11,7 +13,6 @@ import orchestrator.event_pb2 as event_pb2
 from events import health
 from events import localsync
 from localrep.models import LastEvent
-from orchestrator.client import OrchestratorClient
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
@@ -88,7 +89,10 @@ def on_computetask_event(payload):
         )
         return
 
-    queue_compute_task(channel_name, task=task)
+    grpc_task = computetask_pb2.ComputeTask()
+    json_format.ParseDict(task, grpc_task, ignore_unknown_fields=True)
+    orc_task = orchestrator.ComputeTask.from_grpc(grpc_task)
+    queue_compute_task(channel_name, task=orc_task)
 
 
 def on_model_event(payload):
@@ -129,7 +133,7 @@ def on_event(payload):
         close_old_connections()
 
 
-def consume_channel(client: OrchestratorClient, channel_name: str, exception_raised: threading.Event):
+def consume_channel(client: orchestrator.Client, channel_name: str, exception_raised: threading.Event):
     try:
 
         structlog.contextvars.bind_contextvars(channel_name=channel_name)

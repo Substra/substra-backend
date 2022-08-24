@@ -1,31 +1,38 @@
-from dataclasses import dataclass
-from enum import Enum
+import enum
+from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
-import orchestrator.common_pb2 as common_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.model_pb2 as model_pb2
+import pydantic
+
+from orchestrator import common_pb2
+from orchestrator import computetask_pb2
 from orchestrator import datamanager_pb2
 from orchestrator import datasample_pb2
+from orchestrator import model_pb2
 
 
-class AssetKind(Enum):
-    ASSET_UNKNOWN = 0
-    ASSET_ORGANIZATION = 1
-    ASSET_DATA_SAMPLE = 3
-    ASSET_DATA_MANAGER = 4
-    ASSET_ALGO = 5
-    ASSET_COMPUTE_TASK = 6
-    ASSET_COMPUTE_PLAN = 7
-    ASSET_MODEL = 8
-    ASSET_PERFORMANCE = 9
-    ASSET_FAILURE_REPORT = 10
-    ASSET_COMPUTE_TASK_OUTPUT_ASSET = 11
+class AutoNameEnum(enum.Enum):
+    def _generate_next_value_(name, start, count, last_values):  # noqa: N805
+        return name
 
 
-@dataclass
-class Address:
+class AssetKind(AutoNameEnum):
+    ASSET_UNKNOWN = enum.auto()
+    ASSET_ORGANIZATION = enum.auto()
+    ASSET_DATA_SAMPLE = enum.auto()
+    ASSET_DATA_MANAGER = enum.auto()
+    ASSET_ALGO = enum.auto()
+    ASSET_COMPUTE_TASK = enum.auto()
+    ASSET_COMPUTEPLAN = enum.auto()
+    ASSET_MODEL = enum.auto()
+    ASSET_PERFORMANCE = enum.auto()
+    ASSET_FAILURE_REPORT = enum.auto()
+    ASSET_COMPUTE_TASK_OUTPUT_ASSET = enum.auto()
+
+
+class Address(pydantic.BaseModel):
     uri: str
     checksum: str
 
@@ -37,8 +44,7 @@ class Address:
         )
 
 
-@dataclass
-class Model:
+class Model(pydantic.BaseModel):
     """Model is a partial representation of an orchestrator Model
 
     Partial because I didn't have the need and bandwidth to deal with all attributes.
@@ -59,8 +65,7 @@ class Model:
         )
 
 
-@dataclass
-class DataSample:
+class DataSample(pydantic.BaseModel):
     """DataSamples is a partial representation of an orchestrator DataSample
 
     Partial because I didn't have the need and bandwidth to deal with all attributes.
@@ -77,8 +82,7 @@ class DataSample:
         )
 
 
-@dataclass
-class DataManager:
+class DataManager(pydantic.BaseModel):
     """DataManager is a partial representation of an orchestrator DataManager
 
     Partial because I didn't have the need and bandwidth to deal with all attributes.
@@ -94,63 +98,168 @@ class DataManager:
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
 
 
-class ComputeTaskInputAsset:
-    _identifier: str
-    _kind: AssetKind = AssetKind.ASSET_UNKNOWN
-    _model: Optional[Model] = None
-    _data_manager: Optional[DataManager] = None
-    _data_sample: Optional[DataSample] = None
+class ComputeTaskStatus(AutoNameEnum):
+    STATUS_UNKNOWN = enum.auto()
+    STATUS_WAITING = enum.auto()
+    STATUS_TODO = enum.auto()
+    STATUS_DOING = enum.auto()
+    STATUS_DONE = enum.auto()
+    STATUS_CANCELED = enum.auto()
+    STATUS_FAILED = enum.auto()
 
-    def __init__(self, input_asset: computetask_pb2.ComputeTaskInputAsset) -> "ComputeTaskInputAsset":
-        self._identifier = input_asset.identifier
+    @classmethod
+    def from_grpc(cls, s: computetask_pb2.ComputeTaskStatus) -> "ComputeTaskStatus":
+        return cls(computetask_pb2.ComputeTaskStatus.Name(s))
+
+
+class ComputeTaskCategory(AutoNameEnum):
+    """Task category only exists temporarily for compatibility"""
+
+    TASK_UNKNOWN = enum.auto()
+    TASK_TRAIN = enum.auto()
+    TASK_AGGREGATE = enum.auto()
+    TASK_COMPOSITE = enum.auto()
+    TASK_TEST = enum.auto()
+    TASK_PREDICT = enum.auto()
+
+    @classmethod
+    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory) -> "ComputeTaskCategory":
+        return cls(computetask_pb2.ComputeTaskCategory.Name(c))
+
+
+class Permission(pydantic.BaseModel):
+    public: bool
+    authorized_ids: List[str]
+
+    @classmethod
+    def from_grpc(cls, p: common_pb2.Permission) -> "Permission":
+        return cls(
+            public=p.public,
+            authorized_ids=list(p.authorized_ids),
+        )
+
+
+class Permissions(pydantic.BaseModel):
+    process: Permission
+    download: Permission
+
+    @classmethod
+    def from_grpc(cls, p: common_pb2.Permissions) -> "Permissions":
+        return cls(
+            process=Permission.from_grpc(p.process),
+            download=Permission.from_grpc(p.download),
+        )
+
+
+class ComputeTaskOutput(pydantic.BaseModel):
+    permissions: Permissions
+    transient: bool
+
+    @classmethod
+    def from_grpc(cls, o: computetask_pb2.ComputeTaskOutput) -> "ComputeTaskOutput":
+        return cls(
+            permissions=Permissions.from_grpc(o.permissions),
+            transient=o.transient,
+        )
+
+
+class ComputeTaskInput(pydantic.BaseModel):
+    identifier: str
+    asset_key: Optional[str]
+    parent_task_key: Optional[str]
+    parent_task_output_identifier: Optional[str]
+
+    @classmethod
+    def from_grpc(cls, i: computetask_pb2.ComputeTaskInput) -> "ComputeTaskInput":
+        direct_ref = i.WhichOneof("ref") == "asset_key"
+        return cls(
+            identifier=i.identifier,
+            asset_key=i.asset_key if direct_ref else None,
+            parent_task_key=i.parent_task_output.parent_task_key if not direct_ref else None,
+            parent_task_output_identifier=i.parent_task_output.output_identifier if not direct_ref else None,
+        )
+
+
+class ComputeTask(pydantic.BaseModel):
+    """Task represents a generic compute task"""
+
+    key: str
+    # This property is only temporary and will disappear soon
+    category: ComputeTaskCategory
+    owner: str
+    compute_plan_key: str
+    algo_key: str
+    rank: int
+    status: ComputeTaskStatus
+    worker: str
+    metadata: Dict[str, str]
+    inputs: List[ComputeTaskInput]
+    outputs: Dict[str, ComputeTaskOutput]
+    tag: str
+
+    @classmethod
+    def from_grpc(cls, t: computetask_pb2.ComputeTask) -> "ComputeTask":
+        tag = t.metadata.pop("__tag__", "")
+
+        return cls(
+            key=t.key,
+            category=ComputeTaskCategory.from_grpc(t.category),
+            owner=t.owner,
+            compute_plan_key=t.compute_plan_key,
+            algo_key=t.algo.key,
+            rank=t.rank,
+            status=ComputeTaskStatus.from_grpc(t.status),
+            worker=t.worker,
+            metadata={k: v for k, v in t.metadata.items()},  # trick to have a dict instead of a grpc object
+            outputs={k: ComputeTaskOutput.from_grpc(o) for k, o in t.outputs.items()},
+            inputs=[ComputeTaskInput.from_grpc(i) for i in t.inputs],
+            tag=tag,
+        )
+
+    def __json__(self):
+        """__json__ returns the serialized representation of the class.
+
+        This method is called by celery when passing objects around.
+        """
+        return self.json()
+
+
+class ComputeTaskInputAsset(pydantic.BaseModel):
+    identifier: str
+    kind: AssetKind = AssetKind.ASSET_UNKNOWN
+    model: Optional[Model] = None
+    data_manager: Optional[DataManager] = None
+    data_sample: Optional[DataSample] = None
+
+    @classmethod
+    def from_grpc(cls, input_asset: computetask_pb2.ComputeTaskInputAsset) -> "ComputeTaskInputAsset":
+        asset = cls(
+            identifier=input_asset.identifier,
+        )
         if input_asset.WhichOneof("asset") == "data_manager":
-            self._kind = AssetKind.ASSET_DATA_MANAGER
-            self._data_manager = DataManager.from_grpc(input_asset.data_manager)
+            asset.kind = AssetKind.ASSET_DATA_MANAGER
+            asset.data_manager = DataManager.from_grpc(input_asset.data_manager)
         elif input_asset.WhichOneof("asset") == "data_sample":
-            self._kind = AssetKind.ASSET_DATA_SAMPLE
-            self._data_sample = DataSample.from_grpc(input_asset.data_sample)
+            asset.kind = AssetKind.ASSET_DATA_SAMPLE
+            asset.data_sample = DataSample.from_grpc(input_asset.data_sample)
         elif input_asset.WhichOneof("asset") == "model":
-            self._kind = AssetKind.ASSET_MODEL
-            self._model = Model.from_grpc(input_asset.model)
+            asset.kind = AssetKind.ASSET_MODEL
+            asset.model = Model.from_grpc(input_asset.model)
+
+        return asset
 
     @property
-    def identifier(self) -> str:
-        return self._identifier
-
-    @property
-    def kind(self) -> AssetKind:
-        return self._kind
-
-    @property
-    def model(self) -> Model:
-        if not self._model:
-            raise InvalidInputAsset(self._kind, AssetKind.ASSET_MODEL)
-        return self._model
-
-    @property
-    def data_sample(self) -> DataSample:
-        if not self._data_sample:
-            raise InvalidInputAsset(self._kind, AssetKind.ASSET_DATA_SAMPLE)
-        return self._data_sample
-
-    @property
-    def data_manager(self) -> DataManager:
-        if not self._data_manager:
-            raise InvalidInputAsset(self._kind, AssetKind.ASSET_DATA_MANAGER)
-        return self._data_manager
-
-    @property
-    def asset(self) -> Union[Model, DataManager, DataSample]:
-        if self._kind == AssetKind.ASSET_DATA_MANAGER:
-            return self._data_manager
-        elif self._kind == AssetKind.ASSET_DATA_SAMPLE:
-            return self._data_sample
-        elif self._kind == AssetKind.ASSET_MODEL:
-            return self._model
-        raise InvalidInputAsset(self._kind, AssetKind.ASSET_UNKNOWN)
+    def asset(self) -> Union[Model, DataManager, DataSample, None]:
+        if self.kind == AssetKind.ASSET_DATA_MANAGER:
+            return self.data_manager
+        elif self.kind == AssetKind.ASSET_DATA_SAMPLE:
+            return self.data_sample
+        elif self.kind == AssetKind.ASSET_MODEL:
+            return self.model
+        raise InvalidInputAsset(self.kind, AssetKind.ASSET_UNKNOWN)
 
     def __repr__(self) -> str:
-        return f'ComputeTaskInputAsset(identifier="{self._identifier}",kind="{self._kind}",asset={self.asset})'
+        return f'ComputeTaskInputAsset(identifier="{self.identifier}",kind="{self.kind}",asset={self.asset})'
 
 
 class InvalidInputAsset(Exception):

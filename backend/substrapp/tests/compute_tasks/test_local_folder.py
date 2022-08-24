@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import CPDirName
+from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.tasks.tasks_compute_task import compute_task
 from substrapp.tests.orchestrator_factory import Orchestrator
@@ -38,10 +39,19 @@ def test_local_folder(compute_job_raises: bool, settings, mocker: MockerFixture,
     updated_value = "updated value"
 
     train_task = orchestrator.create_train_task(status=computetask_pb2.STATUS_DOING)
+    train_task = orchestrator.client.query_task(train_task.key)
 
     # Setup a fake context
-    task = orchestrator.client.query_task(train_task.key)
-    ctx = Context.from_task(CHANNEL, task)
+    ctx = Context(
+        channel_name="mychannel",
+        task=train_task,
+        compute_plan_tag="",
+        input_assets=[],
+        algo=None,
+        has_chainkeys=False,
+        compute_plan={},
+        directories=Directories("cpkey"),
+    )
 
     class FakeDirectories:
         compute_plan_dir = tempfile.mkdtemp()
@@ -73,7 +83,7 @@ def test_local_folder(compute_job_raises: bool, settings, mocker: MockerFixture,
     # assert that it raises when it should
     context = pytest.raises(Exception) if compute_job_raises else nullcontext()
     with context as excinfo:
-        compute_task(CHANNEL, task, train_task.compute_plan_key)
+        compute_task(CHANNEL, train_task.json(), train_task.compute_plan_key)
 
     # Check the compute plan local folder value is correct:
     # - If do_task did raise an exception then the local value should be unchanged

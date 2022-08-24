@@ -4,6 +4,7 @@ import factory
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
 
+import orchestrator
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
@@ -137,7 +138,7 @@ class MockOrchestratorClient(OrchestratorClient):
         task = self.tasks.get(key)
         if not task:
             raise OrcError()
-        return MessageToDict(task, **CONVERT_SETTINGS)
+        return orchestrator.ComputeTask.from_grpc(task)
 
     def query_compute_plan(self, key):  # noqa: C901
         cp = self.compute_plans.get(key)

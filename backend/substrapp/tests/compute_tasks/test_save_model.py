@@ -1,6 +1,5 @@
 import os
 import tempfile
-import uuid
 from unittest import mock
 
 from django.test import override_settings
@@ -9,7 +8,8 @@ from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
-import orchestrator.computetask_pb2 as compute_task_pb2
+import orchestrator
+import orchestrator.mock as orc_mock
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
@@ -42,11 +42,12 @@ class SaveModelTests(APITestCase):
         data_dir = tempfile.mkdtemp()
         fake_context = Context(
             channel_name="mychannel",
-            task={},
-            task_category=compute_task_pb2.TASK_TRAIN,
-            task_key=str(uuid.uuid4()),
+            task=orc_mock.ComputeTaskFactory(
+                category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
+                status=orchestrator.ComputeTaskStatus.STATUS_DOING,
+                rank=2,
+            ),
             compute_plan={},
-            compute_plan_key=str(uuid.uuid4()),
             compute_plan_tag="",
             input_assets=[],
             algo={},
