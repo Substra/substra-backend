@@ -2,8 +2,6 @@ import json
 import os
 from base64 import b64decode
 from os import path
-from typing import Dict
-from typing import List
 
 import structlog
 from django.conf import settings
@@ -19,7 +17,7 @@ logger = structlog.get_logger(__name__)
 SECRET_NAMESPACE = settings.K8S_SECRET_NAMESPACE
 CHAINKEYS_FILENAME = "chainkeys.json"
 
-Chainkeys = Dict[str, List[bytes]]
+Chainkeys = dict[str, list[bytes]]
 
 
 class ChainkeysPreparationError(Exception):
@@ -51,7 +49,7 @@ def _prepare_chainkeys(chainkeys_dir: str, compute_plan_tag: str) -> None:
     logger.info("Prepared chainkeys", dir=list_dir(chainkeys_dir))
 
 
-def _retrieve_secrets(label_selector: str) -> List[k8s.V1Secret]:
+def _retrieve_secrets(label_selector: str) -> list[k8s.V1Secret]:
     k8s_config.load_incluster_config()
     k8s_client = k8s.CoreV1Api()
 
@@ -65,7 +63,7 @@ def _retrieve_secrets(label_selector: str) -> List[k8s.V1Secret]:
     return secrets.items
 
 
-def _extract_chainkeys(secrets: List[k8s.V1Secret]) -> Chainkeys:
+def _extract_chainkeys(secrets: list[k8s.V1Secret]) -> Chainkeys:
     chainkeys = {}
 
     for secret in secrets:
@@ -83,7 +81,7 @@ def _write_chainkeys(chainkeys_dir: str, chainkeys: Chainkeys) -> None:
         f.write("\n")  # Add newline cause Py JSON does not
 
 
-def _clear_secrets(secrets: List[k8s.V1Secret]) -> None:
+def _clear_secrets(secrets: list[k8s.V1Secret]) -> None:
     """clear the Kubernetes secrets to avoid reusing the chainkeys.
 
     Do not delete secrets as a running k8s operator will recreate them, instead

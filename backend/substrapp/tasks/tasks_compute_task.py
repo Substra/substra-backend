@@ -20,7 +20,6 @@ import errno
 import os
 from typing import Any
 from typing import Optional
-from typing import Tuple
 
 import celery.exceptions
 import structlog
@@ -86,12 +85,12 @@ class ComputeTask(Task):
     def attempt(self) -> int:
         return self.request.retries + 1  # type: ignore
 
-    def on_success(self, retval: dict[str, Any], task_id: str, args: Tuple, kwargs: dict[str, Any]) -> None:
+    def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         from django.db import close_old_connections
 
         close_old_connections()
 
-    def on_retry(self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
+    def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources
         delete_compute_plan_pods(task.compute_plan_key)
@@ -103,7 +102,7 @@ class ComputeTask(Task):
         )
 
     def on_failure(
-        self, exc: Exception, task_id: str, args: Tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
+        self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
     ) -> None:
         from django.db import close_old_connections
 
@@ -130,7 +129,7 @@ class ComputeTask(Task):
                 {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
             )
 
-    def split_args(self, celery_args: Tuple) -> Tuple[str, dict[str, Any]]:
+    def split_args(self, celery_args: tuple) -> tuple[str, dict[str, Any]]:
         channel_name = celery_args[0]
         task = orchestrator.ComputeTask.parse_raw(celery_args[1])
         return channel_name, task

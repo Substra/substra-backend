@@ -1,7 +1,6 @@
 import time
 from copy import deepcopy
 from functools import wraps
-from typing import List
 
 import grpc
 import structlog
@@ -326,7 +325,7 @@ class OrchestratorClient:
         status=computetask_pb2.STATUS_UNKNOWN,
         category=computetask_pb2.TASK_UNKNOWN,
         compute_plan_key=None,
-    ) -> List[ComputeTask]:
+    ) -> list[ComputeTask]:
         task_filter = computetask_pb2.TaskQueryFilter(
             worker=worker,
             status=status,
@@ -548,7 +547,7 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def get_task_input_assets(self, task_key: str) -> List[ComputeTaskInputAsset]:
+    def get_task_input_assets(self, task_key: str) -> list[ComputeTaskInputAsset]:
         assets = self._computetask_client.GetTaskInputAssets(
             computetask_pb2.GetTaskInputAssetsParam(compute_task_key=task_key),
             metadata=self._metadata,

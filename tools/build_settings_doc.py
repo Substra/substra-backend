@@ -6,8 +6,6 @@ import tempfile
 from dataclasses import dataclass
 from os import name
 from typing import Collection
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -51,14 +49,14 @@ class Setting:
     comment: str = ""
 
 
-def load_settings_from_file(filename: pathlib.Path) -> List[Setting]:
+def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:
     """Opens a settings file an look for all the occurrences of os.getenv() or os.environ.get()
 
     Args:
         filename (pathlib.Path): Path of the settings file to scan
 
     Returns:
-        List[Setting]
+        list[Setting]
     """
     settings = {}
     with open(filename) as settings_file:
@@ -138,7 +136,7 @@ def load_true_values_from_file(filename: pathlib.Path):
     return None
 
 
-def generate_doc(settings_by_section: Dict[str, List[Setting]], true_values: Collection, dest: pathlib.Path) -> None:
+def generate_doc(settings_by_section: dict[str, list[Setting]], true_values: Collection, dest: pathlib.Path) -> None:
     """Generates a markdown documentation file of the settings
 
     Args:
@@ -164,7 +162,7 @@ def generate_doc(settings_by_section: Dict[str, List[Setting]], true_values: Col
                 )
 
 
-def parse_arguments() -> Dict[str, str]:
+def parse_arguments() -> dict[str, str]:
     parser = argparse.ArgumentParser(description="Generate settings documentation")
     parser.add_argument("--check", action="store_true")
     return vars(parser.parse_args())

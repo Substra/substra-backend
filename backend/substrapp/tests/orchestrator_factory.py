@@ -1,5 +1,3 @@
-from typing import List
-
 import factory
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -58,7 +56,7 @@ class Orchestrator:
         self.client.models[model.key] = model
         return model
 
-    def set_input_assets(self, task_key: str, inputs: List[ComputeTaskInputAsset]):
+    def set_input_assets(self, task_key: str, inputs: list[ComputeTaskInputAsset]):
         self.client.input_assets[task_key] = inputs
 
     def build_task_inputs(
@@ -129,7 +127,7 @@ class MockOrchestratorClient(OrchestratorClient):
         self.models: dict[str, model_pb2.Model] = {}
         self.algos: dict[str, algo_pb2.Algo] = {}
         self.data_managers: dict[str, datamanager_pb2.DataManager] = {}
-        self.input_assets: dict[str, List[computetask_pb2.ComputeTaskInputAsset]] = {}
+        self.input_assets: dict[str, list[computetask_pb2.ComputeTaskInputAsset]] = {}
 
     def __exit__(self, *args):
         del args
@@ -200,7 +198,7 @@ class MockOrchestratorClient(OrchestratorClient):
         action_to_status = {computetask_pb2.TASK_ACTION_DONE: computetask_pb2.STATUS_DONE}
         task.status = action_to_status[action]
 
-    def get_task_input_assets(self, task_key: str) -> List[ComputeTaskInputAsset]:
+    def get_task_input_assets(self, task_key: str) -> list[ComputeTaskInputAsset]:
         return self.input_assets.get(task_key, [])
 
 

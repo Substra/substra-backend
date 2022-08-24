@@ -2,7 +2,6 @@ import os
 import shutil
 from functools import wraps
 from typing import Callable
-from typing import List
 
 import structlog
 from billiard import Process
@@ -163,7 +162,7 @@ def add_assets_to_taskdir(ctx: Context) -> None:
         )
 
 
-def delete_models_from_buffer(model_keys: List[str]) -> None:
+def delete_models_from_buffer(model_keys: list[str]) -> None:
     for model_key in model_keys:
         model_path = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model_key)
         if os.path.exists(model_path):
@@ -221,7 +220,7 @@ def _add_opener_to_buffer_internal(channel_name: str, opener: Address, dst: str)
     )
 
 
-def _add_models_to_buffer(channel_name: str, models: List[Model]) -> None:
+def _add_models_to_buffer(channel_name: str, models: list[Model]) -> None:
     """Copy/Download models to the asset buffer"""
 
     # Close django connection to force each Process to create its own as
@@ -276,7 +275,7 @@ def _add_model_to_buffer_with_lock(channel_name: str, model: Model, organization
         return _add_model_to_buffer(channel_name, model, organization_id)
 
 
-def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List[str]):
+def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: list[str]):
     """
     Create a hardlink for the asset.
 

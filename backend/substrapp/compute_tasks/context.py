@@ -1,6 +1,4 @@
 import os
-from typing import Dict
-from typing import List
 from typing import Optional
 
 import structlog
@@ -38,20 +36,20 @@ class Context:
     _channel_name: str
     _task: orchestrator.ComputeTask
     _compute_plan_tag: str
-    _compute_plan: Dict
-    _input_assets: List[orchestrator.ComputeTaskInputAsset]
+    _compute_plan: dict
+    _input_assets: list[orchestrator.ComputeTaskInputAsset]
     _directories: Directories
     _algo: Algo
     _has_chainkeys: bool
-    _outputs: Dict[str, str]
+    _outputs: dict[str, str]
 
     def __init__(
         self,
         channel_name: str,
         task: orchestrator.ComputeTask,
-        compute_plan: Dict,
+        compute_plan: dict,
         compute_plan_tag: str,
-        input_assets: List[orchestrator.ComputeTaskInputAsset],
+        input_assets: list[orchestrator.ComputeTaskInputAsset],
         algo: Algo,
         directories: Directories,
         has_chainkeys: bool,
@@ -121,11 +119,11 @@ class Context:
         return self._has_chainkeys
 
     @property
-    def input_assets(self) -> List[orchestrator.ComputeTaskInputAsset]:
+    def input_assets(self) -> list[orchestrator.ComputeTaskInputAsset]:
         return self._input_assets
 
     @property
-    def input_models(self) -> List[orchestrator.Model]:
+    def input_models(self) -> list[orchestrator.Model]:
         """Return the models passed as task inputs"""
         return [input.model for input in self._input_assets if input.kind == orchestrator.AssetKind.ASSET_MODEL]
 
@@ -134,7 +132,7 @@ class Context:
         return self._algo
 
     @property
-    def compute_plan(self) -> Dict:
+    def compute_plan(self) -> dict:
         return self._compute_plan
 
     @property
@@ -149,7 +147,7 @@ class Context:
         return dm[0] if dm else None
 
     @property
-    def data_sample_keys(self) -> List[str]:
+    def data_sample_keys(self) -> list[str]:
         return [
             input.data_sample.key
             for input in self._input_assets
@@ -164,7 +162,7 @@ class Context:
         path = os.path.relpath(value, self.directories.task_dir)
         return self._outputs[path]
 
-    def set_outputs(self, outputs: List[TaskResource]):
+    def set_outputs(self, outputs: list[TaskResource]):
         """set_outputs should be called with outputs as passed to the algo"""
         for output in outputs:
             path = os.path.relpath(output["value"], SANDBOX_DIR)

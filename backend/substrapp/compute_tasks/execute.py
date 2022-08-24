@@ -7,7 +7,6 @@ In these functions, we:
 - Execute the command in the compute pod
 """
 import io
-from typing import List
 
 import kubernetes
 import structlog
@@ -106,7 +105,7 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(compute_pod: ComputePod, exec_command: List[str]):
+def _exec(compute_pod: ComputePod, exec_command: list[str]):
     """Execute a command on a compute pod"""
     logger.debug("Running command", command=exec_command)
 

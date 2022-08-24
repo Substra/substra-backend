@@ -1,6 +1,5 @@
 import json
 import os
-from typing import List
 
 import structlog
 
@@ -51,7 +50,7 @@ def get_performance_filename(algo_key: str) -> str:
     return "-".join([algo_key, Filenames.Performance])
 
 
-def get_exec_command(ctx: Context) -> List[str]:
+def get_exec_command(ctx: Context) -> list[str]:
     entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.algo.checksum)
 
     command = entrypoint.entrypoint_json
@@ -65,7 +64,7 @@ def get_exec_command(ctx: Context) -> List[str]:
 
 
 # TODO: '_get_args' is too complex, consider refactoring
-def _get_args(ctx: Context) -> List[str]:  # noqa: C901
+def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task.category
 

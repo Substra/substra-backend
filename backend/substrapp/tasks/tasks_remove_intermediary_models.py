@@ -1,5 +1,3 @@
-from typing import List
-
 import structlog
 
 from backend.celery import app
@@ -19,7 +17,7 @@ def queue_remove_intermediary_models_from_db(channel_name, model_keys):
 
 
 @app.task(ignore_result=False)
-def remove_intermediary_models_from_db(channel_name: str, model_keys: List[str]) -> None:
+def remove_intermediary_models_from_db(channel_name: str, model_keys: list[str]) -> None:
     """
     Remove model from db.
     Disable model in orchestrator.

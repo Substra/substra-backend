@@ -1,6 +1,4 @@
 import enum
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -129,7 +127,7 @@ class ComputeTaskCategory(AutoNameEnum):
 
 class Permission(pydantic.BaseModel):
     public: bool
-    authorized_ids: List[str]
+    authorized_ids: list[str]
 
     @classmethod
     def from_grpc(cls, p: common_pb2.Permission) -> "Permission":
@@ -192,9 +190,9 @@ class ComputeTask(pydantic.BaseModel):
     rank: int
     status: ComputeTaskStatus
     worker: str
-    metadata: Dict[str, str]
-    inputs: List[ComputeTaskInput]
-    outputs: Dict[str, ComputeTaskOutput]
+    metadata: dict[str, str]
+    inputs: list[ComputeTaskInput]
+    outputs: dict[str, ComputeTaskOutput]
     tag: str
 
     @classmethod

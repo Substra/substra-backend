@@ -13,7 +13,6 @@ from os.path import isdir
 from os.path import isfile
 from typing import Any
 from typing import Callable
-from typing import Tuple
 from typing import Union
 
 import structlog
@@ -243,7 +242,7 @@ class Timer:
 def retry(raise_exception: bool = False) -> Callable:
     def decorator(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper(*args: Tuple[Any], **kwargs: dict[str, Any]) -> Any:
+        def wrapper(*args: tuple[Any], **kwargs: dict[str, Any]) -> Any:
             times = 5
             retry_exception = None
             for attempt in range(times):

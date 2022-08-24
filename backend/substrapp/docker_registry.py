@@ -1,7 +1,5 @@
 import datetime
 import json
-from typing import Dict
-from typing import List
 
 import kubernetes
 import requests
@@ -93,7 +91,7 @@ def container_image_exists(image_name: str) -> bool:
         return True
 
 
-def get_container_image(image_name: str) -> Dict:
+def get_container_image(image_name: str) -> dict:
     response = requests.get(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
         headers={"Accept": "application/json"},
@@ -105,7 +103,7 @@ def get_container_image(image_name: str) -> Dict:
     return response.json()
 
 
-def get_container_images() -> List[Dict]:
+def get_container_images() -> list[dict]:
     response = requests.get(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog",
         headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
@@ -130,7 +128,7 @@ def get_container_images() -> List[Dict]:
     return None
 
 
-def fetch_old_algo_image_names(max_duration: int) -> List[str]:
+def fetch_old_algo_image_names(max_duration: int) -> list[str]:
     logger.info("Fetch old image names", max_duration=f"{max_duration}s")
 
     images = get_container_images()

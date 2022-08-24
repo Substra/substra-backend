@@ -1,4 +1,3 @@
-from typing import List
 from typing import Optional
 
 from django.conf import settings
@@ -103,7 +102,7 @@ def _acquire_worker_index(compute_plan_key: str) -> int:
     return worker_index
 
 
-def _get_workers_with_fewest_running_cps() -> List[int]:
+def _get_workers_with_fewest_running_cps() -> list[int]:
     """
     Return the list of worker indexes with the fewest running Compute Plans.
 

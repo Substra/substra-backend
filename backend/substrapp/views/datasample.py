@@ -5,8 +5,6 @@ import tempfile
 import zipfile
 from tarfile import TarFile
 from typing import BinaryIO
-from typing import List
-from typing import Tuple
 from typing import Union
 
 import structlog
@@ -270,7 +268,7 @@ def _get_archive(f: BinaryIO) -> Union[ZipFile, TarFile]:
     return archive
 
 
-def _get_archive_and_files(f: BinaryIO) -> Tuple[Union[ZipFile, TarFile], List[str]]:
+def _get_archive_and_files(f: BinaryIO) -> tuple[Union[ZipFile, TarFile], list[str]]:
     if zipfile.is_zipfile(f):
         archive = zipfile.ZipFile(file=f)
         return archive, archive.namelist()

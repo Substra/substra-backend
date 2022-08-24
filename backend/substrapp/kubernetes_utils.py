@@ -1,6 +1,5 @@
 import enum
 import time
-from typing import List
 
 import kubernetes
 import structlog
@@ -40,7 +39,7 @@ def get_pod_security_context():
     )
 
 
-def get_security_context(root: bool = False, capabilities: List[str] = None) -> kubernetes.client.V1SecurityContext:
+def get_security_context(root: bool = False, capabilities: list[str] = None) -> kubernetes.client.V1SecurityContext:
     """
     root:
      - True: force running as root
@@ -157,7 +156,7 @@ def _get_pod_state(pod_status: kubernetes.client.V1PodStatus) -> PodState:
         # On the first query the pod just created and often pending as it is not already scheduled to a node
         return PodState(ObjectState.PENDING, pod_status.reason, pod_status.message)
 
-    container_statuses: List[kubernetes.client.V1ContainerStatus] = (
+    container_statuses: list[kubernetes.client.V1ContainerStatus] = (
         pod_status.init_container_statuses if pod_status.init_container_statuses else []
     )
     container_statuses += pod_status.container_statuses

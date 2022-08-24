@@ -1,7 +1,6 @@
 import json
 import os
 from tempfile import TemporaryDirectory
-from typing import List
 
 import kubernetes
 import structlog
@@ -77,7 +76,7 @@ def _build_asset_image(algo: Algo) -> None:
         ImageEntrypoint.objects.get_or_create(algo_checksum=algo.checksum, entrypoint_json=entrypoint)
 
 
-def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:
+def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     """
     Get entrypoint from ENTRYPOINT in the Dockerfile.
 
@@ -272,7 +271,7 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
     )
 
 
-def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> List[str]:
+def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[str]:
     dockerfile_fullpath = os.path.join(dockerfile_mount_path, "Dockerfile")
     args = [
         f"--dockerfile={dockerfile_fullpath}",
