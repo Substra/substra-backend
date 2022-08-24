@@ -31,7 +31,6 @@ from django.core import files
 from django.urls import reverse
 
 import orchestrator
-import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp import models
 from substrapp import utils
@@ -59,7 +58,6 @@ from substrapp.compute_tasks.outputs import save_outputs
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import Timer
-from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
 
@@ -74,7 +72,6 @@ class ComputeTaskSteps(enum.Enum):
 
 
 class ComputeTask(Task):
-
     autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
     max_retries = settings.CELERY_TASK_MAX_RETRIES
     retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
@@ -133,15 +130,6 @@ class ComputeTask(Task):
         channel_name = celery_args[0]
         task = orchestrator.ComputeTask.parse_raw(celery_args[1])
         return channel_name, task
-
-
-@app.task(ignore_result=True)
-def process_pending_tasks(channel_name: str) -> None:
-    with get_orchestrator_client(channel_name) as client:
-        tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO)
-
-    for task in tasks:
-        queue_compute_task(channel_name, task)
 
 
 def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> None:

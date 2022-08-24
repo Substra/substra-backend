@@ -62,21 +62,8 @@ def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pr
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks.tasks_compute_task import process_pending_tasks
     from substrapp.tasks.tasks_docker_registry import clean_old_images_task
     from substrapp.tasks.tasks_docker_registry import docker_registry_garbage_collector_task
-
-    period = int(settings.CELERYBEAT_SCHEDULE_TASK_PERIOD)
-
-    for channel_name in settings.LEDGER_CHANNELS.keys():
-        sender.add_periodic_task(
-            period,
-            process_pending_tasks.s(),
-            queue="scheduler",
-            args=[channel_name],
-            name=f"execute compute tasks for channel {channel_name}",
-        )
-
     from users.tasks import flush_expired_tokens
 
     period = int(settings.CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD)

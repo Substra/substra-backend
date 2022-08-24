@@ -16,7 +16,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `BACKEND_VERSION` | nil |  |
 | string | `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `86400` (`24 * 3600`) |  |
 | string | `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `604800` (`7 * 24 * 3600`) |  |
-| string | `CELERYBEAT_SCHEDULE_TASK_PERIOD` | `10800` (`3 * 3600`) |  |
 | string | `CELERY_BROKER_HOST` | `localhost` |  |
 | string | `CELERY_BROKER_PASSWORD` | nil |  |
 | string | `CELERY_BROKER_PORT` | `5672` |  |
