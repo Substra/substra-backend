@@ -66,10 +66,11 @@ def compute_hash(bytes, key=None):
     if isinstance(bytes, str):
         bytes = bytes.encode()
 
-    if key is not None and isinstance(key, str):
-        bytes += key.encode()
-
     sha256_hash.update(bytes)
+
+    if key is not None:
+        encoded_key = key.encode()
+        sha256_hash.update(encoded_key)
 
     return sha256_hash.hexdigest()
 

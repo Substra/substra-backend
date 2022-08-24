@@ -4,6 +4,7 @@ This module provides various helpers to access assets stored in remote Organizat
 It verifies as well the integrity of downloaded asset when possible.
 """
 import enum
+import hashlib
 import os
 import typing
 
@@ -15,7 +16,6 @@ from requests.auth import HTTPBasicAuth
 from substrapp.exceptions import IntegrityError
 from substrapp.exceptions import OrganizationError
 from substrapp.utils import compute_hash
-from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
 
@@ -149,16 +149,23 @@ def download(
     """Download an asset data to a file (not atomic)."""
     response = _http_request(_Method.GET, channel, organization_id, url, stream=True)
     try:
+        downloaded_file_checksum = hashlib.sha256()
         with open(destination, "wb") as fp:
             for chunk in response.iter_content(_HTTP_STREAM_CHUNK_SIZE):
                 fp.write(chunk)
+                downloaded_file_checksum.update(chunk)
     finally:
         response.close()
 
-    new_checksum = get_hash(destination, key=salt)
-    if new_checksum != checksum:
+    if salt is not None:
+        encoded_salt = salt.encode()
+        downloaded_file_checksum.update(encoded_salt)
+
+    if downloaded_file_checksum.hexdigest() != checksum:
         os.remove(destination)
-        raise IntegrityError(f"url {url}: checksum doesn't match expected={checksum} vs actual={new_checksum}")
+        raise IntegrityError(
+            f"url {url}: checksum doesn't match expected={checksum} vs actual={downloaded_file_checksum}"
+        )
 
 
 def get(
