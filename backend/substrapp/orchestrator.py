@@ -4,7 +4,6 @@ from orchestrator.client import OrchestratorClient
 
 
 def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:
-
     host = f"{settings.ORCHESTRATOR_HOST}:{settings.ORCHESTRATOR_PORT}"
 
     cacert = None
@@ -24,4 +23,6 @@ def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:
     if channel_name is not None:
         chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
 
-    return OrchestratorClient(host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=None)
+    opts = (("grpc.keepalive_time_ms", settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS),)
+
+    return OrchestratorClient(host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=opts)

@@ -150,7 +150,6 @@ def consume_channel(client: orchestrator.Client, channel_name: str, exception_ra
 
 
 def consume(health_service: health.HealthService):
-
     client = get_orchestrator_client()
     exception_raised = threading.Event()
 
