@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 
 from localrep.models import ComputeTask as ComputeTaskRep
 from substrapp.tests import factory
+from substrapp.views.compute_plan_graph import MAX_TASKS_DISPLAYED
 
 from ..common import AuthenticatedClient
 
@@ -40,7 +41,7 @@ class ComputePlanGraphViewTests(APITestCase):
     def test_too_many_tasks(self):
         compute_plan = factory.create_computeplan()
         algo = factory.create_algo()
-        for _ in range(301):
+        for _ in range(MAX_TASKS_DISPLAYED + 1):
             factory.create_computetask(
                 compute_plan,
                 algo=algo,

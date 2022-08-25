@@ -34,6 +34,8 @@ TASK_CATEGORY_OUTPUTS = {
     ComputeTaskRep.Category.TASK_PREDICT: ["out/predictions"],
 }
 
+MAX_TASKS_DISPLAYED = 1000
+
 
 def _get_task_inputs(category):
     return TASK_CATEGORY_INPUTS.get(category, [])
@@ -98,10 +100,10 @@ def get_cp_graph(request, compute_plan_pk):
         "category",
     )
 
-    # Limitation to display at most 300 tasks for performances
-    if tasks.count() > 300:
+    # Set a task limitation for performances issues
+    if tasks.count() > MAX_TASKS_DISPLAYED:
         return ApiResponse(
-            data={"message": "Cannot build workflow graph for more than 300 tasks."},
+            data={"message": f"Cannot build workflow graph for more than {MAX_TASKS_DISPLAYED} tasks."},
             status=status.HTTP_403_FORBIDDEN,
         )
 
