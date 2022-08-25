@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Enable gRPC keepalive
+
 ### Changed
 
 - Increase limit for tasks displayed in CP workflow graph to 1000 (#1266)
