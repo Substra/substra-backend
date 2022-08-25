@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 from typing import Optional
 from typing import Union
@@ -5,6 +7,7 @@ from typing import Union
 import pydantic
 
 from orchestrator import common_pb2
+from orchestrator import computeplan_pb2
 from orchestrator import computetask_pb2
 from orchestrator import datamanager_pb2
 from orchestrator import datasample_pb2
@@ -106,7 +109,7 @@ class ComputeTaskStatus(AutoNameEnum):
     STATUS_FAILED = enum.auto()
 
     @classmethod
-    def from_grpc(cls, s: computetask_pb2.ComputeTaskStatus) -> "ComputeTaskStatus":
+    def from_grpc(cls, s: computetask_pb2.ComputeTaskStatus.ValueType) -> "ComputeTaskStatus":
         return cls(computetask_pb2.ComputeTaskStatus.Name(s))
 
 
@@ -121,7 +124,7 @@ class ComputeTaskCategory(AutoNameEnum):
     TASK_PREDICT = enum.auto()
 
     @classmethod
-    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory) -> "ComputeTaskCategory":
+    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory.ValueType) -> "ComputeTaskCategory":
         return cls(computetask_pb2.ComputeTaskCategory.Name(c))
 
 
@@ -258,6 +261,42 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
 
     def __repr__(self) -> str:
         return f'ComputeTaskInputAsset(identifier="{self.identifier}",kind="{self.kind}",asset={self.asset})'
+
+
+class ComputePlanStatus(AutoNameEnum):
+    PLAN_STATUS_UNKNOWN = enum.auto()
+    PLAN_STATUS_WAITING = enum.auto()
+    PLAN_STATUS_TODO = enum.auto()
+    PLAN_STATUS_DOING = enum.auto()
+    PLAN_STATUS_DONE = enum.auto()
+    PLAN_STATUS_CANCELED = enum.auto()
+    PLAN_STATUS_FAILED = enum.auto()
+    PLAN_STATUS_EMPTY = enum.auto()
+
+    @classmethod
+    def from_grpc(cls, s: computeplan_pb2.ComputePlanStatus.ValueType) -> "ComputePlanStatus":
+        return cls(computeplan_pb2.ComputePlanStatus.Name(s))
+
+
+class ComputePlan(pydantic.BaseModel):
+    key: str
+    status: ComputePlanStatus
+    tag: str
+
+    @classmethod
+    def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> "ComputePlan":
+        return cls(
+            key=compute_plan.key,
+            status=ComputePlanStatus.from_grpc(compute_plan.status),
+            tag=compute_plan.tag,
+        )
+
+    def __json__(self):
+        """__json__ returns the serialized representation of the class.
+
+        This method is called by celery when passing objects around.
+        """
+        return self.json()
 
 
 class InvalidInputAsset(Exception):

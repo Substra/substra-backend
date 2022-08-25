@@ -174,7 +174,7 @@ class MockOrchestratorClient(OrchestratorClient):
         else:
             cp.status = computeplan_pb2.PLAN_STATUS_DONE
 
-        return MessageToDict(cp, **CONVERT_SETTINGS)
+        return orchestrator.ComputePlan.from_grpc(cp)
 
     def query_algo(self, key):
         algo = self.algos.get(key)

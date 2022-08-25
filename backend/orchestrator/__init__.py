@@ -1,6 +1,8 @@
 from .client import OrchestratorClient as Client
 from .resources import Address
 from .resources import AssetKind
+from .resources import ComputePlan
+from .resources import ComputePlanStatus
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
@@ -30,4 +32,6 @@ __all__ = (
     "ComputeTaskInputAsset",
     "InvalidInputAsset",
     "Client",
+    "ComputePlan",
+    "ComputePlanStatus",
 )

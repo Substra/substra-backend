@@ -41,11 +41,10 @@ def test_get_args_train_task():
     ctx = Context(
         channel_name=_CHANNEL,
         task=task,
-        compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
-        compute_plan={},
+        compute_plan=None,
         directories=Directories(task.key),
     )
 
@@ -104,11 +103,10 @@ def test_get_args_composite_task():
     ctx = Context(
         channel_name=_CHANNEL,
         task=task,
-        compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
-        compute_plan={},
+        compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
@@ -165,11 +163,10 @@ def test_get_args_predict_after_train():
     ctx = Context(
         channel_name=_CHANNEL,
         task=task,
-        compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
-        compute_plan={},
+        compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
@@ -226,11 +223,10 @@ def test_get_args_predict_after_composite():
     ctx = Context(
         channel_name=_CHANNEL,
         task=task,
-        compute_plan_tag="",
         input_assets=input_assets,
         algo=None,
         has_chainkeys=False,
-        compute_plan={},
+        compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
@@ -287,11 +283,10 @@ def test_get_args_test_after_predict():
     ctx = Context(
         channel_name=_CHANNEL,
         task=task,
-        compute_plan_tag="",
         input_assets=input_assets,
         algo=algo,
         has_chainkeys=False,
-        compute_plan={},
+        compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 

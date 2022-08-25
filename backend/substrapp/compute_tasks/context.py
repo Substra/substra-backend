@@ -35,8 +35,7 @@ class Context:
 
     _channel_name: str
     _task: orchestrator.ComputeTask
-    _compute_plan_tag: str
-    _compute_plan: dict
+    _compute_plan: orchestrator.ComputePlan
     _input_assets: list[orchestrator.ComputeTaskInputAsset]
     _directories: Directories
     _algo: Algo
@@ -47,8 +46,7 @@ class Context:
         self,
         channel_name: str,
         task: orchestrator.ComputeTask,
-        compute_plan: dict,
-        compute_plan_tag: str,
+        compute_plan: orchestrator.ComputePlan,
         input_assets: list[orchestrator.ComputeTaskInputAsset],
         algo: Algo,
         directories: Directories,
@@ -57,7 +55,6 @@ class Context:
         self._channel_name = channel_name
         self._task = task
         self._compute_plan = compute_plan
-        self._compute_plan_tag = compute_plan_tag
         self._input_assets = input_assets
         self._directories = directories
         self._has_chainkeys = has_chainkeys
@@ -79,15 +76,12 @@ class Context:
 
         directories = Directories(compute_plan_key)
 
-        compute_plan_tag = compute_plan["tag"]
-        cp_is_tagged = True if compute_plan_tag else False
-        has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and cp_is_tagged
+        has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and bool(compute_plan.tag)
 
         return cls(
             channel_name,
             task,
             compute_plan,
-            compute_plan_tag,
             input_assets,
             algo,
             directories,
@@ -105,10 +99,6 @@ class Context:
     @property
     def compute_plan_key(self) -> str:
         return self._task.compute_plan_key
-
-    @property
-    def compute_plan_tag(self) -> str:
-        return self._compute_plan_tag
 
     @property
     def directories(self) -> Directories:
@@ -132,7 +122,7 @@ class Context:
         return self._algo
 
     @property
-    def compute_plan(self) -> dict:
+    def compute_plan(self) -> orchestrator.ComputePlan:
         return self._compute_plan
 
     @property

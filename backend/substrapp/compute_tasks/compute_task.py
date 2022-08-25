@@ -1,7 +1,7 @@
 import structlog
 
+import orchestrator
 import orchestrator.client as orc_client
-import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.error import OrcError
 from orchestrator.resources import ComputeTask
@@ -9,10 +9,10 @@ from orchestrator.resources import ComputeTaskStatus
 
 _RUNNABLE_TASK_STATUSES = [ComputeTaskStatus.STATUS_TODO]
 
-_RUNNABLE_COMPUTE_PLAN_STATUSES_VALUES = [computeplan_pb2.PLAN_STATUS_TODO, computeplan_pb2.PLAN_STATUS_DOING]
-_RUNNABLE_COMPUTE_PLAN_STATUSES = {
-    computeplan_pb2.ComputePlanStatus.Name(s) for s in _RUNNABLE_COMPUTE_PLAN_STATUSES_VALUES
-}
+_RUNNABLE_COMPUTE_PLAN_STATUSES = [
+    orchestrator.ComputePlanStatus.PLAN_STATUS_TODO,
+    orchestrator.ComputePlanStatus.PLAN_STATUS_DOING,
+]
 
 logger = structlog.get_logger(__name__)
 
@@ -24,8 +24,8 @@ def _is_task_status_runnable(task: ComputeTask, allow_doing: bool) -> bool:
     return task.status in _RUNNABLE_TASK_STATUSES
 
 
-def _is_compute_plan_status_runnable(compute_plan: dict) -> bool:
-    return compute_plan["status"] in _RUNNABLE_COMPUTE_PLAN_STATUSES
+def _is_compute_plan_status_runnable(compute_plan: orchestrator.ComputePlan) -> bool:
+    return compute_plan.status in _RUNNABLE_COMPUTE_PLAN_STATUSES
 
 
 class _NonRunnableStatusError(RuntimeError):
@@ -79,11 +79,11 @@ def _raise_if_task_not_runnable(
     task: ComputeTask = existing_task if existing_task else client.query_task(task_key)
 
     if not _is_task_status_runnable(task, allow_doing):
-        raise TaskNonRunnableStatusError(task.status)
+        raise TaskNonRunnableStatusError(task.status.name)
 
     compute_plan = client.query_compute_plan(task.compute_plan_key)
     if not _is_compute_plan_status_runnable(compute_plan):
-        raise ComputePlanNonRunnableStatusError(compute_plan["status"])
+        raise ComputePlanNonRunnableStatusError(compute_plan.status.name)
 
 
 def is_task_runnable(task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False) -> bool:

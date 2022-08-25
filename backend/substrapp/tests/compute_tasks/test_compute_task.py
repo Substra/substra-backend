@@ -8,7 +8,6 @@ import pytest
 
 import orchestrator
 import orchestrator.client as orc_client
-import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.mock as orc_mock
 from substrapp.compute_tasks import compute_task as task_utils
 
@@ -35,11 +34,10 @@ def test_is_task_status_runnable_allow_doing():
     assert task_utils._is_task_status_runnable(compute_task, allow_doing=True)
 
 
-RUNNABLE_COMPUTE_PLAN_STATUSES = sorted(task_utils._RUNNABLE_COMPUTE_PLAN_STATUSES)
+RUNNABLE_COMPUTE_PLAN_STATUSES = task_utils._RUNNABLE_COMPUTE_PLAN_STATUSES
+COMPUTE_PLAN_STATUSES = [status for status in orchestrator.ComputePlanStatus]
 NON_RUNNABLE_COMPUTE_PLAN_STATUSES = [
-    computeplan_pb2.ComputePlanStatus.PLAN_STATUS_CANCELED,
-    computeplan_pb2.ComputePlanStatus.PLAN_STATUS_FAILED,
-    computeplan_pb2.ComputePlanStatus.PLAN_STATUS_DONE,
+    status for status in COMPUTE_PLAN_STATUSES if status not in RUNNABLE_COMPUTE_PLAN_STATUSES
 ]
 
 
@@ -48,7 +46,7 @@ NON_RUNNABLE_COMPUTE_PLAN_STATUSES = [
     [(s, True) for s in RUNNABLE_COMPUTE_PLAN_STATUSES] + [(s, False) for s in NON_RUNNABLE_COMPUTE_PLAN_STATUSES],
 )
 def test_is_compute_plan_status_runnable(compute_plan_status: int, is_runnable: bool):
-    compute_plan = {"status": compute_plan_status}
+    compute_plan = orc_mock.ComputePlanFactory(status=compute_plan_status)
     assert task_utils._is_compute_plan_status_runnable(compute_plan) is is_runnable
 
 
@@ -72,7 +70,7 @@ def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # 
 ):
     task_status = RUNNABLE_TASK_STATUSES[0]
     task = orc_mock.ComputeTaskFactory(status=task_status, compute_plan_key="cp-key")
-    client.query_compute_plan.return_value = {"status": compute_plan_status}
+    client.query_compute_plan.return_value = orc_mock.ComputePlanFactory(status=compute_plan_status)
 
     with pytest.raises(task_utils.ComputePlanNonRunnableStatusError) as exc:
         task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, existing_task=task)
@@ -87,7 +85,7 @@ def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # 
 )
 def test_raise_if_task_not_runnable_do_not_raise(task_status: str, compute_plan_status: str, client: mock.Mock):
     task = orc_mock.ComputeTaskFactory(status=task_status, compute_plan_key="cp-key")
-    client.query_compute_plan.return_value = {"status": compute_plan_status}
+    client.query_compute_plan.return_value = orc_mock.ComputePlanFactory(status=compute_plan_status)
 
     task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, existing_task=task)
 
@@ -97,7 +95,7 @@ def test_raise_if_task_not_runnable_do_not_raise(task_status: str, compute_plan_
 @pytest.mark.parametrize("compute_plan_status", RUNNABLE_COMPUTE_PLAN_STATUSES)
 def test_raise_if_task_not_runnable_allow_doing_do_not_raise(compute_plan_status: str, client: mock.Mock):
     task = orc_mock.ComputeTaskFactory(status=orchestrator.ComputeTaskStatus.STATUS_DOING, compute_plan_key="cp-key")
-    client.query_compute_plan.return_value = {"status": compute_plan_status}
+    client.query_compute_plan.return_value = orc_mock.ComputePlanFactory(status=compute_plan_status)
 
     task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_doing=True, existing_task=task)
 

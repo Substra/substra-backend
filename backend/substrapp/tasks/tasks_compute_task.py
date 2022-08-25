@@ -264,7 +264,7 @@ def _run(
 
             if task.category != orchestrator.ComputeTaskCategory.TASK_TEST:
                 if ctx.has_chainkeys:
-                    _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
+                    _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan.tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
 
             # stop inputs loading timer

@@ -1,6 +1,8 @@
 import factory
 
 from .resources import Address
+from .resources import ComputePlan
+from .resources import ComputePlanStatus
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
 from .resources import ComputeTaskStatus
@@ -57,3 +59,12 @@ class DataManagerFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     opener = factory.SubFactory(AddressFactory)
+
+
+class ComputePlanFactory(factory.Factory):
+    class Meta:
+        model = ComputePlan
+
+    key = factory.Faker("uuid4")
+    tag = ""
+    status = ComputePlanStatus.PLAN_STATUS_DOING

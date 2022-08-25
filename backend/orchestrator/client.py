@@ -33,6 +33,8 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.resources import ComputePlan
+from orchestrator.resources import ComputePlanStatus
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
 
@@ -368,9 +370,9 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_compute_plan(self, key):
+    def query_compute_plan(self, key) -> ComputePlan:
         data = self._computeplan_client.GetPlan(computeplan_pb2.GetComputePlanParam(key=key), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
+        return ComputePlan.from_grpc(data)
 
     @grpc_retry
     def cancel_compute_plan(self, key):
@@ -414,10 +416,9 @@ class OrchestratorClient:
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
-    @grpc_retry
     def is_compute_plan_doing(self, key):
         cp = self.query_compute_plan(key)
-        return computeplan_pb2.ComputePlanStatus.Value(cp["status"]) == computeplan_pb2.PLAN_STATUS_DOING
+        return cp.status == ComputePlanStatus.PLAN_STATUS_DOING
 
     def query_events(
         self,

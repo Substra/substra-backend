@@ -7,7 +7,6 @@ from google.protobuf import json_format
 
 import orchestrator
 import orchestrator.common_pb2 as common_pb2
-import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from events import health
@@ -18,27 +17,26 @@ from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
 from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
-from substrapp.utils import get_owner
 
 logger = structlog.get_logger("events")
+_MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
 
 def on_computetask_event(payload):
-    my_organisation = get_owner()
     asset_key = payload["asset_key"]
     channel_name = payload["channel"]
     event_kind = payload["event_kind"]
     task = payload["compute_task"]
-    targeted_organisation = task["worker"]
+    grpc_task = computetask_pb2.ComputeTask()
+    json_format.ParseDict(task, grpc_task, ignore_unknown_fields=True)
+    orc_task = orchestrator.ComputeTask.from_grpc(grpc_task)
 
-    logger.info("Processing task", asset_key=asset_key, kind=event_kind, status=task["status"])
+    logger.info("Processing task", asset_key=asset_key, kind=event_kind, status=orc_task.status)
 
-    event_task_status = computetask_pb2.ComputeTaskStatus.Value(task["status"])
-
-    if event_task_status in [
-        computetask_pb2.STATUS_DONE,
-        computetask_pb2.STATUS_CANCELED,
-        computetask_pb2.STATUS_FAILED,
+    if orc_task.status in [
+        orchestrator.ComputeTaskStatus.STATUS_DONE,
+        orchestrator.ComputeTaskStatus.STATUS_CANCELED,
+        orchestrator.ComputeTaskStatus.STATUS_FAILED,
     ]:
         with get_orchestrator_client(channel_name) as client:
             # Handle intermediary models
@@ -49,49 +47,46 @@ def on_computetask_event(payload):
             model_keys = [
                 model["key"]
                 for model in models
-                if model["owner"] == my_organisation and client.can_disable_model(model["key"])
+                if model["owner"] == _MY_ORGANIZATION and client.can_disable_model(model["key"])
             ]
             if model_keys:
                 queue_remove_intermediary_models_from_db(channel_name, model_keys)
 
             # Handle compute plan if necessary
-            compute_plan = client.query_compute_plan(task["compute_plan_key"])
+            compute_plan = client.query_compute_plan(orc_task.compute_plan_key)
 
-            if computeplan_pb2.ComputePlanStatus.Value(compute_plan["status"]) in [
-                computeplan_pb2.PLAN_STATUS_DONE,
-                computeplan_pb2.PLAN_STATUS_CANCELED,
-                computeplan_pb2.PLAN_STATUS_FAILED,
+            if compute_plan.status in [
+                orchestrator.ComputePlanStatus.PLAN_STATUS_DONE,
+                orchestrator.ComputePlanStatus.PLAN_STATUS_CANCELED,
+                orchestrator.ComputePlanStatus.PLAN_STATUS_FAILED,
             ]:
                 logger.info(
                     "Compute plan finished",
-                    plan=compute_plan["key"],
-                    status=compute_plan["status"],
+                    plan=compute_plan.key,
+                    status=compute_plan.status,
                     asset_key=asset_key,
                     kind=event_kind,
                 )
 
                 queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan=compute_plan)
 
-    if event_task_status != computetask_pb2.STATUS_TODO:
+    if orc_task.status != orchestrator.ComputeTaskStatus.STATUS_TODO:
         return
 
     if event_pb2.EventKind.Value(event_kind) not in [event_pb2.EVENT_ASSET_CREATED, event_pb2.EVENT_ASSET_UPDATED]:
         return
 
-    if targeted_organisation != my_organisation:
+    if orc_task.worker != _MY_ORGANIZATION:
         logger.info(
             "Skipping task: this organisation is not the targeted organisation",
-            my_organisation=my_organisation,
-            targeted_organisation=targeted_organisation,
+            my_organisation=_MY_ORGANIZATION,
+            targeted_organisation=orc_task.worker,
             asset_key=asset_key,
             kind=event_kind,
-            status=task["status"],
+            status=orc_task.status,
         )
         return
 
-    grpc_task = computetask_pb2.ComputeTask()
-    json_format.ParseDict(task, grpc_task, ignore_unknown_fields=True)
-    orc_task = orchestrator.ComputeTask.from_grpc(grpc_task)
     queue_compute_task(channel_name, task=orc_task)
 
 
