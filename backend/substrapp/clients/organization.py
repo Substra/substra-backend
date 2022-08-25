@@ -190,7 +190,7 @@ def post(
     data: dict,
 ) -> bytes:
     """Post asset data."""
-    return _http_request(_Method.POST, channel, organization_id, url, data).content
+    return _http_request(_Method.POST, channel, organization_id, url, data=data).content
 
 
 def streamed_get(channel: str, organization_id: str, url: str, headers: dict[str, str]) -> requests.Response:
