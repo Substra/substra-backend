@@ -21,6 +21,10 @@ spec:
         runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
       {{- end}}
+      {{- with .Values.server.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: db-migrations
         image: {{ include "common.images.name" .Values.server.image }}

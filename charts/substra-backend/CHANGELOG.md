@@ -1,5 +1,10 @@
 # Changelog
 
+## 21.1.4
+
+### Fixed
+- Added image pull secrets to migrations job
+
 ## 21.1.3
 
 ### Changed
