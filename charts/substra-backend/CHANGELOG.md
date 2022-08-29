@@ -1,5 +1,10 @@
 # Changelog
 
+## 21.1.5
+
+### Changed
+- Update connect-backend image tag to `0.28.0`
+
 ## 21.1.4
 
 ### Fixed
