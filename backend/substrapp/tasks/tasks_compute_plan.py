@@ -39,35 +39,34 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(
         )
         return
 
-    delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan), queue=worker_queue)
+    delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan.key), queue=worker_queue)
 
 
 @app.task(ignore_result=False)
-def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, serialized_compute_plan: str) -> None:
-    compute_plan = orchestrator.ComputePlan.parse_raw(serialized_compute_plan)
+def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan_key: str) -> None:
     with get_orchestrator_client(channel_name) as client:
-        algos = client.query_algos(compute_plan_key=compute_plan.key)
-    algo_keys = [Algo(channel_name, x) for x in algos]
+        _teardown_compute_plan_ressources(client, compute_plan_key)
 
-    # See lock function PyDoc for explanation as to why this lock is necessary
-    with acquire_compute_plan_lock(compute_plan.key):
 
-        # Check the CP is still ready for teardown
-        with get_orchestrator_client(channel_name) as client:
-            is_cp_running = client.is_compute_plan_doing(compute_plan.key)
-        if is_cp_running:
-            logger.info("Skipping teardown of compute_plan, it is still running", compute_plan_key=compute_plan.key)
+def _teardown_compute_plan_ressources(orc_client: orchestrator.Client, compute_plan_key: str) -> None:
+    structlog.contextvars.bind_contextvars(compute_plan_key=compute_plan_key)
+
+    with acquire_compute_plan_lock(compute_plan_key):
+        if orc_client.is_compute_plan_doing(compute_plan_key):
+            logger.info("Skipping teardown, compute plan is still running")
             return
+        _teardown_pods_and_dirs(compute_plan_key)
 
-        release_worker(compute_plan.key)
-        # Teardown
-        delete_compute_plan_pods(compute_plan.key)
-        dirs = Directories(compute_plan.key)
-        teardown_compute_plan_dir(dirs)
-
-    _remove_docker_images(algo_keys)
+    _delete_compute_plan_algos_images(orc_client, compute_plan_key)
 
 
-def _remove_docker_images(algos: list[Algo]) -> None:
-    for algo in algos:
+def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
+    release_worker(compute_plan_key)
+    delete_compute_plan_pods(compute_plan_key)
+    teardown_compute_plan_dir(Directories(compute_plan_key))
+
+
+def _delete_compute_plan_algos_images(orc_client: orchestrator.Client, compute_plan_key: str) -> None:
+    for orc_algo in orc_client.query_algos(compute_plan_key):
+        algo = Algo("", orc_algo)
         delete_container_image_safe(algo.container_image_tag)
