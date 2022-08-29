@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 21.1.6
+
+### Fixed
+- Fix dupplicate `app.kubernetes.io/instance`
+
 ## 21.1.5
 
 ### Changed
@@ -13,7 +19,7 @@
 ## 21.1.3
 
 ### Changed
-- Update connect-backend image tag to `0.27.0`
+- Update connect-backend image tag to 0.27.0
 
 ## 21.1.2
 

@@ -19,7 +19,6 @@ spec:
       labels:
         {{ include "substra.labels" $ | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
-        app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:
       initContainers:
       - name: wait-registry
