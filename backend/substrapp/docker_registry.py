@@ -30,6 +30,10 @@ class RetrieveDigestError(Exception):
     pass
 
 
+class ImageDigestNotFound(RetrieveDigestError):
+    pass
+
+
 def get_container_image_name(image_name: str) -> str:
     pull_domain = REGISTRY_PULL_DOMAIN
 
@@ -58,6 +62,9 @@ def delete_container_image(image_tag: str) -> None:
             headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
         )
+    except ImageDigestNotFound:
+        # Image does not exist
+        return
     except (requests.exceptions.RequestException, RetrieveDigestError) as exception:
         raise ImageDeletionError(image_tag=image_tag) from exception
 
@@ -75,6 +82,9 @@ def _retrieve_image_digest(image_tag: str) -> str:
 
     except requests.exceptions.RequestException as exception:
         raise RetrieveDigestError() from exception
+
+    if response.status_code == 404:
+        raise ImageDigestNotFound()
 
     if response.status_code != requests.status_codes.codes.ok:
         raise RetrieveDigestError()
