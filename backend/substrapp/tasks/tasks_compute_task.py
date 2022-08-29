@@ -286,11 +286,12 @@ def _run(
 
             # Collect results
             save_outputs(ctx)
-            with get_orchestrator_client(channel_name) as client:
-                task_utils.mark_as_done(ctx.task.key, client)
 
             # stop outputs saving timer
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())
+
+            with get_orchestrator_client(channel_name) as client:
+                task_utils.mark_as_done(ctx.task.key, client)
 
     except OSError as e:
         if e.errno == errno.ENOSPC:
