@@ -12,7 +12,7 @@ from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
 
-# These constants are shared with connect-tools.
+# These constants are shared with substra-tools.
 # These constants will disappear once the inputs/outputs are exposed by the orchestrator.
 TASK_IO_PREDICTIONS = "predictions"
 TASK_IO_CHAINKEYS = "chainkeys"

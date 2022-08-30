@@ -4,8 +4,8 @@ config:
   CORS_ORIGIN_WHITELIST: '["http://substra-frontend.org-2.com", "http://substra-frontend.org-2.com:3000", "http://substra-frontend.org-2.com:3001"]'
   CORS_ALLOW_CREDENTIALS: "true"
   ALLOWED_HOSTS: '[".org-2.com", ".org-2", ".org-2.svc.cluster.local"]'
-  DEFAULT_THROTTLE_RATES: '120'
-  TASK_CACHE_DOCKER_IMAGES: 'False'
+  DEFAULT_THROTTLE_RATES: "120"
+  TASK_CACHE_DOCKER_IMAGES: "False"
   LOG_LEVEL: DEBUG
 organizationName: MyOrg2
 
@@ -27,8 +27,8 @@ containerRegistry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: connect-314908/connect-tools:latest-minimal
-      dstImage: owkin/connect-tools:latest-minimal
+    - image: connect-314908/susbtra-tools:latest-minimal
+      dstImage: owkin/susbtra-tools:latest-minimal
       sourceRegistry: gcr.io
       dockerConfigSecretName: "docker-config"
 
@@ -45,10 +45,10 @@ server:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
       nginx.ingress.kubernetes.io/proxy-body-size: 100m
-      nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
-      nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
-      nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
-      nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502"
+      nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "3"
 
 kaniko:
   dockerConfigSecretName: "docker-config"
@@ -56,7 +56,7 @@ kaniko:
   cache:
     warmer:
       cachedImages:
-        - gcr.io/connect-314908/connect-tools:latest-minimal
+        - gcr.io/connect-314908/substra-tools:latest-minimal
 
 addAccountOperator:
   incomingOrganizations:
