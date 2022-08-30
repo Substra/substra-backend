@@ -65,3 +65,21 @@ exclude_lines = [
     "def prepare_training_task",
     "def prepare_testing_task"
 ]
+
+[tool.mypy]
+python_version = 3.9
+plugins = [
+    "mypy_django_plugin.main",
+    "mypy_drf_plugin.main"
+]
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "backend"
+disallow_untyped_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+cache_dir = "/dev/null"
+follow_imports = "silent"
+
+[tool.django-stubs]
+django_settings_module = "backend.settings.test"

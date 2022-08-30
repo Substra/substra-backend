@@ -126,7 +126,7 @@ class ComputeTask(Task):
                 {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
             )
 
-    def split_args(self, celery_args: tuple) -> tuple[str, dict[str, Any]]:
+    def split_args(self, celery_args: tuple) -> tuple[str, orchestrator.ComputeTask]:
         channel_name = celery_args[0]
         task = orchestrator.ComputeTask.parse_raw(celery_args[1])
         return channel_name, task
@@ -298,7 +298,7 @@ def _run(
             # "No space left on device"
             # clear asset buffer and retry the task
             logger.info(
-                "No space left on device, clearing up the asset buffer and retrying the task", task_key=task["key"]
+                "No space left on device, clearing up the asset buffer and retrying the task", task_key=task.key
             )
             with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
                 clear_assets_buffer()

@@ -62,6 +62,8 @@ jobs:
           flake8 $SRC_DIRS
       - name: Check security - Bandit
         run: bandit --ini=.bandit
+      - name: Mypy
+        run: mypy backend/substrapp/tasks/
       - name: Check for missing Django migrations
         run: |
           # If this fails, please run `make migrations` and commit the results
