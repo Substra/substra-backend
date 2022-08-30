@@ -6,6 +6,7 @@ from typing import Union
 
 import pydantic
 
+from orchestrator import algo_pb2
 from orchestrator import common_pb2
 from orchestrator import computeplan_pb2
 from orchestrator import computetask_pb2
@@ -97,6 +98,20 @@ class DataManager(pydantic.BaseModel):
     def from_grpc(cls, m: datamanager_pb2.DataManager) -> "DataManager":
         """Creates a DataManager from grpc message"""
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
+
+
+class Algo(pydantic.BaseModel):
+    key: str
+    owner: str
+    algorithm: Address
+
+    @classmethod
+    def from_grpc(cls, a: algo_pb2.Algo) -> "Algo":
+        return cls(
+            key=a.key,
+            owner=a.owner,
+            algorithm=Address.from_grpc(a.algorithm),
+        )
 
 
 class ComputeTaskStatus(AutoNameEnum):

@@ -1,9 +1,11 @@
+import typing
+
 import structlog
 from django.conf import settings
 
 import orchestrator
 from backend.celery import app
-from substrapp.compute_tasks.algo import Algo
+from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
@@ -57,7 +59,7 @@ def _teardown_compute_plan_ressources(orc_client: orchestrator.Client, compute_p
             return
         _teardown_pods_and_dirs(compute_plan_key)
 
-    _delete_compute_plan_algos_images(orc_client, compute_plan_key)
+    _delete_compute_plan_algos_images(orc_client.query_algos(compute_plan_key))
 
 
 def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
@@ -66,7 +68,6 @@ def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
     teardown_compute_plan_dir(Directories(compute_plan_key))
 
 
-def _delete_compute_plan_algos_images(orc_client: orchestrator.Client, compute_plan_key: str) -> None:
-    for orc_algo in orc_client.query_algos(compute_plan_key):
-        algo = Algo("", orc_algo)
-        delete_container_image_safe(algo.container_image_tag)
+def _delete_compute_plan_algos_images(algos: typing.Iterable[orchestrator.Algo]) -> None:
+    for algo in algos:
+        delete_container_image_safe(utils.container_image_tag_from_algo(algo))

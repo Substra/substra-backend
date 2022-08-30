@@ -3,8 +3,9 @@ from typing import Any
 
 import pytest
 
+import orchestrator
 import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.compute_tasks.algo import Algo
+import orchestrator.mock as orc_mock
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import Directories
 
@@ -16,24 +17,8 @@ ENTRYPOINT ["python3", "myalgo.py"]
 
 
 @pytest.fixture
-def algo() -> Algo:
-    channel = "mychannel"
-    algo = {
-        "key": "ae0fa090-7ba9-48b3-b6c9-fe0feef088ef",
-        "name": "my algo",
-        "category": 1,
-        "owner": "Org1MSP",
-        "description": {"checksum": "", "storage_address": ""},
-        "algorithm": {
-            "checksum": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
-            "storage_address": "",
-        },
-        "permissions": {
-            "process": {"public": True, "authorized_ids": []},
-            "download": {"public": True, "authorized_ids": []},
-        },
-    }
-    return Algo(channel, algo)
+def algo() -> orchestrator.Algo:
+    return orc_mock.AlgoFactory()
 
 
 @pytest.fixture

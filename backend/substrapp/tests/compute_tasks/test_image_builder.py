@@ -1,78 +1,74 @@
 import pathlib
-import tempfile
-import unittest
-import uuid
-from unittest import mock
 
-from parameterized import parameterized
+import pytest
+from pytest_mock import MockerFixture
 
+import orchestrator
 from substrapp.compute_tasks import errors as compute_task_errors
-from substrapp.compute_tasks.algo import Algo
-from substrapp.compute_tasks.image_builder import _get_entrypoint_from_dockerfile
-from substrapp.compute_tasks.image_builder import build_image_if_missing
-from substrapp.tests.test_utils import CHANNEL
+from substrapp.compute_tasks import image_builder
+from substrapp.compute_tasks import utils
 
-DOCKERFILE = """
+_VALID_DOCKERFILE = """
 FROM ubuntu:16.04
-RUN echo "Hello World"
+RUN echo "Hello world"
 ENTRYPOINT ["python3", "myalgo.py"]
+"""
+_NO_ENTRYPOINT = """
+FROM ubuntu:16.04
+"""
+_ENTRYPOINT_SHELL_FORM = """
+FROM ubuntu:16.04
+ENTRYPOINT python3 myalgo.py
 """
 
 
-class GetEntrypointFromDockerfileTests(unittest.TestCase):
-    def setUp(self):
-        self._tmp_dir = tempfile.TemporaryDirectory()
-        self.tmp_dir = pathlib.Path(self._tmp_dir.name)
-        self.dockerfile_path = self.tmp_dir / "Dockerfile"
+class TestBuildImageIfMissing:
+    def test_image_already_exists(self, mocker: MockerFixture, algo: orchestrator.Algo):
+        ds = mocker.Mock()
+        m_container_image_exists = mocker.patch(
+            "substrapp.compute_tasks.image_builder.container_image_exists", return_value=True
+        )
+        algo_image_tag = utils.container_image_tag_from_algo(algo)
 
-    def tearDown(self):
-        self._tmp_dir.cleanup()
+        image_builder.build_image_if_missing(datastore=ds, algo=algo)
 
-    def test_get_entrypoint_from_dockerfile(self):
-        self.dockerfile_path.write_text(DOCKERFILE)
-        res = _get_entrypoint_from_dockerfile(self.tmp_dir)
-        self.assertEqual(res, ["python3", "myalgo.py"])
+        m_container_image_exists.assert_called_once_with(algo_image_tag)
 
-    @parameterized.expand(
+    def test_image_build_needed(self, mocker: MockerFixture, algo: orchestrator.Algo):
+        ds = mocker.Mock()
+        m_container_image_exists = mocker.patch(
+            "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
+        )
+        m_build_asset_image = mocker.patch("substrapp.compute_tasks.image_builder._build_asset_image")
+        algo_image_tag = utils.container_image_tag_from_algo(algo)
+
+        image_builder.build_image_if_missing(datastore=ds, algo=algo)
+
+        m_container_image_exists.assert_called_once_with(algo_image_tag)
+        m_build_asset_image.assert_called_once()
+        assert m_build_asset_image.call_args.args[1] == algo
+
+
+class TestGetEntrypointFromDockerfile:
+    def test_valid_dockerfile(self, tmp_path: pathlib.Path):
+        dockerfile_path = tmp_path / "Dockerfile"
+        dockerfile_path.write_text(_VALID_DOCKERFILE)
+        entrypoint = image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
+
+        assert entrypoint == ["python3", "myalgo.py"]
+
+    @pytest.mark.parametrize(
+        "dockerfile,expected_exc_content",
         [
-            ("INVALID DOCKERFILE", "^Invalid Dockerfile: Cannot find ENTRYPOINT$"),
-            ("FROM scratch\nENTRYPOINT invalid_entrypoint_form", "^Invalid ENTRYPOINT.+"),
+            pytest.param(_NO_ENTRYPOINT, "Invalid Dockerfile: Cannot find ENTRYPOINT", id="no entrypoint"),
+            pytest.param(_ENTRYPOINT_SHELL_FORM, "Invalid ENTRYPOINT", id="shell form"),
         ],
     )
-    def test_get_entrypoint_from_dockerfile_raise(self, dockerfile: str, exc_regex: str):
-        self.dockerfile_path.write_text(dockerfile)
+    def test_invalid_dockerfile(self, tmp_path: pathlib.Path, dockerfile: str, expected_exc_content: str):
+        dockerfile_path = tmp_path / "Dockerfile"
+        dockerfile_path.write_text(dockerfile)
 
-        with self.assertRaisesRegex(compute_task_errors.BuildError, exc_regex):
-            _get_entrypoint_from_dockerfile(self.tmp_dir)
+        with pytest.raises(compute_task_errors.BuildError) as exc:
+            image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
 
-
-class TestImageBuilder:
-    def test_build_image_if_missing(self):
-        algo_key = str(uuid.uuid4())
-        algo_owner = "algo owner"
-        algo_storage_address = "algo storage_address"
-        algo_checksum = "algo checksum"
-        algo_image_tag = f"algo-{algo_checksum}"
-
-        algo = Algo(
-            CHANNEL,
-            {
-                "key": algo_key,
-                "owner": algo_owner,
-                "algorithm": {"storage_address": algo_storage_address, "checksum": algo_checksum},
-            },
-        )
-
-        with (
-            mock.patch("substrapp.compute_tasks.image_builder._build_asset_image") as m_build_asset_image,
-            mock.patch("substrapp.compute_tasks.image_builder.container_image_exists") as mcontainer_image_exists,
-        ):
-
-            mcontainer_image_exists.return_value = False
-            build_image_if_missing(algo)
-
-            assert mcontainer_image_exists.call_count == 1
-            mcontainer_image_exists.assert_any_call(algo_image_tag)
-
-            assert m_build_asset_image.call_count == 1
-            m_build_asset_image.assert_any_call(algo)
+        assert expected_exc_content in str(exc.value)

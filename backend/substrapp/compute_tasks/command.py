@@ -50,7 +50,7 @@ def get_performance_filename(algo_key: str) -> str:
 
 
 def get_exec_command(ctx: Context) -> list[str]:
-    entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.algo.checksum)
+    entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.algo.algorithm.checksum)
 
     command = entrypoint.entrypoint_json
 

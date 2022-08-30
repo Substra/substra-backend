@@ -2,6 +2,7 @@ import uuid
 
 from pytest_mock import MockerFixture
 
+import orchestrator.mock as orc_mock
 from substrapp.tasks import tasks_compute_plan
 
 
@@ -36,13 +37,15 @@ def test_teardown_compute_plan_resources_cp_done(mocker: MockerFixture):
 
 
 def test_delete_cp_algo_images(mocker: MockerFixture):
-    client = mocker.Mock()
-    client.query_algos.return_value = [{"algorithm": {"checksum": "azerty"}}, {"algorithm": {"checksum": "qwerty"}}]
+    algo_1_address = orc_mock.AddressFactory(checksum="azerty")
+    algo_2_address = orc_mock.AddressFactory(checksum="qwerty")
+    algos = [
+        orc_mock.AlgoFactory(algorithm=algo_1_address),
+        orc_mock.AlgoFactory(algorithm=algo_2_address),
+    ]
     mocked_delete_image = mocker.patch("substrapp.tasks.tasks_compute_plan.delete_container_image_safe")
 
-    cp_key = str(uuid.uuid4())
-
-    tasks_compute_plan._delete_compute_plan_algos_images(client, cp_key)
+    tasks_compute_plan._delete_compute_plan_algos_images(algos)
 
     mocked_delete_image.assert_any_call("algo-azerty")
     mocked_delete_image.assert_any_call("algo-qwerty")

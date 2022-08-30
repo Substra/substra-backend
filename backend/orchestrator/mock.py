@@ -1,6 +1,7 @@
 import factory
 
 from .resources import Address
+from .resources import Algo
 from .resources import ComputePlan
 from .resources import ComputePlanStatus
 from .resources import ComputeTask
@@ -59,6 +60,15 @@ class DataManagerFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     opener = factory.SubFactory(AddressFactory)
+
+
+class AlgoFactory(factory.Factory):
+    class Meta:
+        model = Algo
+
+    key = factory.Faker("uuid4")
+    owner = "OrgA"
+    algorithm = factory.SubFactory(AddressFactory)
 
 
 class ComputePlanFactory(factory.Factory):

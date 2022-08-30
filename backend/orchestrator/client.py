@@ -1,6 +1,7 @@
 import time
 from copy import deepcopy
 from functools import wraps
+from typing import Generator
 
 import grpc
 import structlog
@@ -33,6 +34,7 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.resources import Algo
 from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputePlanStatus
 from orchestrator.resources import ComputeTask
@@ -213,27 +215,25 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_algo(self, key):
+    def query_algo(self, key) -> Algo:
         data = self._algo_client.GetAlgo(algo_pb2.GetAlgoParam(key=key), metadata=self._metadata)
-        return MessageToDict(data, **CONVERT_SETTINGS)
+        return Algo.from_grpc(data)
 
     @grpc_retry
-    def query_algos(self, compute_plan_key=None):
+    def query_algos(self, compute_plan_key=None) -> Generator[Algo, None, None]:
         algo_filter = algo_pb2.AlgoQueryFilter(compute_plan_key=compute_plan_key)
-        res = []
         page_token = ""  # nosec
         while True:
             data = self._algo_client.QueryAlgos(
                 algo_pb2.QueryAlgosParam(filter=algo_filter, page_token=page_token),
                 metadata=self._metadata,
             )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            algos = data.get("Algos", [])
-            page_token = data.get("next_page_token")
-            res.extend(algos)
-            if page_token == "" or not algos:  # nosec
+            for algo in data.Algos:
+                yield Algo.from_grpc(algo)
+
+            page_token = data.next_page_token
+            if page_token == "" or len(data.Algos) == 0:  # nosec
                 break
-        return res
 
     @grpc_retry
     def register_datasamples(self, args):

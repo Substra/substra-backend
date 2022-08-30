@@ -44,6 +44,8 @@ from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.datastore import Datastore
+from substrapp.compute_tasks.datastore import get_datastore
 from substrapp.compute_tasks.directories import CPDirName
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.directories import init_compute_plan_dirs
@@ -172,8 +174,9 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
 # and https://github.com/celery/celery/issues/5106
 def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, compute_plan_key: str) -> None:
     task = orchestrator.ComputeTask.parse_raw(serialized_task)
+    datastore = get_datastore(channel=channel_name)
     try:
-        _run(self, channel_name, task, compute_plan_key)
+        _run(self, channel_name, task, compute_plan_key, datastore)
     except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
         logger.exception(exception)
         raise celery.exceptions.Ignore
@@ -206,7 +209,7 @@ def _create_task_profiling_step(
 
 # TODO: function too complex, consider refactoring
 def _run(
-    self: ComputeTask, channel_name: str, task: orchestrator.ComputeTask, compute_plan_key: str
+    self: ComputeTask, channel_name: str, task: orchestrator.ComputeTask, compute_plan_key: str, datastore: Datastore
 ) -> None:  # noqa: C901
     timer = Timer()
     _create_task_profiling(channel_name, task.key)
@@ -242,7 +245,7 @@ def _run(
         # start build_image timer
         timer.start()
 
-        build_image_if_missing(ctx.algo)
+        build_image_if_missing(datastore, ctx.algo)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())

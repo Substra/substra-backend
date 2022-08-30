@@ -6,9 +6,11 @@ import kubernetes
 import structlog
 from django.conf import settings
 
+import orchestrator
 from substrapp.compute_tasks import errors as compute_task_errors
-from substrapp.compute_tasks.algo import Algo
+from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import Label
+from substrapp.compute_tasks.datastore import Datastore
 from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
@@ -39,18 +41,20 @@ KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
 
-def build_image_if_missing(algo: Algo) -> None:
+def build_image_if_missing(datastore: Datastore, algo: orchestrator.Algo) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
-    with lock_resource("image-build", algo.container_image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
-        if container_image_exists(algo.container_image_tag):
-            logger.info("Reusing existing image", image=algo.container_image_tag)
+    container_image_tag = utils.container_image_tag_from_algo(algo)
+    with lock_resource("image-build", container_image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
+        if container_image_exists(container_image_tag):
+            logger.info("Reusing existing image", image=container_image_tag)
         else:
-            _build_asset_image(algo)
+            asset_content = datastore.get_algo(algo)
+            _build_asset_image(asset_content, algo)
 
 
-def _build_asset_image(algo: Algo) -> None:
+def _build_asset_image(asset: bytes, algo: orchestrator.Algo) -> None:
     """
     Build an asset's container image. Perform multiple steps:
     1. Download the asset (algo or metric) using the provided asset storage_address/owner. Verify its checksum and
@@ -64,16 +68,16 @@ def _build_asset_image(algo: Algo) -> None:
 
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         # Download source
-        uncompress_content(algo.archive, tmp_dir)
+        uncompress_content(asset, tmp_dir)
 
         # Extract ENTRYPOINT from Dockerfile
         entrypoint = _get_entrypoint_from_dockerfile(tmp_dir)
 
         # Build image
-        _build_container_image(tmp_dir, algo.container_image_tag)
+        _build_container_image(tmp_dir, utils.container_image_tag_from_algo(algo))
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(algo_checksum=algo.checksum, entrypoint_json=entrypoint)
+        ImageEntrypoint.objects.get_or_create(algo_checksum=algo.algorithm.checksum, entrypoint_json=entrypoint)
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:

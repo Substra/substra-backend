@@ -5,7 +5,6 @@ import structlog
 from django.conf import settings
 
 import orchestrator
-from substrapp.compute_tasks.algo import Algo
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import Directories
@@ -38,7 +37,7 @@ class Context:
     _compute_plan: orchestrator.ComputePlan
     _input_assets: list[orchestrator.ComputeTaskInputAsset]
     _directories: Directories
-    _algo: Algo
+    _algo: orchestrator.Algo
     _has_chainkeys: bool
     _outputs: dict[str, str]
 
@@ -48,7 +47,7 @@ class Context:
         task: orchestrator.ComputeTask,
         compute_plan: orchestrator.ComputePlan,
         input_assets: list[orchestrator.ComputeTaskInputAsset],
-        algo: Algo,
+        algo: orchestrator.Algo,
         directories: Directories,
         has_chainkeys: bool,
     ):
@@ -70,7 +69,6 @@ class Context:
             compute_plan = client.query_compute_plan(compute_plan_key)
             input_assets = client.get_task_input_assets(task.key)
             algo = client.query_algo(task.algo_key)
-            algo = Algo(channel_name, algo)
 
         logger.debug("retrieved input assets from orchestrator", input_assets=input_assets)
 
@@ -118,7 +116,7 @@ class Context:
         return [input.model for input in self._input_assets if input.kind == orchestrator.AssetKind.ASSET_MODEL]
 
     @property
-    def algo(self) -> Algo:
+    def algo(self) -> orchestrator.Algo:
         return self._algo
 
     @property

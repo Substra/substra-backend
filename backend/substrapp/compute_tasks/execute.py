@@ -14,6 +14,7 @@ from django.conf import settings
 
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
@@ -37,14 +38,14 @@ logger = structlog.get_logger(__name__)
 
 @timeit
 def execute_compute_task(ctx: Context) -> None:
-    algo = ctx.algo
     channel_name = ctx.channel_name
+    container_image_tag = utils.container_image_tag_from_algo(ctx.algo)
 
-    compute_pod = ctx.get_compute_pod(algo.key)
+    compute_pod = ctx.get_compute_pod(container_image_tag)
     pod_name = compute_pod.name
 
     env = get_environment(ctx)
-    image = get_container_image_name(algo.container_image_tag)
+    image = get_container_image_name(container_image_tag)
     exec_command = get_exec_command(ctx)
 
     k8s_client = _get_k8s_client()
