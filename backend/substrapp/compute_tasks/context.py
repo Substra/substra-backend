@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+import pydantic
 import structlog
 from django.conf import settings
 
@@ -24,6 +25,14 @@ class TaskResource(dict):
         dict.__init__(self, id=id, value=value, multiple=multiple)
 
 
+class OutputResource(pydantic.BaseModel):
+    identifier: str
+    kind: orchestrator.AssetKind
+    multiple: bool
+    # Relative path in sandbox
+    # rel_path: str
+
+
 class Context:
     """
     Context represents the execution context of a compute task.
@@ -39,7 +48,8 @@ class Context:
     _directories: Directories
     _algo: orchestrator.Algo
     _has_chainkeys: bool
-    _outputs: dict[str, str]
+    _outputs: list[OutputResource]
+    _temp_out: dict[str, str]
 
     def __init__(
         self,
@@ -50,6 +60,7 @@ class Context:
         algo: orchestrator.Algo,
         directories: Directories,
         has_chainkeys: bool,
+        outputs: list[OutputResource],
     ):
         self._channel_name = channel_name
         self._task = task
@@ -58,7 +69,7 @@ class Context:
         self._directories = directories
         self._has_chainkeys = has_chainkeys
         self._algo = algo
-        self._outputs = {}
+        self._outputs = outputs
 
     @classmethod
     def from_task(cls, channel_name: str, task: orchestrator.ComputeTask):
@@ -76,15 +87,9 @@ class Context:
 
         has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and bool(compute_plan.tag)
 
-        return cls(
-            channel_name,
-            task,
-            compute_plan,
-            input_assets,
-            algo,
-            directories,
-            has_chainkeys,
-        )
+        outputs = _get_output_resources(task, algo)
+
+        return cls(channel_name, task, compute_plan, input_assets, algo, directories, has_chainkeys, outputs)
 
     @property
     def channel_name(self) -> str:
@@ -148,10 +153,28 @@ class Context:
     def get_output_identifier(self, value: str) -> str:
         """return the task output identifier from output path"""
         path = os.path.relpath(value, self.directories.task_dir)
-        return self._outputs[path]
+        return self._temp_out[path]
 
     def set_outputs(self, outputs: list[TaskResource]):
         """set_outputs should be called with outputs as passed to the algo"""
         for output in outputs:
             path = os.path.relpath(output["value"], SANDBOX_DIR)
-            self._outputs[path] = output["id"]
+            self._temp_out[path] = output["id"]
+
+
+def _get_output_resources(task: orchestrator.ComputeTask, algo: orchestrator.Algo) -> list[OutputResource]:
+    """return the list of OutputResource built from task outputs and algo output definitions"""
+    outputs = []
+
+    for identifier in task.outputs:
+        algo_out = algo.outputs[identifier]
+
+        outputs.append(
+            OutputResource(
+                identifier=identifier,
+                kind=algo_out.kind,
+                multiple=algo_out.multiple,
+            )
+        )
+
+    return outputs

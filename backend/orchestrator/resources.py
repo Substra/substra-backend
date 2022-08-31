@@ -125,11 +125,21 @@ class AlgoInput(pydantic.BaseModel):
         return cls(kind=AssetKind.from_grpc(i.kind), multiple=i.multiple, optional=i.optional)
 
 
+class AlgoOutput(pydantic.BaseModel):
+    kind: AssetKind
+    multiple: bool
+
+    @classmethod
+    def from_grpc(cls, o: algo_pb2.AlgoOutput) -> "AlgoOutput":
+        return cls(kind=AssetKind.from_grpc(o.kind), multiple=o.multiple)
+
+
 class Algo(pydantic.BaseModel):
     key: str
     owner: str
     algorithm: Address
     inputs: dict[str, AlgoInput]
+    outputs: dict[str, AlgoOutput]
 
     @classmethod
     def from_grpc(cls, a: algo_pb2.Algo) -> "Algo":
@@ -138,6 +148,7 @@ class Algo(pydantic.BaseModel):
             owner=a.owner,
             algorithm=Address.from_grpc(a.algorithm),
             inputs={k: AlgoInput.from_grpc(i) for k, i in a.inputs.items()},
+            outputs={k: AlgoOutput.from_grpc(o) for k, o in a.outputs.items()},
         )
 
 
