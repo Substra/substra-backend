@@ -61,7 +61,6 @@ def test_get_args_train_task():
 
     actual = _get_args(ctx)
     assert actual == [
-        "train",
         "--rank",
         "0",
         "--inputs",
@@ -125,7 +124,6 @@ def test_get_args_composite_task():
 
     actual = _get_args(ctx)
     assert actual == [
-        "train",
         "--rank",
         "0",
         "--inputs",
@@ -183,7 +181,6 @@ def test_get_args_predict_after_train():
 
     actual = _get_args(ctx)
     assert actual == [
-        "predict",
         "--inputs",
         f"'{json.dumps(expected_inputs)}'",
         "--outputs",
@@ -244,7 +241,6 @@ def test_get_args_predict_after_composite():
 
     actual = _get_args(ctx)
     assert actual == [
-        "predict",
         "--inputs",
         f"'{json.dumps(expected_inputs)}'",
         "--outputs",

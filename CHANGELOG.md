@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore: rename connect-tools to substra-tools
+- stop generating algo method to execute from task category as it is now passed within substra cli
 
 ## [0.28.0] 2022-08-29
 

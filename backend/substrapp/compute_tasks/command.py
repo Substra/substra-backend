@@ -29,14 +29,6 @@ class Filenames:
     Performance = "perf.json"
 
 
-TASK_COMMANDS = {
-    orchestrator.ComputeTaskCategory.TASK_TRAIN: "train",
-    orchestrator.ComputeTaskCategory.TASK_PREDICT: "predict",
-    orchestrator.ComputeTaskCategory.TASK_COMPOSITE: "train",
-    orchestrator.ComputeTaskCategory.TASK_AGGREGATE: "aggregate",
-}
-
-
 def get_performance_filename(algo_key: str) -> str:
     """Builds the performance filename
 
@@ -86,7 +78,7 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
         ctx.set_outputs([TaskResource(id="performance", value=perf_path)])
         return command
 
-    command = [TASK_COMMANDS[task_category]]
+    command = []
 
     # TODO: refactor path handling in context to iterate over all inputs at once
     inputs.extend(
