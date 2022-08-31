@@ -29,7 +29,7 @@ containerRegistry:
   prepopulate:
     - image: connect-314908/substra-tools:latest-minimal
       sourceRegistry: gcr.io
-      dstImage: owkin/susbtra-tools:latest-minimal
+      dstImage: owkin/substra-tools:latest-minimal
       dockerConfigSecretName: "docker-config"
 
 worker:

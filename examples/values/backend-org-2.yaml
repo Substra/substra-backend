@@ -27,8 +27,8 @@ containerRegistry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: connect-314908/susbtra-tools:latest-minimal
-      dstImage: owkin/susbtra-tools:latest-minimal
+    - image: connect-314908/substra-tools:latest-minimal
+      dstImage: owkin/substra-tools:latest-minimal
       sourceRegistry: gcr.io
       dockerConfigSecretName: "docker-config"
 
