@@ -1,6 +1,6 @@
 Django==4.0.7
 structlog==22.1.0
-django-structlog==3.0.0
+django-structlog==3.0.1
 celery==5.2.7
 checksumdir==1.2.0
 cryptography==37.0.4
