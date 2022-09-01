@@ -60,7 +60,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     task_category = ctx.task.category
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
-    out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
@@ -74,8 +73,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
         command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
         command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
         command += ["--output-perf-path", perf_path]
-        # use a fake TaskResource until everything is properly passed as a generic output
-        ctx.set_outputs([TaskResource(id="performance", value=perf_path)])
         return command
 
     command = []
@@ -115,18 +112,8 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
         ]
     )
 
-    if task_category == orchestrator.ComputeTaskCategory.TASK_TRAIN:
-        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
-        outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
-        outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_AGGREGATE:
-        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_PREDICT:
-        outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
+    for output in ctx.outputs:
+        outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
 
     rank = str(task.rank)
     if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:

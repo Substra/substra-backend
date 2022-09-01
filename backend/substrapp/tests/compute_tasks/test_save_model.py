@@ -13,8 +13,6 @@ import orchestrator.mock as orc_mock
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.context import TaskResource
-from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.save_models import save_models
 
@@ -40,26 +38,25 @@ class SaveModelTests(APITestCase):
                 self.task_dir = task_dir
 
         data_dir = tempfile.mkdtemp()
-        fake_context = Context(
+        context = Context(
             channel_name="mychannel",
             task=orc_mock.ComputeTaskFactory(
                 category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
                 status=orchestrator.ComputeTaskStatus.STATUS_DOING,
                 rank=2,
+                outputs={"model": orc_mock.ComputeTaskOutputFactory()},
             ),
             compute_plan=None,
             input_assets=[],
-            algo={},
+            algo=orc_mock.Algo(
+                outputs={"model": orchestrator.AlgoOutput(kind=orchestrator.AssetKind.ASSET_MODEL, multiple=False)}
+            ),
             directories=FakeDirectories(data_dir),
             has_chainkeys=False,
         )
         model_dir = os.path.join(data_dir, TaskDirName.OutModels)
         os.makedirs(model_dir)
         model_src = os.path.join(model_dir, Filenames.OutModel)
-        fake_context.set_outputs(
-            [TaskResource(id="model", value=os.path.join(SANDBOX_DIR, TaskDirName.OutModels, Filenames.OutModel))]
-        )
-        print(fake_context._outputs)
 
         with open(model_src, "w") as f:
             f.write("model content")
@@ -76,7 +73,7 @@ class SaveModelTests(APITestCase):
                 mregister_model.side_effect = error
 
             try:
-                save_models(fake_context)
+                save_models(context)
             except RpcError as e:
                 if not save_model_raise:
                     # exception expected
