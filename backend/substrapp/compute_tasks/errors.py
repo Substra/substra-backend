@@ -1,6 +1,5 @@
 """Objects to manage errors occurring in a compute task."""
 
-import abc
 import enum
 from typing import BinaryIO
 
@@ -55,7 +54,7 @@ class ComputeTaskErrorType(enum.Enum):
             return cls.INTERNAL_ERROR
 
 
-class _ComputeTaskError(RuntimeError, abc.ABC):
+class _ComputeTaskError(RuntimeError):
     """Base class for the exceptions that can be raised in a compute task to be advertised to the user."""
 
     error_type: ComputeTaskErrorType

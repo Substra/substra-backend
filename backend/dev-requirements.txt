@@ -14,7 +14,7 @@ pytest-xdist[psutil]==2.5.0
 pytest==7.1.2
 responses==0.21.0
 watchdog==2.1.9
-flake8-bugbear==22.7.1
+flake8-bugbear==22.8.23
 pdbpp==0.10.3
 factory-boy==3.2.1
 mypy==0.941
