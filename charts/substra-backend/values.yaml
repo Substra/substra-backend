@@ -591,7 +591,7 @@ addAccountOperator:
   ##   secret: organizationSecret
   ##
   incomingOrganizations: []
-  ## @param addAccountOperator.users A list of users who can log into the substra backend server
+  ## @param addAccountOperator.users A list of administrators users who can log into the substra backend server with admin privileges
   ## e.g:
   ## - name: username
   ##   secret: password

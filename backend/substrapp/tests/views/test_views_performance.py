@@ -113,7 +113,6 @@ class CPPerformanceViewTests(APITestCase):
     def test_performance_list_empty(self):
         PerformanceRep.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
-        print(response.json())
         self.assertEqual(
             response.json(),
             {

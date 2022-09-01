@@ -189,8 +189,9 @@ class ValidationExceptionError(Exception):
 def get_channel_name(request):
 
     if hasattr(request.user, "channel"):
-        return request.user.channel.name
+        return request.user.channel.channel_name
 
+    # in case of node-to-node authentication, channel name is defined in header
     if "Substra-Channel-Name" in request.headers:
         return request.headers["Substra-Channel-Name"]
 

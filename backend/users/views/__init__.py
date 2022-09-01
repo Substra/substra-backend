@@ -1,3 +1,4 @@
+from .authentication import AuthenticationViewSet
 from .user import UserViewSet
 
-__all__ = ["UserViewSet"]
+__all__ = ["AuthenticationViewSet", "UserViewSet"]

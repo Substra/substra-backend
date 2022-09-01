@@ -243,7 +243,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- | ----- |
 | `addAccountOperator.outgoingOrganizations` | Outgoind organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
-| `addAccountOperator.users`                 | A list of users who can log into the substra backend server                                        | `[]`  |
+| `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
 
 
 ### Helm hooks

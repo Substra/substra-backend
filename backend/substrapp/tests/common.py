@@ -29,6 +29,7 @@ from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
 from organization.models import IncomingOrganization
+from users.models.user_channel import UserChannel
 
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
@@ -131,8 +132,12 @@ def generate_jwt_auth_header(jwt):
 
 
 class AuthenticatedClient(APIClient):
-    def request(self, **kwargs):
+    def __init__(self, enforce_csrf_checks=False, role=UserChannel.Role.USER, channel=None, **defaults):
+        super().__init__(enforce_csrf_checks, **defaults)
+        self.role = role
+        self.channel = channel
 
+    def request(self, **kwargs):
         # create user
         username = "substra"
         password = "p@sswr0d44"
@@ -140,6 +145,12 @@ class AuthenticatedClient(APIClient):
         if created:
             user.set_password(password)
             user.save()
+            # for testing purpose most authentication are done without channel allowing to mock passing channel in
+            # header, this check is necessary to not break previous tests but irl a user cannot be created
+            # without a channel
+            if self.channel:
+                UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
+
         # simulate login
         serializer = CustomTokenObtainPairSerializer(data={"username": username, "password": password})
 

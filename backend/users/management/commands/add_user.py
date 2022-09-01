@@ -6,7 +6,8 @@ from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 
-from users.models import Channel
+from users.models import UserChannel
+from users.views.user import _validate_role
 
 
 class Command(BaseCommand):
@@ -37,5 +38,5 @@ class Command(BaseCommand):
             except IntegrityError as e:
                 self.stderr.write(f"User already exists: {str(e)}")
             else:
-                Channel.objects.create(user=user, name=channel_name)
+                UserChannel.objects.create(user=user, channel_name=channel_name, role=_validate_role("ADMIN"))
                 self.stdout.write(f"user created {username}")

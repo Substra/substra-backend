@@ -63,6 +63,10 @@ class Info(APIView):
             res["orchestrator_version"] = orchestrator_versions.get("orchestrator")
             res["config"]["model_export_enabled"] = channel["model_export_enabled"]
 
+            res["user"] = request.user.get_username()
+            if hasattr(request.user, "channel"):
+                res["user_role"] = request.user.channel.role
+
             if orchestrator_versions.get("chaincode"):
                 res["chaincode_version"] = orchestrator_versions.get("chaincode")
 

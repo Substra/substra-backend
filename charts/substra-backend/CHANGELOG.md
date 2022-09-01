@@ -1,5 +1,9 @@
 # Changelog
 
+## 21.1.7
+
+### Changed
+- Update `addAccountOperator.users` doc
 
 ## 21.1.6
 

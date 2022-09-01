@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -37,3 +38,18 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
             refresh.set_exp()
 
         return refresh
+
+
+class UserSerializer(serializers.ModelSerializer):
+    channel = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["username", "channel", "role"]
+
+    def get_channel(self, instance):
+        return instance.channel.channel_name
+
+    def get_role(self, instance):
+        return instance.channel.role

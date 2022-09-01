@@ -1,3 +1,3 @@
-from .channel import Channel
+from .user_channel import UserChannel
 
-__all__ = ["Channel"]
+__all__ = ["UserChannel"]
