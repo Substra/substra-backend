@@ -121,8 +121,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
 
-    ctx.set_outputs(outputs)
-
     command += ["--inputs", f"'{json.dumps(inputs)}'"]
     command += ["--outputs", f"'{json.dumps(outputs)}'"]
 

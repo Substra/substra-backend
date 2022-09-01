@@ -4,8 +4,8 @@ import orchestrator
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.mock as orc_mock
 from orchestrator.resources import ComputeTaskInputAsset
+from substrapp.compute_tasks import context
 from substrapp.compute_tasks.command import _get_args
-from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import Directories
 from substrapp.tests.common import InputIdentifiers
 from substrapp.tests.orchestrator_factory import AlgoFactory
@@ -38,7 +38,7 @@ def test_get_args_train_task():
         ),
     ]
 
-    ctx = Context(
+    ctx = context.Context(
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
@@ -55,6 +55,14 @@ def test_get_args_train_task():
         compute_plan=None,
         directories=Directories(task.key),
     )
+    ctx._outputs = [
+        context.OutputResource(
+            identifier=InputIdentifiers.MODEL,
+            kind=orchestrator.AssetKind.ASSET_MODEL,
+            multiple=False,
+            rel_path="out_models/out-model",
+        ),
+    ]
 
     expected_inputs = [
         {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}", "multiple": False},
@@ -111,7 +119,7 @@ def test_get_args_composite_task():
         ),
     ]
 
-    ctx = Context(
+    ctx = context.Context(
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
@@ -129,6 +137,20 @@ def test_get_args_composite_task():
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
+    ctx._outputs = [
+        context.OutputResource(
+            identifier=InputIdentifiers.LOCAL,
+            kind=orchestrator.AssetKind.ASSET_MODEL,
+            multiple=False,
+            rel_path="out_models/out-head-model",
+        ),
+        context.OutputResource(
+            identifier=InputIdentifiers.SHARED,
+            kind=orchestrator.AssetKind.ASSET_MODEL,
+            multiple=False,
+            rel_path="out_models/out-model",
+        ),
+    ]
 
     expected_inputs = [
         {"id": InputIdentifiers.SHARED, "value": f"/substra_internal/in_models/{shared.key}", "multiple": False},
@@ -183,7 +205,7 @@ def test_get_args_predict_after_train():
         ),
     ]
 
-    ctx = Context(
+    ctx = context.Context(
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
@@ -200,6 +222,14 @@ def test_get_args_predict_after_train():
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
+    ctx._outputs = [
+        context.OutputResource(
+            identifier=InputIdentifiers.PREDICTIONS,
+            kind=orchestrator.AssetKind.ASSET_MODEL,
+            multiple=False,
+            rel_path="out_models/out-model",
+        ),
+    ]
 
     expected_inputs = [
         {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}", "multiple": False},
@@ -254,7 +284,7 @@ def test_get_args_predict_after_composite():
         ),
     ]
 
-    ctx = Context(
+    ctx = context.Context(
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
@@ -272,6 +302,14 @@ def test_get_args_predict_after_composite():
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
+    ctx._outputs = [
+        context.OutputResource(
+            identifier=InputIdentifiers.PREDICTIONS,
+            kind=orchestrator.AssetKind.ASSET_MODEL,
+            multiple=False,
+            rel_path="out_models/out-model",
+        ),
+    ]
 
     expected_inputs = [
         {"id": InputIdentifiers.LOCAL, "value": f"/substra_internal/in_models/{local.key}", "multiple": False},
@@ -326,7 +364,7 @@ def test_get_args_test_after_predict():
         ),
     ]
 
-    ctx = Context(
+    ctx = context.Context(
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
