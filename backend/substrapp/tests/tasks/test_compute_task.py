@@ -28,7 +28,8 @@ def test_compute_task_exception(mocker: MockerFixture):
     mock_add_asset_to_task_dir = mocker.patch("substrapp.tasks.tasks_compute_task.add_assets_to_taskdir")
     mock_build_image_if_missing = mocker.patch("substrapp.tasks.tasks_compute_task.build_image_if_missing")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
-    mock_save_outputs = mocker.patch("substrapp.tasks.tasks_compute_task.save_outputs")
+    saver = mocker.MagicMock()
+    mock_output_saver = mocker.patch("substrapp.tasks.tasks_compute_task.OutputSaver", return_value=saver)
     mock_teardown_task_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
 
     class FakeDirectories:
@@ -63,7 +64,8 @@ def test_compute_task_exception(mocker: MockerFixture):
     mock_add_asset_to_task_dir.assert_called_once()
     mock_build_image_if_missing.assert_called_once()
     mock_execute_compute_task.assert_called_once()
-    mock_save_outputs.assert_called_once()
+    saver.save_outputs.assert_called_once()
+    mock_output_saver.assert_called_once()
     mock_teardown_task_dirs.assert_called_once()
 
     # test RPC error
@@ -71,7 +73,7 @@ def test_compute_task_exception(mocker: MockerFixture):
     error.details = "OE0000"
     error.code = lambda: StatusCode.NOT_FOUND
 
-    mock_save_outputs.side_effect = error
+    saver.save_outputs.side_effect = error
     with pytest.raises(errors.CeleryRetryError) as excinfo:
         compute_task(CHANNEL, task.json(), None)
     assert str(excinfo.value.__cause__.details) == "OE0000"
