@@ -28,16 +28,6 @@ class ComputeTaskInputFactory(factory.Factory):
     parent_task_output_identifier = None
 
 
-class ComputeTaskOutputFactory(factory.Factory):
-    class Meta:
-        model = ComputeTaskOutput
-
-    permissions = Permissions(
-        download=Permission(public=True, authorized_ids=[]), process=Permission(public=True, authorized_ids=[])
-    )
-    transient = False
-
-
 class ComputeTaskFactory(factory.Factory):
     class Meta:
         model = ComputeTask
