@@ -19,6 +19,7 @@ COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
 COPY ./backend/events /usr/src/app/events
+COPY ./backend/localsync /usr/src/app/localsync
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/organization /usr/src/app/organization
 COPY ./backend/organization_register /usr/src/app/organization_register

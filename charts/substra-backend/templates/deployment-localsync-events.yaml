@@ -1,4 +1,4 @@
-{{- if .Values.events.enabled }}
+{{- if .Values.localsync.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,21 +26,21 @@ spec:
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
         checksum-secret-redis: {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
     spec:
-      {{- with .Values.events.image.pullSecrets }}
+      {{- with .Values.localsync.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.events.podSecurityContext.enabled }}
+      {{- if .Values.localsync.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.events.podSecurityContext.fsGroup }}
-        runAsUser: {{ .Values.events.podSecurityContext.runAsUser }}
-        runAsGroup: {{ .Values.events.podSecurityContext.runAsGroup }}
+        fsGroup: {{ .Values.localsync.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.localsync.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.localsync.podSecurityContext.runAsGroup }}
       {{- end }}
       serviceAccountName: {{ include "substra.events.serviceAccountName" . }}
       containers:
         - name: localsync-event-app
-          image: {{ include "common.images.name" .Values.events.image }}
-          imagePullPolicy: {{ .Values.events.image.pullPolicy }}
+          image: {{ include "common.images.name" .Values.localsync.image }}
+          imagePullPolicy: {{ .Values.localsync.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py localsync"]
@@ -73,7 +73,7 @@ spec:
                   fieldRef:
                     fieldPath: metadata.namespace
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.events.{{ .Values.settings }}
+              value: backend.settings.localsync.{{ .Values.settings }}
           volumeMounts:
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
@@ -113,7 +113,7 @@ spec:
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
         - name: wait-init-migrations
-          image: {{ include "common.images.name" .Values.events.image }}
+          image: {{ include "common.images.name" .Values.localsync.image }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
           volumeMounts:
             - name: volume-wait-init-migrations
@@ -152,15 +152,15 @@ spec:
           secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-    {{- with .Values.events.nodeSelector }}
+    {{- with .Values.localsync.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.events.affinity }}
+    {{- with .Values.localsync.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.events.tolerations }}
+    {{- with .Values.localsync.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

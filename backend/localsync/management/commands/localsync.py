@@ -3,10 +3,10 @@ import time
 import structlog
 from django.core.management.base import BaseCommand
 
-from events import health
-from events.localsync_reactor import consume
+from localsync import health
+from localsync.reactor import consume
 
-logger = structlog.get_logger("events")
+logger = structlog.get_logger("localsync")
 
 
 class Command(BaseCommand):

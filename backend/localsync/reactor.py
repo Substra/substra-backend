@@ -5,9 +5,9 @@ from django.conf import settings
 from django.db import close_old_connections
 
 import orchestrator
-from events import health
-from events import localsync
 from localrep.models import LastEvent
+from localsync import health
+from localsync import localsync
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger("events")

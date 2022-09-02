@@ -499,6 +499,56 @@ events:
     ##
     name: ""
 
+## @section Localsync app settings
+##
+localsync:
+  ## @param localsync.enabled Enable event service
+  ##
+  enabled: true
+  ## @param localsync.image.registry Substra event app image registry
+  ## @param localsync.image.repository Substra event app image repository
+  ## @param localsync.image.tag Substra event app image tag
+  ## @param localsync.image.pullPolicy Substra event app image pull policy
+  ## @param localsync.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.28.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## @param localsync.podSecurityContext.enabled Enable security context
+  ## @param localsync.podSecurityContext.runAsUser User ID for the pod
+  ## @param localsync.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param localsync.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  ## @param localsync.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: {}
+  ## @param localsync.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: []
+  ## @param localsync.affinity Affinity settings for pod assignment
+  ##
+  affinity: {}
+  ## @param localsync.rbac.create Create a role and service account for the event app
+  ##
+  rbac:
+    create: true
+  serviceAccount:
+    ## @param localsync.serviceAccount.create Create a service account for the event app
+    ##
+    create: true
+    ## @param localsync.serviceAccount.name The name of the ServiceAccount to use
+    ## If not set and create is true, a name is generated using the substra.fullname template
+    ##
+    name: ""
+
 ## @section Orchestrator settings
 ##
 orchestrator:

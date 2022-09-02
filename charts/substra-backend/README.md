@@ -208,6 +208,28 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                      |
 
 
+### Localsync app settings
+
+| Name                                      | Description                                         | Value                            |
+| ----------------------------------------- | --------------------------------------------------- | -------------------------------- |
+| `localsync.enabled`                       | Enable event service                                | `true`                           |
+| `localsync.image.registry`                | Substra event app image registry                    | `gcr.io`                         |
+| `localsync.image.repository`              | Substra event app image repository                  | `connect-314908/connect-backend` |
+| `localsync.image.tag`                     | Substra event app image tag                         | `0.28.0`                         |
+| `localsync.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`                   |
+| `localsync.image.pullSecrets`             | Specify image pull secrets                          | `[]`                             |
+| `localsync.podSecurityContext.enabled`    | Enable security context                             | `true`                           |
+| `localsync.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                           |
+| `localsync.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                           |
+| `localsync.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                           |
+| `localsync.nodeSelector`                  | Node labels for pod assignment                      | `{}`                             |
+| `localsync.tolerations`                   | Toleration labels for pod assignment                | `[]`                             |
+| `localsync.affinity`                      | Affinity settings for pod assignment                | `{}`                             |
+| `localsync.rbac.create`                   | Create a role and service account for the event app | `true`                           |
+| `localsync.serviceAccount.create`         | Create a service account for the event app          | `true`                           |
+| `localsync.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                             |
+
+
 ### Orchestrator settings
 
 | Name                                                      | Description                                                                                                                    | Value                |

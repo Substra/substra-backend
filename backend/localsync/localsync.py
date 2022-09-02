@@ -23,7 +23,7 @@ from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
-from events.dynamic_fields import parse_computetask_dates_from_event
+from localsync.dynamic_fields import parse_computetask_dates_from_event
 from orchestrator import client as orc_client
 from orchestrator import computetask
 
