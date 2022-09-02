@@ -42,21 +42,33 @@ def test_get_args_train_task():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=None,
+        algo=orc_mock.AlgoFactory(
+            inputs={
+                InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                    kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
+                ),
+            }
+        ),
         has_chainkeys=False,
         compute_plan=None,
         directories=Directories(task.key),
     )
 
     expected_inputs = [
-        {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}"},
-        {"id": InputIdentifiers.OPENER, "value": f"/substra_internal/openers/{data_manager.key}/__init__.py"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}"},
+        {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}", "multiple": False},
+        {
+            "id": InputIdentifiers.OPENER,
+            "value": f"/substra_internal/openers/{data_manager.key}/__init__.py",
+            "multiple": False,
+        },
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}", "multiple": True},
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}", "multiple": True},
     ]
 
     expected_outputs = [
-        {"id": InputIdentifiers.MODEL, "value": "/substra_internal/out_models/out-model"},
+        {"id": InputIdentifiers.MODEL, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
     actual = _get_args(ctx)
@@ -103,23 +115,36 @@ def test_get_args_composite_task():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=None,
+        algo=orc_mock.AlgoFactory(
+            inputs={
+                InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                    kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
+                ),
+            }
+        ),
         has_chainkeys=False,
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
-        {"id": InputIdentifiers.SHARED, "value": f"/substra_internal/in_models/{shared.key}"},
-        {"id": InputIdentifiers.LOCAL, "value": f"/substra_internal/in_models/{local.key}"},
-        {"id": InputIdentifiers.OPENER, "value": f"/substra_internal/openers/{data_manager.key}/__init__.py"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}"},
+        {"id": InputIdentifiers.SHARED, "value": f"/substra_internal/in_models/{shared.key}", "multiple": False},
+        {"id": InputIdentifiers.LOCAL, "value": f"/substra_internal/in_models/{local.key}", "multiple": False},
+        {
+            "id": InputIdentifiers.OPENER,
+            "value": f"/substra_internal/openers/{data_manager.key}/__init__.py",
+            "multiple": False,
+        },
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}", "multiple": True},
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}", "multiple": True},
     ]
 
     expected_outputs = [
-        {"id": InputIdentifiers.LOCAL, "value": "/substra_internal/out_models/out-head-model"},
-        {"id": InputIdentifiers.SHARED, "value": "/substra_internal/out_models/out-model"},
+        {"id": InputIdentifiers.LOCAL, "value": "/substra_internal/out_models/out-head-model", "multiple": False},
+        {"id": InputIdentifiers.SHARED, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
     actual = _get_args(ctx)
@@ -162,21 +187,33 @@ def test_get_args_predict_after_train():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=None,
+        algo=orc_mock.AlgoFactory(
+            inputs={
+                InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                    kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
+                ),
+            }
+        ),
         has_chainkeys=False,
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
-        {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}"},
-        {"id": InputIdentifiers.OPENER, "value": f"/substra_internal/openers/{data_manager.key}/__init__.py"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}"},
+        {"id": InputIdentifiers.MODEL, "value": f"/substra_internal/in_models/{model.key}", "multiple": False},
+        {
+            "id": InputIdentifiers.OPENER,
+            "value": f"/substra_internal/openers/{data_manager.key}/__init__.py",
+            "multiple": False,
+        },
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}", "multiple": True},
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}", "multiple": True},
     ]
 
     expected_outputs = [
-        {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model"},
+        {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
     actual = _get_args(ctx)
@@ -221,22 +258,35 @@ def test_get_args_predict_after_composite():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=None,
+        algo=orc_mock.AlgoFactory(
+            inputs={
+                InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                    kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
+                ),
+            }
+        ),
         has_chainkeys=False,
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
 
     expected_inputs = [
-        {"id": InputIdentifiers.LOCAL, "value": f"/substra_internal/in_models/{local.key}"},
-        {"id": InputIdentifiers.SHARED, "value": f"/substra_internal/in_models/{shared.key}"},
-        {"id": InputIdentifiers.OPENER, "value": f"/substra_internal/openers/{data_manager.key}/__init__.py"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}"},
-        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}"},
+        {"id": InputIdentifiers.LOCAL, "value": f"/substra_internal/in_models/{local.key}", "multiple": False},
+        {"id": InputIdentifiers.SHARED, "value": f"/substra_internal/in_models/{shared.key}", "multiple": False},
+        {
+            "id": InputIdentifiers.OPENER,
+            "value": f"/substra_internal/openers/{data_manager.key}/__init__.py",
+            "multiple": False,
+        },
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}", "multiple": True},
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}", "multiple": True},
     ]
 
     expected_outputs = [
-        {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model"},
+        {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
     actual = _get_args(ctx)

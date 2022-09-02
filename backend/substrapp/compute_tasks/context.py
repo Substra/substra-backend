@@ -20,8 +20,8 @@ class TaskResource(dict):
     By inheriting from dict, we get JSON serialization for free
     """
 
-    def __init__(self, id: str, value: str):
-        dict.__init__(self, id=id, value=value)
+    def __init__(self, id: str, value: str, multiple: bool = False):
+        dict.__init__(self, id=id, value=value, multiple=multiple)
 
 
 class Context:

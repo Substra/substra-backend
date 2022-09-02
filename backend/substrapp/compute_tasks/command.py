@@ -83,21 +83,33 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     # TODO: refactor path handling in context to iterate over all inputs at once
     inputs.extend(
         [
-            TaskResource(id=input.identifier, value=os.path.join(in_models_dir, input.model.key))
+            TaskResource(
+                id=input.identifier,
+                value=os.path.join(in_models_dir, input.model.key),
+                multiple=ctx.algo.inputs[input.identifier].multiple,
+            )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_MODEL
         ]
     )
     inputs.extend(
         [
-            TaskResource(id=input.identifier, value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener))
+            TaskResource(
+                id=input.identifier,
+                value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener),
+                multiple=ctx.algo.inputs[input.identifier].multiple,
+            )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER
         ]
     )
     inputs.extend(
         [
-            TaskResource(id=input.identifier, value=os.path.join(datasamples_dir, input.data_sample.key))
+            TaskResource(
+                id=input.identifier,
+                value=os.path.join(datasamples_dir, input.data_sample.key),
+                multiple=ctx.algo.inputs[input.identifier].multiple,
+            )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE
         ]

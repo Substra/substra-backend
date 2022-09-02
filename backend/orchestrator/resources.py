@@ -33,6 +33,10 @@ class AssetKind(AutoNameEnum):
     ASSET_FAILURE_REPORT = enum.auto()
     ASSET_COMPUTE_TASK_OUTPUT_ASSET = enum.auto()
 
+    @classmethod
+    def from_grpc(cls, k: common_pb2.AssetKind.ValueType) -> "AssetKind":
+        return cls(common_pb2.AssetKind.Name(k))
+
 
 class Address(pydantic.BaseModel):
     uri: str
@@ -100,10 +104,21 @@ class DataManager(pydantic.BaseModel):
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
 
 
+class AlgoInput(pydantic.BaseModel):
+    kind: AssetKind
+    multiple: bool
+    optional: bool
+
+    @classmethod
+    def from_grpc(cls, i: algo_pb2.AlgoInput) -> "AlgoInput":
+        return cls(kind=AssetKind.from_grpc(i.kind), multiple=i.multiple, optional=i.optional)
+
+
 class Algo(pydantic.BaseModel):
     key: str
     owner: str
     algorithm: Address
+    inputs: dict[str, AlgoInput]
 
     @classmethod
     def from_grpc(cls, a: algo_pb2.Algo) -> "Algo":
@@ -111,6 +126,7 @@ class Algo(pydantic.BaseModel):
             key=a.key,
             owner=a.owner,
             algorithm=Address.from_grpc(a.algorithm),
+            inputs={k: AlgoInput.from_grpc(i) for k, i in a.inputs.items()},
         )
 
 

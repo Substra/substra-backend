@@ -2,6 +2,8 @@ import factory
 
 from .resources import Address
 from .resources import Algo
+from .resources import AlgoInput
+from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputePlanStatus
 from .resources import ComputeTask
@@ -62,6 +64,15 @@ class DataManagerFactory(factory.Factory):
     opener = factory.SubFactory(AddressFactory)
 
 
+class AlgoInputFactory(factory.Factory):
+    class Meta:
+        model = AlgoInput
+
+    kind = AssetKind.ASSET_MODEL
+    multiple = False
+    optional = True
+
+
 class AlgoFactory(factory.Factory):
     class Meta:
         model = Algo
@@ -69,6 +80,7 @@ class AlgoFactory(factory.Factory):
     key = factory.Faker("uuid4")
     owner = "OrgA"
     algorithm = factory.SubFactory(AddressFactory)
+    inputs = {}
 
 
 class ComputePlanFactory(factory.Factory):

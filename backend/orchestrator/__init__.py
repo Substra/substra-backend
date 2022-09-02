@@ -1,6 +1,7 @@
 from .client import OrchestratorClient as Client
 from .resources import Address
 from .resources import Algo
+from .resources import AlgoInput
 from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputePlanStatus
@@ -36,4 +37,5 @@ __all__ = (
     "ComputePlan",
     "ComputePlanStatus",
     "Algo",
+    "AlgoInput",
 )
