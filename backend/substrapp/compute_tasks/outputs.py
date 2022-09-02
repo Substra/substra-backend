@@ -2,56 +2,106 @@ import json
 import os
 
 import structlog
+from django.conf import settings
+from django.urls import reverse
 
 import orchestrator
+from localrep.errors import AlreadyExistsError
+from localrep.serializers import ModelSerializer as ModelRepSerializer
 from orchestrator.client import OrchestratorClient
-from substrapp.compute_tasks import command
+from substrapp.compute_tasks import context
 from substrapp.compute_tasks import directories
-from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.save_models import save_models
+from substrapp.compute_tasks.asset_buffer import add_model_from_path
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
 
 
-def save_outputs(ctx: Context) -> None:
-    """Saves the outputs from a task
+class OutputSaver:
+    def __init__(self, ctx: context.Context):
+        self._ctx = ctx
 
-    Args:
-        ctx: A task context.
-    """
-    if ctx.task.category == orchestrator.ComputeTaskCategory.TASK_TEST:
-        _save_test_task_outputs(ctx)
-    else:
-        _save_training_task_outputs(ctx)
+    def save_outputs(self) -> None:
+        """Saves the task outputs"""
+        performances = [o for o in self._ctx.outputs if o.kind == orchestrator.AssetKind.ASSET_PERFORMANCE]
+        models = [o for o in self._ctx.outputs if o.kind == orchestrator.AssetKind.ASSET_MODEL]
 
+        for perf in performances:
+            self._save_performance(perf)
 
-def _save_training_task_outputs(ctx: Context) -> None:
-    """Saves outputs from a training task
+        if models:
+            self._save_models(models)
 
-    Args:
-        ctx: A task context.
-    """
-    logger.info("saving models and local folder")
-    save_models(ctx)
-    if ctx.has_chainkeys:
-        directories.commit_dir(ctx.directories, directories.TaskDirName.Chainkeys, directories.CPDirName.Chainkeys)
+        if self._ctx.has_chainkeys:
+            directories.commit_dir(
+                self._ctx.directories, directories.TaskDirName.Chainkeys, directories.CPDirName.Chainkeys
+            )
 
+    def _save_performance(self, output: context.OutputResource):
+        logger.info("saving performances")
+        with get_orchestrator_client(self._ctx.channel_name) as client:
+            perf_path = os.path.join(self._ctx.directories.task_dir, output.rel_path)
+            perf = _get_perf(perf_path)
+            _register_perf(client, self._ctx.task.key, self._ctx.algo.key, perf, output.identifier)
 
-def _save_test_task_outputs(ctx: Context) -> None:
-    """Saves outputs from a test task on the orchestrator
+    def _save_models(self, models: list[context.OutputResource]):
+        logger.info("saving models")
 
-    Args:
-        ctx: A task context.
-    """
-    logger.info("saving performances")
-    with get_orchestrator_client(ctx.channel_name) as client:
-        perf_path = os.path.join(
-            ctx.directories.task_dir, directories.TaskDirName.Perf, command.get_performance_filename(ctx.algo.key)
-        )
-        identifier = ctx.get_output_identifier(perf_path)
-        perf = _get_perf(perf_path)
-        _register_perf(client, ctx.task.key, ctx.algo.key, perf, identifier)
+        local_models = []
+        for model in models:
+            local_model = self._save_model_to_local_storage(model)
+            local_models.append(local_model)
+
+        try:
+            with get_orchestrator_client(self._ctx.channel_name) as client:
+                localrep_data_models = client.register_models({"models": models})
+        except Exception as exc:
+            for model in local_models:
+                self._delete_model(model["key"])
+            raise exc
+
+        for localrep_data in localrep_data_models:
+            localrep_data["channel"] = self._ctx.channel_name
+            localrep_serializer = ModelRepSerializer(data=localrep_data)
+            try:
+                localrep_serializer.save_if_not_exists()
+            except AlreadyExistsError:
+                pass
+
+        for model, local in zip(models, local_models):
+            path = os.path.join(self._ctx.directories.task_dir, model.rel_path)
+            add_model_from_path(path, local["key"])
+
+    def _save_model_to_local_storage(self, model: context.OutputResource) -> dict:
+        path = os.path.join(self._ctx.directories.task_dir, model.rel_path)
+        from substrapp.models import Model
+
+        checksum = get_hash(path, self._ctx.task.key)
+        instance = Model.objects.create(checksum=checksum)
+
+        with open(path, "rb") as f:
+            instance.file.save("model", f)
+        current_site = settings.DEFAULT_DOMAIN
+        storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
+
+        logger.debug("Saving model in local storage", model_key=instance.key, identifier=model.identifier)
+
+        return {
+            "key": str(instance.key),
+            "compute_task_key": self._ctx.task.key,
+            "compute_task_output_identifier": model.identifier,
+            "address": {
+                "checksum": checksum,
+                "storage_address": storage_address,
+            },
+        }
+
+    def _delete_model(self, key: str):
+        """Delete model from local storage in case something went wrong during registration"""
+        from substrapp.models import Model
+
+        Model.objects.get(key=key).delete()
 
 
 def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float, identifier: str) -> None:
