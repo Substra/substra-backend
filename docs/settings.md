@@ -13,7 +13,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
 | json | `ALLOWED_HOSTS` | `[]` |  |
-| string | `BACKEND_VERSION` | nil |  |
+| string | `BACKEND_VERSION` | `dev` |  |
 | string | `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `86400` (`24 * 3600`) |  |
 | string | `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `604800` (`7 * 24 * 3600`) |  |
 | string | `CELERY_BROKER_HOST` | `localhost` |  |

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore: rename connect-tools to substra-tools
 - stop generating algo method to execute from task category as it is now passed within substra cli
+- expose a default value (`dev`) for the backend version on the `/info` endpoint
 
 ### Added
 

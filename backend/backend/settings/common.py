@@ -396,7 +396,7 @@ LOGGING = {
     },
 }
 
-BACKEND_VERSION = os.environ.get("BACKEND_VERSION")
+BACKEND_VERSION = os.environ.get("BACKEND_VERSION", "dev")
 
 structlog.configure(
     processors=[
