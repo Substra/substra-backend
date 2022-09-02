@@ -55,7 +55,7 @@ class OutputSaver:
 
         try:
             with get_orchestrator_client(self._ctx.channel_name) as client:
-                localrep_data_models = client.register_models({"models": models})
+                localrep_data_models = client.register_models({"models": local_models})
         except Exception as exc:
             for model in local_models:
                 self._delete_model(model["key"])
