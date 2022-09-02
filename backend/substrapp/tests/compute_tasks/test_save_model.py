@@ -11,7 +11,6 @@ from rest_framework.test import APITestCase
 import orchestrator
 import orchestrator.mock as orc_mock
 from orchestrator.client import OrchestratorClient
-from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.save_models import save_models
@@ -37,6 +36,8 @@ class SaveModelTests(APITestCase):
             def __init__(self, task_dir) -> None:
                 self.task_dir = task_dir
 
+        model_identifier = "outmodel"
+
         data_dir = tempfile.mkdtemp()
         context = Context(
             channel_name="mychannel",
@@ -44,19 +45,21 @@ class SaveModelTests(APITestCase):
                 category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
                 status=orchestrator.ComputeTaskStatus.STATUS_DOING,
                 rank=2,
-                outputs={"model": orc_mock.ComputeTaskOutputFactory()},
+                outputs={model_identifier: orc_mock.ComputeTaskOutputFactory()},
             ),
             compute_plan=None,
             input_assets=[],
-            algo=orc_mock.Algo(
-                outputs={"model": orchestrator.AlgoOutput(kind=orchestrator.AssetKind.ASSET_MODEL, multiple=False)}
+            algo=orc_mock.AlgoFactory(
+                outputs={
+                    model_identifier: orchestrator.AlgoOutput(kind=orchestrator.AssetKind.ASSET_MODEL, multiple=False)
+                }
             ),
             directories=FakeDirectories(data_dir),
             has_chainkeys=False,
         )
         model_dir = os.path.join(data_dir, TaskDirName.OutModels)
         os.makedirs(model_dir)
-        model_src = os.path.join(model_dir, Filenames.OutModel)
+        model_src = os.path.join(model_dir, f"{model_identifier}.model")
 
         with open(model_src, "w") as f:
             f.write("model content")

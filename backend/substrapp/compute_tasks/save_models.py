@@ -48,16 +48,16 @@ def save_models(ctx: Context) -> None:
         raise SaveModelsError(f"Cannot save models for task category {task_category}")
 
     model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutModel)
-    output_identifier = ctx.get_output_identifier(model_path)
-    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key, output_identifier)
+    output = ctx.get_output_resource(model_path)
+    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key, output.identifier)
     models.append(simple_model)
 
     if task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
         # If we have a composite task we have two outputs, a MODEL_HEAD and a MODEL_SIMPLE model
         # so we need to register the head part separately
         head_model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutHeadModel)
-        output_identifier = ctx.get_output_identifier(head_model_path)
-        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key, output_identifier)
+        output = ctx.get_output_resource(head_model_path)
+        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key, output.identifier)
         models.append(head_model)
 
     try:

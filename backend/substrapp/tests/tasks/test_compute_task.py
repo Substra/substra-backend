@@ -8,18 +8,17 @@ from grpc import RpcError
 from grpc import StatusCode
 from pytest_mock import MockerFixture
 
-import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator
+import orchestrator.mock as orc_mock
 from substrapp.compute_tasks import errors
 from substrapp.compute_tasks.context import Context
 from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
-from substrapp.tests.orchestrator_factory import Orchestrator
 
 CHANNEL = "mychannel"
 
 
-def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrator):
-    mocker.patch("substrapp.compute_tasks.context.get_orchestrator_client", return_value=orchestrator.client)
+def test_compute_task_exception(mocker: MockerFixture):
     mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client")
     mock_raise_if_not_runnable = mocker.patch("substrapp.compute_tasks.compute_task._raise_if_task_not_runnable")
     mock_start_task = mocker.patch("substrapp.compute_tasks.compute_task.start_task_if_not_started")
@@ -32,22 +31,27 @@ def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrato
     mock_save_outputs = mocker.patch("substrapp.tasks.tasks_compute_task.save_outputs")
     mock_teardown_task_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
 
-    train_task = orchestrator.create_train_task(status=computetask_pb2.STATUS_DOING)
-
-    # Setup a fake context
-
-    task = orchestrator.client.query_task(train_task.key)
-    ctx = Context.from_task(CHANNEL, task)
-
     class FakeDirectories:
         compute_plan_dir = tempfile.mkdtemp()
         task_dir = tempfile.mkdtemp()
 
-    ctx._directories = FakeDirectories()
-    ctx._has_chainkeys = False
+    # Setup a fake context
+    ctx = Context(
+        channel_name=CHANNEL,
+        task=orc_mock.ComputeTaskFactory(
+            category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
+            status=orchestrator.ComputeTaskStatus.STATUS_DOING,
+        ),
+        compute_plan=None,
+        input_assets=[],
+        algo=orc_mock.AlgoFactory(),
+        directories=FakeDirectories(),
+        has_chainkeys=False,
+    )
+
     mock_ctx_from_task = mocker.patch("substrapp.tasks.tasks_compute_task.Context.from_task", return_value=ctx)
 
-    compute_task(CHANNEL, task.json(), None)
+    compute_task(CHANNEL, ctx.task.json(), None)
 
     assert mock_raise_if_not_runnable.call_count == 2
     mock_ctx_from_task.assert_called_once()
@@ -68,30 +72,30 @@ def test_compute_task_exception(mocker: MockerFixture, orchestrator: Orchestrato
 
     mock_save_outputs.side_effect = error
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, ctx.task.json(), None)
     assert str(excinfo.value.__cause__.details) == "OE0000"
 
     # test compute error
     mock_execute_compute_task.side_effect = Exception("Test")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, ctx.task.json(), None)
 
     assert str(excinfo.value.__cause__) == "Test"
 
     # test not enough space on disk error
     mock_execute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, ctx.task.json(), None)
     assert "No space left on device" in str(excinfo.value.__cause__)
 
     # test other OS error
     mock_execute_compute_task.side_effect = OSError(errno.EACCES, "Dummy error")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, ctx.task.json(), None)
     assert "Dummy error" in str(excinfo.value.__cause__)
 
 
-def test_celery_retry(mocker: MockerFixture, orchestrator: Orchestrator):
+def test_celery_retry(mocker: MockerFixture):
     mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client")
     mocker.patch("substrapp.compute_tasks.compute_task._raise_if_task_not_runnable")
     mocker.patch("substrapp.compute_tasks.compute_task.start_task_if_not_started")
@@ -108,8 +112,7 @@ def test_celery_retry(mocker: MockerFixture, orchestrator: Orchestrator):
     mock_retry = mocker.patch("substrapp.tasks.tasks_compute_task.ComputeTask.retry")
     mock_clear_asset_buffer = mocker.patch("substrapp.tasks.tasks_compute_task.clear_assets_buffer")
 
-    train_task = orchestrator.create_train_task(status=computetask_pb2.STATUS_TODO)
-    task = orchestrator.client.query_task(train_task.key)
+    task = orc_mock.ComputeTaskFactory()
 
     def basic_retry(exc, **retry_kwargs):
         # retry function that just re-raise the exception

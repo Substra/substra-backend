@@ -156,13 +156,16 @@ class Context:
         for output in self._outputs:
             if output.rel_path == path:
                 return output
+
+        print(self._outputs)
+        print(path)
         # TODO: specific exception
         raise InvalidContextError("output not found")
 
-    def _get_output_path(self, output: OutputResource) -> str:
-        if output.kind == orchestrator.AssetKind.ASSET_MODEL:
-            return os.path.join(TaskDirName.OutModels, f"{output.identifier}.model")
-        elif output.kind == orchestrator.AssetKind.ASSET_PERFORMANCE:
+    def _get_output_path(self, kind: orchestrator.AssetKind, identifier: str) -> str:
+        if kind == orchestrator.AssetKind.ASSET_MODEL:
+            return os.path.join(TaskDirName.OutModels, f"{identifier}.model")
+        elif kind == orchestrator.AssetKind.ASSET_PERFORMANCE:
             filename = "-".join([self.algo.key, "perf.json"])
             return os.path.join(TaskDirName.Perf, filename)
 
@@ -181,6 +184,7 @@ class Context:
                     identifier=identifier,
                     kind=algo_out.kind,
                     multiple=algo_out.multiple,
+                    rel_path=self._get_output_path(algo_out.kind, identifier),
                 )
             )
 
