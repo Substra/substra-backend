@@ -98,7 +98,7 @@ class ComputeTaskViewTests(APITestCase):
         done_failed_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST][ComputeTaskRep.Status.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.algos[AlgoRep.Category.ALGO_METRIC])
 
-        # we don't explicit serialized relationships as this test module is focused on computetask
+        # we don't explicitly serialize relationships as this test module is focused on computetask
 
         self.algo_data = {
             # use JSON serializer to convert OrderDicts to dicts, making diffs easier to read
@@ -399,6 +399,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         url = reverse("substrapp:task_bulk_create")
         with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task):
             response = self.client.post(url, data=data, format="json", **self.extra)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.json(), expected_response)
 
@@ -2041,6 +2042,15 @@ def _build_inputs(category: str) -> list[dict]:
 
 
 def _build_input(identifier):
+    if identifier == "opener":
+        return {
+            "asset_key": factory.INPUT_ASSET_KEY,
+            "identifier": identifier,
+            "parent_task_key": None,
+            "parent_task_output_identifier": None,
+            "addressable": None,
+            "permissions": None,
+        }
     return {
         "asset_key": factory.INPUT_ASSET_KEY,
         "identifier": identifier,

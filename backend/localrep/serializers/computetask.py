@@ -1,7 +1,9 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers
 
+import orchestrator.common_pb2 as common_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
@@ -10,6 +12,7 @@ from localrep.models import ComputeTaskInput
 from localrep.models import ComputeTaskOutput
 from localrep.models import DataManager
 from localrep.models import DataSample
+from localrep.models import Model
 from localrep.models.computetask import TaskDataSamples
 from localrep.serializers.algo import AlgoSerializer
 from localrep.serializers.datamanager import DataManagerSerializer
@@ -267,11 +270,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         # replace storage addresses
         self._replace_storage_addresses(data)
 
-        tmp = {}
-        for output in data["outputs"]:
-            tmp[output["identifier"]] = output
-            del output["identifier"]
-        data["outputs"] = tmp
+        data["outputs"] = {_output.pop("identifier"): _output for _output in data["outputs"]}
 
         # Fill the legacy permission fields.
         # This block will be deleted once all clients have stopped using these legacy permissions fields.
@@ -287,18 +286,15 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 "permissions"
             ]
 
-        def find_output_kind(output_id):
-            return data["algo"]["outputs"][output_id]["kind"]
-
         # Include output models/performances in output field
         # TODO: Move this in ComputeTaskOutputSerializer
         #  + Use the actual asset<->output association to find the assets
         #  (should be done once generic task is done)
         for output_id, output in data["outputs"].items():
-            output_kind = find_output_kind(output_id)
-            if output_kind == "ASSET_MODEL":
+            output_kind = self._find_output_kind(data, output_id)
+            if output_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL):
                 output["value"] = self._find_output_model(instance.category, data, output_id, data["key"])
-            elif output_kind == "ASSET_PERFORMANCE":
+            elif output_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE):
                 perfs = data["test"]["perfs"]
                 if perfs:
                     if len(perfs) != 1:  # performance output cannot be multiple
@@ -310,7 +306,51 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                     value = None
                 output["value"] = value
 
+        # set data inputs
+        self._inputs_to_representation(data)
+
         return data
+
+    def _inputs_to_representation(self, data):  # noqa: C901
+        # Include asset kind and asset addressable if exists in input field
+        # TODO: Move this in ComputeTaskInputSerializer
+        #  + Use the actual asset<->input association to find the assets
+        # to remove C901 complexity warning (should be done once generic task is done)
+        for input in data["inputs"]:
+            input_kind = self._find_input_kind(data, input.get("identifier"))
+            if input_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER):
+                input["addressable"] = self._get_opener_addressable(input.get("asset_key"))
+                input["permissions"] = self._get_opener_permissions(input.get("asset_key"))
+
+            if input_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL):
+                # get parent task output permissions
+                try:
+                    outputs = ComputeTaskOutput.objects.filter(task_id=input.get("parent_task_key")).all()
+                    models = Model.objects.filter(compute_task_id=input.get("parent_task_key")).all()
+                except ObjectDoesNotExist:
+                    input["permissions"] = None
+                    input["addressable"] = None
+                    continue
+                else:
+                    output_identifier = input.get("parent_task_output_identifier")
+                    for output in outputs:
+                        if output.identifier == output_identifier:
+                            input["permissions"] = make_download_process_permission_serializer()(output).data
+                    request = self.context.get("request")
+                    if request:
+                        for model in models:
+                            model_category = OUTPUT_MODEL_CATEGORY[output_identifier]
+                            if model.category == model_category:
+                                input["addressable"] = make_addressable_serializer("model")(model).data
+                                input["addressable"]["storage_address"] = request.build_absolute_uri(
+                                    reverse("substrapp:model-file", args=[model.key])
+                                )
+
+    def _find_output_kind(self, data, output_id):
+        return data["algo"]["outputs"][output_id]["kind"]
+
+    def _find_input_kind(self, data, input_id):
+        return data["algo"]["inputs"][input_id]["kind"]
 
     def _find_output_model(self, instance_category, data, output_identifier, task_key):
         task_category_field = TASK_CATEGORY_FIELDS[instance_category]
@@ -325,13 +365,34 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 model = matching_models[0]
                 return model
 
+    def _get_opener_addressable(self, key):
+        request = self.context.get("request")
+        if request:
+            try:
+                data_manager = DataManager.objects.filter(key=key).get()
+            except ObjectDoesNotExist:
+                return None
+            else:
+                addressable = make_addressable_serializer("opener")(data_manager).data
+                addressable["storage_address"] = request.build_absolute_uri(
+                    reverse("substrapp:data_manager-opener", args=[key])
+                )
+            return addressable
+
+    def _get_opener_permissions(self, key):
+        try:
+            data_manager = DataManager.objects.filter(key=key).get()
+        except ObjectDoesNotExist:
+            return None
+        else:
+            return make_download_process_permission_serializer()(data_manager).data
+
     def _replace_storage_addresses(self, task):
         request = self.context.get("request")
         if not request:
             return task
 
         # replace in common relationships
-
         if "algo" in task:
             task["algo"]["description"]["storage_address"] = request.build_absolute_uri(
                 reverse("substrapp:algo-description", args=[task["algo"]["key"]])
