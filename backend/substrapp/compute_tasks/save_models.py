@@ -1,19 +1,9 @@
-import os
 from uuid import UUID
 
 import structlog
 from django.conf import settings
 from django.urls import reverse
 
-import orchestrator
-import orchestrator.model_pb2 as model_pb2
-from localrep.errors import AlreadyExistsError
-from localrep.serializers import ModelSerializer as ModelRepSerializer
-from substrapp.compute_tasks.asset_buffer import add_model_from_path
-from substrapp.compute_tasks.command import Filenames
-from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.directories import TaskDirName
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_hash
 from substrapp.utils import timeit
 
@@ -22,63 +12,6 @@ logger = structlog.get_logger(__name__)
 
 class SaveModelsError(Exception):
     """An error occurred while saving models"""
-
-
-def save_models(ctx: Context) -> None:
-    """Saves models produced by the task to the orchestrator and data storage
-
-    Args:
-        ctx (Context): the compute task context
-
-    Raises:
-        SaveModelsError: Raised if we can't save a model for this task kind
-    """
-
-    task_category = ctx.task.category
-    dirs = ctx.directories
-    task_key = ctx.task.key
-    models = []
-
-    if task_category not in [
-        orchestrator.ComputeTaskCategory.TASK_AGGREGATE,
-        orchestrator.ComputeTaskCategory.TASK_TRAIN,
-        orchestrator.ComputeTaskCategory.TASK_COMPOSITE,
-        orchestrator.ComputeTaskCategory.TASK_PREDICT,
-    ]:
-        raise SaveModelsError(f"Cannot save models for task category {task_category}")
-
-    model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutModel)
-    output = ctx.get_output_resource(model_path)
-    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key, output.identifier)
-    models.append(simple_model)
-
-    if task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
-        # If we have a composite task we have two outputs, a MODEL_HEAD and a MODEL_SIMPLE model
-        # so we need to register the head part separately
-        head_model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutHeadModel)
-        output = ctx.get_output_resource(head_model_path)
-        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key, output.identifier)
-        models.append(head_model)
-
-    try:
-        with get_orchestrator_client(ctx.channel_name) as client:
-            localrep_data_models = client.register_models({"models": models})
-    except Exception as exc:
-        for model in models:
-            _delete_model(model["key"])
-        raise exc
-
-    for localrep_data in localrep_data_models:
-        localrep_data["channel"] = ctx.channel_name
-        localrep_serializer = ModelRepSerializer(data=localrep_data)
-        try:
-            localrep_serializer.save_if_not_exists()
-        except AlreadyExistsError:
-            pass
-
-    add_model_from_path(model_path, str(simple_model["key"]))
-    if task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
-        add_model_from_path(head_model_path, str(head_model["key"]))
 
 
 @timeit

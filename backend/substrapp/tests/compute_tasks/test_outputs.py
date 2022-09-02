@@ -2,6 +2,8 @@ import os
 import tempfile
 
 import pytest
+from grpc import RpcError
+from grpc import StatusCode
 from pytest_mock import MockerFixture
 
 import orchestrator
@@ -38,7 +40,11 @@ def test_commit_chainkeys(has_chainkeys: bool, mocker: MockerFixture):
 
 
 @pytest.mark.django_db
-def test_save_model(settings, mocker: MockerFixture):
+@pytest.mark.parametrize(
+    ("orc_raise"),
+    [True, False],
+)
+def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
     from substrapp.models import Model
 
     settings.SUBTUPLE_DIR = tempfile.mkdtemp()
@@ -69,14 +75,27 @@ def test_save_model(settings, mocker: MockerFixture):
 
     client = mocker.MagicMock()
     client.__enter__.return_value = client
+    if orc_raise:
+        error = RpcError()
+        error.details = "orchestrator unavailable"
+        error.code = lambda: StatusCode.UNAVAILABLE
+        client.register_models.side_effect = error
+
     add_model_from_path = mocker.patch("substrapp.compute_tasks.outputs.add_model_from_path")
     mocker.patch("substrapp.compute_tasks.outputs.get_orchestrator_client", return_value=client)
 
-    saver.save_outputs()
+    try:
+        saver.save_outputs()
+    except RpcError as e:
+        if not orc_raise:
+            raise e  # unexpected exception
 
     client.register_models.assert_called_once()
-    add_model_from_path.assert_called_once()
+    if not orc_raise:
+        add_model_from_path.assert_called_once()
+    else:
+        add_model_from_path.assert_not_called()
 
     models = Model.objects.all()
     filtered_model_keys = [str(model.key) for model in models]
-    assert len(filtered_model_keys) == 1
+    assert len(filtered_model_keys) == (0 if orc_raise else 1)
