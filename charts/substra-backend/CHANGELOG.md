@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.0.0
+
+### Changed
+- BREAKING CHANGE Use Redis instead of RabbitMQ as celery message broker
+
 ## 21.1.7
 
 ### Changed

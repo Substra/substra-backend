@@ -15,16 +15,16 @@ def str_to_bool(str_value: str) -> bool:
 
 # This is copied from the backend settings
 def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
-    """Builds a rabbitmq connection string
+    """Builds a redis connection string
 
     Args:
-        user (str): rabbitmq user
-        pasword (str): rabbitmq password
-        host (str): rabbitmq hostname
-        port (str): rabbitmq port
+        user (str): redis user
+        pasword (str): redis password
+        host (str): redis hostname
+        port (str): redis port
 
     Returns:
-        str: a connection string of the form "amqp://user:password@hostname:port//"
+        str: a connection string of the form "redis://user:password@hostname:port//"
     """
     conn_info = ""
     conn_port = ""
@@ -32,7 +32,7 @@ def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
         conn_info = f"{user}:{pasword}@"
     if port:
         conn_port = f":{port}"
-    return f"amqp://{conn_info}{host}{conn_port}//"
+    return f"redis://{conn_info}{host}{conn_port}//"
 
 
 # App settings
@@ -43,8 +43,8 @@ LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 # Celery settings
 CELERY_MONITORING_ENABLED = str_to_bool(os.environ.get("CELERY_MONITORING_ENABLED", "False"))
 # For convenience we use the same settings as in the backend
-CELERY_BROKER_USER = os.environ.get("CELERY_BROKER_USER", "rabbitmq")
-CELERY_BROKER_PASSWORD = os.environ.get("CELERY_BROKER_PASSWORD", "rabbitmq")
+CELERY_BROKER_USER = os.environ.get("CELERY_BROKER_USER", "redis")
+CELERY_BROKER_PASSWORD = os.environ.get("CELERY_BROKER_PASSWORD", "redis")
 CELERY_BROKER_HOST = os.environ.get("CELERY_BROKER_HOST", "localhost")
 CELERY_BROKER_PORT = os.environ.get("CELERY_BROKER_PORT", "5672")
 CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_USER, CELERY_BROKER_PASSWORD, CELERY_BROKER_HOST, CELERY_BROKER_PORT)

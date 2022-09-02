@@ -140,9 +140,9 @@ spec:
           - "python /usr/src/app/metrics_exporter/server.py"
         envFrom:
           - configMapRef:
-              name: {{ include "substra.fullname" . }}-rabbitmq
+              name: {{ include "substra.fullname" . }}-redis
           - secretRef:
-              name: {{ include "substra.fullname" . }}-rabbitmq
+              name: {{ include "substra.fullname" . }}-redis
         env:
           - name: PROMETHEUS_MULTIPROC_DIR
             value: {{ $metricsPath }}

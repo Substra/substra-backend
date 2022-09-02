@@ -32,16 +32,16 @@ def to_bool(value):
 
 
 def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
-    """Builds a rabbitmq connection string
+    """Builds a redis connection string
 
     Args:
-        user (str): rabbitmq user
-        pasword (str): rabbitmq password
-        host (str): rabbitmq hostname
-        port (str): rabbitmq port
+        user (str): redis user
+        pasword (str): redis password
+        host (str): redis hostname
+        port (str): redis port
 
     Returns:
-        str: a connection string of the form "amqp://user:password@hostname:port//"
+        str: a connection string of the form "redis://user:password@hostname:port//"
     """
     conn_info = ""
     conn_port = ""
@@ -49,7 +49,7 @@ def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
         conn_info = f"{user}:{pasword}@"
     if port:
         conn_port = f":{port}"
-    return f"amqp://{conn_info}{host}{conn_port}//"
+    return f"redis://{conn_info}{host}{conn_port}//"
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

@@ -22,10 +22,10 @@ spec:
         checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
         checksum-cm-settings: {{ include (print $.Template.BasePath "/configmap-settings.yaml") . | sha256sum }}
         checksum-cm-db: {{ include (print $.Template.BasePath "/configmap-database.yaml") . | sha256sum }}
-        checksum-cm-rabbitmq: {{ include (print $.Template.BasePath "/configmap-rabbitmq.yaml") . | sha256sum }}
+        checksum-cm-redis: {{ include (print $.Template.BasePath "/configmap-redis.yaml") . | sha256sum }}
         checksum-cm-registry: {{ include (print $.Template.BasePath "/configmap-registry.yaml") . | sha256sum }}
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
-        checksum-secret-rabbitmq : {{ include (print $.Template.BasePath "/secret-rabbitmq.yaml") . | sha256sum }}
+        checksum-secret-redis : {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
     spec:
       {{- if .Values.schedulerWorker.podSecurityContext.enabled }}
       securityContext:
@@ -54,11 +54,11 @@ spec:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-database
             - configMapRef:
-                name: {{ include "substra.fullname" . }}-rabbitmq
+                name: {{ include "substra.fullname" . }}-redis
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-registry
             - secretRef:
-                name: {{ include "substra.fullname" . }}-rabbitmq
+                name: {{ include "substra.fullname" . }}-redis
             - secretRef:
                 name: {{ include "substra.fullname" . }}-database
           env:

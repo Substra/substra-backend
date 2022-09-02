@@ -34,9 +34,9 @@ def acquire_compute_plan_lock(compute_plan_key: str) -> AbstractContextManager:
     - *Prevent the deletion compute plan resources while the compute plan is running*
       When the last compute task of a compute plan transitions to the "done" state, the compute plan itself transitions
       to the "done" state. As a result, an event is emitted to teardown (delete) the compute plan resources (pods,
-      directories). If the AMQP event queue is busy, the execution of this teardown task might be delayed. If, in
-      addition, the user adds a new compute task to the compute plan before the compute plan teardown task has been
-      executed, the teardown of the compute plan might be executed _at the same time_ at the execution of the new
+      directories). If the message broker event queue is busy, the execution of this teardown task might be delayed.
+      If, in addition, the user adds a new compute task to the compute plan before the compute plan teardown task has
+      been executed, the teardown of the compute plan might be executed _at the same time_ at the execution of the new
       compute task. In that scenario, the compute plan resources (pods, directories) should not be deleted until the
       compute task is completed. This lock ensures this is enforced.
     """

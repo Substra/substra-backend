@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add method to update algo, compute_plan and data manager name (#1137)
 
+### Changed
+
+- BREAKING: Replace celery RabbitMQ by Redis (#1231)
+
 ## [0.25.0] 2022-08-09
 
 ### Added

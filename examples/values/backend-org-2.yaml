@@ -9,10 +9,6 @@ config:
   LOG_LEVEL: DEBUG
 organizationName: MyOrg2
 
-rabbitmq:
-  auth:
-    erlangCookie: rabbitmqErlangCookie
-
 postgresql:
   primary:
     persistence:

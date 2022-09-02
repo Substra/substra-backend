@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-redis
+  labels:
+  {{- include "substra.labels" . | nindent 4 }}
+data:
+  CELERY_BROKER_USER: "default"
+  CELERY_BROKER_HOST: {{ default (include "redis.serviceName" .) .Values.redis.host }}
+  CELERY_BROKER_PORT: {{ .Values.redis.master.service.ports.redis | quote }}

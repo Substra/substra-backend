@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://substra.org/
-version: 21.1.7
+version: 22.0.0
 appVersion: 0.28.0
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
@@ -14,10 +14,10 @@ maintainers:
     email: clement@gautier.im
 
 dependencies:
-  - name: rabbitmq
+  - name: redis
     repository: https://charts.bitnami.com/bitnami
-    condition: rabbitmq.enabled
-    version: 10.1.1
+    condition: redis.enabled
+    version: 17.0.7
   - name: postgresql
     repository:  https://charts.bitnami.com/bitnami
     version: 11.6.2

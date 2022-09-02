@@ -83,13 +83,13 @@ Redefine the postgresql service name because we can't use subchart templates dir
 
 
 {{/*
-Redefine the rabbitmq service name because we can't use subchart templates directly.
+Redefine the redis service name because we can't use subchart templates directly.
 */}}
-{{- define "rabbitmq.serviceName" -}}
-{{- if .Values.rabbitmq.fullnameOverride -}}
-{{- .Values.rabbitmq.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- define "redis.serviceName" -}}
+{{- if .Values.redis.fullnameOverride -}}
+{{- .Values.redis.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default "rabbitmq" .Values.rabbitmq.nameOverride -}}
+{{- $name := default "redis-master" .Values.redis.nameOverride -}}
 {{- if contains $name (printf "%s" .Release.Name) -}}
 {{- printf "%s" .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}

@@ -24,7 +24,7 @@ skaffold run
 This will spawn several pods in two different namespaces to simulate several organizations: 'org-1' and 'org-2'.
 Each organization will have:
 - Postgres database
-- RabbitMQ message broker
+- Redis message broker
 - Docker registry
 - Kaniko cache warmer
 - [Celery beat](./charts/substra-backend/templates/deployment-scheduler.yaml)

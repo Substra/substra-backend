@@ -610,18 +610,21 @@ postgresql:
     password: postgres
     database: substra
 
-## @skip rabbitmq
+## @skip redis
 ##
-rabbitmq:
+redis:
   enabled: true
+  architecture: standalone
   auth:
-    username: rabbitmq
-    password: rabbitmq
-  persistence:
-    enabled: false
-  service:
-    ports:
-      amqp: 5672
+    password: redis
+  master:
+    persistence:
+      enabled: false
+    service:
+      ports:
+        redis: 6379
+  replica:
+    replicaCount: 0
 
 ## @skip docker-registry
 ##

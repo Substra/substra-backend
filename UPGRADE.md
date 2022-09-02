@@ -1,3 +1,45 @@
+# Migration steps to change Celery Broker from RabbitMQ to Redis (#1231) from connect-backend helm chart 21.1.0 and docker image 0.24.0 to upper version
+
+## Migration without task in queues
+
+Set `connect-backend` `events` Deployment replicas to `0`.
+
+Wait for RabbitMQ queues to be empty with `rabbitmqctl list_queues`
+
+Upgrade `connect-backend` upper than 0.18.0 to deploy `Redis` instead of `RabbitMQ`.
+
+Set `connect-backend` `events` Deployment replicas to the number you set in your deployement if it hasn't been done by the upgrade.
+
+
+## Migration with tasks in queues
+Set `connect-backend` `worker` Replicaset to `0`.
+
+Deploy a temporary RabbitMQ to keep the scheduled tasks : `helm install tmp-rabbit -n NAMESPACE bitnami/rabbitmq`
+
+Migrate data from `connect-backend RabbitMQ` to `tmp-rabbit RabbitMQ`
+
+```bash
+celery -b "amqp://<username>:<password>@<url-rabbitmq-connect-backend>:<port>/" inspect scheduled > scheduled_tasks_rabbitmq.txt
+celery migrate "amqp://<username>:<password>@<url-rabbitmq-connect-backend>:<port>/" "amqp://<username>:<password>@<url-tmp-rabbitmq>:<port>/"
+celery -b "amqp://<username>:<password>@<url-tmp-rabbitmq>:<port>/" inspect scheduled  > scheduled_tasks_tmp_rabbitmq.txt
+diff scheduled_tasks_rabbitmq.txt scheduled_tasks_tmp_rabbitmq.txt
+```
+
+Upgrade `connect-backend` upper than 0.18.0 to deploy `Redis` instead of `RabbitMQ`. Be sure to have a backup, it will remove `connect-backend` `RabbitMQ`.
+RabbitMQ backup documentation : https://www.rabbitmq.com/backup.html
+
+
+Migrate data from  `tmp-rabbit RabbitMQ` to `connect-backend Redis`
+
+```bash
+celery migrate "amqp://<username>:<password>@<url-tmp-rabbitmq>:<port>/" "redis://<username>:<password>@<url-redis-connect-backend>:<port>/"
+celery -b "redis://<username>:<password>@<url-redis-connect-backend>:<port>/" inspect scheduled  > scheduled_tasks_redis.txt
+diff scheduled_tasks_tmp_rabbitmq.txt scheduled_tasks_redis.txt
+```
+
+Set `connect-backend` `worker` Replicaset to the number you set in your deployement.
+
+
 # Migration steps for Merge Metric and Algo view (#976) from connect-backend 0.11.0 to upper version
 
 Be sure to backup Django model databases and MinIO data before doing those steps
