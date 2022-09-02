@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.1.0
+
+### Changed
+- Split compute engine and localrep events consumer in two container
+
 ## 22.0.3
 
 ### Changed

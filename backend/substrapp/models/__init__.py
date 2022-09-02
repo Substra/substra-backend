@@ -5,6 +5,7 @@ from .datamanager import DataManager
 from .datasample import DataSample
 from .image_entrypoint import ImageEntrypoint
 from .model import Model
+from .worker_events import WorkerLastEvent
 
 __all__ = [
     "DataSample",
@@ -14,4 +15,5 @@ __all__ = [
     "ComputePlanWorkerMapping",
     "ImageEntrypoint",
     "ComputeTaskFailureReport",
+    "WorkerLastEvent",
 ]

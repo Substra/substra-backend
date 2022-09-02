@@ -4,13 +4,13 @@ import structlog
 from django.core.management.base import BaseCommand
 
 from events import health
-from events.reactor import consume
+from events.localsync_reactor import consume
 
 logger = structlog.get_logger("events")
 
 
 class Command(BaseCommand):
-    help = "Consume events from the orchestrator broker for compute_engine"
+    help = "Consume events from the orchestrator broker for localrep"
 
     def handle(self, *args, **options):
         health_service = health.HealthService()

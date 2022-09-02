@@ -2,20 +2,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "substra.fullname" . }}-events
+  name: {{ template "substra.fullname" . }}-worker-events
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}-events
+    app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
 spec:
   replicas: 1
   selector:
     matchLabels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
         {{ include "substra.selectorLabels" . | nindent 8}}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
@@ -38,7 +38,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "substra.events.serviceAccountName" . }}
       containers:
-        - name: event-app
+        - name: worker-event-app
           image: {{ include "common.images.name" .Values.events.image }}
           imagePullPolicy: {{ .Values.events.image.pullPolicy }}
           command: ["/bin/bash"]
