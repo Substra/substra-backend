@@ -8,10 +8,34 @@ from .resources import ComputePlan
 from .resources import ComputePlanStatus
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
+from .resources import ComputeTaskInput
+from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
 from .resources import DataManager
 from .resources import DataSample
 from .resources import Model
+from .resources import Permission
+from .resources import Permissions
+
+
+class ComputeTaskInputFactory(factory.Factory):
+    class Meta:
+        model = ComputeTaskInput
+
+    identifier = "model"
+    asset_key = None
+    parent_task_key = None
+    parent_task_output_identifier = None
+
+
+class ComputeTaskOutputFactory(factory.Factory):
+    class Meta:
+        model = ComputeTaskOutput
+
+    permissions = Permissions(
+        download=Permission(public=True, authorized_ids=[]), process=Permission(public=True, authorized_ids=[])
+    )
+    transient = False
 
 
 class ComputeTaskFactory(factory.Factory):
@@ -47,6 +71,7 @@ class ModelFactory(factory.Factory):
     key = factory.Faker("uuid4")
     compute_task_key = factory.Faker("uuid4")
     address = factory.SubFactory(AddressFactory)
+    owner = "OrgA"
 
 
 class DataSampleFactory(factory.Factory):

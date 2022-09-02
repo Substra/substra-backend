@@ -1,7 +1,6 @@
 import structlog
 
 import orchestrator
-import orchestrator.client as orc_client
 import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.error import OrcError
 from orchestrator.resources import ComputeTask
@@ -53,7 +52,7 @@ class ComputePlanNonRunnableStatusError(_NonRunnableStatusError):
 
 def _raise_if_task_not_runnable(
     task_key: str,
-    client: orc_client.OrchestratorClient,
+    client: orchestrator.Client,
     allow_doing: bool = False,
     existing_task: ComputeTask = None,
 ) -> None:
@@ -86,7 +85,7 @@ def _raise_if_task_not_runnable(
         raise ComputePlanNonRunnableStatusError(compute_plan.status.name)
 
 
-def is_task_runnable(task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False) -> bool:
+def is_task_runnable(task_key: str, client: orchestrator.Client, allow_doing: bool = False) -> bool:
     """Check whether a compute task is runnable given its status and the status of the associated compute plan.
 
     Args:
@@ -107,7 +106,7 @@ def is_task_runnable(task_key: str, client: orc_client.OrchestratorClient, allow
 
 
 def abort_task_if_not_runnable(
-    task_key: str, client: orc_client.OrchestratorClient, allow_doing: bool = False, task: ComputeTask = None
+    task_key: str, client: orchestrator.Client, allow_doing: bool = False, task: ComputeTask = None
 ) -> None:
     """Cancel a compute task if its associated compute plan is not runnable. In addition, raise an error if the compute
     task is not runnable because of its status or the status of its compute plan.
@@ -139,7 +138,7 @@ def abort_task_if_not_runnable(
         raise
 
 
-def start_task_if_not_started(task: ComputeTask, client: orc_client.OrchestratorClient) -> None:
+def start_task_if_not_started(task: ComputeTask, client: orchestrator.Client) -> None:
     """Start a compute task if it is not already started
 
     Args:
@@ -164,7 +163,7 @@ def start_task_if_not_started(task: ComputeTask, client: orc_client.Orchestrator
             raise
 
 
-def mark_as_done(task_key: str, client: orc_client.OrchestratorClient) -> None:
+def mark_as_done(task_key: str, client: orchestrator.Client) -> None:
     """Transition a compute task to DONE
 
     Args:

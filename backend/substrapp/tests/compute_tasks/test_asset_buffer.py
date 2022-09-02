@@ -14,9 +14,9 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.mock as orc_mock
 from orchestrator.resources import Address
 from orchestrator.resources import DataManager
-from orchestrator.resources import Model
 from substrapp import models
 from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import _add_datasample_to_buffer
@@ -284,7 +284,7 @@ class AssetBufferTests(APITestCase):
         init_asset_buffer()
         dest = os.path.join(ASSET_BUFFER_DIR_3, AssetBufferDirName.Models, self.model_key)
 
-        model = Model(
+        model = orc_mock.ModelFactory(
             key=self.model_key,
             compute_task_key=self.model_compute_task_key,
             address=Address(uri="some storage address", checksum=self.model_checksum),
@@ -334,7 +334,7 @@ class AssetBufferTests(APITestCase):
 
         # populate the buffer
         init_asset_buffer()
-        model = Model(
+        model = orc_mock.ModelFactory(
             key=self.model_key,
             compute_task_key=self.model_compute_task_key,
             address=Address(uri="some storage address", checksum=self.model_checksum),

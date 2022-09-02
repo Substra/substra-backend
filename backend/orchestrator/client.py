@@ -320,6 +320,12 @@ class OrchestratorClient:
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
+    def disable_task_output(self, task_key: str, identifier: str) -> None:
+        self._computetask_client.DisableOutput(
+            computetask_pb2.DisableOutputParam(compute_task_key=task_key, identifier=identifier),
+            metadata=self._metadata,
+        )
+
     @grpc_retry
     def query_tasks(
         self,

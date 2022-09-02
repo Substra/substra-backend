@@ -9,14 +9,15 @@ import orchestrator
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
+from events import handler_compute_engine
 from events import health
 from events import localsync
 from localrep.models import LastEvent
+from orchestrator import model_pb2
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
-from substrapp.tasks.tasks_remove_intermediary_models import remove_intermediary_models_from_buffer
 
 logger = structlog.get_logger("events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
@@ -39,6 +40,8 @@ def on_computetask_event(payload):
         orchestrator.ComputeTaskStatus.STATUS_FAILED,
     ]:
         with get_orchestrator_client(channel_name) as client:
+            handler_compute_engine.handle_finished_tasks(client, channel_name, orc_task)
+
             # Handle intermediary models
             models = []
             for parent_key in task["parent_task_keys"]:
@@ -91,15 +94,17 @@ def on_computetask_event(payload):
 
 
 def on_model_event(payload):
-    asset_key = payload["asset_key"]
     event_kind = payload["event_kind"]
+    channel_name = payload["channel"]
+    model = payload["model"]
+    grpc_model = model_pb2.Model()
+    json_format.ParseDict(model, grpc_model, ignore_unknown_fields=True)
+    orc_model = orchestrator.Model.from_grpc(grpc_model)
 
-    logger.info("Processing model", asset_key=asset_key, kind=event_kind)
+    logger.info("Processing model", asset_key=orc_model.key, kind=event_kind)
 
     if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_DISABLED:
-
-        # This task is broadcasted to all worker (see the broadcast defined in backend/celery.py)
-        remove_intermediary_models_from_buffer.apply_async([asset_key])
+        handler_compute_engine.handle_disabled_model(channel_name, orc_model)
 
 
 def on_message_compute_engine(payload):

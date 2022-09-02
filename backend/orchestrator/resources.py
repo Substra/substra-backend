@@ -20,6 +20,15 @@ class AutoNameEnum(enum.Enum):
         return name
 
 
+class _Base(pydantic.BaseModel):
+    def __json__(self):
+        """__json__ returns the serialized representation of the class.
+
+        This method is called by celery when passing objects around.
+        """
+        return self.json()
+
+
 class AssetKind(AutoNameEnum):
     ASSET_UNKNOWN = enum.auto()
     ASSET_ORGANIZATION = enum.auto()
@@ -60,6 +69,7 @@ class Model(pydantic.BaseModel):
     key: str
     compute_task_key: str
     address: Address
+    owner: str
 
     @classmethod
     def from_grpc(cls, m: model_pb2.Model) -> "Model":
@@ -68,6 +78,7 @@ class Model(pydantic.BaseModel):
             key=m.key,
             compute_task_key=m.compute_task_key,
             address=Address.from_grpc(m.address),
+            owner=m.owner,
         )
 
 
@@ -183,7 +194,7 @@ class Permissions(pydantic.BaseModel):
         )
 
 
-class ComputeTaskOutput(pydantic.BaseModel):
+class ComputeTaskOutput(_Base):
     permissions: Permissions
     transient: bool
 
@@ -212,7 +223,7 @@ class ComputeTaskInput(pydantic.BaseModel):
         )
 
 
-class ComputeTask(pydantic.BaseModel):
+class ComputeTask(_Base):
     """Task represents a generic compute task"""
 
     key: str
@@ -247,13 +258,6 @@ class ComputeTask(pydantic.BaseModel):
             inputs=[ComputeTaskInput.from_grpc(i) for i in t.inputs],
             tag=tag,
         )
-
-    def __json__(self):
-        """__json__ returns the serialized representation of the class.
-
-        This method is called by celery when passing objects around.
-        """
-        return self.json()
 
 
 class ComputeTaskInputAsset(pydantic.BaseModel):
@@ -309,7 +313,7 @@ class ComputePlanStatus(AutoNameEnum):
         return cls(computeplan_pb2.ComputePlanStatus.Name(s))
 
 
-class ComputePlan(pydantic.BaseModel):
+class ComputePlan(_Base):
     key: str
     status: ComputePlanStatus
     tag: str
@@ -321,13 +325,6 @@ class ComputePlan(pydantic.BaseModel):
             status=ComputePlanStatus.from_grpc(compute_plan.status),
             tag=compute_plan.tag,
         )
-
-    def __json__(self):
-        """__json__ returns the serialized representation of the class.
-
-        This method is called by celery when passing objects around.
-        """
-        return self.json()
 
 
 class InvalidInputAsset(Exception):

@@ -1,3 +1,4 @@
+from .client import OrcError
 from .client import OrchestratorClient as Client
 from .resources import Address
 from .resources import Algo
@@ -37,5 +38,6 @@ __all__ = (
     "ComputePlan",
     "ComputePlanStatus",
     "Algo",
+    "OrcError",
     "AlgoInput",
 )

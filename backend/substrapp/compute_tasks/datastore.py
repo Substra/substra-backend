@@ -2,6 +2,10 @@ import orchestrator
 import substrapp.clients.organization as organization_client
 
 
+class DatastoreError(Exception):
+    pass
+
+
 class Datastore:
     def __init__(self, channel: str) -> None:
         self.channel = channel
@@ -13,6 +17,14 @@ class Datastore:
 
     def get_algo(self, algo: orchestrator.Algo) -> bytes:
         return self._get_from_address(algo.owner, algo.algorithm)
+
+    def delete_model(self, model_key: str) -> None:
+        from substrapp.models import Model
+
+        try:
+            Model.objects.get(key=model_key).delete()
+        except Model.DoesNotExist as exc:
+            raise DatastoreError() from exc
 
 
 def get_datastore(channel: str) -> Datastore:
