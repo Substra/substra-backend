@@ -35,13 +35,14 @@ def test_compute_task_exception(mocker: MockerFixture):
         compute_plan_dir = tempfile.mkdtemp()
         task_dir = tempfile.mkdtemp()
 
+    task = orc_mock.ComputeTaskFactory(
+        category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
+        status=orchestrator.ComputeTaskStatus.STATUS_DOING,
+    )
     # Setup a fake context
     ctx = Context(
         channel_name=CHANNEL,
-        task=orc_mock.ComputeTaskFactory(
-            category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
-            status=orchestrator.ComputeTaskStatus.STATUS_DOING,
-        ),
+        task=task,
         compute_plan=None,
         input_assets=[],
         algo=orc_mock.AlgoFactory(),
@@ -51,7 +52,7 @@ def test_compute_task_exception(mocker: MockerFixture):
 
     mock_ctx_from_task = mocker.patch("substrapp.tasks.tasks_compute_task.Context.from_task", return_value=ctx)
 
-    compute_task(CHANNEL, ctx.task.json(), None)
+    compute_task(CHANNEL, task.json(), None)
 
     assert mock_raise_if_not_runnable.call_count == 2
     mock_ctx_from_task.assert_called_once()
@@ -72,26 +73,26 @@ def test_compute_task_exception(mocker: MockerFixture):
 
     mock_save_outputs.side_effect = error
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, ctx.task.json(), None)
+        compute_task(CHANNEL, task.json(), None)
     assert str(excinfo.value.__cause__.details) == "OE0000"
 
     # test compute error
     mock_execute_compute_task.side_effect = Exception("Test")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, ctx.task.json(), None)
+        compute_task(CHANNEL, task.json(), None)
 
     assert str(excinfo.value.__cause__) == "Test"
 
     # test not enough space on disk error
     mock_execute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, ctx.task.json(), None)
+        compute_task(CHANNEL, task.json(), None)
     assert "No space left on device" in str(excinfo.value.__cause__)
 
     # test other OS error
     mock_execute_compute_task.side_effect = OSError(errno.EACCES, "Dummy error")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, ctx.task.json(), None)
+        compute_task(CHANNEL, task.json(), None)
     assert "Dummy error" in str(excinfo.value.__cause__)
 
 
