@@ -12,7 +12,6 @@ sources:
 maintainers:
   - name: Alexandre Picosson
     email: alexandre.picosson@owkin.com
-
 dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami

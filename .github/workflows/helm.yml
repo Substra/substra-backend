@@ -36,7 +36,7 @@ jobs:
 
       - name: Validate version increment
         run: |
-          helm repo add substra https://substra.github.io/charts/connect-backend
+          helm repo add substra https://substra.github.io/charts
 
           RES=$(helm search repo substra/substra-backend --version $(yq eval .version charts/substra-backend/Chart.yaml))
 
