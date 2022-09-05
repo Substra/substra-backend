@@ -6,7 +6,7 @@ This file document all the settings of the substra application
 These settings are configured through env variables.
 They can be set in the [chart](../charts/substra-backend/README) through the `config` value.
 
-Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `True`, `true`, `Y`, `y`, `YES`, `yes`; anything else is falsey.
+Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `True`, `true`, `Y`, `y`, `YES`, `yes`; anything else is falsy.
 
 ## Global settings
 

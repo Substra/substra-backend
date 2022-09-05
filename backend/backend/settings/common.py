@@ -31,12 +31,12 @@ def to_bool(value):
     return value in TRUE_VALUES
 
 
-def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
+def build_broker_url(user: str, password: str, host: str, port: str) -> str:
     """Builds a redis connection string
 
     Args:
         user (str): redis user
-        pasword (str): redis password
+        password (str): redis password
         host (str): redis hostname
         port (str): redis port
 
@@ -45,8 +45,8 @@ def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
     """
     conn_info = ""
     conn_port = ""
-    if user and pasword:
-        conn_info = f"{user}:{pasword}@"
+    if user and password:
+        conn_info = f"{user}:{password}@"
     if port:
         conn_port = f":{port}"
     return f"redis://{conn_info}{host}{conn_port}//"
@@ -423,5 +423,5 @@ CONTENT_DISPOSITION_HEADER = {}
 
 LOCALREP_RESYNC_EVENTS_PAGE_SIZE = int(os.environ.get("LOCALREP_RESYNC_EVENTS_PAGE_SIZE", 1000))
 
-# To encode unique jwt token generated whith reset password request
+# To encode unique jwt token generated with reset password request
 RESET_JWT_SIGNATURE_ALGORITHM = "HS256"

@@ -14,7 +14,7 @@ def test_teardown_compute_plan_resources_cp_doing(mocker: MockerFixture):
 
     cp_key = str(uuid.uuid4())
 
-    tasks_compute_plan._teardown_compute_plan_ressources(client, cp_key)
+    tasks_compute_plan._teardown_compute_plan_resources(client, cp_key)
 
     client.is_compute_plan_doing.assert_called_once()
     mocked_teardown.assert_not_called()
@@ -29,7 +29,7 @@ def test_teardown_compute_plan_resources_cp_done(mocker: MockerFixture):
 
     cp_key = str(uuid.uuid4())
 
-    tasks_compute_plan._teardown_compute_plan_ressources(client, cp_key)
+    tasks_compute_plan._teardown_compute_plan_resources(client, cp_key)
 
     client.is_compute_plan_doing.assert_called_once()
     mocked_teardown.assert_called_once()

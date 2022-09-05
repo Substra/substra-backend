@@ -1,4 +1,4 @@
-# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml) 
+# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml)
 
 Backend of the Substra platform
 
@@ -39,7 +39,7 @@ For Visual Studio resources for substra-backend, see [this page](./docs/vscode.m
 
 ### Use dev profile
 
-Use `skaffold [run|dev] -p dev` in order to take advandage of:
+Use `skaffold [run|dev] -p dev` in order to take advantage of:
 - Pre-installed dev tools: debugger, profiler
 - Test modules: fixtures, assets factory, utils
 - Run application container as root: install packages, edit files, restart services
@@ -132,7 +132,7 @@ Unit tests require to have a running postgres instance.
 
 If it is not already running, you could start a new DB, using the command below.
 This command will only work if you have a local docker daemon running.
-It is recommanded to use the same version as the one defined in the charts.
+It is recommended to use the same version as the one defined in the charts.
 
 ```sh
 make db

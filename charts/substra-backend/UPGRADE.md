@@ -36,7 +36,7 @@ Apply changes from [minio 8](https://github.com/bitnami/charts/tree/master/bitna
 See [CHANGELOG.md](./CHANGELOG.md#14.0.0).
 Metrics, datamanagers and algos are now stored in Minio.
 Minio persistent size should be increased to support the additional storage from the previous metrics, datamanagers and algos volumes.
-After upgrading from 13.x.x to 14.0.0 the assets will need to be reuploaded into the plateform.
+After upgrading from 13.x.x to 14.0.0 the assets will need to be reuploaded into the platform.
 
 ## 13.0.0
 
@@ -56,7 +56,7 @@ All the application configuration that was created using multiple values is now 
 
 1. Set `hooks.deleteWorkerPvc.enabled` to the desired value. Note that delete hooks are triggered only when deploying with helm.
 2. Optional: set `celeryworker.replicaCount` value
-3. Optional: on multi node set up. Set up the way pods are scheduled across kubernetes nodes either with affinity or anti-affinity, see the [spread workers accross nodes](../../values/spread-workers.yaml) for the full configuration, or using `nodeSelector` and labelling.
+3. Optional: on multi node set up. Set up the way pods are scheduled across kubernetes nodes either with affinity or anti-affinity, see the [spread workers across nodes](../../values/spread-workers.yaml) for the full configuration, or using `nodeSelector` and labelling.
 
 ## 10.0.0
 - Note that the kaniko cache volume is now configurable via `backend.kaniko.persistence` fields.

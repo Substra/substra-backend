@@ -8,7 +8,7 @@ Wait for RabbitMQ queues to be empty with `rabbitmqctl list_queues`
 
 Upgrade `connect-backend` upper than 0.18.0 to deploy `Redis` instead of `RabbitMQ`.
 
-Set `connect-backend` `events` Deployment replicas to the number you set in your deployement if it hasn't been done by the upgrade.
+Set `connect-backend` `events` Deployment replicas to the number you set in your deployment if it hasn't been done by the upgrade.
 
 
 ## Migration with tasks in queues
@@ -37,7 +37,7 @@ celery -b "redis://<username>:<password>@<url-redis-connect-backend>:<port>/" in
 diff scheduled_tasks_tmp_rabbitmq.txt scheduled_tasks_redis.txt
 ```
 
-Set `connect-backend` `worker` Replicaset to the number you set in your deployement.
+Set `connect-backend` `worker` Replicaset to the number you set in your deployment.
 
 
 # Migration steps for Merge Metric and Algo view from substra-backend 0.11.0 to upper version
@@ -145,5 +145,3 @@ substra list metric --profile PROFILE | awk '(NR>1) {print $1}' | xargs -I % sub
 ```bash
 kubectl exec -it -n NAMESPACE $(kubectl get pod -l app.kubernetes.io/name=minio  -n NAMESPACE -o name) -- mc rm --force --recursive /data/substra-metrics
 ```
-
-

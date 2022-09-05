@@ -31,9 +31,9 @@ def _filter_outputs_generated_by_worker(
     task_input_producer_mapping: typing.Iterable[tuple[str, orchestrator.ComputeTask]],
     worker: str,
 ) -> typing.Generator[tuple[str, orchestrator.ComputeTask], None, None]:
-    for output_identifer, task in task_input_producer_mapping:
+    for output_identifier, task in task_input_producer_mapping:
         if task.worker == worker:
-            yield (output_identifer, task)
+            yield (output_identifier, task)
 
 
 def _filter_transient_outputs(

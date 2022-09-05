@@ -134,7 +134,7 @@ def _acquire_secondary_lock(secondary_lock_file: str, delay: float, timeout: flo
 
     Acquiring a lock on the lock file is useful because:
 
-    - It ensures that only 1 process at a time can accesse/remove the lock file.
+    - It ensures that only 1 process at a time can access/remove the lock file.
     - It ensures that operations on the lock file are canonical. Example operations:
       - "open followed by read followed by remove", see _release_lock()
       - "stat followed by remove", see _release_lock_if_expired()

@@ -22,7 +22,7 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 """
 
 TRUE_VALUES_HEADER_TEMPLATE = """
-Accepted true values for `bool` are: {}; anything else is falsey.
+Accepted true values for `bool` are: {}; anything else is falsy.
 """
 
 SUPPORTED_ENV_COMMANDS = [""]
