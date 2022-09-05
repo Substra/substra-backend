@@ -100,7 +100,6 @@ jobs:
           helm repo add twuni https://helm.twun.io
 
       - name: Package chart
-        env:
         run: |
           helm dep build charts/substra-backend
           helm package charts/substra-backend
