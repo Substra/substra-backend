@@ -1,5 +1,8 @@
 # Changelog
 
+## 22.0.1
+- Update image registry
+
 ## 22.0.0
 
 ### Changed

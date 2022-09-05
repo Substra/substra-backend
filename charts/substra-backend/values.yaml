@@ -64,8 +64,8 @@ server:
   ## @param server.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
+    registry: ghcr.io
+    repository: substra/substra-backend
     tag: 0.28.0
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
@@ -238,8 +238,8 @@ server:
     ## @param server.metrics.image.pullPolicy Substra backend server Prometheus Exporter image pull policy
     ##
     image:
-      registry: gcr.io
-      repository: connect-314908/metrics-exporter
+      registry: ghcr.io
+      repository: substra/substra-backend-metrics-exporter
       tag: 0.28.0
       pullPolicy: IfNotPresent
 
@@ -285,8 +285,8 @@ worker:
   ## @param worker.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
+    registry: ghcr.io
+    repository: substra/substra-backend
     tag: 0.28.0
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -350,8 +350,8 @@ schedulerWorker:
   ## @param schedulerWorker.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
+    registry: ghcr.io
+    repository: substra/substra-backend
     tag: 0.28.0
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -394,8 +394,8 @@ scheduler:
   ## @param scheduler.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
+    registry: ghcr.io
+    repository: substra/substra-backend
     tag: 0.28.0
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -443,7 +443,7 @@ containerRegistry:
   ## @param containerRegistry.prepopulate Images to add to the container registry
   ## e.g:
   ## - image: owkin/substra-tools:0.7.0
-  ##   sourceRegistry: gcr.io
+  ##   sourceRegistry: ghcr.io
   ##   dstImage: test/substra-tools
   ##   dockerConfigSecretName: docker-config
   ##
@@ -462,8 +462,8 @@ events:
   ## @param events.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
+    registry: ghcr.io
+    repository: substra/substra-backend
     tag: 0.28.0
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -566,7 +566,7 @@ kaniko:
         tag: v1.8.1
       ## @param kaniko.cache.warmer.cachedImages A list of docker images to warmup the Kaniko cache
       ## e.g:
-      ## - gcr.io/substra-314908/substra-tools:0.9.0-minimal
+      ## - ghcr.io/substra-314908/substra-tools:0.9.0-minimal
       ##
       cachedImages: []
     ## @param kaniko.cache.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
