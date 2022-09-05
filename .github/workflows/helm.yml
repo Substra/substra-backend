@@ -18,25 +18,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: azure/setup-helm@v3.3
         with:
           version: "v3.5.0"
         id: install
+
       - name: Install tools
         run: |
           sudo snap install yq
+
       - name: Build dependencies
         run: helm dep update charts/substra-backend
+
       - name: Lint Chart
         run: helm lint charts/substra-backend
-      - name: Validate version increment
-        env:
-          HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
-          HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
-        run: |
-          helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
 
-          RES=$(helm search repo owkin-priv/substra-backend --version $(yq eval .version charts/substra-backend/Chart.yaml))
+      - name: Validate version increment
+        run: |
+          helm repo add substra https://substra.github.io/charts/connect-backend
+
+          RES=$(helm search repo substra/substra-backend --version $(yq eval .version charts/substra-backend/Chart.yaml))
 
           if [ "${RES}" == "No results found" ]; then
             echo "Version incremented"
@@ -44,6 +46,7 @@ jobs:
             echo "Validation failed, you should upgrade the chart version in Chart.yaml"
             exit 1
           fi
+
   generate-chart-readme:
     runs-on: ubuntu-latest
     steps:
@@ -53,13 +56,17 @@ jobs:
           repository: 'bitnami-labs/readme-generator-for-helm'
           ref: '3300343a6cd1c9cd86d13b04d8c85a7415cb849e' # There is no release on the repo so we target an arbitrary commit
           path: readme-generator-for-helm
+
       - name: Install readme-generator-for-helm dependencies
         run: cd readme-generator-for-helm && npm install
+
       - uses: actions/checkout@v3
         with:
           path: backend
+
       - name: Execute readme-generator-for-helm
         run: readme-generator-for-helm/bin/index.js -r backend/charts/substra-backend/README.md -v backend/charts/substra-backend/values.yaml
+      
       - name: Check diff
         run: |
           cd backend/
@@ -70,6 +77,7 @@ jobs:
             git diff
             exit 1
           fi
+  
   publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -79,24 +87,39 @@ jobs:
       - generate-chart-readme
     steps:
       - uses: actions/checkout@v3
+      
       - uses: azure/setup-helm@v3.3
         with:
           version: "v3.5.0"
         id: install
-      - name: Install tools
-        run: |
-          helm plugin install https://github.com/chartmuseum/helm-push
+      
       - name: Add dependencies repo
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add std-helm https://charts.helm.sh/stable
           helm repo add twuni https://helm.twun.io
+
       - name: Package chart
         env:
-          HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
-          HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
         run: |
           helm dep build charts/substra-backend
           helm package charts/substra-backend
-          helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
-          helm cm-push substra-backend-$(grep -e "^version" charts/substra-backend/Chart.yaml | cut -c10-).tgz owkin-priv
+
+      - name: Clone Substra charts
+        uses: actions/checkout@v3
+        with:
+          repository: Substra/charts
+          ref: 'main'
+          token: ${{ secrets.CHARTS_GITHUB_TOKEN }}
+          path: substra-charts
+
+      - name: Publish chart
+        run: |
+          mv substra-backend-$(grep -e "^version" charts/substra-backend/Chart.yaml | cut -c10-).tgz substra-charts/
+          cd substra-charts
+          helm repo index .
+          git add .
+          git config --global user.email "gh-actions@github.com"
+          git config --global user.name "GitHub Action"
+          git commit -s --message "GitHub Action: ${{ github.repository }}@${{ github.sha }}"
+          git push --quiet --set-upstream origin main
