@@ -42,7 +42,7 @@ jobs:
       id: docker-metadata
       uses: docker/metadata-action@v4
       with:
-        images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/connect-backend'
+        images: 'ghcr.io/substra/substra-backend'
         flavor: |
           latest=${{ env.LATEST }}
 
