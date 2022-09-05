@@ -44,7 +44,7 @@ jobs:
       id: docker-metadata
       uses: docker/metadata-action@v4
       with:
-        images: 'ghcr.io/substra/connect-backend-metrics-exporter'
+        images: 'ghcr.io/substra/substra-backend-metrics-exporter'
         flavor: |
           latest=${{ env.LATEST }}
 
