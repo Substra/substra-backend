@@ -16,7 +16,7 @@
 ## 21.1.6
 
 ### Fixed
-- Fix dupplicate `app.kubernetes.io/instance`
+- Fix duplicate `app.kubernetes.io/instance`
 
 ## 21.1.5
 
@@ -350,7 +350,7 @@ See [UPGRADE.md](./UPGRADE.md#11.0.0)
 - each `celeryWorker` instance is listening to 3 queues:
   1. `{{ .Values.organization.name }}.worker` generic shared worker queue
   2. `{{ .Values.organization.name }}.worker-${HOSTNAME##*-}` worker specific queue
-  3. `{{ .Values.organization.name }}.broadcast` broadcast shared accross the workers
+  3. `{{ .Values.organization.name }}.broadcast` broadcast shared across the workers
 - Optional skaffold profile: [preferred](../../examples/values/spread_workers.yaml) `antiAffinity` to schedule 1 worker pod per namespace
 
 ### Changed

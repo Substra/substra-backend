@@ -56,7 +56,7 @@ def grpc_retry(func):
     """Decorator to handle grpc errors from the orchestrator.
     It retries on UNKNOWN or UNAVAILABLE error and wraps the returned error as an OrcError.
     """
-    # In case of grpc status code unknow, we retry 5 times spaced by 1s
+    # In case of grpc status code unknown, we retry 5 times spaced by 1s
     @wraps(func)
     def wrapper(*args, **kwargs):
         retry_exception = None

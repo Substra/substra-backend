@@ -117,7 +117,7 @@ class CeleryCollector:
     def handlers(self) -> dict[str, Callable]:
         """returns a dict of Celery events handlers
 
-        These handlers should be registered on the celery app through an event reciever.
+        These handlers should be registered on the celery app through an event receiver.
         celery docs: https://docs.celeryproject.org/en/v5.2.0/userguide/monitoring.html#real-time-processing
 
         Returns:

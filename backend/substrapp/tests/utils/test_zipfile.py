@@ -5,14 +5,14 @@ from django.test import TestCase
 
 from substrapp.utils.safezip import ZipFile
 
-# This zip file was specificaly crafted and contains empty files named:
+# This zip file was specifically crafted and contains empty files named:
 # foo/bar
 # ../foo/bar
 # ../../foo/bar
 # ../../../foo/bar
 TRAVERSAL_ZIP = os.path.join(os.path.dirname(__file__), "data", "traversal.zip")
 
-# This zip file was specificaly crafted and contains:
+# This zip file was specifically crafted and contains:
 # bar
 # foo -> bar (symlink)
 SYMLINK_ZIP = os.path.join(os.path.dirname(__file__), "data", "symlink.zip")

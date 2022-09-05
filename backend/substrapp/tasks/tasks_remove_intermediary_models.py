@@ -41,7 +41,7 @@ def remove_intermediary_models_from_db(channel_name: str, model_keys: list[str])
 
 
 def queue_remove_intermediary_models_from_buffer(model_key: str) -> None:
-    # This task is broadcasted to all worker (see the broadcast defined in backend/celery.py)
+    # This task is broadcast to all worker (see the broadcast defined in backend/celery.py)
     remove_intermediary_models_from_buffer.apply_async((model_key,))
 
 

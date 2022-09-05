@@ -43,7 +43,7 @@ class ReadOnlyMinIOFile(File):
         """open the file object
 
         Returns:
-            Any: an openend file object
+            Any: an opened file object
         """
         if self._file is None:
             self._open_file_at(0)

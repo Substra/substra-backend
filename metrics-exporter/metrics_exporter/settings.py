@@ -14,12 +14,12 @@ def str_to_bool(str_value: str) -> bool:
 
 
 # This is copied from the backend settings
-def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
+def build_broker_url(user: str, password: str, host: str, port: str) -> str:
     """Builds a redis connection string
 
     Args:
         user (str): redis user
-        pasword (str): redis password
+        password (str): redis password
         host (str): redis hostname
         port (str): redis port
 
@@ -28,8 +28,8 @@ def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
     """
     conn_info = ""
     conn_port = ""
-    if user and pasword:
-        conn_info = f"{user}:{pasword}@"
+    if user and password:
+        conn_info = f"{user}:{password}@"
     if port:
         conn_port = f":{port}"
     return f"redis://{conn_info}{host}{conn_port}//"

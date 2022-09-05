@@ -383,7 +383,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local representation of performance assets
 - Use localrep data in tasks views
 - Use localrep performances in tasks views
-- Localrep computeplan status field, that is synced when recieving computetask event update instead of in the computeplan view
+- Localrep computeplan status field, that is synced when receiving computetask event update instead of in the computeplan view
 - Compute and store cp dates and duration during sync
 - Local representation of model assets
 - Use localrep data in newsfeed view

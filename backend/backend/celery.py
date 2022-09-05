@@ -29,7 +29,7 @@ app.steps["worker"].add(DjangoStructLogInitStep)
 app.autodiscover_tasks()
 
 
-# Declare broadcasting queue accross worker
+# Declare broadcasting queue across worker
 app.conf.task_queues = (Broadcast(settings.CELERY_BROADCAST),)
 
 app.conf.task_routes = {

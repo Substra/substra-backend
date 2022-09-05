@@ -47,10 +47,10 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(
 @app.task(ignore_result=False)
 def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan_key: str) -> None:
     with get_orchestrator_client(channel_name) as client:
-        _teardown_compute_plan_ressources(client, compute_plan_key)
+        _teardown_compute_plan_resources(client, compute_plan_key)
 
 
-def _teardown_compute_plan_ressources(orc_client: orchestrator.Client, compute_plan_key: str) -> None:
+def _teardown_compute_plan_resources(orc_client: orchestrator.Client, compute_plan_key: str) -> None:
     structlog.contextvars.bind_contextvars(compute_plan_key=compute_plan_key)
 
     with acquire_compute_plan_lock(compute_plan_key):
