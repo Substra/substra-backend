@@ -12,6 +12,7 @@ on:
     paths:
       - 'docker/substra-backend/*'
       - 'backend/**'
+      - '.github/workflows/container-image-backend.yml'
 
 jobs:
   build:
