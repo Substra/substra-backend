@@ -442,9 +442,9 @@ containerRegistry:
   pullDomain: 127.0.0.1
   ## @param containerRegistry.prepopulate Images to add to the container registry
   ## e.g:
-  ## - image: owkin/connect-tools:0.7.0
+  ## - image: owkin/substra-tools:0.7.0
   ##   sourceRegistry: gcr.io
-  ##   dstImage: test/connect-tools
+  ##   dstImage: test/substra-tools
   ##   dockerConfigSecretName: docker-config
   ##
   prepopulate: []
@@ -566,7 +566,7 @@ kaniko:
         tag: v1.8.1
       ## @param kaniko.cache.warmer.cachedImages A list of docker images to warmup the Kaniko cache
       ## e.g:
-      ## - gcr.io/connect-314908/connect-tools:0.9.0-minimal
+      ## - gcr.io/substra-314908/substra-tools:0.9.0-minimal
       ##
       cachedImages: []
     ## @param kaniko.cache.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning

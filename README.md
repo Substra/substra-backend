@@ -1,18 +1,18 @@
-# Substra-Backend [![Python](https://github.com/owkin/connect-backend/actions/workflows/python.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/python.yml) [![Helm](https://github.com/owkin/connect-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/helm.yml) [![Build](https://github.com/owkin/connect-backend/actions/workflows/gcr.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/gcr.yml)
+# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build](https://github.com/Substra/substra-backend/actions/workflows/gcr.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/gcr.yml)
 
-Backend of the Connect platform
+Backend of the Substra platform
 
 ## Running a development instance
 
-This section details how you can get started on running a local connect backend. For this you will need a running Kubernetes cluster and the [orchestrator](https://github.com/owkin/orchestrator) deployed in this cluster.
+This section details how you can get started on running a local substra backend. For this you will need a running Kubernetes cluster and the [orchestrator](https://github.com/Substra/orchestrator) deployed in this cluster.
 
-If you want to run the connect-backend with Skaffold you will need to add the twuni and bitnami helm repos:
+If you want to run the substra-backend with Skaffold you will need to add the twuni and bitnami helm repos:
 ```sh
 helm repo add twuni https://helm.twun.io
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
-To launch the connect backend:
+To launch the substra backend:
 ```sh
 skaffold dev
 ```
@@ -29,13 +29,13 @@ Each organization will have:
 - Kaniko cache warmer
 - [Celery beat](./charts/substra-backend/templates/deployment-scheduler.yaml)
 - 2 celery workers (a [worker](./charts/substra-backend/templates/statefulset-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler-worker.yaml) restarting hanging tasks and performing cleanup tasks)
-- a [_Job_](./charts/substra-backend/templates/job-migrations.yaml) to run migrations and add accounts. 
+- a [_Job_](./charts/substra-backend/templates/job-migrations.yaml) to run migrations and add accounts.
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
 - the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the orchestrator into celery tasks
 
 ### VSCode
 
-For Visual Studio resources for connect-backend, see [this page](./docs/vscode.md)
+For Visual Studio resources for substra-backend, see [this page](./docs/vscode.md)
 
 ### Use dev profile
 
@@ -60,7 +60,12 @@ See: https://docs.python.org/fr/3/library/pdb.html
 
 The backend can be deployed on a kubernete cluster running more than one kubernetes node.
 
-To run the worker and the server on two different nodes (requires the nodes to be labelled [see wiki](`https://github.com/owkin/connect-backend/wiki/Running-the-backend-on-Multinode`)
+To run the worker and the server on two different nodes:
+Label the nodes:
+```sh
+kubectl label nodes <node_name> server=true
+kubectl label nodes <node_name> worker=true
+```
 
 Deploy the backend with:
     - `skaffold run -p add-worker-server-node-selectors` to run 1 server pod and 1 worker pod on 2 separate kubernetes nodes. The nodes need to be labelled (see `add-worker-server-node-selectors.yaml`)
@@ -209,10 +214,10 @@ pre-commit install
 
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
 
-- [hlf-k8s](https://github.com/owkin/connect-hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
-- [orchestrator](https://github.com/owkin/orchestrator) contains the orchestration logic of a federated learning deployment
-- [connect-frontend](https://github.com/owkin/connect-frontend) is the frontend consuming the API exposed by the backend
-- [connect-tests](https://github.com/owkin/connect-tests) is the Substra end to end test suite
+- [hlf-k8s](https://github.com/Substra/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
+- [orchestrator](https://github.com/Substra/orchestrator) contains the orchestration logic of a federated learning deployment
+- [substra-frontend](https://github.com/Substra/substra-frontend) is the frontend consuming the API exposed by the backend
+- [substra-tests](https://github.com/Substra/substra-tests) is the Substra end to end test suite
 
 ## License
 

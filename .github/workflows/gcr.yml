@@ -1,5 +1,5 @@
 ---
-name: Build connect backend image
+name: Build substra backend image
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
     branches:
       - main
     paths:
-      - 'docker/connect-backend/*'
+      - 'docker/substra-backend/*'
       - 'backend/**'
 
 jobs:
@@ -50,7 +50,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: ${{ github.event_name != 'pull_request' }}
-        file: ./docker/connect-backend/Dockerfile
+        file: ./docker/substra-backend/Dockerfile
         context: .
         tags: ${{ steps.docker-metadata.outputs.tags }}
         labels: ${{ steps.docker-metadata.outputs.labels }}

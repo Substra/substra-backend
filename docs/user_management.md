@@ -2,7 +2,7 @@
 
 ## Problem to solve
 
-User creation could only be made during deployment of connect or by SRE action, and there was only one layer of privileges. We needed a proper user management mechanism with different roles for different privileges and ability to add/modify existing users. It was also necessary to allow a user to request a reset of password if forgotten.
+User creation could only be made during deployment of substra or by SRE action, and there was only one layer of privileges. We needed a proper user management mechanism with different roles for different privileges and ability to add/modify existing users. It was also necessary to allow a user to request a reset of password if forgotten.
 
 ## Solutions implemented
 

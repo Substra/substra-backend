@@ -1,6 +1,6 @@
 # Visual Studio Code
 
-This document provides helpful resources when working on connect-backend in Visual Studio Code.
+This document provides helpful resources when working on substra-backend in Visual Studio Code.
 
 ## Running unit tests from the Test Explorer
 

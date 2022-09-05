@@ -18,7 +18,7 @@
 ## 21.1.5
 
 ### Changed
-- Update connect-backend image tag to `0.28.0`
+- Update substra-backend image tag to `0.28.0`
 
 ## 21.1.4
 
@@ -28,17 +28,17 @@
 ## 21.1.3
 
 ### Changed
-- Update connect-backend image tag to 0.27.0
+- Update substra-backend image tag to 0.27.0
 
 ## 21.1.2
 
 ### Changed
-- Update connect-backend image tag to `0.26.0`
+- Update substra-backend image tag to `0.26.0`
 
 ## 21.1.1
 
 ### Changed
-- Update connect-backend image tag to `0.25.0`
+- Update substra-backend image tag to `0.25.0`
 
 ## 21.1.0
 
@@ -48,12 +48,12 @@
 ## 21.0.2
 
 ### Changed
-- Update connect-backend image tag to `0.24.0`
+- Update substra-backend image tag to `0.24.0`
 
 ## 21.0.1
 
 ### Changed
-- Update connect-backend image tag to `0.23.1`
+- Update substra-backend image tag to `0.23.1`
 
 ## 21.0.0
 
@@ -63,12 +63,12 @@
 ## 20.0.0
 
 ### Changed
-- Update connect-backend image tag to `0.23.0`
+- Update substra-backend image tag to `0.23.0`
 
 ## 19.0.0
 
 ### Changed
-- BREAKING: the format of `image.pullSecrets`, to match that of other Connect charts
+- BREAKING: the format of `image.pullSecrets`, to match that of other Substra charts
 
 ## 18.3.1
 
@@ -132,7 +132,7 @@ This release contains a breaking change check the UPGRADE document for the upgra
 
 ### Fixed
 
-- `kaniko` image is now `gcr.io/kaniko-project/executor:v1.6.0` (#980)
+- `kaniko` image is now `gcr.io/kaniko-project/executor:v1.6.0`
 
 ## 17.1.2
 
@@ -177,7 +177,7 @@ This release contains a breaking change check the UPGRADE document for the upgra
 ## 16.0.2
 
 ### Changed
-- Increase the number of threads on uWSGI to 10 (#820)
+- Increase the number of threads on uWSGI to 10
 
 ## 16.0.1
 

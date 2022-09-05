@@ -14,8 +14,8 @@ SETTINGS_FOLDER = FILE_PATH / "../backend/backend/settings/"
 DOC_PATH = FILE_PATH / "../docs/settings.md"
 FILE_HEADER = """
 <!-- This file is an auto-generated file, please do not edit manually. Instead you can run `make docs` to update it -->
-# Connect setting
-This file document all the settings of the connect application
+# Substra setting
+This file document all the settings of the substra application
 
 These settings are configured through env variables.
 They can be set in the [chart](../charts/substra-backend/README) through the `config` value.

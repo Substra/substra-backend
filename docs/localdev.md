@@ -22,17 +22,17 @@ make fixtures  # generate assets fixtures
 Alternatively, you can run it inside a container by using dev target (adapt to mount volumes you need).
 
 ```sh
-docker build -f docker/connect-backend/Dockerfile --target dev -t connect-backend .
-docker run -it --name connect-backend --rm -p 8000:8000 \
+docker build -f docker/substra-backend/Dockerfile --target dev -t substra-backend .
+docker run -it --name substra-backend --rm -p 8000:8000 \
   -v ${PWD}/backend/substrapp:/usr/src/app/substrapp \
   -e DJANGO_SETTINGS_MODULE=backend.settings.localdev \
   -e ISOLATED=1 \
   -e BACKEND_DB_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgres) \
-  connect-backend sh dev-startup.sh
-docker exec connect-backend python manage.py generate_fixtures
+  substra-backend sh dev-startup.sh
+docker exec substra-backend python manage.py generate_fixtures
 ```
 
-Connect substra client (`org-1` profile is used by Titanic example).
+Connect Substra client (`org-1` profile is used by Titanic example).
 
 ```sh
 substra config --profile org-1 http://127.0.0.1:8000

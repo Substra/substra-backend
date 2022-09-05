@@ -1,5 +1,5 @@
 ---
-name: Build connect-backend-metrics-exporter image
+name: Build substra-backend-metrics-exporter image
 on:
   push:
     branches:

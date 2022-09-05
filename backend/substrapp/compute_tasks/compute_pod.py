@@ -86,8 +86,6 @@ def create_pod(
         # To be able to share the same GPU between different pods in GKE context,
         # we use a "hack" based on misleading the Google Nvidia device plugin with
         # fake gpu devices (/dev/nvidia*), which are just symlinks of the original one.
-        # To do that we use:
-        # https://github.com/owkin/connect-generator/blob/0.4.3/templates/helmfile/values/gpu-sharing.yaml
         #
         # Moreover, it seems that original GPU, which are simlinks, are not automatically mounted once a
         # fake GPU is assigned to a specific pod. To fix that we mount them manually.

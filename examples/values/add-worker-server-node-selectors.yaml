@@ -1,7 +1,6 @@
 # When running on a kubernetes cluster with multiple nodes
 # the nodeSelector assign the worker and backend pods on the too different nodes
 # these values have to be added to backend-org-x.yaml value files
-# see: https://github.com/owkin/connect-backend/wiki/Running-the-backend-on-Multinode to create a 2 node cluster and label the nodes
 celeryworker:
   nodeSelector:
     worker: "true"

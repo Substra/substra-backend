@@ -1,4 +1,4 @@
-# Migration steps to change Celery Broker from RabbitMQ to Redis (#1231) from connect-backend helm chart 21.1.0 and docker image 0.24.0 to upper version
+# Migration steps to change Celery Broker from RabbitMQ to Redis from substra-backend helm chart 21.1.0 and docker image 0.24.0 to upper version
 
 ## Migration without task in queues
 
@@ -40,7 +40,7 @@ diff scheduled_tasks_tmp_rabbitmq.txt scheduled_tasks_redis.txt
 Set `connect-backend` `worker` Replicaset to the number you set in your deployement.
 
 
-# Migration steps for Merge Metric and Algo view (#976) from connect-backend 0.11.0 to upper version
+# Migration steps for Merge Metric and Algo view from substra-backend 0.11.0 to upper version
 
 Be sure to backup Django model databases and MinIO data before doing those steps
 
@@ -108,9 +108,9 @@ kubectl exec -it -n NAMESPACE $(kubectl get pod -l app.kubernetes.io/name=substr
 
 ## Upgrade procedure
 
-For each org or a connect network you need to do manual minio migration before update connect-backend
+For each org or a substra network you need to do manual minio migration before update substra-backend
 
-Example with a connect-backend deployed in kubernetes namespace `NAMESPACE`
+Example with a substra-backend deployed in kubernetes namespace `NAMESPACE`
 
 
 ## 1 - Copy data from metrics minio bucket to algos one
@@ -119,9 +119,9 @@ Example with a connect-backend deployed in kubernetes namespace `NAMESPACE`
 kubectl exec -it -n NAMESPACE $(kubectl get pod -l app.kubernetes.io/name=minio  -n NAMESPACE -o name) -- mc cp --recursive /data/substra-metrics/metrics/ /data/substra-algo/algos
 ```
 
-## 2 - Update connect-backend to the last version
+## 2 - Update substra-backend to the last version
 
-Update your connect-backend version
+Update your substra-backend version
 
 ## 3 - Sanity verification
 

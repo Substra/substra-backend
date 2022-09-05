@@ -5,7 +5,7 @@ build:
     - image: substrafoundation/substra-backend
       context: .
       docker:
-        dockerfile: docker/connect-backend/Dockerfile
+        dockerfile: docker/substra-backend/Dockerfile
       sync:
         manual:
         - src: backend/**/*
