@@ -1,4 +1,4 @@
-# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build](https://github.com/Substra/substra-backend/actions/workflows/gcr.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/gcr.yml)
+# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml) 
 
 Backend of the Substra platform
 
