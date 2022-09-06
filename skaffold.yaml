@@ -2,7 +2,7 @@ apiVersion: skaffold/v2beta24
 kind: Config
 build:
   artifacts:
-    - image: substrafoundation/substra-backend
+    - image: substra/substra-backend
       context: .
       docker:
         dockerfile: docker/substra-backend/Dockerfile
@@ -26,11 +26,11 @@ deploy:
           helm:
             explicitRegistry: true
         artifactOverrides:
-          server.image: substrafoundation/substra-backend
-          scheduler.image: substrafoundation/substra-backend
-          worker.image: substrafoundation/substra-backend
-          schedulerWorker.image: substrafoundation/substra-backend
-          events.image: substrafoundation/substra-backend
+          server.image: substra/substra-backend
+          scheduler.image: substra/substra-backend
+          worker.image: substra/substra-backend
+          schedulerWorker.image: substra/substra-backend
+          events.image: substra/substra-backend
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -42,11 +42,11 @@ deploy:
           helm:
             explicitRegistry: true
         artifactOverrides:
-          server.image: substrafoundation/substra-backend
-          scheduler.image: substrafoundation/substra-backend
-          worker.image: substrafoundation/substra-backend
-          schedulerWorker.image: substrafoundation/substra-backend
-          events.image: substrafoundation/substra-backend
+          server.image: substra/substra-backend
+          scheduler.image: substra/substra-backend
+          worker.image: substra/substra-backend
+          schedulerWorker.image: substra/substra-backend
+          events.image: substra/substra-backend
         skipBuildDependencies: true # deps already built by other org-1 release
   kubectl:
     manifests:
@@ -190,13 +190,13 @@ profiles:
       - op: add
         path: /build/artifacts/-
         value:
-          image: substrafoundation/metrics-exporter
+          image: substra/metrics-exporter
           context: .
           docker:
             dockerfile: docker/metrics-exporter/Dockerfile
       - op: add
         path: /deploy/helm/releases/0/artifactOverrides/server.metrics.image
-        value: substrafoundation/metrics-exporter
+        value: substra/metrics-exporter
       - op: add
         path: /deploy/helm/releases/0/setValues/server.metrics.enabled
         value: True
