@@ -11,6 +11,8 @@ from events.dynamic_fields import parse_computetask_dates_from_event
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
+from localrep.models import ComputeTaskOutput
+from localrep.models import ComputeTaskOutputAsset
 from localrep.models import DataManager
 from localrep.models import DataSample
 from localrep.models import Model
@@ -195,6 +197,36 @@ def _update_computetask(
     compute_task.save()
 
 
+def _on_create_computetask_output_asset_event(event: dict) -> None:
+    """Process create computetask output asset event to update local database."""
+    logger.debug("Syncing computetask output asset create", event_id=event["id"])
+    asset = event["compute_task_output_asset"]
+
+    _create_computetask_output_asset(
+        compute_task_key=asset["compute_task_key"],
+        identifier=asset["compute_task_output_identifier"],
+        asset_kind=asset["asset_kind"],
+        asset_key=asset["asset_key"],
+    )
+
+
+def _create_computetask_output_asset(
+    compute_task_key: str,
+    identifier: str,
+    asset_kind: str,
+    asset_key: str,
+) -> None:
+    task_output = ComputeTaskOutput.objects.get(
+        task__key=compute_task_key,
+        identifier=identifier,
+    )
+    ComputeTaskOutputAsset.objects.create(
+        task_output=task_output,
+        asset_kind=asset_kind,
+        asset_key=asset_key,
+    )
+
+
 def _on_create_datamanager_event(event: dict) -> None:
     """Process create datamanager event to update local database."""
     logger.debug("Syncing datamanager create", asset_key=event["asset_key"], event_id=event["id"])
@@ -321,6 +353,9 @@ EVENT_CALLBACKS = {
     common_pb2.ASSET_COMPUTE_TASK: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computetask_event,
         event_pb2.EVENT_ASSET_UPDATED: _on_update_computetask_event,
+    },
+    common_pb2.ASSET_COMPUTE_TASK_OUTPUT_ASSET: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_computetask_output_asset_event,
     },
     common_pb2.ASSET_DATA_MANAGER: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_datamanager_event,
