@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: allow registration of users with role from the API and reset password mechanism
 - Add address and permissions for `inputs` of kind datamanager and model in compute_tasks api response
+- Synchronize compute task output assets into localrep
 
 ## [0.28.0] 2022-08-29
 
