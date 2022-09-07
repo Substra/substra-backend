@@ -68,37 +68,7 @@ profiles:
     patches:
       - op: add
         path: /build/artifacts/0/docker/target
-        value: dev  # install dev-requirements, root user
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/0/setValues/events.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/0/setValues/worker.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/0/setValues/scheduler.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/0/setValues/schedulerWorker.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/1/setValues/server.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/1/setValues/events.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/1/setValues/worker.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/1/setValues/scheduler.podSecurityContext.enabled
-        value: false
-      - op: add
-        path: /deploy/helm/releases/1/setValues/schedulerWorker.podSecurityContext.enabled
-        value: false
+        value: dev  # install dev-requirements
   - name: nodeps
     patches:
       - op: add
