@@ -343,7 +343,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                             if model.category == model_category:
                                 input["addressable"] = make_addressable_serializer("model")(model).data
                                 input["addressable"]["storage_address"] = request.build_absolute_uri(
-                                    reverse("substrapp:model-file", args=[model.key])
+                                    reverse("localrep:model-file", args=[model.key])
                                 )
 
     def _find_output_kind(self, data, output_id):
@@ -375,7 +375,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             else:
                 addressable = make_addressable_serializer("opener")(data_manager).data
                 addressable["storage_address"] = request.build_absolute_uri(
-                    reverse("substrapp:data_manager-opener", args=[key])
+                    reverse("localrep:data_manager-opener", args=[key])
                 )
             return addressable
 
@@ -395,10 +395,10 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         # replace in common relationships
         if "algo" in task:
             task["algo"]["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:algo-description", args=[task["algo"]["key"]])
+                reverse("localrep:algo-description", args=[task["algo"]["key"]])
             )
             task["algo"]["algorithm"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:algo-file", args=[task["algo"]["key"]])
+                reverse("localrep:algo-file", args=[task["algo"]["key"]])
             )
 
         # replace in category-dependent relationships
@@ -407,17 +407,17 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         if "data_manager" in task_details and task_details["data_manager"]:
             data_manager = task_details["data_manager"]
             data_manager["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:data_manager-description", args=[data_manager["key"]])
+                reverse("localrep:data_manager-description", args=[data_manager["key"]])
             )
             data_manager["opener"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:data_manager-opener", args=[data_manager["key"]])
+                reverse("localrep:data_manager-opener", args=[data_manager["key"]])
             )
 
         models = task_details.get("models") or []  # field may be set to None
         for model in models:
             if "address" in model and model["address"]:
                 model["address"]["storage_address"] = request.build_absolute_uri(
-                    reverse("substrapp:model-file", args=[model["key"]])
+                    reverse("localrep:model-file", args=[model["key"]])
                 )
 
     class Meta:

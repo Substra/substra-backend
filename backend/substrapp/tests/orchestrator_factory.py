@@ -16,9 +16,6 @@ from orchestrator.error import OrcError
 from orchestrator.resources import ComputeTaskInputAsset
 from substrapp.tests import common
 from substrapp.tests.common import InputIdentifiers
-from substrapp.tests.factory import DEFAULT_OWNER
-from substrapp.tests.factory import DEFAULT_WORKER
-from substrapp.tests.factory import get_storage_address
 
 OPEN_PERMISSIONS = common_pb2.Permissions(
     download=common_pb2.Permission(public=True, authorized_ids=[]),
@@ -27,6 +24,13 @@ OPEN_PERMISSIONS = common_pb2.Permissions(
 
 ALGO_INPUTS_PER_CATEGORY = common.ALGO_INPUTS_PER_CATEGORY
 ALGO_OUTPUTS_PER_CATEGORY = common.ALGO_OUTPUTS_PER_CATEGORY
+
+DEFAULT_OWNER = "MyOrg1MSP"
+DEFAULT_WORKER = "MyOrg1MSP"
+
+
+def get_storage_address(asset_kind: str, key: str, field: str) -> str:
+    return f"http://testserver/{asset_kind}/{key}/{field}/"
 
 
 class Orchestrator:

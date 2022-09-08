@@ -61,10 +61,10 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         request = self.context.get("request")
         if request:
             res["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:algo-description", args=[res["key"]])
+                reverse("localrep:algo-description", args=[res["key"]])
             )
             res["algorithm"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:algo-file", args=[res["key"]])
+                reverse("localrep:algo-file", args=[res["key"]])
             )
         # from list to dict, to align with the orchestrator format
         res["inputs"] = {_input.pop("identifier"): _input for _input in res["inputs"]}

@@ -6,7 +6,7 @@ from rest_framework.test import APIRequestFactory
 
 from localrep.models import Model
 from localrep.serializers import ModelSerializer
-from substrapp.tests import factory
+from localrep.tests import asset_factory as factory
 
 
 class ModelSerializerTests(TestCase):

@@ -1,7 +1,7 @@
 import pytest
 
 from localrep.models import ComputeTask
-from substrapp.tests import factory
+from localrep.tests import asset_factory as factory
 
 
 @pytest.mark.django_db

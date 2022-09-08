@@ -39,6 +39,6 @@ class ModelSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         elif request:
             if "address" in model and model["address"]:
                 model["address"]["storage_address"] = request.build_absolute_uri(
-                    reverse("substrapp:model-file", args=[model["key"]])
+                    reverse("localrep:model-file", args=[model["key"]])
                 )
         return model
