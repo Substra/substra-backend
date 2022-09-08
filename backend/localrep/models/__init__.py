@@ -5,6 +5,7 @@ from .computeplan import ComputePlan
 from .computetask import ComputeTask
 from .computetask import ComputeTaskInput
 from .computetask import ComputeTaskOutput
+from .computetask import ComputeTaskOutputAsset
 from .datamanager import DataManager
 from .datasample import DataSample
 from .events import LastEvent
@@ -21,6 +22,7 @@ __all__ = [
     "ComputePlan",
     "ComputeTask",
     "ComputeTaskOutput",
+    "ComputeTaskOutputAsset",
     "ComputeTaskInput",
     "DataManager",
     "DataSample",

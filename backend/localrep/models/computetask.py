@@ -1,6 +1,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models.datasample import DataSample
@@ -32,6 +33,16 @@ class ComputeTaskOutput(models.Model):
 
     class Meta:
         unique_together = (("task", "identifier"),)
+
+
+class ComputeTaskOutputAsset(models.Model):
+    class Kind(models.TextChoices):
+        ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
+        ASSET_PERFORMANCE = common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
+
+    task_output = models.ForeignKey("ComputeTaskOutput", on_delete=models.CASCADE, related_name="assets")
+    asset_kind = models.CharField(max_length=64, choices=Kind.choices)
+    asset_key = models.CharField(max_length=73)  # performance have composite key: key1|key2
 
 
 class ComputeTask(models.Model, AssetPermissionMixin):
