@@ -18,23 +18,7 @@ TASK_IO_CHAINKEYS = "chainkeys"
 
 
 class Filenames:
-    OutModel = "out-model"
-    OutHeadModel = "out-head-model"
     Opener = "__init__.py"
-    Predictions = "pred.json"
-    Performance = "perf.json"
-
-
-def get_performance_filename(algo_key: str) -> str:
-    """Builds the performance filename
-
-    Args:
-        algo_key: The key of the algo that produce this performance file.
-
-    Returns:
-        A string representation of the performance filename.
-    """
-    return "-".join([algo_key, Filenames.Performance])
 
 
 def get_exec_command(ctx: Context) -> list[str]:
@@ -64,11 +48,11 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     outputs = []
 
     if task_category == orchestrator.ComputeTaskCategory.TASK_TEST:
-        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
+        perf_output = [o for o in ctx.outputs if o.kind == orchestrator.AssetKind.ASSET_PERFORMANCE][0]
         command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.input_models[0].key)]
         command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
         command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
-        command += ["--output-perf-path", perf_path]
+        command += ["--output-perf-path", os.path.join(SANDBOX_DIR, perf_output.rel_path)]
         return command
 
     command = []

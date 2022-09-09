@@ -373,6 +373,14 @@ def test_get_args_test_after_predict():
         compute_plan=None,
         directories=Directories(task.compute_plan_key),
     )
+    ctx._outputs = [
+        context.OutputResource(
+            identifier=InputIdentifiers.PERFORMANCE,
+            kind=orchestrator.AssetKind.ASSET_PERFORMANCE,
+            multiple=False,
+            rel_path=f"perf/{algo.key}-perf.json",
+        ),
+    ]
 
     cmd = [
         "--input-predictions-path",

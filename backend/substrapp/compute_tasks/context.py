@@ -165,8 +165,7 @@ class Context:
         if kind == orchestrator.AssetKind.ASSET_MODEL:
             return os.path.join(TaskDirName.OutModels, f"{identifier}.model")
         elif kind == orchestrator.AssetKind.ASSET_PERFORMANCE:
-            filename = "-".join([self.algo.key, "perf.json"])
-            return os.path.join(TaskDirName.Perf, filename)
+            return os.path.join(TaskDirName.Perf, f"{identifier}-perf.json")
 
         raise UnsupportedOutputAsset(f"{identifier} output has an unsupported kind {kind}")
 
