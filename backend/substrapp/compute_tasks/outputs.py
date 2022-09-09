@@ -9,7 +9,6 @@ import orchestrator
 import orchestrator.model_pb2 as model_pb2
 from localrep.errors import AlreadyExistsError
 from localrep.serializers import ModelSerializer as ModelRepSerializer
-from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks import context
 from substrapp.compute_tasks import directories
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
@@ -47,7 +46,13 @@ class OutputSaver:
         with get_orchestrator_client(self._ctx.channel_name) as client:
             perf_path = os.path.join(self._ctx.directories.task_dir, output.rel_path)
             perf = _get_perf(perf_path)
-            _register_perf(client, self._ctx.task.key, self._ctx.algo.key, perf, output.identifier)
+            performance_obj = {
+                "compute_task_key": self._ctx.task.key,
+                "metric_key": self._ctx.algo.key,
+                "performance_value": perf,
+                "compute_task_output_identifier": output.identifier,
+            }
+            client.register_performance(performance_obj)
 
     def _save_models(self, models: list[context.OutputResource]):
         logger.info("saving models")
@@ -107,24 +112,6 @@ class OutputSaver:
         from substrapp.models import Model
 
         Model.objects.get(key=key).delete()
-
-
-def _register_perf(client: OrchestratorClient, task_key: str, algo_key: str, perf: float, identifier: str) -> None:
-    """Registers the performance on the orchestrator
-
-    Args:
-        client: An open orchestrator client.
-        task_key: The key of the compute task that produced this performances.
-        algo_key: The key of the algo that produced this performance.
-        perf: The performance value.
-    """
-    performance_obj = {
-        "compute_task_key": task_key,
-        "metric_key": algo_key,
-        "performance_value": perf,
-        "compute_task_output_identifier": identifier,
-    }
-    client.register_performance(performance_obj)
 
 
 def _get_perf(perf_path: str) -> float:
