@@ -1,3 +1,30 @@
+# Rename localrep to api: substra-backend 0.28.0 -> 0.29.0
+
+Execute this command in the backend DB, before running django migrations,
+
+```sql
+UPDATE django_content_type SET app_label='api' WHERE app_label='localrep';
+UPDATE django_migrations SET app='api' WHERE app='localrep';
+ALTER TABLE localrep_algo RENAME TO api_algo;
+ALTER TABLE localrep_algoinput RENAME TO api_algoinput;
+ALTER TABLE localrep_algooutput RENAME TO api_algooutput;
+ALTER TABLE localrep_channelorganization RENAME TO api_channelorganization;
+ALTER TABLE localrep_computeplan RENAME TO api_computeplan;
+ALTER TABLE localrep_computetask RENAME TO api_computetask;
+ALTER TABLE localrep_computetaskinput RENAME TO api_computetaskinput;
+ALTER TABLE localrep_computetaskoutput RENAME TO api_computetaskoutput;
+ALTER TABLE localrep_computetaskoutputasset RENAME TO api_computetaskoutputasset;
+ALTER TABLE localrep_datamanager RENAME TO api_datamanager;
+ALTER TABLE localrep_datasample RENAME TO api_datasample;
+ALTER TABLE localrep_datasample_data_managers RENAME TO api_datasample_data_managers;
+ALTER TABLE localrep_lastevent RENAME TO api_lastevent;
+ALTER TABLE localrep_model RENAME TO api_model;
+ALTER TABLE localrep_performance RENAME TO api_performance;
+ALTER TABLE localrep_profilingstep RENAME TO api_profilingstep;
+ALTER TABLE localrep_taskdatasamples RENAME TO api_taskdatasamples;
+ALTER TABLE localrep_taskprofiling RENAME TO api_taskprofiling;
+```
+
 # Migration steps to change Celery Broker from RabbitMQ to Redis from substra-backend helm chart 21.1.0 and docker image 0.24.0 to upper version
 
 ## Migration without task in queues

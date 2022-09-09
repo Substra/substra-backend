@@ -23,9 +23,9 @@ from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.settings import api_settings
 
+from api.urls import urlpatterns
 from backend.views import info_view
 from backend.views import obtain_auth_token
-from localrep.urls import urlpatterns
 from organization.urls import router as organization_router
 from users.urls import router as user_router
 
@@ -35,7 +35,7 @@ urlpatterns = (
             r"",
             include(
                 [
-                    path("", include((urlpatterns, "localrep"))),
+                    path("", include((urlpatterns, "api"))),
                     path("", include((organization_router.urls, "organization"))),
                     path("", include((user_router.urls, "user"))),  # for secure jwt authent
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent

@@ -5,11 +5,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from api.views.utils import ApiResponse
+from api.views.utils import get_channel_name
 from libs.expiry_token_authentication import expires_at
 from libs.expiry_token_authentication import token_expire_handler
 from libs.user_login_throttle import UserLoginThrottle
-from localrep.views.utils import ApiResponse
-from localrep.views.utils import get_channel_name
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 

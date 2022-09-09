@@ -7,8 +7,8 @@ from django.urls import reverse
 
 import orchestrator
 import orchestrator.model_pb2 as model_pb2
-from localrep.errors import AlreadyExistsError
-from localrep.serializers import ModelSerializer as ModelRepSerializer
+from api.errors import AlreadyExistsError
+from api.serializers import ModelSerializer as ModelRepSerializer
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
@@ -62,17 +62,17 @@ def save_models(ctx: Context) -> None:
 
     try:
         with get_orchestrator_client(ctx.channel_name) as client:
-            localrep_data_models = client.register_models({"models": models})
+            api_data_models = client.register_models({"models": models})
     except Exception as exc:
         for model in models:
             _delete_model(model["key"])
         raise exc
 
-    for localrep_data in localrep_data_models:
-        localrep_data["channel"] = ctx.channel_name
-        localrep_serializer = ModelRepSerializer(data=localrep_data)
+    for api_data in api_data_models:
+        api_data["channel"] = ctx.channel_name
+        api_serializer = ModelRepSerializer(data=api_data)
         try:
-            localrep_serializer.save_if_not_exists()
+            api_serializer.save_if_not_exists()
         except AlreadyExistsError:
             pass
 
@@ -101,7 +101,7 @@ def _save_model_to_local_storage(category: int, src_path: str, task_key: str, ta
     with open(src_path, "rb") as f:
         instance.file.save("model", f)
     current_site = settings.DEFAULT_DOMAIN
-    storage_address = f'{current_site}{reverse("localrep:model-file", args=[instance.key])}'
+    storage_address = f'{current_site}{reverse("api:model-file", args=[instance.key])}'
 
     logger.debug("Saving model in local storage", model_key=instance.key, model_category=category)
 

@@ -18,10 +18,10 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import GenericViewSet
 
+from api.views.filters_utils import MatchFilter
+from api.views.utils import ApiResponse
+from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
-from localrep.views.filters_utils import MatchFilter
-from localrep.views.utils import ApiResponse
-from localrep.views.utils import get_channel_name
 from users.models.user_channel import UserChannel
 from users.serializers.user import UserSerializer
 

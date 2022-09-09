@@ -107,7 +107,7 @@ INSTALLED_APPS = [
     "substrapp",
     "organization",
     "users",
-    "localrep",
+    "api",
     "drf_spectacular",
     "django_filters",
 ]
@@ -377,7 +377,7 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
-        "localrep": {
+        "api": {
             "level": LOG_LEVEL,
             "handlers": ["console"],
             "propagate": False,

@@ -7,23 +7,23 @@ from rest_framework.exceptions import ValidationError
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
+from api.errors import AlreadyExistsError
+from api.models import ComputePlan
+from api.models import ComputeTask
+from api.models import ComputeTaskOutput
+from api.models import ComputeTaskOutputAsset
+from api.models import DataManager
+from api.models import DataSample
+from api.models import Model
+from api.serializers import AlgoSerializer
+from api.serializers import ChannelOrganizationSerializer
+from api.serializers import ComputePlanSerializer
+from api.serializers import ComputeTaskSerializer
+from api.serializers import DataManagerSerializer
+from api.serializers import DataSampleSerializer
+from api.serializers import ModelSerializer
+from api.serializers import PerformanceSerializer
 from events.dynamic_fields import parse_computetask_dates_from_event
-from localrep.errors import AlreadyExistsError
-from localrep.models import ComputePlan
-from localrep.models import ComputeTask
-from localrep.models import ComputeTaskOutput
-from localrep.models import ComputeTaskOutputAsset
-from localrep.models import DataManager
-from localrep.models import DataSample
-from localrep.models import Model
-from localrep.serializers import AlgoSerializer
-from localrep.serializers import ChannelOrganizationSerializer
-from localrep.serializers import ComputePlanSerializer
-from localrep.serializers import ComputeTaskSerializer
-from localrep.serializers import DataManagerSerializer
-from localrep.serializers import DataSampleSerializer
-from localrep.serializers import ModelSerializer
-from localrep.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
 
@@ -70,7 +70,7 @@ def _on_update_algo_event(event: dict) -> None:
 def _update_algo(key: str, data: dict) -> None:
     """Process update algo event to update local database."""
 
-    from localrep.models.algo import Algo
+    from api.models.algo import Algo
 
     algo = Algo.objects.get(key=key)
     algo.name = data["name"]
@@ -101,7 +101,7 @@ def _on_update_computeplan_event(event: dict) -> None:
 def _update_computeplan(key: str, data: dict) -> None:
     """Process update compute plan event to update local database."""
 
-    from localrep.models.computeplan import ComputePlan
+    from api.models.computeplan import ComputePlan
 
     compute_plan = ComputePlan.objects.get(key=key)
     compute_plan.cancelation_date = data.get("cancelation_date")
@@ -127,23 +127,23 @@ def _create_computetask(
     channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
 ) -> None:
 
-    localrep_data = computetask.orc_to_localrep(data)
-    localrep_data["channel"] = channel
+    api_data = computetask.orc_to_api(data)
+    api_data["channel"] = channel
     if start_date is not None:
-        localrep_data["start_date"] = parse_datetime(start_date)
+        api_data["start_date"] = parse_datetime(start_date)
     if end_date is not None:
-        localrep_data["end_date"] = parse_datetime(end_date)
+        api_data["end_date"] = parse_datetime(end_date)
     if failure_report is not None:
-        localrep_data["error_type"] = failure_report["error_type"]
+        api_data["error_type"] = failure_report["error_type"]
         if "logs_address" in failure_report:
-            localrep_data["logs_address"] = failure_report["logs_address"]
+            api_data["logs_address"] = failure_report["logs_address"]
         if "owner" in failure_report:
-            localrep_data["logs_owner"] = failure_report["owner"]
-    serializer = ComputeTaskSerializer(data=localrep_data)
+            api_data["logs_owner"] = failure_report["owner"]
+    serializer = ComputeTaskSerializer(data=api_data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
-        logger.debug("Computetask already exists", asset_key=localrep_data["key"])
+        logger.debug("Computetask already exists", asset_key=api_data["key"])
 
 
 def _on_update_computetask_event(event: dict) -> None:
