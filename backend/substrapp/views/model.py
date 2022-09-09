@@ -43,6 +43,7 @@ class ModelRepFilter(FilterSet):
         field_name="category",
         choices=ModelRep.Category.choices,
     )
+    compute_task_key = BaseInFilter(field_name="compute_task__key")
 
     class Meta:
         model = ModelRep
