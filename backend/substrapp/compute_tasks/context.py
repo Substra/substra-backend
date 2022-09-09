@@ -10,6 +10,8 @@ from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.errors import InvalidContextError
+from substrapp.compute_tasks.errors import OutputPathNotFound
+from substrapp.compute_tasks.errors import UnsupportedOutputAsset
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -157,8 +159,7 @@ class Context:
             if output.rel_path == path:
                 return output
 
-        # TODO: specific exception
-        raise InvalidContextError("output not found")
+        raise OutputPathNotFound(f"path {abs_path} does not match a known output")
 
     def _get_output_path(self, kind: orchestrator.AssetKind, identifier: str) -> str:
         if kind == orchestrator.AssetKind.ASSET_MODEL:
@@ -167,8 +168,7 @@ class Context:
             filename = "-".join([self.algo.key, "perf.json"])
             return os.path.join(TaskDirName.Perf, filename)
 
-        # TODO: specific exception
-        raise InvalidContextError("unsupported output asset")
+        raise UnsupportedOutputAsset(f"{identifier} output has an unsupported kind {kind}")
 
     def _get_output_resources(self, task: orchestrator.ComputeTask, algo: orchestrator.Algo) -> list[OutputResource]:
         """return the list of OutputResource built from task outputs and algo output definitions"""
