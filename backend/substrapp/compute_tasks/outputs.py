@@ -18,6 +18,9 @@ from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
 
+# Temporarily determine model category based on output identifier
+OUTPUT_HEAD_MODEL_IDENTIFIERS = ["local", "head"]
+
 
 class OutputSaver:
     def __init__(self, ctx: context.Context):
@@ -147,4 +150,4 @@ def _get_model_category(identifier: str) -> str:
     - except "local" or "head" outputs
     """
 
-    return model_pb2.MODEL_HEAD if identifier.lower() in ["local", "head"] else model_pb2.MODEL_SIMPLE
+    return model_pb2.MODEL_HEAD if identifier.lower() in OUTPUT_HEAD_MODEL_IDENTIFIERS else model_pb2.MODEL_SIMPLE

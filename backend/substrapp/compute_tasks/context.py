@@ -150,15 +150,13 @@ class Context:
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
 
-    def get_output_resource(self, value: str) -> OutputResource:
+    def get_output_resource(self, abs_path: str) -> OutputResource:
         """return the task output from output path, raise if not found"""
-        path = os.path.relpath(value, self.directories.task_dir)
+        path = os.path.relpath(abs_path, self.directories.task_dir)
         for output in self._outputs:
             if output.rel_path == path:
                 return output
 
-        print(self._outputs)
-        print(path)
         # TODO: specific exception
         raise InvalidContextError("output not found")
 
