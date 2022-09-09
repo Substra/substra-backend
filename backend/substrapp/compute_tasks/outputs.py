@@ -92,7 +92,7 @@ class OutputSaver:
         with open(path, "rb") as f:
             instance.file.save("model", f)
         current_site = settings.DEFAULT_DOMAIN
-        storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
+        storage_address = f'{current_site}{reverse("localrep:model-file", args=[instance.key])}'
 
         logger.debug("Saving model in local storage", model_key=instance.key, identifier=model.identifier)
 
