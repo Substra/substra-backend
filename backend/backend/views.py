@@ -8,10 +8,10 @@ from rest_framework.views import APIView
 from libs.expiry_token_authentication import expires_at
 from libs.expiry_token_authentication import token_expire_handler
 from libs.user_login_throttle import UserLoginThrottle
+from localrep.views.utils import ApiResponse
+from localrep.views.utils import get_channel_name
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-from substrapp.views.utils import ApiResponse
-from substrapp.views.utils import get_channel_name
 
 
 class ExpiryObtainAuthToken(ObtainAuthToken):

@@ -19,9 +19,9 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
-from substrapp.views.filters_utils import MatchFilter
-from substrapp.views.utils import ApiResponse
-from substrapp.views.utils import get_channel_name
+from localrep.views.filters_utils import MatchFilter
+from localrep.views.utils import ApiResponse
+from localrep.views.utils import get_channel_name
 from users.models.user_channel import UserChannel
 from users.serializers.user import UserSerializer
 

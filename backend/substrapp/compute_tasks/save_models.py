@@ -101,7 +101,7 @@ def _save_model_to_local_storage(category: int, src_path: str, task_key: str, ta
     with open(src_path, "rb") as f:
         instance.file.save("model", f)
     current_site = settings.DEFAULT_DOMAIN
-    storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
+    storage_address = f'{current_site}{reverse("localrep:model-file", args=[instance.key])}'
 
     logger.debug("Saving model in local storage", model_key=instance.key, model_category=category)
 

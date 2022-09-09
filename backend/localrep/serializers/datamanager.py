@@ -37,10 +37,10 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         request = self.context.get("request")
         if request:
             res["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:data_manager-description", args=[res["key"]])
+                reverse("localrep:data_manager-description", args=[res["key"]])
             )
             res["opener"]["storage_address"] = request.build_absolute_uri(
-                reverse("substrapp:data_manager-opener", args=[res["key"]])
+                reverse("localrep:data_manager-opener", args=[res["key"]])
             )
         return res
 

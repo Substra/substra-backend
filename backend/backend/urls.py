@@ -25,8 +25,8 @@ from rest_framework.settings import api_settings
 
 from backend.views import info_view
 from backend.views import obtain_auth_token
+from localrep.urls import urlpatterns
 from organization.urls import router as organization_router
-from substrapp.urls import urlpatterns
 from users.urls import router as user_router
 
 urlpatterns = (
@@ -35,7 +35,7 @@ urlpatterns = (
             r"",
             include(
                 [
-                    path("", include((urlpatterns, "substrapp"))),
+                    path("", include((urlpatterns, "localrep"))),
                     path("", include((organization_router.urls, "organization"))),
                     path("", include((user_router.urls, "user"))),  # for secure jwt authent
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
