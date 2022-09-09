@@ -12,13 +12,9 @@ from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
 
-# These constants are shared with substra-tools.
-# These constants will disappear once the inputs/outputs are exposed by the orchestrator.
-TASK_IO_PREDICTIONS = "predictions"
+# This constant is shared with substra-tools.
+# It will disappear once the inputs/outputs are exposed by the orchestrator.
 TASK_IO_CHAINKEYS = "chainkeys"
-TRAIN_IO_MODEL = "model"
-COMPOSITE_IO_SHARED = "shared"
-COMPOSITE_IO_LOCAL = "local"
 
 
 class Filenames:
