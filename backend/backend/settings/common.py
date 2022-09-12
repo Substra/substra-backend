@@ -421,7 +421,5 @@ ISOLATED = to_bool(os.environ.get("ISOLATED"))
 
 CONTENT_DISPOSITION_HEADER = {}
 
-LOCALREP_RESYNC_EVENTS_PAGE_SIZE = int(os.environ.get("LOCALREP_RESYNC_EVENTS_PAGE_SIZE", 1000))
-
 # To encode unique jwt token generated with reset password request
 RESET_JWT_SIGNATURE_ALGORITHM = "HS256"
