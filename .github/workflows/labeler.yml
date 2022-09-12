@@ -5,7 +5,7 @@ on:
 jobs:
   triage:
     permissions:
-      content: read
+      contents: read
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
