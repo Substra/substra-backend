@@ -5,19 +5,19 @@ from django.conf import settings
 from django.db import close_old_connections
 
 import orchestrator
-from localrep.models import LastEvent
-from localsync import health
-from localsync import localsync
+from api.models import LastEvent
+from api_events import health
+from api_events import sync
 from substrapp.orchestrator import get_orchestrator_client
 
-logger = structlog.get_logger("events")
+logger = structlog.get_logger("api_events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
 
 def on_event(payload):
     try:
         logger.debug("Received payload", payload=payload)
-        localsync.sync_on_event_message(payload)
+        sync.sync_on_event_message(payload)
     except Exception as e:
         logger.exception("Error processing message", e=e)
         raise

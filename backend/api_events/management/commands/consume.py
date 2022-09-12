@@ -3,14 +3,14 @@ import time
 import structlog
 from django.core.management.base import BaseCommand
 
-from events import health
-from events.reactor import consume
+from api_events import health
+from api_events.reactor import consume
 
-logger = structlog.get_logger("events")
+logger = structlog.get_logger("api_events")
 
 
 class Command(BaseCommand):
-    help = "Consume events from the orchestrator broker for compute_engine"
+    help = "Consume events from the orchestrator broker for api database"
 
     def handle(self, *args, **options):
         health_service = health.HealthService()

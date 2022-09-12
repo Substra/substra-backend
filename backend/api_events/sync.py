@@ -23,7 +23,7 @@ from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
-from localsync.dynamic_fields import parse_computetask_dates_from_event
+from api_events.dynamic_fields import parse_computetask_dates_from_event
 from orchestrator import client as orc_client
 from orchestrator import computetask
 
@@ -235,7 +235,7 @@ def _on_create_datamanager_event(event: dict) -> None:
 
 def _create_datamanager(channel: str, data: dict) -> None:
     data["channel"] = channel
-    # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
+    # XXX: in case of sync of MDY dumps, logs_permission won't be provided:
     #      the orchestrator and backend used to generate the dumps are both outdated.
     #      We provide a sensible default: logs are private.
     data.setdefault("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})

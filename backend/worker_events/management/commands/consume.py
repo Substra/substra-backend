@@ -3,14 +3,14 @@ import time
 import structlog
 from django.core.management.base import BaseCommand
 
-from localsync import health
-from localsync.reactor import consume
+from worker_events import health
+from worker_events.reactor import consume
 
-logger = structlog.get_logger("localsync")
+logger = structlog.get_logger("worker_events")
 
 
 class Command(BaseCommand):
-    help = "Consume events from the orchestrator broker for localrep"
+    help = "Consume events from the orchestrator broker for worker task scheduling"
 
     def handle(self, *args, **options):
         health_service = health.HealthService()

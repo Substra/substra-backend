@@ -1,21 +1,21 @@
-{{- if .Values.localsync.enabled }}
+{{- if .Values.api_events.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "substra.fullname" . }}-localsync-events
+  name: {{ template "substra.fullname" . }}-api-events
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}-localsync-events
+    app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
 spec:
   replicas: 1
   selector:
     matchLabels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-localsync-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
         {{ include "substra.selectorLabels" . | nindent 8}}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-localsync-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
@@ -26,26 +26,26 @@ spec:
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
         checksum-secret-redis: {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
     spec:
-      {{- with .Values.localsync.image.pullSecrets }}
+      {{- with .Values.api_events.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.localsync.podSecurityContext.enabled }}
+      {{- if .Values.api_events.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.localsync.podSecurityContext.fsGroup }}
-        runAsUser: {{ .Values.localsync.podSecurityContext.runAsUser }}
-        runAsGroup: {{ .Values.localsync.podSecurityContext.runAsGroup }}
+        fsGroup: {{ .Values.api_events.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.api_events.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.api_events.podSecurityContext.runAsGroup }}
       {{- end }}
-      serviceAccountName: {{ include "substra.events.serviceAccountName" . }}
+      serviceAccountName: {{ include "substra.api_events.serviceAccountName" . }}
       containers:
-        - name: localsync-event-app
-          image: {{ include "common.images.name" .Values.localsync.image }}
-          imagePullPolicy: {{ .Values.localsync.image.pullPolicy }}
+        - name: api-event-app
+          image: {{ include "common.images.name" .Values.api_events.image }}
+          imagePullPolicy: {{ .Values.api_events.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
-          args: ["-c", "python manage.py localsync"]
+          args: ["-c", "python manage.py consume"]
           {{- else }}
-          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python manage.py localsync"]
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python manage.py consume"]
           {{- end }}
           envFrom:
             - configMapRef:
@@ -73,7 +73,7 @@ spec:
                   fieldRef:
                     fieldPath: metadata.namespace
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.localsync.{{ .Values.settings }}
+              value: backend.settings.api_events.{{ .Values.settings }}
           volumeMounts:
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
@@ -113,7 +113,7 @@ spec:
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
         - name: wait-init-migrations
-          image: {{ include "common.images.name" .Values.localsync.image }}
+          image: {{ include "common.images.name" .Values.api_events.image }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
           volumeMounts:
             - name: volume-wait-init-migrations
@@ -152,15 +152,15 @@ spec:
           secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-    {{- with .Values.localsync.nodeSelector }}
+    {{- with .Values.api_events.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.localsync.affinity }}
+    {{- with .Values.api_events.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.localsync.tolerations }}
+    {{- with .Values.api_events.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

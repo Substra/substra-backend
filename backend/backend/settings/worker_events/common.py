@@ -8,7 +8,7 @@ INSTALLED_APPS = [
     "django_celery_results",
     "rest_framework",
     "api",
-    "events",
+    "worker_events",
     "substrapp",
     "users",
     "organization",

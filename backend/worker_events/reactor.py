@@ -10,8 +10,8 @@ import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from api.models import LastEvent
-from events import handler_compute_engine
-from events import health
+from worker_events import handler_compute_engine
+from worker_events import health
 from orchestrator import model_pb2
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
@@ -19,7 +19,7 @@ from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
 
-logger = structlog.get_logger("events")
+logger = structlog.get_logger("worker_events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
 

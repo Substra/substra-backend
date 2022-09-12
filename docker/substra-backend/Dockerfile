@@ -18,8 +18,8 @@ RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
 COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
-COPY ./backend/events /usr/src/app/events
-COPY ./backend/localsync /usr/src/app/localsync
+COPY ./backend/api_events /usr/src/app/api_events
+COPY ./backend/worker_events /usr/src/app/worker_events
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/organization /usr/src/app/organization
 COPY ./backend/organization_register /usr/src/app/organization_register

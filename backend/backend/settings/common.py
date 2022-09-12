@@ -382,7 +382,12 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
-        "events": {
+        "worker_events": {
+            "level": LOG_LEVEL,
+            "handlers": ["console"],
+            "propagate": False,
+        },
+        "api_events": {
             "level": LOG_LEVEL,
             "handlers": ["console"],
             "propagate": False,
