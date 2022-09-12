@@ -196,7 +196,8 @@ if __name__ == "__main__":
     settings["Org"] = load_settings_from_file(SETTINGS_FOLDER / "deps/org.py")
     settings["CORS"] = load_settings_from_file(SETTINGS_FOLDER / "deps/cors.py")
     settings["Ledger"] = load_settings_from_file(SETTINGS_FOLDER / "deps/ledger.py")
-    settings["Event app"] = load_settings_from_file(SETTINGS_FOLDER / "events/common.py")
+    settings["Worker event app"] = load_settings_from_file(SETTINGS_FOLDER / "worker_events/common.py")
+    settings["API event app"] = load_settings_from_file(SETTINGS_FOLDER / "api_events/common.py")
 
     true_values = load_true_values_from_file(SETTINGS_FOLDER / "common.py")
 
