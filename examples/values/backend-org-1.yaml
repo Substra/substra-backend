@@ -23,10 +23,9 @@ containerRegistry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: connect-314908/substra-tools:latest-minimal
-      sourceRegistry: gcr.io
-      dstImage: owkin/substra-tools:latest-minimal
-      dockerConfigSecretName: "docker-config"
+    - image: substra/substra-tools:latest-minimal
+      sourceRegistry: ghcr.io
+      dstImage: substra/substra-tools:latest-minimal
 
 worker:
   concurrency: 3
@@ -47,12 +46,11 @@ server:
       nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "3"
 
 kaniko:
-  dockerConfigSecretName: "docker-config"
   mirror: true
   cache:
     warmer:
       cachedImages:
-        - gcr.io/connect-314908/substra-tools:latest-minimal
+        - ghcr.io/substra/substra-tools:latest-minimal
 
 addAccountOperator:
   incomingOrganizations:
