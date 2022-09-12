@@ -44,7 +44,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `server.uwsgiThreads`                             | The number of uwsgi threads                                                                                                                        | `10`                                       |
 | `server.image.registry`                           | Substra backend server image registry                                                                                                              | `ghcr.io`                                  |
 | `server.image.repository`                         | Substra backend server image repository                                                                                                            | `substra/substra-backend`                  |
-| `server.image.tag`                                | Substra backend server image tag                                                                                                                   | `0.28.0`                                   |
+| `server.image.tag`                                | Substra backend server image tag                                                                                                                   | `0.29.0`                                   |
 | `server.image.pullPolicy`                         | Substra backend server image pull policy                                                                                                           | `IfNotPresent`                             |
 | `server.image.pullSecrets`                        | Specify image pull secrets                                                                                                                         | `[]`                                       |
 | `server.podSecurityContext.enabled`               | Enable security context                                                                                                                            | `true`                                     |
@@ -88,7 +88,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `server.metrics.enabled`                          | Start a prometheus exporter                                                                                                                        | `false`                                    |
 | `server.metrics.image.registry`                   | Substra backend server Prometheus Exporter image registry                                                                                          | `ghcr.io`                                  |
 | `server.metrics.image.repository`                 | Substra backend server Prometheus Exporter image repository                                                                                        | `substra/substra-backend-metrics-exporter` |
-| `server.metrics.image.tag`                        | Substra backend server Prometheus Exporter image tag                                                                                               | `0.28.0`                                   |
+| `server.metrics.image.tag`                        | Substra backend server Prometheus Exporter image tag                                                                                               | `0.29.0`                                   |
 | `server.metrics.image.pullPolicy`                 | Substra backend server Prometheus Exporter image pull policy                                                                                       | `IfNotPresent`                             |
 | `server.metrics.serviceMonitor.enabled`           | Create ServiceMonitor resource for scraping metrics using Prometheus Operator                                                                      | `false`                                    |
 | `server.metrics.serviceMonitor.namespace`         | Namespace for the ServiceMonitor resource (defaults to the Release Namespace)                                                                      | `""`                                       |
@@ -108,7 +108,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `worker.concurrency`                           | Maximum amount of tasks to process in parallel                                                                                                     | `1`                       |
 | `worker.image.registry`                        | Substra backend worker image registry                                                                                                              | `ghcr.io`                 |
 | `worker.image.repository`                      | Substra backend worker image repository                                                                                                            | `substra/substra-backend` |
-| `worker.image.tag`                             | Substra backend worker image tag                                                                                                                   | `0.28.0`                  |
+| `worker.image.tag`                             | Substra backend worker image tag                                                                                                                   | `0.29.0`                  |
 | `worker.image.pullPolicy`                      | Substra backend worker image pull policy                                                                                                           | `IfNotPresent`            |
 | `worker.image.pullSecrets`                     | Specify image pull secrets                                                                                                                         | `[]`                      |
 | `worker.podSecurityContext.enabled`            | Enable security context                                                                                                                            | `true`                    |
@@ -136,7 +136,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `schedulerWorker.replicaCount`                  | Replica count for the periodic tasks worker       | `1`                       |
 | `schedulerWorker.image.registry`                | Substra backend tasks scheduler image registry    | `ghcr.io`                 |
 | `schedulerWorker.image.repository`              | Substra backend tasks scheduler image repository  | `substra/substra-backend` |
-| `schedulerWorker.image.tag`                     | Substra backend tasks scheduler image tag         | `0.28.0`                  |
+| `schedulerWorker.image.tag`                     | Substra backend tasks scheduler image tag         | `0.29.0`                  |
 | `schedulerWorker.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`            |
 | `schedulerWorker.image.pullSecrets`             | Specify image pull secrets                        | `[]`                      |
 | `schedulerWorker.nodeSelector`                  | Node labels for pod assignment                    | `{}`                      |
@@ -157,7 +157,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `scheduler.replicaCount`                  | Replica count for the scheduler server            | `1`                       |
 | `scheduler.image.registry`                | Subsra backend tasks scheduler image registry     | `ghcr.io`                 |
 | `scheduler.image.repository`              | Substra backend tasks scheduler image repository  | `substra/substra-backend` |
-| `scheduler.image.tag`                     | Substra backend tasks scheduler image tag         | `0.28.0`                  |
+| `scheduler.image.tag`                     | Substra backend tasks scheduler image tag         | `0.29.0`                  |
 | `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`            |
 | `scheduler.image.pullSecrets`             | Specify image pull secrets                        | `[]`                      |
 | `scheduler.resources`                     | Scheduler container resources requests and limits | `{}`                      |
@@ -189,7 +189,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `events.enabled`                       | Enable event service                                | `true`                    |
 | `events.image.registry`                | Substra event app image registry                    | `ghcr.io`                 |
 | `events.image.repository`              | Substra event app image repository                  | `substra/substra-backend` |
-| `events.image.tag`                     | Substra event app image tag                         | `0.28.0`                  |
+| `events.image.tag`                     | Substra event app image tag                         | `0.29.0`                  |
 | `events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`            |
 | `events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                      |
 | `events.podSecurityContext.enabled`    | Enable security context                             | `true`                    |

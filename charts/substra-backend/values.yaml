@@ -66,7 +66,7 @@ server:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: 0.28.0
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be created manually in the namespace.
@@ -240,7 +240,7 @@ server:
     image:
       registry: ghcr.io
       repository: substra/substra-backend-metrics-exporter
-      tag: 0.28.0
+      tag: 0.29.0
       pullPolicy: IfNotPresent
 
     serviceMonitor:
@@ -287,7 +287,7 @@ worker:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: 0.28.0
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param worker.podSecurityContext.enabled Enable security context
@@ -352,7 +352,7 @@ schedulerWorker:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: 0.28.0
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param schedulerWorker.nodeSelector Node labels for pod assignment
@@ -396,7 +396,7 @@ scheduler:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: 0.28.0
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param scheduler.resources Scheduler container resources requests and limits
@@ -464,7 +464,7 @@ events:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: 0.28.0
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param events.podSecurityContext.enabled Enable security context
