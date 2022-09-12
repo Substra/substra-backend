@@ -2,9 +2,9 @@ import structlog
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.common_pb2 as common_pb2
-from api.models import Algo as AlgoRep
-from api.models import ComputePlan as ComputePlanRep
-from api.models import DataManager as DataManagerRep
+from api.models import Algo as Algo
+from api.models import ComputePlan as ComputePlan
+from api.models import DataManager as DataManager
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
 
@@ -46,7 +46,7 @@ class NewsFeedViewSet(GenericViewSet):
         items = []
         channel = get_channel_name(self.request)
 
-        for compute_plan in ComputePlanRep.objects.filter(
+        for compute_plan in ComputePlan.objects.filter(
             channel=channel, end_date__isnull=False, **self.date_filters("end_date")
         ):
             detail = {}
@@ -68,7 +68,7 @@ class NewsFeedViewSet(GenericViewSet):
             return items
 
         # else retrieve all other news
-        for compute_plan in ComputePlanRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
+        for compute_plan in ComputePlan.objects.filter(channel=channel, **self.date_filters("creation_date")):
             items.append(
                 cp_item(
                     compute_plan.key,
@@ -78,14 +78,14 @@ class NewsFeedViewSet(GenericViewSet):
                 )
             )
 
-        for compute_plan in ComputePlanRep.objects.filter(
+        for compute_plan in ComputePlan.objects.filter(
             channel=channel, start_date__isnull=False, **self.date_filters("start_date")
         ):
             items.append(
                 cp_item(
                     compute_plan.key,
                     compute_plan.name,
-                    ComputePlanRep.Status.PLAN_STATUS_DOING,
+                    ComputePlan.Status.PLAN_STATUS_DOING,
                     compute_plan.start_date,
                 )
             )
@@ -96,7 +96,7 @@ class NewsFeedViewSet(GenericViewSet):
         items = []
         channel = get_channel_name(self.request)
 
-        for algo in AlgoRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
+        for algo in Algo.objects.filter(channel=channel, **self.date_filters("creation_date")):
             items.append(
                 {
                     "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO),
@@ -113,7 +113,7 @@ class NewsFeedViewSet(GenericViewSet):
         items = []
         channel = get_channel_name(self.request)
 
-        for datamanager in DataManagerRep.objects.filter(channel=channel, **self.date_filters("creation_date")):
+        for datamanager in DataManager.objects.filter(channel=channel, **self.date_filters("creation_date")):
             items.append(
                 {
                     "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER),

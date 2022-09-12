@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import ViewSet
 
-from api.models import ComputeTask as ComputeTaskRep
+from api.models import ComputeTask
 from organization.authentication import OrganizationUser
 from substrapp.clients import organization as organization_client
 from substrapp.exceptions import AssetPermissionError
@@ -26,11 +26,11 @@ from substrapp.utils import get_owner
 CP_BASENAME_PREFIX = "compute_plan_"
 
 TASK_CATEGORY = {
-    "traintuple": ComputeTaskRep.Category.TASK_TRAIN,
-    "predicttuple": ComputeTaskRep.Category.TASK_PREDICT,
-    "testtuple": ComputeTaskRep.Category.TASK_TEST,
-    "aggregatetuple": ComputeTaskRep.Category.TASK_AGGREGATE,
-    "composite_traintuple": ComputeTaskRep.Category.TASK_COMPOSITE,
+    "traintuple": ComputeTask.Category.TASK_TRAIN,
+    "predicttuple": ComputeTask.Category.TASK_PREDICT,
+    "testtuple": ComputeTask.Category.TASK_TEST,
+    "aggregatetuple": ComputeTask.Category.TASK_AGGREGATE,
+    "composite_traintuple": ComputeTask.Category.TASK_COMPOSITE,
 }
 
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"

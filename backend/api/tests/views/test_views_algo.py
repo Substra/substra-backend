@@ -12,7 +12,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Algo as AlgoRep
+from api.models import Algo
 from api.tests import asset_factory as factory
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -44,11 +44,11 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("api:algo-list")
 
-        simple_algo = factory.create_algo(category=AlgoRep.Category.ALGO_SIMPLE, name="simple algo")
-        aggregate_algo = factory.create_algo(category=AlgoRep.Category.ALGO_AGGREGATE, name="aggregate")
-        composite_algo = factory.create_algo(category=AlgoRep.Category.ALGO_COMPOSITE, name="composite")
-        predict_algo = factory.create_algo(category=AlgoRep.Category.ALGO_PREDICT, name="predict")
-        metric_algo = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC, name="metric")
+        simple_algo = factory.create_algo(category=Algo.Category.ALGO_SIMPLE, name="simple algo")
+        aggregate_algo = factory.create_algo(category=Algo.Category.ALGO_AGGREGATE, name="aggregate")
+        composite_algo = factory.create_algo(category=Algo.Category.ALGO_COMPOSITE, name="composite")
+        predict_algo = factory.create_algo(category=Algo.Category.ALGO_PREDICT, name="predict")
+        metric_algo = factory.create_algo(category=Algo.Category.ALGO_METRIC, name="metric")
 
         self.algos = [simple_algo, aggregate_algo, composite_algo, predict_algo]
         self.expected_algos = [
@@ -199,7 +199,7 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_algo_list_empty(self):
-        AlgoRep.objects.all().delete()
+        Algo.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -227,7 +227,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_list_storage_addresses_update(self):
-        for algo in AlgoRep.objects.all():
+        for algo in Algo.objects.all():
             algo.description_address.replace("http://testserver", "http://remotetestserver")
             algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
             algo.save()
@@ -357,12 +357,12 @@ class AlgoViewTests(APITestCase):
         )
 
     def test_algo_list_can_process(self):
-        public_algo = AlgoRep.objects.get(key=self.expected_algos[0]["key"])
+        public_algo = Algo.objects.get(key=self.expected_algos[0]["key"])
         public_algo.permissions_process_public = True
         public_algo.save()
         self.expected_algos[0]["permissions"]["process"]["public"] = True
 
-        shared_algo = AlgoRep.objects.get(key=self.expected_algos[1]["key"])
+        shared_algo = Algo.objects.get(key=self.expected_algos[1]["key"])
         shared_algo.permissions_process_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
         shared_algo.save()
         self.expected_algos[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
@@ -446,7 +446,7 @@ class AlgoViewTests(APITestCase):
             self.assertIsNotNone(response.data["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             # asset created in local db
-            self.assertEqual(AlgoRep.objects.count(), len(self.expected_algos) + 1)
+            self.assertEqual(Algo.objects.count(), len(self.expected_algos) + 1)
         else:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -515,7 +515,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "register_algo", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(AlgoRep.objects.count(), len(self.expected_algos))
+        self.assertEqual(Algo.objects.count(), len(self.expected_algos))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
@@ -537,7 +537,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_algo_retrieve_storage_addresses_update(self):
-        algo = AlgoRep.objects.get(key=self.expected_algos[0]["key"])
+        algo = Algo.objects.get(key=self.expected_algos[0]["key"])
         algo.description_address.replace("http://testserver", "http://remotetestserver")
         algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
         algo.save()
