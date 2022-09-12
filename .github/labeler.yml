@@ -1,0 +1,13 @@
+api:
+  - backend/api/**/*
+
+chart:
+  - chart/**/*
+
+documentation:
+  - docs/**/*
+  - README.md
+
+compute-engine:
+  - backend/substrapp/compute_tasks/**/*
+  - backend/substrapp/tasks/**/*
