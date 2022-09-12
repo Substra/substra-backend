@@ -13,7 +13,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import DataManager as DataManagerRep
+from api.models import DataManager
 from api.tests import asset_factory as factory
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -181,7 +181,7 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_datamanager_list_empty(self):
-        DataManagerRep.objects.all().delete()
+        DataManager.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -204,7 +204,7 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_datamanager_list_storage_addresses_update(self):
-        for data_manager in DataManagerRep.objects.all():
+        for data_manager in DataManager.objects.all():
             data_manager.description_address.replace("http://testserver", "http://remotetestserver")
             data_manager.opener_address.replace("http://testserver", "http://remotetestserver")
             data_manager.save()
@@ -306,12 +306,12 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
 
     def test_datamanager_list_can_process(self):
-        public_dm = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
+        public_dm = DataManager.objects.get(key=self.expected_results[0]["key"])
         public_dm.permissions_process_public = True
         public_dm.save()
         self.expected_results[0]["permissions"]["process"]["public"] = True
 
-        shared_dm = DataManagerRep.objects.get(key=self.expected_results[1]["key"])
+        shared_dm = DataManager.objects.get(key=self.expected_results[1]["key"])
         shared_dm.permissions_process_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
         shared_dm.save()
         self.expected_results[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
@@ -333,12 +333,12 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.json().get("results"), self.expected_results[:2]),
 
     def test_datamanager_list_can_access_logs(self):
-        public_dm = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
+        public_dm = DataManager.objects.get(key=self.expected_results[0]["key"])
         public_dm.logs_permission_public = True
         public_dm.save()
         self.expected_results[0]["logs_permission"]["public"] = True
 
-        shared_dm = DataManagerRep.objects.get(key=self.expected_results[1]["key"])
+        shared_dm = DataManager.objects.get(key=self.expected_results[1]["key"])
         shared_dm.logs_permission_authorized_ids = ["MyOrg1MSP", "MyOrg2MSP"]
         shared_dm.save()
         self.expected_results[1]["logs_permission"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
@@ -404,7 +404,7 @@ class DataManagerViewTests(APITestCase):
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataManagerRep.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(DataManager.objects.count(), len(self.expected_results) + 1)
 
         data["data_opener"].close()
         data["description"].close()
@@ -472,7 +472,7 @@ class DataManagerViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "register_datamanager", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(DataManagerRep.objects.count(), len(self.expected_results))
+        self.assertEqual(DataManager.objects.count(), len(self.expected_results))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
@@ -526,7 +526,7 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_datamanager_retrieve_storage_addresses_update(self):
-        data_manager = DataManagerRep.objects.get(key=self.expected_results[0]["key"])
+        data_manager = DataManager.objects.get(key=self.expected_results[0]["key"])
         data_manager.description_address.replace("http://testserver", "http://remotetestserver")
         data_manager.opener_address.replace("http://testserver", "http://remotetestserver")
         data_manager.save()

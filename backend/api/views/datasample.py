@@ -24,18 +24,18 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import DataManager as DataManagerRep
-from api.models import DataSample as DataSampleRep
-from api.serializers import DataSampleSerializer as DataSampleRepSerializer
+from api.models import DataManager
+from api.models import DataSample
+from api.serializers import DataSampleSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
 from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
-from substrapp.models import DataManager
+from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.serializers import DataSampleSerializer
+from substrapp.serializers import DataSampleSerializer as DataSampleFilesSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
@@ -109,26 +109,26 @@ def _api_create(request, instances, orc_response):
     results = []
     for api_data in orc_response:
         api_data["channel"] = get_channel_name(request)
-        api_serializer = DataSampleRepSerializer(data=api_data)
+        api_serializer = DataSampleSerializer(data=api_data)
         try:
             api_serializer.save_if_not_exists()
         except AlreadyExistsError:
-            data_sample = DataSampleRep.objects.get(key=api_data["key"])
-            data = DataSampleRepSerializer(data_sample).data
+            data_sample = DataSample.objects.get(key=api_data["key"])
+            data = DataSampleSerializer(data_sample).data
         except Exception:
             for instance in instances.values():
                 instance.delete()  # warning: post delete signals are not executed by django rollback
             raise
         else:
             data = api_serializer.data
-        result = DataSampleSerializer(instances[data["key"]]).data
+        result = DataSampleFilesSerializer(instances[data["key"]]).data
         result.update(data)
         results.append(result)
     return results
 
 
 def _db_create(data):
-    serializer = DataSampleSerializer(data=data)
+    serializer = DataSampleFilesSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
     # FIXME: This try/except block is only here to ensure
@@ -142,7 +142,7 @@ def _db_create(data):
 def check_datamanagers(data_manager_keys):
     if not data_manager_keys:
         raise exceptions.BadRequestError("missing or empty field 'data_manager_keys'")
-    datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
+    datamanager_count = DataManagerFiles.objects.filter(key__in=data_manager_keys).count()
     if datamanager_count != len(data_manager_keys):
         raise exceptions.BadRequestError(
             "One or more datamanager keys provided do not exist in local database. "
@@ -280,7 +280,7 @@ def _get_archive_and_files(f: BinaryIO) -> tuple[Union[ZipFile, TarFile], list[s
         raise serializers.ValidationError("Archive must be zip or tar")
 
 
-class DataSampleRepFilter(FilterSet):
+class DataSampleFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     compute_plan_key = CharInFilter(
         field_name="data_managers__compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
@@ -289,7 +289,7 @@ class DataSampleRepFilter(FilterSet):
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
 
     class Meta:
-        model = DataSampleRep
+        model = DataSample
         fields = {
             "owner": ["exact"],
             "key": ["exact"],
@@ -311,15 +311,15 @@ class DataSampleRepFilter(FilterSet):
 
 
 class DataSampleViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = DataSampleRepSerializer
+    serializer_class = DataSampleSerializer
     filter_backends = (OrderingFilter, DjangoFilterBackend)
     ordering_fields = ["creation_date", "key", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    filterset_class = DataSampleRepFilter
+    filterset_class = DataSampleFilter
 
     def get_queryset(self):
-        return DataSampleRep.objects.filter(channel=get_channel_name(self.request)).prefetch_related("data_managers")
+        return DataSample.objects.filter(channel=get_channel_name(self.request)).prefetch_related("data_managers")
 
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
@@ -339,8 +339,8 @@ class DataSampleViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins
             data = client.update_datasample(orc_ds)
 
         # Update relations directly in local db to ensure consistency
-        data_managers = DataManagerRep.objects.filter(key__in=data_manager_keys)
-        data_samples = DataSampleRep.objects.filter(key__in=data_sample_keys)
+        data_managers = DataManager.objects.filter(key__in=data_manager_keys)
+        data_samples = DataSample.objects.filter(key__in=data_sample_keys)
         for data_sample in data_samples:
             # WARNING: bulk update is only for adding new links, not for removing ones
             data_sample.data_managers.add(*data_managers)

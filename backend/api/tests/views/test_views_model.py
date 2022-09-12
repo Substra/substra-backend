@@ -12,8 +12,8 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.computetask_pb2 as computetask_pb2
-from api.models import Model as ModelRep
+from api.models import ComputeTask
+from api.models import Model
 from api.tests import asset_factory as factory
 from api.views.model import ModelPermissionViewSet
 from api.views.utils import AssetPermissionError
@@ -50,12 +50,12 @@ class ModelViewTests(APITestCase):
         algo = factory.create_algo()
         compute_plan = factory.create_computeplan()
 
-        self.train_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_TRAIN)
-        simple_model_1 = factory.create_model(self.train_task, category=ModelRep.Category.MODEL_SIMPLE)
-        simple_model_2 = factory.create_model(self.train_task, category=ModelRep.Category.MODEL_SIMPLE)
+        self.train_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_TRAIN)
+        simple_model_1 = factory.create_model(self.train_task, category=Model.Category.MODEL_SIMPLE)
+        simple_model_2 = factory.create_model(self.train_task, category=Model.Category.MODEL_SIMPLE)
 
-        composite_task = factory.create_computetask(compute_plan, algo, category=computetask_pb2.TASK_COMPOSITE)
-        head_model = factory.create_model(composite_task, category=ModelRep.Category.MODEL_HEAD)
+        composite_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_COMPOSITE)
+        head_model = factory.create_model(composite_task, category=Model.Category.MODEL_HEAD)
 
         self.expected_results = [
             {
@@ -128,7 +128,7 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_model_list_empty(self):
-        ModelRep.objects.all().delete()
+        Model.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -151,7 +151,7 @@ class ModelViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_model_list_storage_addresses_update(self):
-        for model in ModelRep.objects.all():
+        for model in Model.objects.all():
             model.model_address.replace("http://testserver", "http://remotetestserver")
             model.save()
 
@@ -262,7 +262,7 @@ class ModelViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_model_retrieve_storage_addresses_update(self):
-        model = ModelRep.objects.get(key=self.expected_results[0]["key"])
+        model = Model.objects.get(key=self.expected_results[0]["key"])
         model.model_address.replace("http://testserver", "http://remotetestserver")
         model.save()
 

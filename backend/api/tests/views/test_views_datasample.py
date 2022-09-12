@@ -15,7 +15,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import DataSample as DataSampleRep
+from api.models import DataSample
 from api.tests import asset_factory as factory
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -128,7 +128,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_datasample_list_empty(self):
-        DataSampleRep.objects.all().delete()
+        DataSample.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -241,7 +241,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[0]["checksum"], _get_archive_checksum(data_path))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(DataSample.objects.count(), len(self.expected_results) + 1)
 
         data["file"].close()
 
@@ -272,7 +272,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[1]["checksum"], _get_archive_checksum(data_path2))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # assets created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 2)
+        self.assertEqual(DataSample.objects.count(), len(self.expected_results) + 2)
 
         for x in data["files"]:
             data[x].close()
@@ -299,7 +299,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[0]["checksum"], get_dir_hash(target_path))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(DataSample.objects.count(), len(self.expected_results) + 1)
 
     @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
     def test_datasample_create_parent_path(self):
@@ -332,7 +332,7 @@ class DataSampleViewTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # assets created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results) + 2)
+        self.assertEqual(DataSample.objects.count(), len(self.expected_results) + 2)
 
     @override_settings(DATA_UPLOAD_MAX_SIZE=150)
     def test_file_size_limit(self):
@@ -378,7 +378,7 @@ class DataSampleViewTests(APITestCase):
         ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db
-        self.assertEqual(DataSampleRep.objects.count(), len(self.expected_results))
+        self.assertEqual(DataSample.objects.count(), len(self.expected_results))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 

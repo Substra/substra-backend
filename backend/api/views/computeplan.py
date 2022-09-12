@@ -18,8 +18,8 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import ComputePlan as ComputePlanRep
-from api.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from api.models import ComputePlan
+from api.serializers import ComputePlanSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -67,13 +67,13 @@ def create(request, get_success_headers):
 
     # Step2: save metadata in local database
     api_data["channel"] = get_channel_name(request)
-    api_serializer = ComputePlanRepSerializer(data=api_data)
+    api_serializer = ComputePlanSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
-        cp = ComputePlanRep.objects.get(key=api_data["key"])
-        data = ComputePlanRepSerializer(cp).data
+        cp = ComputePlan.objects.get(key=api_data["key"])
+        data = ComputePlanSerializer(cp).data
     else:
         data = api_serializer.data
 
@@ -86,7 +86,7 @@ def validate_status(key, values):
     if key == "status":
         try:
             for value in values:
-                getattr(ComputePlanRep.Status, value)
+                getattr(ComputePlan.Status, value)
         except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
@@ -109,13 +109,13 @@ class MetadataOrderingFilter(OrderingFilter):
         return [term for term in fields if term_valid(term)]
 
 
-class ComputePlanRepFilter(FilterSet):
+class ComputePlanFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
     status = ChoiceInFilter(
         field_name="status",
-        choices=ComputePlanRep.Status.choices,
+        choices=ComputePlan.Status.choices,
     )
     algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
@@ -125,7 +125,7 @@ class ComputePlanRepFilter(FilterSet):
     duration = RangeFilter(label="duration")
 
     class Meta:
-        model = ComputePlanRep
+        model = ComputePlan
         fields = {
             "owner": ["exact"],
             "key": ["exact"],
@@ -148,7 +148,7 @@ class ComputePlanRepFilter(FilterSet):
         }
 
 
-class ComputePlanRepMetadataFilter(MetadataFilterBackend):
+class ComputePlanMetadataFilter(MetadataFilterBackend):
     def _apply_filters(self, queryset, filter_keys):
         return queryset.annotate(
             metadata_filters=JSONObject(
@@ -164,20 +164,20 @@ class ComputePlanRepMetadataFilter(MetadataFilterBackend):
 
 
 class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
-    serializer_class = ComputePlanRepSerializer
+    serializer_class = ComputePlanSerializer
     pagination_class = SmallPageNumberPagination
     filter_backends = (
         MetadataOrderingFilter,
         MatchFilter,
         DjangoFilterBackend,
-        ComputePlanRepMetadataFilter,
+        ComputePlanMetadataFilter,
     )
     ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration"]
     search_fields = ("key", "name")
-    filterset_class = ComputePlanRepFilter
+    filterset_class = ComputePlanFilter
 
     def get_queryset(self):
-        return ComputePlanRep.objects.filter(channel=get_channel_name(self.request)).annotate(
+        return ComputePlan.objects.filter(channel=get_channel_name(self.request)).annotate(
             # Using 0 as default value instead of None for ordering purpose, as default
             # Postgres behavior considers null as greater than any other value.
             duration=models.Case(

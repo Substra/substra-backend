@@ -7,7 +7,7 @@ from django.db.models.expressions import F
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from api.models import ComputeTask as ComputeTaskRep
+from api.models import ComputeTask
 from api.views.sql_utils import Any
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
@@ -19,19 +19,19 @@ Field.register_lookup(Any)
 logger = structlog.get_logger(__name__)
 
 TASK_CATEGORY_INPUTS = {
-    ComputeTaskRep.Category.TASK_TRAIN: ["in/model"],
-    ComputeTaskRep.Category.TASK_TEST: ["in/predictions"],
-    ComputeTaskRep.Category.TASK_COMPOSITE: ["in/head_model", "in/trunk_model"],
-    ComputeTaskRep.Category.TASK_AGGREGATE: ["in/models[]"],
-    ComputeTaskRep.Category.TASK_PREDICT: ["in/tested_model"],
+    ComputeTask.Category.TASK_TRAIN: ["in/model"],
+    ComputeTask.Category.TASK_TEST: ["in/predictions"],
+    ComputeTask.Category.TASK_COMPOSITE: ["in/head_model", "in/trunk_model"],
+    ComputeTask.Category.TASK_AGGREGATE: ["in/models[]"],
+    ComputeTask.Category.TASK_PREDICT: ["in/tested_model"],
 }
 
 TASK_CATEGORY_OUTPUTS = {
-    ComputeTaskRep.Category.TASK_TRAIN: ["out/model"],
-    ComputeTaskRep.Category.TASK_TEST: [],
-    ComputeTaskRep.Category.TASK_COMPOSITE: ["out/head_model", "out/trunk_model"],
-    ComputeTaskRep.Category.TASK_AGGREGATE: ["out/model"],
-    ComputeTaskRep.Category.TASK_PREDICT: ["out/predictions"],
+    ComputeTask.Category.TASK_TRAIN: ["out/model"],
+    ComputeTask.Category.TASK_TEST: [],
+    ComputeTask.Category.TASK_COMPOSITE: ["out/head_model", "out/trunk_model"],
+    ComputeTask.Category.TASK_AGGREGATE: ["out/model"],
+    ComputeTask.Category.TASK_PREDICT: ["out/predictions"],
 }
 
 MAX_TASKS_DISPLAYED = 1000
@@ -56,8 +56,8 @@ def _get_target_input(edge):
             )
         )
     if (
-        target_category == ComputeTaskRep.Category.TASK_COMPOSITE
-        and edge.get("source_task_category") == ComputeTaskRep.Category.TASK_AGGREGATE
+        target_category == ComputeTask.Category.TASK_COMPOSITE
+        and edge.get("source_task_category") == ComputeTask.Category.TASK_AGGREGATE
     ):
         input = inputs[1]
     else:
@@ -77,8 +77,8 @@ def _get_source_output(edge):
             )
         )
     if (
-        source_category == ComputeTaskRep.Category.TASK_COMPOSITE
-        and edge.get("target_task_category") == ComputeTaskRep.Category.TASK_AGGREGATE
+        source_category == ComputeTask.Category.TASK_COMPOSITE
+        and edge.get("target_task_category") == ComputeTask.Category.TASK_AGGREGATE
     ):
         output = outputs[1]
     else:
@@ -92,7 +92,7 @@ def get_cp_graph(request, compute_plan_pk):
     """Return a workflow graph for each task of the computeplan"""
     validate_key(compute_plan_pk)
 
-    tasks = ComputeTaskRep.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).values(
+    tasks = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).values(
         "key",
         "rank",
         "worker",
@@ -111,10 +111,10 @@ def get_cp_graph(request, compute_plan_pk):
         task["inputs"] = _get_task_inputs(task.get("category"))
         task["outputs"] = _get_task_outputs(task.get("category"))
 
-    parent_tasks = ComputeTaskRep.objects.filter(key__any=OuterRef("parent_tasks"))
+    parent_tasks = ComputeTask.objects.filter(key__any=OuterRef("parent_tasks"))
 
     edges = (
-        ComputeTaskRep.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
+        ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
         .annotate(
             source_task_key=Func(ArraySubquery(parent_tasks.values("key")), function="unnest"),
             source_task_category=Func(ArraySubquery(parent_tasks.values("category")), function="unnest"),
