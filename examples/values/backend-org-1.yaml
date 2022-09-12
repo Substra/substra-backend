@@ -25,7 +25,7 @@ containerRegistry:
   prepopulate:
     - image: substra/substra-tools:latest-minimal
       sourceRegistry: ghcr.io
-      dstImage: owkin/substra-tools:latest-minimal
+      dstImage: substra/substra-tools:latest-minimal
 
 worker:
   concurrency: 3
