@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from api.serializers import ChannelOrganizationSerializer as OrganizationRepSerializer
-from substrapp.tests.common import AuthenticatedClient
+from api.tests.common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 

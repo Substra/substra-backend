@@ -11,7 +11,7 @@ from rest_framework.test import APITestCase
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.tests import asset_factory as factory
-from substrapp.tests.common import AuthenticatedClient
+from api.tests.common import AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 

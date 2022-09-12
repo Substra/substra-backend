@@ -5,7 +5,7 @@ from django.urls.base import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from substrapp.tests.common import AuthenticatedClient
+from api.tests.common import AuthenticatedClient
 from users.models.user_channel import UserChannel
 
 

@@ -24,6 +24,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
+from api.errors import BadRequestError
 from api.models import DataManager
 from api.models import DataSample
 from api.serializers import DataSampleSerializer
@@ -31,7 +32,6 @@ from api.views.filters_utils import CharInFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
-from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
@@ -136,15 +136,15 @@ def _db_create(data):
     try:
         return serializer.save()
     except Exception as e:
-        raise exceptions.BadRequestError(str(e))
+        raise BadRequestError(str(e))
 
 
 def check_datamanagers(data_manager_keys):
     if not data_manager_keys:
-        raise exceptions.BadRequestError("missing or empty field 'data_manager_keys'")
+        raise BadRequestError("missing or empty field 'data_manager_keys'")
     datamanager_count = DataManagerFiles.objects.filter(key__in=data_manager_keys).count()
     if datamanager_count != len(data_manager_keys):
-        raise exceptions.BadRequestError(
+        raise BadRequestError(
             "One or more datamanager keys provided do not exist in local database. "
             f"Please create them before. DataManager keys: {data_manager_keys}"
         )

@@ -11,16 +11,16 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
+from api.errors import AssetPermissionError
+from api.errors import BadRequestError
 from api.models import Model
 from api.serializers import ModelSerializer
 from api.views.filters_utils import ChoiceInFilter
-from api.views.utils import AssetPermissionError
 from api.views.utils import PermissionMixin
 from api.views.utils import get_channel_name
 from api.views.utils import if_true
 from libs.pagination import DefaultPageNumberPagination
 from organization.authentication import OrganizationUser
-from substrapp import exceptions
 from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_owner
 
@@ -33,7 +33,7 @@ def validate_category(key, values):
             for value in values:
                 getattr(Model.Category, value)
         except AttributeError as e:
-            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
+            raise BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 

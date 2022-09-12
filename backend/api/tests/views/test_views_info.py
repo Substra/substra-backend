@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
+from api.tests.common import AuthenticatedClient
 from orchestrator.client import OrchestratorClient
-from substrapp.tests.common import AuthenticatedClient
 
 
 @override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})

@@ -10,10 +10,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.tests import asset_factory as factory
+from api.tests.common import generate_basic_auth_header
 from organization.models import IncomingOrganization
 from organization.models import OutgoingOrganization
 from substrapp.models import Algo as AlgoFiles
-from substrapp.tests.common import generate_basic_auth_header
 from substrapp.tests.common import get_description_algo
 from substrapp.tests.common import get_sample_algo
 
