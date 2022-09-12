@@ -378,7 +378,7 @@ def test_get_args_test_after_predict():
             identifier=InputIdentifiers.PERFORMANCE,
             kind=orchestrator.AssetKind.ASSET_PERFORMANCE,
             multiple=False,
-            rel_path=f"perf/{algo.key}-perf.json",
+            rel_path=f"perf/{InputIdentifiers.PERFORMANCE}-perf.json",
         ),
     ]
 
@@ -391,7 +391,7 @@ def test_get_args_test_after_predict():
     ]
     cmd.extend([f"/substra_internal/data_samples/{ds.key}" for ds in [ds1, ds2]])
     cmd.append("--output-perf-path")
-    cmd.append(f"/substra_internal/perf/{ctx.algo.key}-perf.json")
+    cmd.append(f"/substra_internal/perf/{InputIdentifiers.PERFORMANCE}-perf.json")
 
     actual = _get_args(ctx)
 
