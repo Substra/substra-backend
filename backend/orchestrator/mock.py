@@ -28,16 +28,6 @@ class ComputeTaskInputFactory(factory.Factory):
     parent_task_output_identifier = None
 
 
-class ComputeTaskOutputFactory(factory.Factory):
-    class Meta:
-        model = ComputeTaskOutput
-
-    permissions = Permissions(
-        download=Permission(public=True, authorized_ids=[]), process=Permission(public=True, authorized_ids=[])
-    )
-    transient = False
-
-
 class ComputeTaskFactory(factory.Factory):
     class Meta:
         model = ComputeTask
@@ -106,6 +96,7 @@ class AlgoFactory(factory.Factory):
     owner = "OrgA"
     algorithm = factory.SubFactory(AddressFactory)
     inputs = {}
+    outputs = {}
 
 
 class ComputePlanFactory(factory.Factory):
@@ -115,3 +106,27 @@ class ComputePlanFactory(factory.Factory):
     key = factory.Faker("uuid4")
     tag = ""
     status = ComputePlanStatus.PLAN_STATUS_DOING
+
+
+class PermissionFactory(factory.Factory):
+    class Meta:
+        model = Permission
+
+    public = True
+    authorized_ids = []
+
+
+class PermissionsFactory(factory.Factory):
+    class Meta:
+        model = Permissions
+
+    process = factory.SubFactory(PermissionFactory)
+    download = factory.SubFactory(PermissionFactory)
+
+
+class ComputeTaskOutputFactory(factory.Factory):
+    class Meta:
+        model = ComputeTaskOutput
+
+    transient = False
+    permissions = factory.SubFactory(PermissionsFactory)

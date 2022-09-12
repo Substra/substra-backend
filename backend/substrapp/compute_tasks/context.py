@@ -1,14 +1,17 @@
 import os
 from typing import Optional
 
+import pydantic
 import structlog
 from django.conf import settings
 
 import orchestrator
 from substrapp.compute_tasks.compute_pod import ComputePod
-from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.errors import InvalidContextError
+from substrapp.compute_tasks.errors import OutputPathNotFound
+from substrapp.compute_tasks.errors import UnsupportedOutputAsset
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -22,6 +25,14 @@ class TaskResource(dict):
 
     def __init__(self, id: str, value: str, multiple: bool = False):
         dict.__init__(self, id=id, value=value, multiple=multiple)
+
+
+class OutputResource(pydantic.BaseModel):
+    identifier: str
+    kind: orchestrator.AssetKind
+    multiple: bool
+    # Relative path in sandbox
+    rel_path: str
 
 
 class Context:
@@ -39,7 +50,7 @@ class Context:
     _directories: Directories
     _algo: orchestrator.Algo
     _has_chainkeys: bool
-    _outputs: dict[str, str]
+    _outputs: list[OutputResource]
 
     def __init__(
         self,
@@ -58,7 +69,7 @@ class Context:
         self._directories = directories
         self._has_chainkeys = has_chainkeys
         self._algo = algo
-        self._outputs = {}
+        self._outputs = self._get_output_resources(task, algo)
 
     @classmethod
     def from_task(cls, channel_name: str, task: orchestrator.ComputeTask):
@@ -76,15 +87,7 @@ class Context:
 
         has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and bool(compute_plan.tag)
 
-        return cls(
-            channel_name,
-            task,
-            compute_plan,
-            input_assets,
-            algo,
-            directories,
-            has_chainkeys,
-        )
+        return cls(channel_name, task, compute_plan, input_assets, algo, directories, has_chainkeys)
 
     @property
     def channel_name(self) -> str:
@@ -142,16 +145,44 @@ class Context:
             if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE
         ]
 
+    @property
+    def outputs(self) -> list[OutputResource]:
+        return self._outputs
+
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
 
-    def get_output_identifier(self, value: str) -> str:
-        """return the task output identifier from output path"""
-        path = os.path.relpath(value, self.directories.task_dir)
-        return self._outputs[path]
+    def get_output_resource(self, abs_path: str) -> OutputResource:
+        """return the task output from output path, raise if not found"""
+        path = os.path.relpath(abs_path, self.directories.task_dir)
+        for output in self._outputs:
+            if output.rel_path == path:
+                return output
 
-    def set_outputs(self, outputs: list[TaskResource]):
-        """set_outputs should be called with outputs as passed to the algo"""
-        for output in outputs:
-            path = os.path.relpath(output["value"], SANDBOX_DIR)
-            self._outputs[path] = output["id"]
+        raise OutputPathNotFound(f"path {abs_path} does not match a known output")
+
+    def _get_output_path(self, kind: orchestrator.AssetKind, identifier: str) -> str:
+        if kind == orchestrator.AssetKind.ASSET_MODEL:
+            return os.path.join(TaskDirName.OutModels, f"{identifier}.model")
+        elif kind == orchestrator.AssetKind.ASSET_PERFORMANCE:
+            return os.path.join(TaskDirName.Perf, f"{identifier}-perf.json")
+
+        raise UnsupportedOutputAsset(f"{identifier} output has an unsupported kind {kind}")
+
+    def _get_output_resources(self, task: orchestrator.ComputeTask, algo: orchestrator.Algo) -> list[OutputResource]:
+        """return the list of OutputResource built from task outputs and algo output definitions"""
+        outputs = []
+
+        for identifier in task.outputs:
+            algo_out = algo.outputs[identifier]
+
+            outputs.append(
+                OutputResource(
+                    identifier=identifier,
+                    kind=algo_out.kind,
+                    multiple=algo_out.multiple,
+                    rel_path=self._get_output_path(algo_out.kind, identifier),
+                )
+            )
+
+        return outputs

@@ -56,7 +56,7 @@ from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.image_builder import build_image_if_missing
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
-from substrapp.compute_tasks.outputs import save_outputs
+from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import Timer
@@ -288,7 +288,8 @@ def _run(
             timer.start()
 
             # Collect results
-            save_outputs(ctx)
+            saver = OutputSaver(ctx)
+            saver.save_outputs()
 
             # stop outputs saving timer
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())

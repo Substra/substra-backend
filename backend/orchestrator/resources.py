@@ -43,7 +43,7 @@ class AssetKind(AutoNameEnum):
     ASSET_COMPUTE_TASK_OUTPUT_ASSET = enum.auto()
 
     @classmethod
-    def from_grpc(cls, k: common_pb2.AssetKind.ValueType) -> "AssetKind":
+    def from_grpc(cls, k: common_pb2.AssetKind.ValueType) -> AssetKind:
         return cls(common_pb2.AssetKind.Name(k))
 
 
@@ -52,7 +52,7 @@ class Address(pydantic.BaseModel):
     checksum: str
 
     @classmethod
-    def from_grpc(cls, a: common_pb2.Addressable) -> "Address":
+    def from_grpc(cls, a: common_pb2.Addressable) -> Address:
         return cls(
             uri=a.storage_address,
             checksum=a.checksum,
@@ -72,7 +72,7 @@ class Model(pydantic.BaseModel):
     owner: str
 
     @classmethod
-    def from_grpc(cls, m: model_pb2.Model) -> "Model":
+    def from_grpc(cls, m: model_pb2.Model) -> Model:
         """Creates a Model from grpc message"""
         return cls(
             key=m.key,
@@ -92,7 +92,7 @@ class DataSample(pydantic.BaseModel):
     key: str
 
     @classmethod
-    def from_grpc(cls, s: datasample_pb2.DataSample) -> "DataSample":
+    def from_grpc(cls, s: datasample_pb2.DataSample) -> DataSample:
         """Creates a DataSample from grpc message"""
         return cls(
             key=s.key,
@@ -110,7 +110,7 @@ class DataManager(pydantic.BaseModel):
     opener: Address
 
     @classmethod
-    def from_grpc(cls, m: datamanager_pb2.DataManager) -> "DataManager":
+    def from_grpc(cls, m: datamanager_pb2.DataManager) -> DataManager:
         """Creates a DataManager from grpc message"""
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
 
@@ -121,8 +121,17 @@ class AlgoInput(pydantic.BaseModel):
     optional: bool
 
     @classmethod
-    def from_grpc(cls, i: algo_pb2.AlgoInput) -> "AlgoInput":
+    def from_grpc(cls, i: algo_pb2.AlgoInput) -> AlgoInput:
         return cls(kind=AssetKind.from_grpc(i.kind), multiple=i.multiple, optional=i.optional)
+
+
+class AlgoOutput(pydantic.BaseModel):
+    kind: AssetKind
+    multiple: bool
+
+    @classmethod
+    def from_grpc(cls, o: algo_pb2.AlgoOutput) -> AlgoOutput:
+        return cls(kind=AssetKind.from_grpc(o.kind), multiple=o.multiple)
 
 
 class Algo(pydantic.BaseModel):
@@ -130,14 +139,16 @@ class Algo(pydantic.BaseModel):
     owner: str
     algorithm: Address
     inputs: dict[str, AlgoInput]
+    outputs: dict[str, AlgoOutput]
 
     @classmethod
-    def from_grpc(cls, a: algo_pb2.Algo) -> "Algo":
+    def from_grpc(cls, a: algo_pb2.Algo) -> Algo:
         return cls(
             key=a.key,
             owner=a.owner,
             algorithm=Address.from_grpc(a.algorithm),
             inputs={k: AlgoInput.from_grpc(i) for k, i in a.inputs.items()},
+            outputs={k: AlgoOutput.from_grpc(o) for k, o in a.outputs.items()},
         )
 
 
@@ -151,7 +162,7 @@ class ComputeTaskStatus(AutoNameEnum):
     STATUS_FAILED = enum.auto()
 
     @classmethod
-    def from_grpc(cls, s: computetask_pb2.ComputeTaskStatus.ValueType) -> "ComputeTaskStatus":
+    def from_grpc(cls, s: computetask_pb2.ComputeTaskStatus.ValueType) -> ComputeTaskStatus:
         return cls(computetask_pb2.ComputeTaskStatus.Name(s))
 
 
@@ -166,7 +177,7 @@ class ComputeTaskCategory(AutoNameEnum):
     TASK_PREDICT = enum.auto()
 
     @classmethod
-    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory.ValueType) -> "ComputeTaskCategory":
+    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory.ValueType) -> ComputeTaskCategory:
         return cls(computetask_pb2.ComputeTaskCategory.Name(c))
 
 
@@ -175,7 +186,7 @@ class Permission(pydantic.BaseModel):
     authorized_ids: list[str]
 
     @classmethod
-    def from_grpc(cls, p: common_pb2.Permission) -> "Permission":
+    def from_grpc(cls, p: common_pb2.Permission) -> Permission:
         return cls(
             public=p.public,
             authorized_ids=list(p.authorized_ids),
@@ -187,7 +198,7 @@ class Permissions(pydantic.BaseModel):
     download: Permission
 
     @classmethod
-    def from_grpc(cls, p: common_pb2.Permissions) -> "Permissions":
+    def from_grpc(cls, p: common_pb2.Permissions) -> Permissions:
         return cls(
             process=Permission.from_grpc(p.process),
             download=Permission.from_grpc(p.download),
@@ -199,7 +210,7 @@ class ComputeTaskOutput(_Base):
     transient: bool
 
     @classmethod
-    def from_grpc(cls, o: computetask_pb2.ComputeTaskOutput) -> "ComputeTaskOutput":
+    def from_grpc(cls, o: computetask_pb2.ComputeTaskOutput) -> ComputeTaskOutput:
         return cls(
             permissions=Permissions.from_grpc(o.permissions),
             transient=o.transient,
@@ -213,7 +224,7 @@ class ComputeTaskInput(pydantic.BaseModel):
     parent_task_output_identifier: Optional[str]
 
     @classmethod
-    def from_grpc(cls, i: computetask_pb2.ComputeTaskInput) -> "ComputeTaskInput":
+    def from_grpc(cls, i: computetask_pb2.ComputeTaskInput) -> ComputeTaskInput:
         direct_ref = i.WhichOneof("ref") == "asset_key"
         return cls(
             identifier=i.identifier,
@@ -241,7 +252,7 @@ class ComputeTask(_Base):
     tag: str
 
     @classmethod
-    def from_grpc(cls, t: computetask_pb2.ComputeTask) -> "ComputeTask":
+    def from_grpc(cls, t: computetask_pb2.ComputeTask) -> ComputeTask:
         tag = t.metadata.pop("__tag__", "")
 
         return cls(
@@ -268,7 +279,7 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
     data_sample: Optional[DataSample] = None
 
     @classmethod
-    def from_grpc(cls, input_asset: computetask_pb2.ComputeTaskInputAsset) -> "ComputeTaskInputAsset":
+    def from_grpc(cls, input_asset: computetask_pb2.ComputeTaskInputAsset) -> ComputeTaskInputAsset:
         asset = cls(
             identifier=input_asset.identifier,
         )
@@ -309,7 +320,7 @@ class ComputePlanStatus(AutoNameEnum):
     PLAN_STATUS_EMPTY = enum.auto()
 
     @classmethod
-    def from_grpc(cls, s: computeplan_pb2.ComputePlanStatus.ValueType) -> "ComputePlanStatus":
+    def from_grpc(cls, s: computeplan_pb2.ComputePlanStatus.ValueType) -> ComputePlanStatus:
         return cls(computeplan_pb2.ComputePlanStatus.Name(s))
 
 
@@ -319,7 +330,7 @@ class ComputePlan(_Base):
     tag: str
 
     @classmethod
-    def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> "ComputePlan":
+    def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> ComputePlan:
         return cls(
             key=compute_plan.key,
             status=ComputePlanStatus.from_grpc(compute_plan.status),

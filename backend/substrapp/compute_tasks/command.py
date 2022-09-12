@@ -12,33 +12,13 @@ from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
 
-# These constants are shared with substra-tools.
-# These constants will disappear once the inputs/outputs are exposed by the orchestrator.
-TASK_IO_PREDICTIONS = "predictions"
+# This constant is shared with substra-tools.
+# It will disappear once the inputs/outputs are exposed by the orchestrator.
 TASK_IO_CHAINKEYS = "chainkeys"
-TRAIN_IO_MODEL = "model"
-COMPOSITE_IO_SHARED = "shared"
-COMPOSITE_IO_LOCAL = "local"
 
 
 class Filenames:
-    OutModel = "out-model"
-    OutHeadModel = "out-head-model"
     Opener = "__init__.py"
-    Predictions = "pred.json"
-    Performance = "perf.json"
-
-
-def get_performance_filename(algo_key: str) -> str:
-    """Builds the performance filename
-
-    Args:
-        algo_key: The key of the algo that produce this performance file.
-
-    Returns:
-        A string representation of the performance filename.
-    """
-    return "-".join([algo_key, Filenames.Performance])
 
 
 def get_exec_command(ctx: Context) -> list[str]:
@@ -60,7 +40,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     task_category = ctx.task.category
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
-    out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
@@ -69,13 +48,11 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     outputs = []
 
     if task_category == orchestrator.ComputeTaskCategory.TASK_TEST:
-        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, get_performance_filename(ctx.algo.key))
+        perf_output = [o for o in ctx.outputs if o.kind == orchestrator.AssetKind.ASSET_PERFORMANCE][0]
         command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.input_models[0].key)]
         command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
         command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
-        command += ["--output-perf-path", perf_path]
-        # use a fake TaskResource until everything is properly passed as a generic output
-        ctx.set_outputs([TaskResource(id="performance", value=perf_path)])
+        command += ["--output-perf-path", os.path.join(SANDBOX_DIR, perf_output.rel_path)]
         return command
 
     command = []
@@ -115,26 +92,14 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
         ]
     )
 
-    if task_category == orchestrator.ComputeTaskCategory.TASK_TRAIN:
-        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_COMPOSITE:
-        outputs.append(TaskResource(id=COMPOSITE_IO_LOCAL, value=os.path.join(out_models_dir, Filenames.OutHeadModel)))
-        outputs.append(TaskResource(id=COMPOSITE_IO_SHARED, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_AGGREGATE:
-        outputs.append(TaskResource(id=TRAIN_IO_MODEL, value=os.path.join(out_models_dir, Filenames.OutModel)))
-
-    elif task_category == orchestrator.ComputeTaskCategory.TASK_PREDICT:
-        outputs.append(TaskResource(id=TASK_IO_PREDICTIONS, value=os.path.join(out_models_dir, Filenames.OutModel)))
+    for output in ctx.outputs:
+        outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
 
     rank = str(task.rank)
     if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:
         command += ["--rank", rank]
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
-
-    ctx.set_outputs(outputs)
 
     command += ["--inputs", f"'{json.dumps(inputs)}'"]
     command += ["--outputs", f"'{json.dumps(outputs)}'"]
