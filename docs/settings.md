@@ -45,7 +45,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | nil |  |
 | string | `KANIKO_IMAGE` | nil |  |
 | bool | `KANIKO_MIRROR` | `False` |  |
-| int | `LOCALREP_RESYNC_EVENTS_PAGE_SIZE` | `1000` |  |
 | bool | `LOGGING_USE_COLORS` | `True` |  |
 | string | `LOG_LEVEL` | `INFO` |  |
 | string | `NAMESPACE` | nil |  |
