@@ -17,10 +17,10 @@ from rest_framework.test import APITestCase
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedClient
+from api.tests.common import internal_server_error_on_exception
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
-from substrapp.tests.common import AuthenticatedClient
-from substrapp.tests.common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
 

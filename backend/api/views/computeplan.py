@@ -18,6 +18,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
+from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.serializers import ComputePlanSerializer
 from api.views.filters_utils import CharInFilter
@@ -28,7 +29,6 @@ from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from api.views.utils import to_string_uuid
 from libs.pagination import SmallPageNumberPagination
-from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -88,7 +88,7 @@ def validate_status(key, values):
             for value in values:
                 getattr(ComputePlan.Status, value)
         except AttributeError as e:
-            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
+            raise BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 

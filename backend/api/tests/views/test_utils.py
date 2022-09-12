@@ -11,10 +11,10 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedClient
 from organization.authentication import OrganizationUser
 from organization.models import OutgoingOrganization
 from substrapp.models import Algo as AlgoFiles
-from substrapp.tests.common import AuthenticatedClient
 from substrapp.tests.common import get_description_algo
 from substrapp.tests.common import get_sample_algo
 

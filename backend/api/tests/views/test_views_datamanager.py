@@ -15,10 +15,10 @@ from rest_framework.test import APITestCase
 
 from api.models import DataManager
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedClient
+from api.tests.common import internal_server_error_on_exception
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
-from substrapp.tests.common import AuthenticatedClient
-from substrapp.tests.common import internal_server_error_on_exception
 from substrapp.utils import compute_hash
 
 MEDIA_ROOT = tempfile.mkdtemp()

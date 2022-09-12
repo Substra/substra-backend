@@ -21,10 +21,10 @@ from api.serializers import AlgoSerializer
 from api.serializers import DataManagerSerializer
 from api.serializers import ModelSerializer
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedClient
+from api.tests.common import internal_server_error_on_exception
 from api.views.computetask import EXTRA_DATA_FIELD
 from orchestrator.client import OrchestratorClient
-from substrapp.tests.common import AuthenticatedClient
-from substrapp.tests.common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
 

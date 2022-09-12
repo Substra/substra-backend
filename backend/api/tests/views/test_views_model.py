@@ -12,15 +12,15 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from api.errors import AssetPermissionError
 from api.models import ComputeTask
 from api.models import Model
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedClient
+from api.tests.common import internal_server_error_on_exception
 from api.views.model import ModelPermissionViewSet
-from api.views.utils import AssetPermissionError
 from organization.authentication import OrganizationUser
-from substrapp.tests.common import AuthenticatedClient
 from substrapp.tests.common import get_sample_model
-from substrapp.tests.common import internal_server_error_on_exception
 from substrapp.utils import compute_hash
 
 CHANNEL = "mychannel"

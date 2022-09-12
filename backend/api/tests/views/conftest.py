@@ -6,7 +6,7 @@ import pytest
 from django import conf
 from rest_framework import test
 
-from substrapp.tests import common
+from api.tests.common import AuthenticatedClient
 
 _CHANNEL_NAME: Final[str] = "mychannel"
 _EXTRA_HTTP_HEADERS: Final[dict[str, str]] = {"HTTP_SUBSTRA_CHANNEL_NAME": _CHANNEL_NAME}
@@ -20,7 +20,7 @@ def _set_settings(settings: conf.Settings, tmp_path: pathlib.Path):
 
 @pytest.fixture
 def authenticated_client() -> test.APIClient:
-    client = common.AuthenticatedClient()
+    client = AuthenticatedClient()
 
     client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
     client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)

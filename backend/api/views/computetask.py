@@ -18,6 +18,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
+from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.serializers import ComputeTaskSerializer
@@ -34,7 +35,6 @@ from api.views.utils import get_channel_name
 from api.views.utils import validate_key
 from libs.pagination import DefaultPageNumberPagination
 from orchestrator import computetask
-from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -174,9 +174,9 @@ def task_bulk_create_view(request):
     compute_plan_keys = [task["compute_plan_key"] for task in request.data["tasks"]]
     compute_plans = ComputePlan.objects.filter(key__in=compute_plan_keys)
     if len(compute_plans) == 0:
-        raise exceptions.BadRequestError("Invalid compute plan key")
+        raise BadRequestError("Invalid compute plan key")
     if len(compute_plans) > 1:
-        raise exceptions.BadRequestError("All tasks should have the same compute plan key")
+        raise BadRequestError("All tasks should have the same compute plan key")
     compute_plan = compute_plans[0]
     orc_data = _register_in_orchestrator(request.data["tasks"], get_channel_name(request))
 
@@ -207,7 +207,7 @@ def validate_status_and_map_cp_key(key, values):
             for value in values:
                 getattr(ComputeTask.Status, value)
         except AttributeError as e:
-            raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
+            raise BadRequestError(f"Wrong {key} value: {e}")
     elif key == "compute_plan_key":
         key = "compute_plan_id"
     return key, values
