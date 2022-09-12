@@ -9,15 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- stop generating algo method to execute from task category as it is now passed within substra cli
-- expose a default value (`dev`) for the backend version on the `/info` endpoint
+- BREAKING! Rename `localrep` app to `api`, see `UPGRADE.md` for migration.
+
+## [0.29.0] 2022-09-12
+
+### Changed
+
+- Stop generating algo method to execute from task category as it is now passed within substra cli
+- Expose a default value (`dev`) for the backend version on the `/info` endpoint
 
 ### Added
 
 - BREAKING: allow registration of users with role from the API and reset password mechanism
 - Add address and permissions for `inputs` of kind datamanager and model in compute_tasks api response
 - Synchronize compute task output assets into localrep
-- `compute_task_key` filter on the model view.
+- Add `compute_task_key` filter on the model view.
 
 ## [0.28.0] 2022-08-29
 

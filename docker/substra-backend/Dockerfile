@@ -24,7 +24,7 @@ COPY ./backend/organization /usr/src/app/organization
 COPY ./backend/organization_register /usr/src/app/organization_register
 COPY ./backend/users /usr/src/app/users
 COPY ./backend/orchestrator /usr/src/app/orchestrator
-COPY ./backend/localrep /usr/src/app/localrep
+COPY ./backend/api /usr/src/app/api
 
 FROM build AS arm64
 

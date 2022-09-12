@@ -1,6 +1,18 @@
 # Changelog
 
+## 22.0.3
+
+### Changed
+- Update substra-backend image tag to `0.29.0`
+
+## 22.0.2
+
+### Changed
+- Fix typos
+
 ## 22.0.1
+
+### Changed
 - Update image registry
 
 ## 22.0.0

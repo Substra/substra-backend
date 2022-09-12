@@ -1,6 +1,6 @@
 from typing import Optional
 
-from localrep.models.computetask import ComputeTask
+from api.models.computetask import ComputeTask
 
 
 def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Optional[str]]:
