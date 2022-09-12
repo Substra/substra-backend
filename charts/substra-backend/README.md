@@ -9,7 +9,11 @@ Substra Backend is a component of [Substra](https://github.com/SubstraFoundation
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/Substra/substra-backend/blob/main/charts/substra-backend/CHANGELOG.md)
+
+## Upgrade
+
+See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/substra-backend/UPGRADE.md)
 
 ## Parameters
 
