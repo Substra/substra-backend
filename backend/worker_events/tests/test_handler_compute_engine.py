@@ -167,10 +167,10 @@ class TestHandleDisabledModel:
 
     def test_disable_local_model(self, mocker: MockerFixture):
         m_queue_remove_intermediary_model_ab = mocker.patch(
-            "events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
+            "worker_events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
         )
         m_queue_remove_intermediary_model_db = mocker.patch(
-            "events.handler_compute_engine.queue_remove_intermediary_models_from_db_new"
+            "worker_events.handler_compute_engine.queue_remove_intermediary_models_from_db_new"
         )
         model = orc_mock.ModelFactory(owner="my_worker")
         handler_compute_engine._MY_ORGANIZATION = "my_worker"
