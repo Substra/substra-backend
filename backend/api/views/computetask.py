@@ -18,10 +18,10 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import ComputePlan as ComputePlanRep
-from api.models import ComputeTask as ComputeTaskRep
-from api.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
-from api.serializers import ComputeTaskWithRelationshipsSerializer as ComputeTaskWithRelationshipsRepSerializer
+from api.models import ComputePlan
+from api.models import ComputeTask
+from api.serializers import ComputeTaskSerializer
+from api.serializers import ComputeTaskWithRelationshipsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -41,33 +41,33 @@ logger = structlog.get_logger(__name__)
 
 
 EXTRA_DATA_FIELD = {
-    ComputeTaskRep.Category.TASK_TRAIN: "train",
-    ComputeTaskRep.Category.TASK_PREDICT: "predict",
-    ComputeTaskRep.Category.TASK_TEST: "test",
-    ComputeTaskRep.Category.TASK_AGGREGATE: "aggregate",
-    ComputeTaskRep.Category.TASK_COMPOSITE: "composite",
+    ComputeTask.Category.TASK_TRAIN: "train",
+    ComputeTask.Category.TASK_PREDICT: "predict",
+    ComputeTask.Category.TASK_TEST: "test",
+    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
+    ComputeTask.Category.TASK_COMPOSITE: "composite",
 }
 
 
 def _compute_extra_data(orc_task, task_data):
-    if orc_task["category"] == ComputeTaskRep.Category.TASK_TRAIN:
+    if orc_task["category"] == ComputeTask.Category.TASK_TRAIN:
         return {
             "data_manager_key": task_data["data_manager_key"],
             "data_sample_keys": task_data["train_data_sample_keys"],
         }
 
-    elif orc_task["category"] in [ComputeTaskRep.Category.TASK_PREDICT, ComputeTaskRep.Category.TASK_TEST]:
+    elif orc_task["category"] in [ComputeTask.Category.TASK_PREDICT, ComputeTask.Category.TASK_TEST]:
         return {
             "data_manager_key": task_data["data_manager_key"],
             "data_sample_keys": task_data["test_data_sample_keys"],
         }
 
-    elif orc_task["category"] == ComputeTaskRep.Category.TASK_AGGREGATE:
+    elif orc_task["category"] == ComputeTask.Category.TASK_AGGREGATE:
         return {
             "worker": task_data["worker"],
         }
 
-    elif orc_task["category"] == ComputeTaskRep.Category.TASK_COMPOSITE:
+    elif orc_task["category"] == ComputeTask.Category.TASK_COMPOSITE:
         return {
             "data_manager_key": task_data["data_manager_key"],
             "data_sample_keys": task_data["train_data_sample_keys"],
@@ -81,13 +81,13 @@ def _compute_parent_task_keys(orc_task, task_data, batch):
     # Deduplicate parent tasks, but avoid using a set to preserve parents order
     parent_task_keys = list(dict.fromkeys([str(key) for key in (task_data.get("in_models_keys", []) or [])]))
 
-    if orc_task["category"] == ComputeTaskRep.Category.TASK_COMPOSITE:
+    if orc_task["category"] == ComputeTask.Category.TASK_COMPOSITE:
         # here we need to build a list from the head and trunk models sent by the user
         parent_task_keys = [
             task_data.get(field) for field in ("in_head_model_key", "in_trunk_model_key") if task_data.get(field)
         ]
 
-    elif orc_task["category"] == ComputeTaskRep.Category.TASK_PREDICT:
+    elif orc_task["category"] == ComputeTask.Category.TASK_PREDICT:
         if traintuple_id := task_data.get("traintuple_key"):
             parent_task_keys.append(traintuple_id)
         else:
@@ -101,13 +101,13 @@ def _compute_parent_task_keys(orc_task, task_data, batch):
         parent_task_data = batch.get(parent_task_keys[0])
         # else query the db
         if parent_task_data is None:
-            parent_task = ComputeTaskRep.objects.get(key=parent_task_keys[0])
+            parent_task = ComputeTask.objects.get(key=parent_task_keys[0])
             parent_task_data = {
                 "compute_plan_key": str(parent_task.compute_plan_id),
             }
         orc_task["compute_plan_key"] = parent_task_data["compute_plan_key"]
 
-    elif orc_task["category"] == ComputeTaskRep.Category.TASK_TEST:
+    elif orc_task["category"] == ComputeTask.Category.TASK_TEST:
         if predicttuple_id := task_data.get("predicttuple_key"):
             parent_task_keys.append(predicttuple_id)
         else:
@@ -121,7 +121,7 @@ def _compute_parent_task_keys(orc_task, task_data, batch):
         parent_task_data = batch.get(parent_task_keys[0])
         # else query the db
         if parent_task_data is None:
-            parent_task = ComputeTaskRep.objects.get(key=parent_task_keys[0])
+            parent_task = ComputeTask.objects.get(key=parent_task_keys[0])
             parent_task_data = {
                 "compute_plan_key": str(parent_task.compute_plan_id),
             }
@@ -172,7 +172,7 @@ def task_bulk_create_view(request):
 
     # Step1: register asset in orchestrator
     compute_plan_keys = [task["compute_plan_key"] for task in request.data["tasks"]]
-    compute_plans = ComputePlanRep.objects.filter(key__in=compute_plan_keys)
+    compute_plans = ComputePlan.objects.filter(key__in=compute_plan_keys)
     if len(compute_plans) == 0:
         raise exceptions.BadRequestError("Invalid compute plan key")
     if len(compute_plans) > 1:
@@ -185,13 +185,13 @@ def task_bulk_create_view(request):
     for task in orc_data:
         api_data = computetask.orc_to_api(task)
         api_data["channel"] = get_channel_name(request)
-        api_serializer = ComputeTaskRepSerializer(data=api_data)
+        api_serializer = ComputeTaskSerializer(data=api_data)
         try:
             api_serializer.save_if_not_exists()
         except AlreadyExistsError:
             # May happen if the events app already processed the event pushed by the orchestrator
-            compute_task = ComputeTaskRep.objects.get(key=api_data["key"])
-            api_task_data = ComputeTaskRepSerializer(compute_task).data
+            compute_task = ComputeTask.objects.get(key=api_data["key"])
+            api_task_data = ComputeTaskSerializer(compute_task).data
         else:
             api_task_data = api_serializer.data
         data.append(api_task_data)
@@ -205,7 +205,7 @@ def validate_status_and_map_cp_key(key, values):
     if key == "status":
         try:
             for value in values:
-                getattr(ComputeTaskRep.Status, value)
+                getattr(ComputeTask.Status, value)
         except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     elif key == "compute_plan_key":
@@ -221,7 +221,7 @@ class ComputePlanKeyOrderingFilter(OrderingFilter):
         return [v.replace("compute_plan_key", "compute_plan_id") for v in ordering]
 
 
-class ComputeTaskRepMetadataFilter(MetadataFilterBackend):
+class ComputeTaskMetadataFilter(MetadataFilterBackend):
     def _apply_filters(self, queryset, filter_keys):
         return queryset.annotate(
             metadata_filters=JSONObject(
@@ -236,17 +236,17 @@ class ComputeTaskRepMetadataFilter(MetadataFilterBackend):
         )
 
 
-class ComputeTaskRepFilter(FilterSet):
+class ComputeTaskFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     start_date = DateTimeFromToRangeFilter()
     end_date = DateTimeFromToRangeFilter()
     status = ChoiceInFilter(
         field_name="status",
-        choices=ComputeTaskRep.Status.choices,
+        choices=ComputeTask.Status.choices,
     )
     category = ChoiceInFilter(
         field_name="category",
-        choices=ComputeTaskRep.Category.choices,
+        choices=ComputeTask.Category.choices,
     )
     compute_plan_key = CharInFilter(field_name="compute_plan__key")
     algo_key = CharFilter(field_name="algo__key", distinct=True, label="algo_key")
@@ -255,7 +255,7 @@ class ComputeTaskRepFilter(FilterSet):
     duration = RangeFilter(label="duration")
 
     class Meta:
-        model = ComputeTaskRep
+        model = ComputeTask
         fields = {
             "key": ["exact"],
             "owner": ["exact"],
@@ -286,8 +286,8 @@ class ComputeTaskRepFilter(FilterSet):
 
 
 class ComputeTaskViewSetConfig:
-    serializer_class = ComputeTaskRepSerializer
-    filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskRepMetadataFilter)
+    serializer_class = ComputeTaskSerializer
+    filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskMetadataFilter)
     ordering_fields = [
         "creation_date",
         "start_date",
@@ -305,7 +305,7 @@ class ComputeTaskViewSetConfig:
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
     search_fields = ("key",)
-    filterset_class = ComputeTaskRepFilter
+    filterset_class = ComputeTaskFilter
 
     @property
     def short_basename(self):
@@ -317,12 +317,12 @@ class ComputeTaskViewSetConfig:
 
     def get_serializer_class(self):
         if self.action == "retrieve":
-            return ComputeTaskWithRelationshipsRepSerializer
-        return ComputeTaskRepSerializer
+            return ComputeTaskWithRelationshipsSerializer
+        return ComputeTaskSerializer
 
     def get_queryset(self):
         queryset = (
-            ComputeTaskRep.objects.filter(channel=get_channel_name(self.request), category=self.category)
+            ComputeTask.objects.filter(channel=get_channel_name(self.request), category=self.category)
             .select_related("algo")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
@@ -333,7 +333,7 @@ class ComputeTaskViewSetConfig:
                 )
             )
         )
-        if self.category == ComputeTaskRep.Category.TASK_TEST:
+        if self.category == ComputeTask.Category.TASK_TEST:
             queryset = queryset.prefetch_related("performances")
         else:
             queryset = queryset.prefetch_related("models")

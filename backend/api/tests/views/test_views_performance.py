@@ -8,10 +8,10 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Algo as AlgoRep
-from api.models import ComputePlan as ComputePlanRep
-from api.models import ComputeTask as ComputeTaskRep
-from api.models import Performance as PerformanceRep
+from api.models import Algo
+from api.models import ComputePlan
+from api.models import ComputeTask
+from api.models import Performance
 from api.tests import asset_factory as factory
 from substrapp.tests.common import AuthenticatedClient
 
@@ -35,15 +35,15 @@ class CPPerformanceViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:compute_plan_perf-list", args=[self.compute_plan.key])
 
-        self.metric = factory.create_algo(category=AlgoRep.Category.ALGO_METRIC)
+        self.metric = factory.create_algo(category=Algo.Category.ALGO_METRIC)
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plan,
                 algo=self.metric,
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
-                category=ComputeTaskRep.Category.TASK_TEST,
-                status=ComputeTaskRep.Status.STATUS_DONE,
+                category=ComputeTask.Category.TASK_TEST,
+                status=ComputeTask.Status.STATUS_DONE,
                 rank=i + 1,
                 metadata={"round_idx": 1},
                 error_type=None,
@@ -110,7 +110,7 @@ class CPPerformanceViewTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_performance_list_empty(self):
-        PerformanceRep.objects.all().delete()
+        Performance.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
@@ -151,8 +151,8 @@ class PerformanceViewTests(APITestCase):
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plans = [
-            factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DOING),
-            factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE),
+            factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DOING),
+            factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE),
         ]
 
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
@@ -160,15 +160,15 @@ class PerformanceViewTests(APITestCase):
         self.export_extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "*/*"}
         self.export_url = reverse("api:performance-export")
 
-        self.metrics = [factory.create_algo(category=AlgoRep.Category.ALGO_METRIC) for _ in range(3)]
+        self.metrics = [factory.create_algo(category=Algo.Category.ALGO_METRIC) for _ in range(3)]
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plans[i],
                 algo=self.metrics[i],
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
-                category=ComputeTaskRep.Category.TASK_TEST,
-                status=ComputeTaskRep.Status.STATUS_DONE,
+                category=ComputeTask.Category.TASK_TEST,
+                status=ComputeTask.Status.STATUS_DONE,
                 error_type=None,
             )
             for i in range(2)
@@ -311,7 +311,7 @@ class PerformanceViewTests(APITestCase):
         """Filter performance on cp key and status."""
         key_0 = self.compute_plans[0].key
         key_1 = self.compute_plans[1].key
-        status = ComputePlanRep.Status.PLAN_STATUS_DOING
+        status = ComputePlan.Status.PLAN_STATUS_DOING
         params = urlencode({"key": ",".join([str(key_0), str(key_1)]), "status": status})
         response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
         content_list = list(response.streaming_content)

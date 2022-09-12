@@ -11,8 +11,8 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
-from api.models import Model as ModelRep
-from api.serializers import ModelSerializer as ModelRepSerializer
+from api.models import Model
+from api.serializers import ModelSerializer
 from api.views.filters_utils import ChoiceInFilter
 from api.views.utils import AssetPermissionError
 from api.views.utils import PermissionMixin
@@ -21,7 +21,7 @@ from api.views.utils import if_true
 from libs.pagination import DefaultPageNumberPagination
 from organization.authentication import OrganizationUser
 from substrapp import exceptions
-from substrapp.models import Model
+from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_owner
 
 logger = structlog.get_logger(__name__)
@@ -31,22 +31,22 @@ def validate_category(key, values):
     if key == "category":
         try:
             for value in values:
-                getattr(ModelRep.Category, value)
+                getattr(Model.Category, value)
         except AttributeError as e:
             raise exceptions.BadRequestError(f"Wrong {key} value: {e}")
     return key, values
 
 
-class ModelRepFilter(FilterSet):
+class ModelFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     category = ChoiceInFilter(
         field_name="category",
-        choices=ModelRep.Category.choices,
+        choices=Model.Category.choices,
     )
     compute_task_key = BaseInFilter(field_name="compute_task__key")
 
     class Meta:
-        model = ModelRep
+        model = Model
         fields = {
             "owner": ["exact"],
             "key": ["exact"],
@@ -71,18 +71,18 @@ class ModelRepFilter(FilterSet):
 class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
     filter_backends = (OrderingFilter, DjangoFilterBackend)
     pagination_class = DefaultPageNumberPagination
-    serializer_class = ModelRepSerializer
+    serializer_class = ModelSerializer
     ordering_fields = ["creation_date", "key"]
     ordering = ["creation_date", "key"]
-    filterset_class = ModelRepFilter
+    filterset_class = ModelFilter
 
     def get_queryset(self):
-        return ModelRep.objects.filter(channel=get_channel_name(self.request))
+        return Model.objects.filter(channel=get_channel_name(self.request))
 
 
 class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
 
-    queryset = Model.objects.all()
+    queryset = ModelFiles.objects.all()
 
     def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Return true if API consumer is allowed to access the model.
@@ -119,4 +119,4 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
     @if_true(gzip.gzip_page, settings.GZIP_MODELS)
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, ModelRep, "file", "model_address")
+        return self.download_file(request, Model, "file", "model_address")

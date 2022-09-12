@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 from api.tests import asset_factory as factory
 from organization.models import IncomingOrganization
 from organization.models import OutgoingOrganization
-from substrapp.models import Algo
+from substrapp.models import Algo as AlgoFiles
 from substrapp.tests.common import generate_basic_auth_header
 from substrapp.tests.common import get_description_algo
 from substrapp.tests.common import get_sample_algo
@@ -33,7 +33,7 @@ class AuthenticationTests(APITestCase):
         # create algo instance which file download is protected
         self.algo_file, self.algo_filename = get_sample_algo()
         self.algo_description_file, self.algo_description_filename = get_description_algo()
-        self.algo = Algo.objects.create(file=self.algo_file, description=self.algo_description_file)
+        self.algo = AlgoFiles.objects.create(file=self.algo_file, description=self.algo_description_file)
         metadata = factory.create_algo(key=self.algo.key, public=True, owner="foo")
         metadata.algorithm_address = "http://fake_address.com"
         metadata.save()

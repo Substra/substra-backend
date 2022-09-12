@@ -7,7 +7,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import ComputeTask as ComputeTaskRep
+from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from api.views.compute_plan_graph import MAX_TASKS_DISPLAYED
 from substrapp.tests.common import AuthenticatedClient
@@ -55,21 +55,21 @@ class ComputePlanGraphViewTests(APITestCase):
         train_task = factory.create_computetask(
             compute_plan,
             algo=algo,
-            category=ComputeTaskRep.Category.TASK_TRAIN,
+            category=ComputeTask.Category.TASK_TRAIN,
         )
         predict_task = factory.create_computetask(
-            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_PREDICT, parent_tasks=[train_task.key]
+            compute_plan, algo=algo, category=ComputeTask.Category.TASK_PREDICT, parent_tasks=[train_task.key]
         )
         test_task = factory.create_computetask(
-            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_TEST, parent_tasks=[predict_task.key]
+            compute_plan, algo=algo, category=ComputeTask.Category.TASK_TEST, parent_tasks=[predict_task.key]
         )
         composite_task = factory.create_computetask(
             compute_plan,
             algo=algo,
-            category=ComputeTaskRep.Category.TASK_COMPOSITE,
+            category=ComputeTask.Category.TASK_COMPOSITE,
         )
         aggregate_task = factory.create_computetask(
-            compute_plan, algo=algo, category=ComputeTaskRep.Category.TASK_AGGREGATE, parent_tasks=[composite_task.key]
+            compute_plan, algo=algo, category=ComputeTask.Category.TASK_AGGREGATE, parent_tasks=[composite_task.key]
         )
 
         expected_results = {
