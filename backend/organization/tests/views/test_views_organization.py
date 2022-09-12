@@ -6,7 +6,7 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from localrep.serializers import ChannelOrganizationSerializer as OrganizationRepSerializer
+from api.serializers import ChannelOrganizationSerializer as OrganizationRepSerializer
 from substrapp.tests.common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -40,7 +40,7 @@ class ModelViewTests(APITestCase):
 
     def test_organization_list_success(self):
         url = reverse("organization:organization-list")
-        with mock.patch("localrep.serializers.organization.get_owner", return_value="foo"):
+        with mock.patch("api.serializers.organization.get_owner", return_value="foo"):
             response = self.client.get(url, **self.extra)
             self.assertEqual(
                 response.json(),

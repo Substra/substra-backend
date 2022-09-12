@@ -17,7 +17,7 @@ REST_FRAMEWORK = {
     "UNICODE_JSON": False,
     "ALLOWED_VERSIONS": ("0.0",),
     "DEFAULT_VERSION": "0.0",
-    "EXCEPTION_HANDLER": "localrep.views.exception_handler.api_exception_handler",
+    "EXCEPTION_HANDLER": "api.views.exception_handler.api_exception_handler",
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
     ],

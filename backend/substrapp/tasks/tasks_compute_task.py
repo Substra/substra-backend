@@ -193,7 +193,7 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
 
 @retry()
 def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
-    url = settings.DEFAULT_DOMAIN + reverse("localrep:task_profiling-list")
+    url = settings.DEFAULT_DOMAIN + reverse("api:task_profiling-list")
     return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url, {"compute_task_key": compute_task_key})
 
 
@@ -201,7 +201,7 @@ def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
 def _create_task_profiling_step(
     channel_name: str, compute_task_key: str, field: ComputeTaskSteps, duration: datetime.timedelta
 ) -> bytes:
-    url = settings.DEFAULT_DOMAIN + reverse("localrep:step-list", args=[compute_task_key])
+    url = settings.DEFAULT_DOMAIN + reverse("api:step-list", args=[compute_task_key])
     return organization_client.post(
         channel_name, settings.LEDGER_MSP_ID, url, {"step": field.value, "duration": duration}
     )
