@@ -6,7 +6,7 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from api.models import ComputePlan as ComputePlanRep
+from api.models import ComputePlan
 from api.tests import asset_factory as factory
 from substrapp.tests.common import AuthenticatedClient
 
@@ -38,7 +38,7 @@ class ComputePlanMetadataViewTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_metadata_list_empty(self):
-        ComputePlanRep.objects.all().delete()
+        ComputePlan.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(list(response.data), [])
 

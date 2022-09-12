@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 from api.tests import asset_factory as factory
 from organization.authentication import OrganizationUser
 from organization.models import OutgoingOrganization
-from substrapp.models import Algo
+from substrapp.models import Algo as AlgoFiles
 from substrapp.tests.common import AuthenticatedClient
 from substrapp.tests.common import get_description_algo
 from substrapp.tests.common import get_sample_algo
@@ -45,7 +45,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
 
     def test_download_file_local_allowed(self):
         """Asset is local (owner is local-organization) and local-organization in authorized ids."""
-        Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
+        AlgoFiles.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
         metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
         self.assertIn("local-organization", metadata.permissions_process_authorized_ids)
 
@@ -58,7 +58,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
 
     def test_download_file_local_denied(self):
         """Asset is local (owner is local-organization) and local-organization NOT in authorized ids."""
-        Algo.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
+        AlgoFiles.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
         metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
         metadata.permissions_process_authorized_ids = []
         metadata.save()

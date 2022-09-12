@@ -14,9 +14,9 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import DataManager as DataManagerRep
-from api.serializers import DataManagerSerializer as DataManagerRepSerializer
-from api.serializers import DataManagerWithRelationsSerializer as DataManagerRepWithRelationsSerializer
+from api.models import DataManager
+from api.serializers import DataManagerSerializer
+from api.serializers import DataManagerWithRelationsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import LogsPermissionFilter
 from api.views.filters_utils import MatchFilter
@@ -26,9 +26,9 @@ from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
-from substrapp.models import DataManager
+from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.serializers import DataManagerSerializer
+from substrapp.serializers import DataManagerSerializer as DataManagerFilesSerializer
 from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
@@ -83,7 +83,7 @@ def create(request, get_success_headers):
     except Exception as e:
         raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
 
-    serializer = DataManagerSerializer(
+    serializer = DataManagerFilesSerializer(
         data={
             "data_opener": data_opener,
             "description": request.data.get("description"),
@@ -108,13 +108,13 @@ def create(request, get_success_headers):
 
     # Step3: save metadata in local database
     api_data["channel"] = get_channel_name(request)
-    api_serializer = DataManagerRepSerializer(data=api_data)
+    api_serializer = DataManagerSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
-        data_manager = DataManagerRep.objects.get(key=api_data["key"])
-        data = DataManagerRepSerializer(data_manager).data
+        data_manager = DataManager.objects.get(key=api_data["key"])
+        data = DataManagerSerializer(data_manager).data
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
         raise
@@ -129,7 +129,7 @@ def create(request, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class DataManagerRepFilter(FilterSet):
+class DataManagerFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
     compute_plan_key = CharInFilter(
         field_name="compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
@@ -140,7 +140,7 @@ class DataManagerRepFilter(FilterSet):
     )
 
     class Meta:
-        model = DataManagerRep
+        model = DataManager
         fields = {
             "key": ["exact"],
             "name": ["exact"],
@@ -173,15 +173,15 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
     ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    filterset_class = DataManagerRepFilter
+    filterset_class = DataManagerFilter
 
     def get_queryset(self):
-        return DataManagerRep.objects.filter(channel=get_channel_name(self.request))
+        return DataManager.objects.filter(channel=get_channel_name(self.request))
 
     def get_serializer_class(self):
         if self.action == "retrieve":
-            return DataManagerRepWithRelationsSerializer
-        return DataManagerRepSerializer
+            return DataManagerWithRelationsSerializer
+        return DataManagerSerializer
 
     def create(self, request, *args, **kwargs):
         return create(request, lambda data: self.get_success_headers(data))
@@ -204,8 +204,8 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
 
 
 class DataManagerPermissionViewSet(PermissionMixin, GenericViewSet):
-    queryset = DataManager.objects.all()
-    serializer_class = DataManagerSerializer
+    queryset = DataManagerFiles.objects.all()
+    serializer_class = DataManagerFilesSerializer
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -214,8 +214,8 @@ class DataManagerPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, DataManagerRep, "description", "description_address")
+        return self.download_file(request, DataManager, "description", "description_address")
 
     @action(detail=True)
     def opener(self, request, *args, **kwargs):
-        return self.download_file(request, DataManagerRep, "data_opener", "opener_address")
+        return self.download_file(request, DataManager, "data_opener", "opener_address")

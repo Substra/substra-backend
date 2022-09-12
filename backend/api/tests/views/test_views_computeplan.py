@@ -14,8 +14,8 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import ComputePlan as ComputePlanRep
-from api.models import ComputeTask as ComputeTaskRep
+from api.models import ComputePlan
+from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
@@ -33,7 +33,7 @@ def mock_register_compute_plan(data):
         "name": data["name"],
         "metadata": data["metadata"],
         "delete_intermediary_models": data["delete_intermediary_models"],
-        "status": ComputePlanRep.Status.PLAN_STATUS_TODO,
+        "status": ComputePlan.Status.PLAN_STATUS_TODO,
         "task_count": 0,
         "done_count": 0,
         "waiting_count": 0,
@@ -68,28 +68,28 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         algo = factory.create_algo()
 
-        todo_cp = factory.create_computeplan(name="To do", status=ComputePlanRep.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(todo_cp, algo, status=ComputeTaskRep.Status.STATUS_TODO)
+        todo_cp = factory.create_computeplan(name="To do", status=ComputePlan.Status.PLAN_STATUS_TODO)
+        factory.create_computetask(todo_cp, algo, status=ComputeTask.Status.STATUS_TODO)
 
-        doing_cp = factory.create_computeplan(name="Doing", status=ComputePlanRep.Status.PLAN_STATUS_DOING)
-        factory.create_computetask(doing_cp, algo, status=ComputeTaskRep.Status.STATUS_DOING)
+        doing_cp = factory.create_computeplan(name="Doing", status=ComputePlan.Status.PLAN_STATUS_DOING)
+        factory.create_computetask(doing_cp, algo, status=ComputeTask.Status.STATUS_DOING)
         self.now = doing_cp.start_date + datetime.timedelta(hours=1)
 
-        done_cp = factory.create_computeplan(name="Done", status=ComputePlanRep.Status.PLAN_STATUS_DONE)
-        factory.create_computetask(done_cp, algo, status=ComputeTaskRep.Status.STATUS_DONE)
+        done_cp = factory.create_computeplan(name="Done", status=ComputePlan.Status.PLAN_STATUS_DONE)
+        factory.create_computetask(done_cp, algo, status=ComputeTask.Status.STATUS_DONE)
 
-        failed_cp = factory.create_computeplan(name="Failed", status=ComputePlanRep.Status.PLAN_STATUS_FAILED)
+        failed_cp = factory.create_computeplan(name="Failed", status=ComputePlan.Status.PLAN_STATUS_FAILED)
         failed_task = factory.create_computetask(
-            failed_cp, algo, category=ComputeTaskRep.Category.TASK_TRAIN, status=ComputeTaskRep.Status.STATUS_FAILED
+            failed_cp, algo, category=ComputeTask.Category.TASK_TRAIN, status=ComputeTask.Status.STATUS_FAILED
         )
         failed_cp.failed_task_key = str(failed_task.key)
         failed_cp.failed_task_category = failed_task.category
         failed_cp.save()
 
-        canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
-        factory.create_computetask(canceled_cp, algo, status=ComputeTaskRep.Status.STATUS_CANCELED)
+        canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlan.Status.PLAN_STATUS_CANCELED)
+        factory.create_computetask(canceled_cp, algo, status=ComputeTask.Status.STATUS_CANCELED)
 
-        empty_cp = factory.create_computeplan(name="Empty", status=ComputePlanRep.Status.PLAN_STATUS_EMPTY)
+        empty_cp = factory.create_computeplan(name="Empty", status=ComputePlan.Status.PLAN_STATUS_EMPTY)
 
         self.expected_results = [
             {
@@ -242,7 +242,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data["key"])
         # asset created in local db
-        self.assertEqual(ComputePlanRep.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(ComputePlan.objects.count(), len(self.expected_results) + 1)
 
     def test_compute_plan_update(self):
         key = str(uuid.uuid4())
@@ -282,7 +282,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_computeplan_list_empty(self):
-        ComputePlanRep.objects.all().delete()
+        ComputePlan.objects.all().delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -347,7 +347,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         key = self.expected_results[0]["key"]
         name = "cp156-MP-classification-PH1"
         self.expected_results[0]["name"] = name
-        instance = ComputePlanRep.objects.get(key=key)
+        instance = ComputePlan.objects.get(key=key)
         instance.name = name
         instance.save()
         params = urlencode({"match": "cp156"})
@@ -366,7 +366,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         key = self.expected_results[0]["key"]
         name = "cp156-MP-classification-PH1"
         self.expected_results[0]["name"] = name
-        instance = ComputePlanRep.objects.get(key=key)
+        instance = ComputePlan.objects.get(key=key)
         instance.name = name
         instance.save()
         params = urlencode(
@@ -454,7 +454,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         data_manager = factory.create_datamanager()
         data_sample = factory.create_datasample([data_manager])
 
-        compute_plan = factory.create_computeplan(name="cp", status=ComputePlanRep.Status.PLAN_STATUS_TODO)
+        compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_TODO)
         factory.create_computetask(compute_plan, algo, data_manager=data_manager, data_samples=[data_sample.key])
         expected_cp = {
             "key": str(compute_plan.key),
@@ -505,7 +505,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "special_chars": 'special "?= %` chars',
         }
         self.expected_results[0]["metadata"] = metadata
-        instance = ComputePlanRep.objects.get(key=key)
+        instance = ComputePlan.objects.get(key=key)
         instance.metadata = metadata
         instance.save()
 

@@ -15,8 +15,8 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import Algo as AlgoRep
-from api.serializers import AlgoSerializer as AlgoRepSerializer
+from api.models import Algo
+from api.serializers import AlgoSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import ProcessPermissionFilter
@@ -26,9 +26,9 @@ from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
 from libs.pagination import DefaultPageNumberPagination
-from substrapp.models import Algo
+from substrapp.models import Algo as AlgoFiles
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.serializers import AlgoSerializer
+from substrapp.serializers import AlgoSerializer as AlgoFilesSerializer
 from substrapp.utils import get_hash
 
 logger = structlog.get_logger(__name__)
@@ -39,7 +39,7 @@ def _register_in_orchestrator(request, basename, instance):
 
     category = request.data["category"]
     try:
-        getattr(AlgoRep.Category, category)  # validate category
+        getattr(Algo.Category, category)  # validate category
     except AttributeError:
         raise ValidationError({"category": "Invalid category"})
 
@@ -86,7 +86,7 @@ def create(request, basename, get_success_headers):
     except Exception as e:
         raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
 
-    serializer = AlgoSerializer(
+    serializer = AlgoFilesSerializer(
         data={"file": file, "description": request.data.get("description"), "checksum": checksum}
     )
 
@@ -106,13 +106,13 @@ def create(request, basename, get_success_headers):
 
     # Step3: save metadata in local database
     api_data["channel"] = get_channel_name(request)
-    api_serializer = AlgoRepSerializer(data=api_data)
+    api_serializer = AlgoSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
-        algo = AlgoRep.objects.get(key=api_data["key"])
-        data = AlgoRepSerializer(algo).data
+        algo = Algo.objects.get(key=api_data["key"])
+        data = AlgoSerializer(algo).data
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
         raise
@@ -127,7 +127,7 @@ def create(request, basename, get_success_headers):
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class AlgoRepFilter(FilterSet):
+class AlgoFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
 
     compute_plan_key = CharInFilter(field_name="compute_tasks__compute_plan__key", label="compute_plan_key")
@@ -137,7 +137,7 @@ class AlgoRepFilter(FilterSet):
     )
 
     class Meta:
-        model = AlgoRep
+        model = Algo
         fields = {
             "owner": ["exact"],
             "key": ["exact"],
@@ -160,15 +160,15 @@ class AlgoRepFilter(FilterSet):
 
 
 class AlgoViewSetConfig:
-    serializer_class = AlgoRepSerializer
+    serializer_class = AlgoSerializer
     filter_backends = (OrderingFilter, MatchFilter, DjangoFilterBackend, ProcessPermissionFilter)
     ordering_fields = ["creation_date", "key", "name", "owner"]
     ordering = ["creation_date", "key"]
     pagination_class = DefaultPageNumberPagination
-    filterset_class = AlgoRepFilter
+    filterset_class = AlgoFilter
 
     def get_queryset(self):
-        return AlgoRep.objects.filter(channel=get_channel_name(self.request))
+        return Algo.objects.filter(channel=get_channel_name(self.request))
 
 
 class AlgoViewSet(
@@ -203,12 +203,12 @@ class CPAlgoViewSet(AlgoViewSetConfig, mixins.ListModelMixin, GenericViewSet):
 
 
 class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
-    queryset = Algo.objects.all()
-    serializer_class = AlgoSerializer
+    queryset = AlgoFiles.objects.all()
+    serializer_class = AlgoFilesSerializer
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, AlgoRep, "file", "algorithm_address")
+        return self.download_file(request, Algo, "file", "algorithm_address")
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -216,4 +216,4 @@ class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, AlgoRep, "description", "description_address")
+        return self.download_file(request, Algo, "description", "description_address")

@@ -8,8 +8,8 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
-from api.models import ComputePlan as ComputePlanRep
-from api.models import ComputeTask as ComputeTaskRep
+from api.models import ComputePlan
+from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from substrapp.tests.common import AuthenticatedClient
 
@@ -40,14 +40,14 @@ class NewsFeedViewTests(APITestCase):
         # first all CPs are created in the order below
         # then they all start in the same order (depending on the status)
         # finally they all end in the same order (depending on the status)
-        todo_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_TODO)  # no start_date, end_date
-        doing_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DOING)  # no end_date
-        canceled_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_CANCELED)
-        failed_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_FAILED)
+        todo_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_TODO)  # no start_date, end_date
+        doing_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DOING)  # no end_date
+        canceled_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_CANCELED)
+        failed_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_FAILED)
         failed_cp.failed_task_key = str(uuid4())
-        failed_cp.failed_task_category = ComputeTaskRep.Category.TASK_TRAIN
+        failed_cp.failed_task_category = ComputeTask.Category.TASK_TRAIN
         failed_cp.save()
-        done_cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
+        done_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
 
@@ -245,7 +245,7 @@ class NewsFeedViewTests(APITestCase):
         )
 
     def test_newsfeed_filter_start_end_date(self):
-        cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
+        cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
 
         expected_results = [
             {
@@ -304,7 +304,7 @@ class NewsFeedViewTests(APITestCase):
         )
 
     def test_newsfeed_filter_important_news_only(self):
-        cp = factory.create_computeplan(status=ComputePlanRep.Status.PLAN_STATUS_DONE)
+        cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
         algo = factory.create_algo()
         datamanager = factory.create_datamanager()
 

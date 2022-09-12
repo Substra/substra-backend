@@ -14,10 +14,10 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
-from api.models import ComputePlan as ComputePlanRep
-from api.models import Performance as PerformanceRep
-from api.serializers import CPPerformanceSerializer as CPPerformanceRepSerializer
-from api.serializers import ExportPerformanceSerializer as ExportPerformanceRepSerializer
+from api.models import ComputePlan as ComputePlan
+from api.models import Performance as Performance
+from api.serializers import CPPerformanceSerializer as CPPerformanceSerializer
+from api.serializers import ExportPerformanceSerializer as ExportPerformanceSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -29,7 +29,7 @@ logger = structlog.get_logger(__name__)
 
 
 class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
-    serializer_class = CPPerformanceRepSerializer
+    serializer_class = CPPerformanceSerializer
     filter_backends = [OrderingFilter]
     ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__metadata__round_idx"]
     ordering = ["compute_task__rank", "compute_task__worker"]
@@ -37,7 +37,7 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def _get_cp_ranks_and_rounds(self, compute_plan_pk):
         return (
-            ComputePlanRep.objects.filter(channel=get_channel_name(self.request), key=compute_plan_pk)
+            ComputePlan.objects.filter(channel=get_channel_name(self.request), key=compute_plan_pk)
             .annotate(
                 # List all existing tasks ranks for a given compute plan
                 compute_tasks_distinct_ranks=ArrayAgg(
@@ -55,7 +55,7 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return (
-            PerformanceRep.objects.filter(channel=get_channel_name(self.request))
+            Performance.objects.filter(channel=get_channel_name(self.request))
             .filter(compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk"))
             .select_related("compute_task", "metric")
             .distinct()
@@ -72,13 +72,13 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
         return response
 
 
-class PerformanceRepFilter(FilterSet):
+class PerformanceFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__creation_date")
     start_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__start_date")
     end_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__end_date")
     status = ChoiceInFilter(
         field_name="compute_task__compute_plan__status",
-        choices=ComputePlanRep.Status.choices,
+        choices=ComputePlan.Status.choices,
     )
     key = UUIDInFilter(field_name="compute_task__compute_plan__key")
     owner = CharInFilter(field_name="compute_task__compute_plan__owner")
@@ -116,12 +116,12 @@ def map_compute_plan_status(value) -> str:
 
 
 class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
-    serializer_class = ExportPerformanceRepSerializer
+    serializer_class = ExportPerformanceSerializer
     filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend]
     ordering_fields = ["test_task_rank", "test_task_round", "worker"]
     ordering = ["test_task_rank", "test_task_round", "worker"]
     pagination_class = LargePageNumberPagination
-    filterset_class = PerformanceRepFilter
+    filterset_class = PerformanceFilter
 
     def get_queryset(self):
         metadata = {}
@@ -130,7 +130,7 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                 metadata[md] = F("compute_task__compute_plan__metadata__" + md)
 
         return (
-            PerformanceRep.objects.filter(channel=get_channel_name(self.request))
+            Performance.objects.filter(channel=get_channel_name(self.request))
             .select_related("compute_task", "metric", "compute_task__compute_plan")
             .annotate(
                 compute_plan_key=F("compute_task__compute_plan__key"),

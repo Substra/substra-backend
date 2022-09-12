@@ -13,13 +13,13 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Algo as AlgoRep
-from api.models import ComputeTask as ComputeTaskRep
-from api.models import Model as ModelRep
-from api.models import Performance as PerformanceRep
-from api.serializers import AlgoSerializer as AlgoRepSerializer
-from api.serializers import DataManagerSerializer as DataManagerRepSerializer
-from api.serializers import ModelSerializer as ModelRepSerializer
+from api.models import Algo
+from api.models import ComputeTask
+from api.models import Model
+from api.models import Performance
+from api.serializers import AlgoSerializer
+from api.serializers import DataManagerSerializer
+from api.serializers import ModelSerializer
 from api.tests import asset_factory as factory
 from api.views.computetask import EXTRA_DATA_FIELD
 from orchestrator.client import OrchestratorClient
@@ -44,11 +44,11 @@ class ComputeTaskViewTests(APITestCase):
         self.algos = {
             category: factory.create_algo(category=category)
             for category in [
-                AlgoRep.Category.ALGO_SIMPLE,
-                AlgoRep.Category.ALGO_COMPOSITE,
-                AlgoRep.Category.ALGO_AGGREGATE,
-                AlgoRep.Category.ALGO_PREDICT,
-                AlgoRep.Category.ALGO_METRIC,
+                Algo.Category.ALGO_SIMPLE,
+                Algo.Category.ALGO_COMPOSITE,
+                Algo.Category.ALGO_AGGREGATE,
+                Algo.Category.ALGO_PREDICT,
+                Algo.Category.ALGO_METRIC,
             ]
         }
         self.data_manager = factory.create_datamanager()
@@ -57,23 +57,21 @@ class ComputeTaskViewTests(APITestCase):
 
         self.compute_tasks = {}
         for category in (
-            ComputeTaskRep.Category.TASK_TRAIN,
-            ComputeTaskRep.Category.TASK_TEST,
-            ComputeTaskRep.Category.TASK_COMPOSITE,
+            ComputeTask.Category.TASK_TRAIN,
+            ComputeTask.Category.TASK_TEST,
+            ComputeTask.Category.TASK_COMPOSITE,
         ):
             self.compute_tasks[category] = {}
             for _status in (
-                ComputeTaskRep.Status.STATUS_TODO,
-                ComputeTaskRep.Status.STATUS_WAITING,
-                ComputeTaskRep.Status.STATUS_DOING,
-                ComputeTaskRep.Status.STATUS_DONE,
-                ComputeTaskRep.Status.STATUS_FAILED,
-                ComputeTaskRep.Status.STATUS_CANCELED,
+                ComputeTask.Status.STATUS_TODO,
+                ComputeTask.Status.STATUS_WAITING,
+                ComputeTask.Status.STATUS_DOING,
+                ComputeTask.Status.STATUS_DONE,
+                ComputeTask.Status.STATUS_FAILED,
+                ComputeTask.Status.STATUS_CANCELED,
             ):
                 error_type = (
-                    ComputeTaskRep.ErrorType.ERROR_TYPE_EXECUTION
-                    if _status == ComputeTaskRep.Status.STATUS_FAILED
-                    else None
+                    ComputeTask.ErrorType.ERROR_TYPE_EXECUTION if _status == ComputeTask.Status.STATUS_FAILED else None
                 )
                 self.compute_tasks[category][_status] = factory.create_computetask(
                     self.compute_plan,
@@ -85,36 +83,34 @@ class ComputeTaskViewTests(APITestCase):
                     error_type=error_type,
                 )
 
-        done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
-        self.train_model = factory.create_model(done_train_task, category=ModelRep.Category.MODEL_SIMPLE)
+        done_train_task = self.compute_tasks[ComputeTask.Category.TASK_TRAIN][ComputeTask.Status.STATUS_DONE]
+        self.train_model = factory.create_model(done_train_task, category=Model.Category.MODEL_SIMPLE)
 
-        done_composite_task = self.compute_tasks[ComputeTaskRep.Category.TASK_COMPOSITE][
-            ComputeTaskRep.Status.STATUS_DONE
-        ]
-        self.local_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_HEAD)
-        self.shared_model = factory.create_model(done_composite_task, category=ModelRep.Category.MODEL_SIMPLE)
+        done_composite_task = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE][ComputeTask.Status.STATUS_DONE]
+        self.local_model = factory.create_model(done_composite_task, category=Model.Category.MODEL_HEAD)
+        self.shared_model = factory.create_model(done_composite_task, category=Model.Category.MODEL_SIMPLE)
 
-        done_failed_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST][ComputeTaskRep.Status.STATUS_DONE]
-        self.performance = factory.create_performance(done_failed_task, self.algos[AlgoRep.Category.ALGO_METRIC])
+        done_failed_task = self.compute_tasks[ComputeTask.Category.TASK_TEST][ComputeTask.Status.STATUS_DONE]
+        self.performance = factory.create_performance(done_failed_task, self.algos[Algo.Category.ALGO_METRIC])
 
         # we don't explicitly serialize relationships as this test module is focused on computetask
 
         self.algo_data = {
             # use JSON serializer to convert OrderDicts to dicts, making diffs easier to read
-            category: json.loads(json.dumps(AlgoRepSerializer(instance=self.algos[category]).data))
+            category: json.loads(json.dumps(AlgoSerializer(instance=self.algos[category]).data))
             for category in [
-                AlgoRep.Category.ALGO_SIMPLE,
-                AlgoRep.Category.ALGO_COMPOSITE,
-                AlgoRep.Category.ALGO_AGGREGATE,
-                AlgoRep.Category.ALGO_PREDICT,
-                AlgoRep.Category.ALGO_METRIC,
+                Algo.Category.ALGO_SIMPLE,
+                Algo.Category.ALGO_COMPOSITE,
+                Algo.Category.ALGO_AGGREGATE,
+                Algo.Category.ALGO_PREDICT,
+                Algo.Category.ALGO_METRIC,
             ]
         }
 
-        self.data_manager_data = DataManagerRepSerializer(instance=self.data_manager).data
-        self.train_model_data = ModelRepSerializer(instance=self.train_model).data
-        self.local_model_data = ModelRepSerializer(instance=self.local_model).data
-        self.shared_model_data = ModelRepSerializer(instance=self.shared_model).data
+        self.data_manager_data = DataManagerSerializer(instance=self.data_manager).data
+        self.train_model_data = ModelSerializer(instance=self.train_model).data
+        self.local_model_data = ModelSerializer(instance=self.local_model).data
+        self.shared_model_data = ModelSerializer(instance=self.shared_model).data
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -170,17 +166,17 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         aggregate_task_key = str(uuid.uuid4())
         test_task_key = str(uuid.uuid4())
         predict_task_key = str(uuid.uuid4())
-        done_train_task = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN][ComputeTaskRep.Status.STATUS_DONE]
+        done_train_task = self.compute_tasks[ComputeTask.Category.TASK_TRAIN][ComputeTask.Status.STATUS_DONE]
         data = {
             "tasks": [
                 {
                     "compute_plan_key": self.compute_plan.key,
                     "category": "TASK_TRAIN",
                     "key": train_task_key,
-                    "algo_key": self.algos[AlgoRep.Category.ALGO_SIMPLE].key,
+                    "algo_key": self.algos[Algo.Category.ALGO_SIMPLE].key,
                     "data_manager_key": self.data_manager.key,
                     "train_data_sample_keys": [self.data_sample.key],
-                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                    "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}, "transient": True},
                     },
@@ -190,9 +186,9 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "category": "TASK_AGGREGATE",
                     "key": aggregate_task_key,
                     "in_models_keys": [train_task_key, done_train_task.key],
-                    "algo_key": self.algos[AlgoRep.Category.ALGO_AGGREGATE].key,
+                    "algo_key": self.algos[Algo.Category.ALGO_AGGREGATE].key,
                     "worker": "MyOrg1MSP",
-                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_AGGREGATE),
+                    "inputs": _build_inputs(ComputeTask.Category.TASK_AGGREGATE),
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -202,10 +198,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "category": "TASK_PREDICT",
                     "traintuple_key": train_task_key,
                     "key": predict_task_key,
-                    "algo_key": self.algos[AlgoRep.Category.ALGO_PREDICT].key,
+                    "algo_key": self.algos[Algo.Category.ALGO_PREDICT].key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
-                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_PREDICT),
+                    "inputs": _build_inputs(ComputeTask.Category.TASK_PREDICT),
                     "outputs": {
                         "predictions": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -215,10 +211,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "category": "TASK_TEST",
                     "key": test_task_key,
                     "predicttuple_key": predict_task_key,
-                    "algo_key": self.algos[AlgoRep.Category.ALGO_METRIC].key,
+                    "algo_key": self.algos[Algo.Category.ALGO_METRIC].key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
-                    "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                    "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                     "outputs": {
                         "performance": {"permissions": {"public": True, "authorized_ids": []}},
                     },
@@ -229,7 +225,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         expected_response = [
             {
                 "key": train_task_key,
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "category": "TASK_TRAIN",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -258,7 +254,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -272,7 +268,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": aggregate_task_key,
-                "algo": self.algo_data[AlgoRep.Category.ALGO_AGGREGATE],
+                "algo": self.algo_data[Algo.Category.ALGO_AGGREGATE],
                 "category": "TASK_AGGREGATE",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -299,7 +295,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_AGGREGATE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_AGGREGATE),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -313,7 +309,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": predict_task_key,
-                "algo": self.algo_data[AlgoRep.Category.ALGO_PREDICT],
+                "algo": self.algo_data[Algo.Category.ALGO_PREDICT],
                 "category": "TASK_PREDICT",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -342,7 +338,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_PREDICT),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_PREDICT),
                 "outputs": {
                     "predictions": {
                         "permissions": {
@@ -356,7 +352,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             },
             {
                 "key": test_task_key,
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "category": "TASK_TEST",
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -381,7 +377,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -411,18 +407,18 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:traintuple-list")
-        train_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_TRAIN]
-        todo_train_task = train_tasks[ComputeTaskRep.Status.STATUS_TODO]
-        waiting_train_task = train_tasks[ComputeTaskRep.Status.STATUS_WAITING]
-        doing_train_task = train_tasks[ComputeTaskRep.Status.STATUS_DOING]
-        done_train_task = train_tasks[ComputeTaskRep.Status.STATUS_DONE]
-        failed_train_task = train_tasks[ComputeTaskRep.Status.STATUS_FAILED]
-        canceled_train_task = train_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
+        train_tasks = self.compute_tasks[ComputeTask.Category.TASK_TRAIN]
+        todo_train_task = train_tasks[ComputeTask.Status.STATUS_TODO]
+        waiting_train_task = train_tasks[ComputeTask.Status.STATUS_WAITING]
+        doing_train_task = train_tasks[ComputeTask.Status.STATUS_DOING]
+        done_train_task = train_tasks[ComputeTask.Status.STATUS_DONE]
+        failed_train_task = train_tasks[ComputeTask.Status.STATUS_FAILED]
+        canceled_train_task = train_tasks[ComputeTask.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -455,7 +451,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -470,7 +466,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -503,7 +499,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -518,7 +514,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -551,7 +547,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -566,7 +562,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -599,7 +595,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -614,7 +610,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -647,7 +643,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -662,7 +658,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_train_task.key),
                 "category": "TASK_TRAIN",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_SIMPLE],
+                "algo": self.algo_data[Algo.Category.ALGO_SIMPLE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -695,7 +691,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TRAIN),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TRAIN),
                 "outputs": {
                     "model": {
                         "permissions": {
@@ -710,8 +706,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_traintask_list_empty(self):
-        ModelRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_TRAIN).delete()
-        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_TRAIN).delete()
+        Model.objects.filter(compute_task__category=ComputeTask.Category.TASK_TRAIN).delete()
+        ComputeTask.objects.filter(category=ComputeTask.Category.TASK_TRAIN).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -720,7 +716,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(
             response.json(),
@@ -784,11 +780,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if t_status != "STATUS_XXX":
-            if t_status == ComputeTaskRep.Status.STATUS_DOING:
+            if t_status == ComputeTask.Status.STATUS_DOING:
                 # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
                 # couldn't be properly mocked
                 for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    if task["status"] == ComputeTask.Status.STATUS_DOING:
                         task["duration"] = 3600
             self.assertEqual(
                 response.json(),
@@ -811,11 +807,11 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
 
         if "STATUS_XXX" not in t_statuses:
-            if ComputeTaskRep.Status.STATUS_DOING in t_statuses:
+            if ComputeTask.Status.STATUS_DOING in t_statuses:
                 # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
                 # couldn't be properly mocked
                 for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    if task["status"] == ComputeTask.Status.STATUS_DOING:
                         task["duration"] = 3600
             self.assertEqual(
                 response.json(),
@@ -870,7 +866,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in r["results"]:
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(r["count"], len(self.expected_results))
         offset = (page - 1) * page_size
@@ -883,7 +879,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(
             response.json(),
@@ -895,7 +891,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_SIMPLE].key}),
+            urlencode({"algo_key": self.algos[Algo.Category.ALGO_SIMPLE].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -905,7 +901,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results)
 
@@ -920,7 +916,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
@@ -929,7 +925,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
@@ -963,18 +959,18 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:testtuple-list")
-        test_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_TEST]
-        todo_test_task = test_tasks[ComputeTaskRep.Status.STATUS_TODO]
-        waiting_test_task = test_tasks[ComputeTaskRep.Status.STATUS_WAITING]
-        doing_test_task = test_tasks[ComputeTaskRep.Status.STATUS_DOING]
-        done_test_task = test_tasks[ComputeTaskRep.Status.STATUS_DONE]
-        failed_test_task = test_tasks[ComputeTaskRep.Status.STATUS_FAILED]
-        canceled_test_task = test_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
+        test_tasks = self.compute_tasks[ComputeTask.Category.TASK_TEST]
+        todo_test_task = test_tasks[ComputeTask.Status.STATUS_TODO]
+        waiting_test_task = test_tasks[ComputeTask.Status.STATUS_WAITING]
+        doing_test_task = test_tasks[ComputeTask.Status.STATUS_DOING]
+        done_test_task = test_tasks[ComputeTask.Status.STATUS_DONE]
+        failed_test_task = test_tasks[ComputeTask.Status.STATUS_FAILED]
+        canceled_test_task = test_tasks[ComputeTask.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -997,7 +993,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1012,7 +1008,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1035,7 +1031,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1050,7 +1046,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1073,7 +1069,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1088,7 +1084,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1104,14 +1100,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 "test": {
                     "data_manager_key": str(self.data_manager.key),
                     "data_sample_keys": [str(self.data_sample.key)],
-                    "perfs": {str(self.algos[AlgoRep.Category.ALGO_METRIC].key): self.performance.value},
+                    "perfs": {str(self.algos[Algo.Category.ALGO_METRIC].key): self.performance.value},
                 },
                 "logs_permission": {
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1126,7 +1122,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1149,7 +1145,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1164,7 +1160,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_test_task.key),
                 "category": "TASK_TEST",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_METRIC],
+                "algo": self.algo_data[Algo.Category.ALGO_METRIC],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1187,7 +1183,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_TEST),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_TEST),
                 "outputs": {
                     "performance": {
                         "permissions": {
@@ -1202,8 +1198,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_testtask_list_empty(self):
-        PerformanceRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_TEST).delete()
-        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_TEST).delete()
+        Performance.objects.filter(compute_task__category=ComputeTask.Category.TASK_TEST).delete()
+        ComputeTask.objects.filter(category=ComputeTask.Category.TASK_TEST).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -1213,7 +1209,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # couldn't be properly mocked
         self.maxDiff = None
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(
             response.json(),
@@ -1281,7 +1277,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
                 # couldn't be properly mocked
                 for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    if task["status"] == ComputeTask.Status.STATUS_DOING:
                         task["duration"] = 3600
             self.assertEqual(
                 response.json(),
@@ -1319,7 +1315,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_METRIC].key}),
+            urlencode({"algo_key": self.algos[Algo.Category.ALGO_METRIC].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -1329,7 +1325,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
             # couldn't be properly mocked
             for task in response.json().get("results"):
-                if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                if task["status"] == ComputeTask.Status.STATUS_DOING:
                     task["duration"] = 3600
             self.assertEqual(response.json().get("results"), self.expected_results)
 
@@ -1352,7 +1348,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in r.get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
 
         self.assertEqual(r["count"], len(self.expected_results))
@@ -1366,7 +1362,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
                 self.maxDiff = None
         self.assertEqual(
@@ -1380,7 +1376,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
@@ -1389,7 +1385,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
@@ -1423,18 +1419,18 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:composite_traintuple-list")
-        composite_tasks = self.compute_tasks[ComputeTaskRep.Category.TASK_COMPOSITE]
-        todo_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_TODO]
-        waiting_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_WAITING]
-        doing_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_DOING]
-        done_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_DONE]
-        failed_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_FAILED]
-        canceled_composite_task = composite_tasks[ComputeTaskRep.Status.STATUS_CANCELED]
+        composite_tasks = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE]
+        todo_composite_task = composite_tasks[ComputeTask.Status.STATUS_TODO]
+        waiting_composite_task = composite_tasks[ComputeTask.Status.STATUS_WAITING]
+        doing_composite_task = composite_tasks[ComputeTask.Status.STATUS_DOING]
+        done_composite_task = composite_tasks[ComputeTask.Status.STATUS_DONE]
+        failed_composite_task = composite_tasks[ComputeTask.Status.STATUS_FAILED]
+        canceled_composite_task = composite_tasks[ComputeTask.Status.STATUS_CANCELED]
         self.expected_results = [
             {
                 "key": str(todo_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1477,7 +1473,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1500,7 +1496,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(waiting_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1543,7 +1539,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1566,7 +1562,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(doing_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1609,7 +1605,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1632,7 +1628,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(done_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1675,7 +1671,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1698,7 +1694,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(failed_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1741,7 +1737,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1764,7 +1760,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             {
                 "key": str(canceled_composite_task.key),
                 "category": "TASK_COMPOSITE",
-                "algo": self.algo_data[AlgoRep.Category.ALGO_COMPOSITE],
+                "algo": self.algo_data[Algo.Category.ALGO_COMPOSITE],
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -1807,7 +1803,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": _build_inputs(ComputeTaskRep.Category.TASK_COMPOSITE),
+                "inputs": _build_inputs(ComputeTask.Category.TASK_COMPOSITE),
                 "outputs": {
                     "local": {
                         "permissions": {
@@ -1830,8 +1826,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         ]
 
     def test_compositetask_list_empty(self):
-        ModelRep.objects.filter(compute_task__category=ComputeTaskRep.Category.TASK_COMPOSITE).delete()
-        ComputeTaskRep.objects.filter(category=ComputeTaskRep.Category.TASK_COMPOSITE).delete()
+        Model.objects.filter(compute_task__category=ComputeTask.Category.TASK_COMPOSITE).delete()
+        ComputeTask.objects.filter(category=ComputeTask.Category.TASK_COMPOSITE).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -1840,7 +1836,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(
             response.json(),
@@ -1904,7 +1900,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                 # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
                 # couldn't be properly mocked
                 for task in response.json().get("results"):
-                    if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                    if task["status"] == ComputeTask.Status.STATUS_DOING:
                         task["duration"] = 3600
             self.assertEqual(
                 response.json(),
@@ -1932,7 +1928,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.algos[AlgoRep.Category.ALGO_COMPOSITE].key}),
+            urlencode({"algo_key": self.algos[Algo.Category.ALGO_COMPOSITE].key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -1942,7 +1938,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
             # couldn't be properly mocked
             for task in response.json().get("results"):
-                if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+                if task["status"] == ComputeTask.Status.STATUS_DOING:
                     task["duration"] = 3600
             self.assertEqual(response.json().get("results"), self.expected_results)
 
@@ -1964,7 +1960,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         r = response.json()
         self.assertEqual(r["count"], len(self.expected_results))
@@ -1978,7 +1974,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(
             response.json(),
@@ -1991,7 +1987,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results),
 
@@ -2000,7 +1996,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
-            if task["status"] == ComputeTaskRep.Status.STATUS_DOING:
+            if task["status"] == ComputeTask.Status.STATUS_DOING:
                 task["duration"] = 3600
         self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
@@ -2028,15 +2024,15 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
 
 def _build_inputs(category: str) -> list[dict]:
     # match the factory: create one input for each identifier, ordered alphabetically
-    if category == ComputeTaskRep.Category.TASK_TRAIN:
+    if category == ComputeTask.Category.TASK_TRAIN:
         return [_build_input("datasamples"), _build_input("model"), _build_input("opener")]
-    elif category == ComputeTaskRep.Category.TASK_COMPOSITE:
+    elif category == ComputeTask.Category.TASK_COMPOSITE:
         return [_build_input("datasamples"), _build_input("local"), _build_input("opener"), _build_input("shared")]
-    elif category == ComputeTaskRep.Category.TASK_AGGREGATE:
+    elif category == ComputeTask.Category.TASK_AGGREGATE:
         return [_build_input("model")]
-    elif category == ComputeTaskRep.Category.TASK_PREDICT:
+    elif category == ComputeTask.Category.TASK_PREDICT:
         return [_build_input("datasamples"), _build_input("model"), _build_input("opener"), _build_input("shared")]
-    elif category == ComputeTaskRep.Category.TASK_TEST:
+    elif category == ComputeTask.Category.TASK_TEST:
         return [_build_input("datasamples"), _build_input("opener"), _build_input("predictions")]
 
 
