@@ -4,6 +4,7 @@ from .algo import AlgoOutput
 from .computeplan import ComputePlan
 from .computetask import ComputeTask
 from .computetask import ComputeTaskInput
+from .computetask import ComputeTaskInputAsset
 from .computetask import ComputeTaskOutput
 from .computetask import ComputeTaskOutputAsset
 from .datamanager import DataManager
@@ -24,6 +25,7 @@ __all__ = [
     "ComputeTaskOutput",
     "ComputeTaskOutputAsset",
     "ComputeTaskInput",
+    "ComputeTaskInputAsset",
     "DataManager",
     "DataSample",
     "Model",

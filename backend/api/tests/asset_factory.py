@@ -79,6 +79,7 @@ from api.models import AlgoOutput
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
+from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
@@ -135,11 +136,8 @@ def build_computetask_inputs(
 ) -> list[ComputeTaskInput]:
     task_inputs = []
     for algo_input in algo.inputs.all():
-        for position, key in enumerate(keys.get(algo_input.identifier, [])):
-            task_input = ComputeTaskInput(
-                identifier=algo_input.identifier,
-                position=position,
-            )
+        for key in keys.get(algo_input.identifier, []):
+            task_input = ComputeTaskInput(identifier=algo_input.identifier)
             if algo_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
                 task_input.asset_key = key
             else:  # we assume that all other assets are produced by parent tasks
@@ -396,13 +394,19 @@ def create_computetask(
         compute_task.refresh_from_db()
 
     if inputs:
-        pos = 0
-        for task_input in inputs:
+        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.algo.inputs.all()}
+        for position, task_input in enumerate(inputs):
             task_input.task = compute_task
             task_input.channel = channel
-            task_input.position = pos
+            task_input.position = position
             task_input.save()
-            pos += 1
+            if task_input.asset_key:
+                ComputeTaskInputAsset.objects.create(
+                    task_input=task_input,
+                    asset_kind=input_kinds[task_input.identifier],
+                    asset_key=task_input.asset_key,
+                    channel=channel,
+                )
 
     if outputs:
         for task_output in outputs:
@@ -439,6 +443,16 @@ def create_model(
         asset_key=model.key,
         channel=channel,
     )
+    for task_input in ComputeTaskInput.objects.filter(
+        parent_task_key=compute_task,
+        parent_task_output_identifier=identifier,
+    ):
+        ComputeTaskInputAsset.objects.create(
+            task_input=task_input,
+            asset_kind=AlgoOutput.Kind.ASSET_MODEL,
+            asset_key=model.key,
+            channel=channel,
+        )
     return model
 
 
