@@ -512,9 +512,9 @@ api_events:
   ## @param api_events.image.pullSecrets Specify image pull secrets
   ##
   image:
-    registry: gcr.io
-    repository: connect-314908/connect-backend
-    tag: 0.28.0
+    registry: ghcr.io
+    repository: substra/substra-backend
+    tag: 0.29.0
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param api_events.podSecurityContext.enabled Enable security context
