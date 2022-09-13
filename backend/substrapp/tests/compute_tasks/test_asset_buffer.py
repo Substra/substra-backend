@@ -294,7 +294,7 @@ class AssetBufferTests(APITestCase):
         storage_address = "some storage address"
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
-            _add_model_to_buffer(CHANNEL, model, organization_id)
+            _add_model_to_buffer(CHANNEL, model)
 
             mdownload.assert_called_once_with(
                 CHANNEL,
