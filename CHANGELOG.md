@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING! Rename `localrep` app to `api`, see `UPGRADE.md` for migration.
 - Accept `ALGO_UNKNOWN` as a valid algo category.
+- Use task output asset in API response
 
 ## [0.29.0] 2022-09-12
 

@@ -10,9 +10,11 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
 from api.models import ComputeTaskOutput
+from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
+from api.models import Performance
 from api.models.computetask import TaskDataSamples
 from api.serializers.algo import AlgoSerializer
 from api.serializers.datamanager import DataManagerSerializer
@@ -59,9 +61,31 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
             "identifier",
             "permissions",
             "transient",
+            "value",
         ]
 
     permissions = make_download_process_permission_serializer()(source="*")
+    value = serializers.SerializerMethodField(source="*", read_only=True)
+
+    def get_value(self, task_output):
+        data = []
+        for output_asset in task_output.assets.all():
+            if output_asset.asset_kind == ComputeTaskOutputAsset.Kind.ASSET_MODEL:
+                model = Model.objects.get(key=output_asset.asset_key)
+                data.append(ModelSerializer(instance=model).data)
+            elif output_asset.asset_kind == ComputeTaskOutputAsset.Kind.ASSET_PERFORMANCE:
+                task_key, metric_key = output_asset.asset_key.split("|")
+                perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+                data.append(perf.value)
+
+        # FIXME: we should better always return a list,
+        # but it may requires some adapations on the frontend side
+        if len(data) == 0:
+            return None
+        elif len(data) == 1:
+            return data[0]
+        else:
+            return data
 
 
 class AlgoField(serializers.Field):
@@ -286,26 +310,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 "permissions"
             ]
 
-        # Include output models/performances in output field
-        # TODO: Move this in ComputeTaskOutputSerializer
-        #  + Use the actual asset<->output association to find the assets
-        #  (should be done once generic task is done)
-        for output_id, output in data["outputs"].items():
-            output_kind = self._find_output_kind(data, output_id)
-            if output_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL):
-                output["value"] = self._find_output_model(instance.category, data, output_id, data["key"])
-            elif output_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE):
-                perfs = data["test"]["perfs"]
-                if perfs:
-                    if len(perfs) != 1:  # performance output cannot be multiple
-                        raise Exception(
-                            f"Couldn't associate a performance to output '{output_id}' of task '{data['key']}'"
-                        )
-                    (value,) = perfs.values()
-                else:
-                    value = None
-                output["value"] = value
-
         # set data inputs
         self._inputs_to_representation(data)
 
@@ -346,24 +350,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                                     reverse("api:model-file", args=[model.key])
                                 )
 
-    def _find_output_kind(self, data, output_id):
-        return data["algo"]["outputs"][output_id]["kind"]
-
     def _find_input_kind(self, data, input_id):
         return data["algo"]["inputs"][input_id]["kind"]
-
-    def _find_output_model(self, instance_category, data, output_identifier, task_key):
-        task_category_field = TASK_CATEGORY_FIELDS[instance_category]
-        model_category = OUTPUT_MODEL_CATEGORY[output_identifier]
-        models = data[task_category_field]["models"]
-        if models:  # return None in case the output model is not computed yet
-            matching_models = [model for model in models if model["category"] == model_category]
-            # Due to how sync works it is possible that one model is present but not the other for composite tasks
-            if matching_models:
-                if len(matching_models) > 1:  # No task can output more than one model of each category
-                    raise Exception(f"Couldn't associate a model to output '{output_identifier}' of task '{task_key}'")
-                model = matching_models[0]
-                return model
 
     def _get_opener_addressable(self, key):
         request = self.context.get("request")
