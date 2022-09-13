@@ -5,7 +5,6 @@ from typing import Optional
 from typing import Union
 
 import pydantic
-from orchestrator import info_pb2
 
 from orchestrator import algo_pb2
 from orchestrator import common_pb2
@@ -13,6 +12,7 @@ from orchestrator import computeplan_pb2
 from orchestrator import computetask_pb2
 from orchestrator import datamanager_pb2
 from orchestrator import datasample_pb2
+from orchestrator import info_pb2
 from orchestrator import model_pb2
 
 

@@ -8,7 +8,6 @@ import structlog
 from django.conf import settings
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
-from orchestrator.resources import OrchestratorVersion
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
@@ -40,6 +39,7 @@ from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputePlanStatus
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
+from orchestrator.resources import OrchestratorVersion
 
 logger = structlog.get_logger(__name__)
 
