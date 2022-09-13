@@ -8,6 +8,7 @@ import structlog
 from django.conf import settings
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
+from orchestrator.resources import OrchestratorVersion
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
@@ -530,15 +531,12 @@ class OrchestratorClient:
 
         return (MessageToDict(event, **CONVERT_SETTINGS) for event in events_stream)
 
-    def query_version(
-        self,
-    ):
+    def query_version(self) -> OrchestratorVersion:
         data = self._info_client.QueryVersion(
             info_pb2.QueryVersionParam(),
             metadata=self._metadata,
         )
-        data = MessageToDict(data, **CONVERT_SETTINGS)
-        return data
+        return OrchestratorVersion.from_grpc(data)
 
     def __enter__(self):
         return self

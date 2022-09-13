@@ -52,7 +52,7 @@ class Info(APIView):
             channel_name = get_channel_name(request)
             channel = settings.LEDGER_CHANNELS[channel_name]
 
-            orchestrator_versions = {}
+            orchestrator_versions = None
 
             if not settings.ISOLATED:
                 with get_orchestrator_client(channel_name) as client:
@@ -60,15 +60,15 @@ class Info(APIView):
 
             res["channel"] = channel_name
             res["version"] = settings.BACKEND_VERSION
-            res["orchestrator_version"] = orchestrator_versions.get("orchestrator")
+            res["orchestrator_version"] = orchestrator_versions.server if orchestrator_versions is not None else None
             res["config"]["model_export_enabled"] = channel["model_export_enabled"]
 
             res["user"] = request.user.get_username()
             if hasattr(request.user, "channel"):
                 res["user_role"] = request.user.channel.role
 
-            if orchestrator_versions.get("chaincode"):
-                res["chaincode_version"] = orchestrator_versions.get("chaincode")
+            if orchestrator_versions and orchestrator_versions.chaincode:
+                res["chaincode_version"] = orchestrator_versions.chaincode
 
         return ApiResponse(res)
 
