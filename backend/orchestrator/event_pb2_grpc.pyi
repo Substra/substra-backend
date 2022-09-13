@@ -3,33 +3,33 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import event_pb2
 import grpc
-import typing
 
 class EventServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     QueryEvents: grpc.UnaryUnaryMultiCallable[
         event_pb2.QueryEventsParam,
-        event_pb2.QueryEventsResponse]
-
+        event_pb2.QueryEventsResponse,
+    ]
     SubscribeToEvents: grpc.UnaryStreamMultiCallable[
         event_pb2.SubscribeToEventsParam,
-        event_pb2.Event]
-
+        event_pb2.Event,
+    ]
 
 class EventServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def QueryEvents(self,
+    def QueryEvents(
+        self,
         request: event_pb2.QueryEventsParam,
         context: grpc.ServicerContext,
     ) -> event_pb2.QueryEventsResponse: ...
-
     @abc.abstractmethod
-    def SubscribeToEvents(self,
+    def SubscribeToEvents(
+        self,
         request: event_pb2.SubscribeToEventsParam,
         context: grpc.ServicerContext,
-    ) -> typing.Iterator[event_pb2.Event]: ...
-
+    ) -> collections.abc.Iterator[event_pb2.Event]: ...
 
 def add_EventServiceServicer_to_server(servicer: EventServiceServicer, server: grpc.Server) -> None: ...

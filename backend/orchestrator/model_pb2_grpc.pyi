@@ -10,85 +10,65 @@ class ModelServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.NewModel,
-        model_pb2.Model]
-
+        model_pb2.Model,
+    ]
     RegisterModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.RegisterModelsParam,
-        model_pb2.RegisterModelsResponse]
-
+        model_pb2.RegisterModelsResponse,
+    ]
     GetModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetModelParam,
-        model_pb2.Model]
-
-    QueryModels: grpc.UnaryUnaryMultiCallable[
-        model_pb2.QueryModelsParam,
-        model_pb2.QueryModelsResponse]
-
+        model_pb2.Model,
+    ]
     GetComputeTaskOutputModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetComputeTaskModelsParam,
-        model_pb2.GetComputeTaskModelsResponse]
-
-    GetComputeTaskInputModels: grpc.UnaryUnaryMultiCallable[
-        model_pb2.GetComputeTaskModelsParam,
-        model_pb2.GetComputeTaskModelsResponse]
-
+        model_pb2.GetComputeTaskModelsResponse,
+    ]
     CanDisableModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.CanDisableModelParam,
-        model_pb2.CanDisableModelResponse]
-
+        model_pb2.CanDisableModelResponse,
+    ]
     DisableModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.DisableModelParam,
-        model_pb2.DisableModelResponse]
-
+        model_pb2.DisableModelResponse,
+    ]
 
 class ModelServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterModel(self,
+    def RegisterModel(
+        self,
         request: model_pb2.NewModel,
         context: grpc.ServicerContext,
     ) -> model_pb2.Model: ...
-
     @abc.abstractmethod
-    def RegisterModels(self,
+    def RegisterModels(
+        self,
         request: model_pb2.RegisterModelsParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.RegisterModelsResponse: ...
-
     @abc.abstractmethod
-    def GetModel(self,
+    def GetModel(
+        self,
         request: model_pb2.GetModelParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.Model: ...
-
     @abc.abstractmethod
-    def QueryModels(self,
-        request: model_pb2.QueryModelsParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.QueryModelsResponse: ...
-
-    @abc.abstractmethod
-    def GetComputeTaskOutputModels(self,
+    def GetComputeTaskOutputModels(
+        self,
         request: model_pb2.GetComputeTaskModelsParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.GetComputeTaskModelsResponse: ...
-
     @abc.abstractmethod
-    def GetComputeTaskInputModels(self,
-        request: model_pb2.GetComputeTaskModelsParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.GetComputeTaskModelsResponse: ...
-
-    @abc.abstractmethod
-    def CanDisableModel(self,
+    def CanDisableModel(
+        self,
         request: model_pb2.CanDisableModelParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.CanDisableModelResponse: ...
-
     @abc.abstractmethod
-    def DisableModel(self,
+    def DisableModel(
+        self,
         request: model_pb2.DisableModelParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.DisableModelResponse: ...
-
 
 def add_ModelServiceServicer_to_server(servicer: ModelServiceServicer, server: grpc.Server) -> None: ...
