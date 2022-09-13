@@ -7,6 +7,8 @@ import grpc
 import structlog
 from django.conf import settings
 from google.protobuf.json_format import MessageToDict
+from grpc_health.v1 import health_pb2
+from grpc_health.v1 import health_pb2_grpc
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
@@ -55,6 +57,7 @@ def grpc_retry(func):
     """Decorator to handle grpc errors from the orchestrator.
     It retries on UNKNOWN or UNAVAILABLE error and wraps the returned error as an OrcError.
     """
+
     # In case of grpc status code unknown, we retry 5 times spaced by 1s
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -160,6 +163,7 @@ class OrchestratorClient:
 
             self.grpc_channel = grpc.secure_channel(target, creds, opts)
 
+        self._health_client = health_pb2_grpc.HealthStub(self.grpc_channel)
         self._organization_client = OrganizationServiceStub(self.grpc_channel)
         self._algo_client = AlgoServiceStub(self.grpc_channel)
         self._datasample_client = DataSampleServiceStub(self.grpc_channel)
@@ -180,6 +184,10 @@ class OrchestratorClient:
             ("channel", channel_name),
             ("chaincode", chaincode),
         )
+
+    def is_healthy(self) -> bool:
+        resp = self._health_client.Check(health_pb2.HealthCheckRequest())
+        return resp.status == health_pb2.HealthCheckResponse.SERVING
 
     @property
     def channel_name(self):

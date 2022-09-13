@@ -1,4 +1,5 @@
 import threading
+import time
 
 import structlog
 from django.conf import settings
@@ -47,11 +48,22 @@ def consume_channel(client: orchestrator.Client, channel_name: str, exception_ra
             raise
 
 
+def _check_health(client: orchestrator.Client, exception_raised: threading.Event):
+    while client.is_healthy():
+        if exception_raised.is_set():
+            break
+
+        time.sleep(settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS)
+    else:
+        logger.error("health check failed")
+        exception_raised.set()
+
+
 def consume(health_service: health.HealthService):
     client = get_orchestrator_client()
     exception_raised = threading.Event()
 
-    consumers = [
+    threads = [
         threading.Thread(
             target=consume_channel,
             args=(
@@ -63,15 +75,17 @@ def consume(health_service: health.HealthService):
         for channel_name in settings.LEDGER_CHANNELS.keys()
     ]
 
-    for consumer in consumers:
-        consumer.start()
+    threads.append(threading.Thread(target=_check_health, args=(client, exception_raised)))
+
+    for thread in threads:
+        thread.start()
 
     health_service.ready()
 
     exception_raised.wait()
     client.grpc_channel.close()
 
-    for consumer in consumers:
-        consumer.join()
+    for thread in threads:
+        thread.join()
 
     raise RuntimeError("Orchestrator gRPC streams consumption interrupted")
