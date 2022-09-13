@@ -122,7 +122,7 @@ class ComputeTaskViewTests(APITestCase):
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TaskBulkCreateViewTests(ComputeTaskViewTests):
-    _parent_task_key = "8c08f9cc-3e2f-4af2-a84b-25cee37a3681"
+    _parent_task_key = str(uuid.uuid4())
 
     def test_task_bulk_create(self):
         def mock_register_compute_task(orc_request):
