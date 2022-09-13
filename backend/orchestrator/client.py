@@ -39,6 +39,7 @@ from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputePlanStatus
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
+from orchestrator.resources import OrchestratorVersion
 
 logger = structlog.get_logger(__name__)
 
@@ -530,15 +531,12 @@ class OrchestratorClient:
 
         return (MessageToDict(event, **CONVERT_SETTINGS) for event in events_stream)
 
-    def query_version(
-        self,
-    ):
+    def query_version(self) -> OrchestratorVersion:
         data = self._info_client.QueryVersion(
             info_pb2.QueryVersionParam(),
             metadata=self._metadata,
         )
-        data = MessageToDict(data, **CONVERT_SETTINGS)
-        return data
+        return OrchestratorVersion.from_grpc(data)
 
     def __enter__(self):
         return self

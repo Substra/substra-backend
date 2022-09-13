@@ -12,6 +12,7 @@ from orchestrator import computeplan_pb2
 from orchestrator import computetask_pb2
 from orchestrator import datamanager_pb2
 from orchestrator import datasample_pb2
+from orchestrator import info_pb2
 from orchestrator import model_pb2
 
 
@@ -344,3 +345,12 @@ class InvalidInputAsset(Exception):
     def __init__(self, actual: AssetKind, expected: AssetKind):
         message = f"Invalid asset kind, expected {expected} but have {actual}"
         super().__init__(message)
+
+
+class OrchestratorVersion(pydantic.BaseModel):
+    server: str
+    chaincode: str
+
+    @classmethod
+    def from_grpc(cls, orc_version: info_pb2.QueryVersionResponse) -> OrchestratorVersion:
+        return cls(server=orc_version.orchestrator, chaincode=orc_version.chaincode)

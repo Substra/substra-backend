@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 
 from api.tests.common import AuthenticatedClient
 from orchestrator.client import OrchestratorClient
+from orchestrator.resources import OrchestratorVersion
 
 
 @override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
@@ -32,7 +33,7 @@ class InfoViewTests(APITestCase):
         client = AuthenticatedClient()
 
         with mock.patch.object(
-            OrchestratorClient, "query_version", return_value={"orchestrator": "foo", "chaincode": "bar"}
+            OrchestratorClient, "query_version", return_value=OrchestratorVersion(server="foo", chaincode="bar")
         ):
             response = client.get(self.url, **self.extra)
 
