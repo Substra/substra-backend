@@ -7,10 +7,8 @@ import grpc
 import structlog
 from django.conf import settings
 from google.protobuf.json_format import MessageToDict
-from google.protobuf.timestamp_pb2 import Timestamp
 
 import orchestrator.algo_pb2 as algo_pb2
-import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
@@ -195,13 +193,6 @@ class OrchestratorClient:
         MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_organizations(self):
-        data = self._organization_client.GetAllOrganizations(
-            organization_pb2.GetAllOrganizationsParam(), metadata=self._metadata
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS).get("organizations", [])
-
-    @grpc_retry
     def register_algo(self, args):
         args["inputs"] = {identifier: algo_pb2.AlgoInput(**_input) for identifier, _input in args["inputs"].items()}
         args["outputs"] = {
@@ -251,13 +242,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_datasample(self, key):
-        data = self._datasample_client.GetDataSample(
-            datasample_pb2.GetDataSampleParam(key=key), metadata=self._metadata
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
     def register_datamanager(self, args):
         data = self._datamanager_client.RegisterDataManager(
             datamanager_pb2.NewDataManager(**args), metadata=self._metadata
@@ -268,13 +252,6 @@ class OrchestratorClient:
     def update_datamanager(self, args):
         data = self._datamanager_client.UpdateDataManager(
             datamanager_pb2.UpdateDataManagerParam(**args), metadata=self._metadata
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
-    def query_datamanager(self, key):
-        data = self._datamanager_client.GetDataManager(
-            datamanager_pb2.GetDataManagerParam(key=key), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
@@ -326,36 +303,6 @@ class OrchestratorClient:
             computetask_pb2.DisableOutputParam(compute_task_key=task_key, identifier=identifier),
             metadata=self._metadata,
         )
-
-    @grpc_retry
-    def query_tasks(
-        self,
-        worker=None,
-        status=computetask_pb2.STATUS_UNKNOWN,
-        category=computetask_pb2.TASK_UNKNOWN,
-        compute_plan_key=None,
-    ) -> list[ComputeTask]:
-        task_filter = computetask_pb2.TaskQueryFilter(
-            worker=worker,
-            status=status,
-            category=category,
-            compute_plan_key=compute_plan_key,
-        )
-
-        res = []
-        page_token = ""  # nosec
-        while True:
-            data = self._computetask_client.QueryTasks(
-                computetask_pb2.QueryTasksParam(filter=task_filter, page_token=page_token),
-                metadata=self._metadata,
-            )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            tasks = data.get("tasks", [])
-            page_token = data.get("next_page_token")
-            res.extend(ComputeTask.from_grpc(t) for t in tasks)
-            if page_token == "" or not tasks:  # nosec
-                break
-        return res
 
     @grpc_retry
     def query_task(self, key) -> ComputeTask:
@@ -427,92 +374,6 @@ class OrchestratorClient:
         cp = self.query_compute_plan(key)
         return cp.status == ComputePlanStatus.PLAN_STATUS_DOING
 
-    def query_events(
-        self,
-        asset_key="",
-        asset_kind=common_pb2.ASSET_UNKNOWN,
-        event_kind=event_pb2.EVENT_UNKNOWN,
-        sort=common_pb2.ASCENDING,
-        metadata=None,
-        start=None,
-        end=None,
-        page_size=None,
-    ):
-        """return a list with all events instead of a generator"""
-        return list(
-            self.query_events_generator(
-                asset_key=asset_key,
-                asset_kind=asset_kind,
-                event_kind=event_kind,
-                sort=sort,
-                metadata=metadata,
-                start=start,
-                end=end,
-                page_size=page_size,
-            )
-        )
-
-    @grpc_retry
-    def query_events_generator(
-        self,
-        asset_key="",
-        asset_kind=common_pb2.ASSET_UNKNOWN,
-        event_kind=event_pb2.EVENT_UNKNOWN,
-        sort=common_pb2.ASCENDING,
-        metadata=None,
-        start=None,
-        end=None,
-        page_size=1,
-    ):
-        """This function returns all events as a generator.
-        Until page_token is null or no more events are fetched, a loop call will get page_size events
-        which are yield one by one
-
-        XXX: default page size is 1, which has very bad performance when querying lots of assets.
-        """
-
-        # convert JsonStringDate into pb Timestamp
-        start_ts = None
-        end_ts = None
-
-        if start is not None:
-            start_ts = Timestamp()
-            start_ts.FromJsonString(start)
-
-        if end is not None:
-            end_ts = Timestamp()
-            end_ts.FromJsonString(end)
-
-        event_filter = event_pb2.EventQueryFilter(
-            asset_key=asset_key,
-            asset_kind=asset_kind,
-            event_kind=event_kind,
-            metadata=metadata,
-            start=start_ts,
-            end=end_ts,
-        )
-
-        page_token = ""  # nosec
-
-        while True:
-            data = self._event_client.QueryEvents(
-                event_pb2.QueryEventsParam(filter=event_filter, page_token=page_token, page_size=page_size, sort=sort),
-                metadata=self._metadata,
-            )
-
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            page_token = data.get("next_page_token")
-            events = data.get("events", [])
-
-            for event in events:
-                if event["asset_kind"] == common_pb2.AssetKind.Name(common_pb2.ASSET_COMPUTE_TASK):
-                    add_tag_from_metadata(event["compute_task"])
-
-                yield event
-
-            if page_token == "" or not events:  # nosec
-                return
-
     def subscribe_to_events(self, channel_name=None, start_event_id=""):
 
         if channel_name is not None:
@@ -522,7 +383,7 @@ class OrchestratorClient:
                 ("chaincode", settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]),
             )
         else:
-            metadata = self.metadata
+            metadata = self._metadata
 
         events_stream = self._event_client.SubscribeToEvents(
             event_pb2.SubscribeToEventsParam(start_event_id=start_event_id),
