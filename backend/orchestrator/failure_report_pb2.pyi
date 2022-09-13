@@ -8,27 +8,31 @@ import google.protobuf.descriptor
 import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
+import sys
 import typing
-import typing_extensions
+
+if sys.version_info >= (3, 10):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class _ErrorType:
-    ValueType = typing.NewType('ValueType', builtins.int)
+    ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
-class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ErrorType.ValueType], builtins.type):
+
+class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ErrorType.ValueType], builtins.type):  # noqa: F821
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     ERROR_TYPE_UNSPECIFIED: _ErrorType.ValueType  # 0
     ERROR_TYPE_BUILD: _ErrorType.ValueType  # 1
     """An ERROR_TYPE_BUILD is an error occurring during the build of the container image.
     It is likely to be caused by the user's code.
     """
-
     ERROR_TYPE_EXECUTION: _ErrorType.ValueType  # 2
     """An ERROR_TYPE_EXECUTION is an error occurring during the execution of the algo/metric container.
     It is likely to be caused by the user's code.
     """
-
     ERROR_TYPE_INTERNAL: _ErrorType.ValueType  # 3
     """An ERROR_TYPE_INTERNAL describes any other error that does not fall into the previous categories.
     It is likely to be caused by a fault in the system. It would require the action of a system administrator.
@@ -36,90 +40,96 @@ class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enum
 
 class ErrorType(_ErrorType, metaclass=_ErrorTypeEnumTypeWrapper):
     """ErrorType defines the types of errors that can occur in a compute task."""
-    pass
 
 ERROR_TYPE_UNSPECIFIED: ErrorType.ValueType  # 0
 ERROR_TYPE_BUILD: ErrorType.ValueType  # 1
 """An ERROR_TYPE_BUILD is an error occurring during the build of the container image.
 It is likely to be caused by the user's code.
 """
-
 ERROR_TYPE_EXECUTION: ErrorType.ValueType  # 2
 """An ERROR_TYPE_EXECUTION is an error occurring during the execution of the algo/metric container.
 It is likely to be caused by the user's code.
 """
-
 ERROR_TYPE_INTERNAL: ErrorType.ValueType  # 3
 """An ERROR_TYPE_INTERNAL describes any other error that does not fall into the previous categories.
 It is likely to be caused by a fault in the system. It would require the action of a system administrator.
 """
-
 global___ErrorType = ErrorType
-
 
 class FailureReport(google.protobuf.message.Message):
     """FailureReport is used to store information related to a failed ComputeTask."""
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
     ERROR_TYPE_FIELD_NUMBER: builtins.int
     LOGS_ADDRESS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
-    compute_task_key: typing.Text
+    compute_task_key: builtins.str
     error_type: global___ErrorType.ValueType
     @property
     def logs_address(self) -> common_pb2.Addressable: ...
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
-    owner: typing.Text
+    owner: builtins.str
     """The owner of a failure report matches the 'worker' field of the associated compute task but can differ from
     the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
     to another user. The failure report generated will be located on the execution organization and belong to the owner
     of this organization.
     """
-
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        compute_task_key: typing.Text = ...,
+        compute_task_key: builtins.str = ...,
         error_type: global___ErrorType.ValueType = ...,
-        logs_address: typing.Optional[common_pb2.Addressable] = ...,
-        creation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
-        owner: typing.Text = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["creation_date",b"creation_date","logs_address",b"logs_address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key",b"compute_task_key","creation_date",b"creation_date","error_type",b"error_type","logs_address",b"logs_address","owner",b"owner"]) -> None: ...
+        logs_address: common_pb2.Addressable | None = ...,
+        creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+        owner: builtins.str = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "logs_address", b"logs_address"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "creation_date", b"creation_date", "error_type", b"error_type", "logs_address", b"logs_address", "owner", b"owner"]) -> None: ...
+
 global___FailureReport = FailureReport
 
 class NewFailureReport(google.protobuf.message.Message):
     """NewFailureReport is used to register a FailureReport.
     It will be processed into a FailureReport.
     """
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
     ERROR_TYPE_FIELD_NUMBER: builtins.int
     LOGS_ADDRESS_FIELD_NUMBER: builtins.int
-    compute_task_key: typing.Text
+    compute_task_key: builtins.str
     error_type: global___ErrorType.ValueType
     @property
     def logs_address(self) -> common_pb2.Addressable: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        compute_task_key: typing.Text = ...,
+        compute_task_key: builtins.str = ...,
         error_type: global___ErrorType.ValueType = ...,
-        logs_address: typing.Optional[common_pb2.Addressable] = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["logs_address",b"logs_address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key",b"compute_task_key","error_type",b"error_type","logs_address",b"logs_address"]) -> None: ...
+        logs_address: common_pb2.Addressable | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["logs_address", b"logs_address"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "error_type", b"error_type", "logs_address", b"logs_address"]) -> None: ...
+
 global___NewFailureReport = NewFailureReport
 
 class GetFailureReportParam(google.protobuf.message.Message):
     """GetFailureReportParam is used to fetch a Failure."""
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
-    compute_task_key: typing.Text
-    def __init__(self,
+    compute_task_key: builtins.str
+    def __init__(
+        self,
         *,
-        compute_task_key: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key",b"compute_task_key"]) -> None: ...
+        compute_task_key: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key"]) -> None: ...
+
 global___GetFailureReportParam = GetFailureReportParam

@@ -5,27 +5,37 @@ isort:skip_file
 import builtins
 import google.protobuf.descriptor
 import google.protobuf.message
-import typing
-import typing_extensions
+import sys
+
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class QueryVersionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    def __init__(self,
-        ) -> None: ...
+
+    def __init__(
+        self,
+    ) -> None: ...
+
 global___QueryVersionParam = QueryVersionParam
 
 class QueryVersionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ORCHESTRATOR_FIELD_NUMBER: builtins.int
     CHAINCODE_FIELD_NUMBER: builtins.int
-    orchestrator: typing.Text
-    chaincode: typing.Text
-    def __init__(self,
+    orchestrator: builtins.str
+    chaincode: builtins.str
+    def __init__(
+        self,
         *,
-        orchestrator: typing.Text = ...,
-        chaincode: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["chaincode",b"chaincode","orchestrator",b"orchestrator"]) -> None: ...
+        orchestrator: builtins.str = ...,
+        chaincode: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["chaincode", b"chaincode", "orchestrator", b"orchestrator"]) -> None: ...
+
 global___QueryVersionResponse = QueryVersionResponse

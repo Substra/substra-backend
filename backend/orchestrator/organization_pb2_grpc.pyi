@@ -10,25 +10,25 @@ class OrganizationServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterOrganization: grpc.UnaryUnaryMultiCallable[
         organization_pb2.RegisterOrganizationParam,
-        organization_pb2.Organization]
-
+        organization_pb2.Organization,
+    ]
     GetAllOrganizations: grpc.UnaryUnaryMultiCallable[
         organization_pb2.GetAllOrganizationsParam,
-        organization_pb2.GetAllOrganizationsResponse]
-
+        organization_pb2.GetAllOrganizationsResponse,
+    ]
 
 class OrganizationServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterOrganization(self,
+    def RegisterOrganization(
+        self,
         request: organization_pb2.RegisterOrganizationParam,
         context: grpc.ServicerContext,
     ) -> organization_pb2.Organization: ...
-
     @abc.abstractmethod
-    def GetAllOrganizations(self,
+    def GetAllOrganizations(
+        self,
         request: organization_pb2.GetAllOrganizationsParam,
         context: grpc.ServicerContext,
     ) -> organization_pb2.GetAllOrganizationsResponse: ...
-
 
 def add_OrganizationServiceServicer_to_server(servicer: OrganizationServiceServicer, server: grpc.Server) -> None: ...

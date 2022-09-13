@@ -122,6 +122,8 @@ class ComputeTaskViewTests(APITestCase):
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TaskBulkCreateViewTests(ComputeTaskViewTests):
+    _parent_task_key = str(uuid.uuid4())
+
     def test_task_bulk_create(self):
         def mock_register_compute_task(orc_request):
             """Build orchestrator register response from request data."""
@@ -135,7 +137,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                         "key": in_data["algo_key"],
                     },
                     "compute_plan_key": in_data["compute_plan_key"],
-                    "parent_task_keys": in_data["parent_task_keys"],
+                    "parent_task_keys": [self._parent_task_key],
                     "rank": 0,
                     "status": "STATUS_WAITING",
                     "owner": "MyOrg1MSP",
@@ -239,7 +241,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
-                "parent_task_keys": [],
+                "parent_task_keys": [self._parent_task_key],
                 "rank": 0,
                 "start_date": None,
                 "status": "STATUS_WAITING",
@@ -282,7 +284,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
-                "parent_task_keys": [train_task_key, str(done_train_task.key)],
+                "parent_task_keys": [self._parent_task_key],
                 "rank": 0,
                 "start_date": None,
                 "status": "STATUS_WAITING",
@@ -323,7 +325,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
-                "parent_task_keys": [train_task_key],
+                "parent_task_keys": [self._parent_task_key],
                 "rank": 0,
                 "start_date": None,
                 "status": "STATUS_WAITING",
@@ -366,7 +368,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
-                "parent_task_keys": [predict_task_key],
+                "parent_task_keys": [self._parent_task_key],
                 "rank": 0,
                 "start_date": None,
                 "status": "STATUS_WAITING",

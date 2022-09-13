@@ -30,7 +30,6 @@ from api.views.filters_utils import MetadataFilterBackend
 from api.views.utils import CP_BASENAME_PREFIX
 from api.views.utils import TASK_CATEGORY
 from api.views.utils import ApiResponse
-from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
 from libs.pagination import DefaultPageNumberPagination
@@ -77,60 +76,6 @@ def _compute_extra_data(orc_task, task_data):
         raise Exception(f'Task type "{orc_task["category"]}" not handled')
 
 
-def _compute_parent_task_keys(orc_task, task_data, batch):
-    # Deduplicate parent tasks, but avoid using a set to preserve parents order
-    parent_task_keys = list(dict.fromkeys([str(key) for key in (task_data.get("in_models_keys", []) or [])]))
-
-    if orc_task["category"] == ComputeTask.Category.TASK_COMPOSITE:
-        # here we need to build a list from the head and trunk models sent by the user
-        parent_task_keys = [
-            task_data.get(field) for field in ("in_head_model_key", "in_trunk_model_key") if task_data.get(field)
-        ]
-
-    elif orc_task["category"] == ComputeTask.Category.TASK_PREDICT:
-        if traintuple_id := task_data.get("traintuple_key"):
-            parent_task_keys.append(traintuple_id)
-        else:
-            raise ValidationExceptionError(
-                data=[{"traintuple_key": ["This field may not be null."]}],
-                key=orc_task["key"],
-                st=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # try to retrieve parent task in current batch
-        parent_task_data = batch.get(parent_task_keys[0])
-        # else query the db
-        if parent_task_data is None:
-            parent_task = ComputeTask.objects.get(key=parent_task_keys[0])
-            parent_task_data = {
-                "compute_plan_key": str(parent_task.compute_plan_id),
-            }
-        orc_task["compute_plan_key"] = parent_task_data["compute_plan_key"]
-
-    elif orc_task["category"] == ComputeTask.Category.TASK_TEST:
-        if predicttuple_id := task_data.get("predicttuple_key"):
-            parent_task_keys.append(predicttuple_id)
-        else:
-            raise ValidationExceptionError(
-                data=[{"predicttuple_key": ["This field may not be null."]}],
-                key=orc_task["key"],
-                st=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # try to retrieve parent task in current batch
-        parent_task_data = batch.get(parent_task_keys[0])
-        # else query the db
-        if parent_task_data is None:
-            parent_task = ComputeTask.objects.get(key=parent_task_keys[0])
-            parent_task_data = {
-                "compute_plan_key": str(parent_task.compute_plan_id),
-            }
-        orc_task["compute_plan_key"] = parent_task_data["compute_plan_key"]
-
-    orc_task["parent_task_keys"] = parent_task_keys
-    return orc_task
-
-
 def _register_in_orchestrator(tasks_data, channel_name):
     """Register computetask in orchestrator."""
     batch = {}
@@ -149,8 +94,6 @@ def _register_in_orchestrator(tasks_data, channel_name):
             raise Exception('"__tag__" cannot be used as a metadata key')
         else:
             orc_task["metadata"]["__tag__"] = task_data.get("tag") or ""
-
-        _compute_parent_task_keys(orc_task, task_data, batch)
 
         extra_data_field = EXTRA_DATA_FIELD[orc_task["category"]]
         orc_task[extra_data_field] = _compute_extra_data(orc_task, task_data)

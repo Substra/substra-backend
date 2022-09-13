@@ -3,60 +3,78 @@
 isort:skip_file
 """
 import builtins
+import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
-import typing
-import typing_extensions
+import sys
+
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class Organization(google.protobuf.message.Message):
     """Organization is a member of the network"""
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ID_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     ADDRESS_FIELD_NUMBER: builtins.int
-    id: typing.Text
+    id: builtins.str
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
-    address: typing.Text
-    def __init__(self,
+    address: builtins.str
+    def __init__(
+        self,
         *,
-        id: typing.Text = ...,
-        creation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
-        address: typing.Text = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["creation_date",b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["address",b"address","creation_date",b"creation_date","id",b"id"]) -> None: ...
+        id: builtins.str = ...,
+        creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+        address: builtins.str = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "creation_date", b"creation_date", "id", b"id"]) -> None: ...
+
 global___Organization = Organization
 
 class GetAllOrganizationsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ORGANIZATIONS_FIELD_NUMBER: builtins.int
     @property
     def organizations(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Organization]: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        organizations: typing.Optional[typing.Iterable[global___Organization]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["organizations",b"organizations"]) -> None: ...
+        organizations: collections.abc.Iterable[global___Organization] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["organizations", b"organizations"]) -> None: ...
+
 global___GetAllOrganizationsResponse = GetAllOrganizationsResponse
 
 class RegisterOrganizationParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     ADDRESS_FIELD_NUMBER: builtins.int
-    address: typing.Text
-    def __init__(self,
+    address: builtins.str
+    def __init__(
+        self,
         *,
-        address: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["address",b"address"]) -> None: ...
+        address: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address", b"address"]) -> None: ...
+
 global___RegisterOrganizationParam = RegisterOrganizationParam
 
 class GetAllOrganizationsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    def __init__(self,
-        ) -> None: ...
+
+    def __init__(
+        self,
+    ) -> None: ...
+
 global___GetAllOrganizationsParam = GetAllOrganizationsParam

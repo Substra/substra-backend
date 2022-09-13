@@ -3,44 +3,56 @@
 isort:skip_file
 """
 import builtins
+import collections.abc
 import datamanager_pb2
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
-import typing
-import typing_extensions
+import sys
+
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class Dataset(google.protobuf.message.Message):
     """Dataset references several related samples"""
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     DATA_MANAGER_FIELD_NUMBER: builtins.int
     TRAIN_DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
     TEST_DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
     @property
     def data_manager(self) -> datamanager_pb2.DataManager: ...
     @property
-    def train_data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
+    def train_data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
     @property
-    def test_data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    def __init__(self,
+    def test_data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
+    def __init__(
+        self,
         *,
-        data_manager: typing.Optional[datamanager_pb2.DataManager] = ...,
-        train_data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        test_data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["data_manager",b"data_manager"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager",b"data_manager","test_data_sample_keys",b"test_data_sample_keys","train_data_sample_keys",b"train_data_sample_keys"]) -> None: ...
+        data_manager: datamanager_pb2.DataManager | None = ...,
+        train_data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
+        test_data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["data_manager", b"data_manager"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager", b"data_manager", "test_data_sample_keys", b"test_data_sample_keys", "train_data_sample_keys", b"train_data_sample_keys"]) -> None: ...
+
 global___Dataset = Dataset
 
 class GetDatasetParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEY_FIELD_NUMBER: builtins.int
-    key: typing.Text
-    def __init__(self,
+    key: builtins.str
+    def __init__(
+        self,
         *,
-        key: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key",b"key"]) -> None: ...
+        key: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key", b"key"]) -> None: ...
+
 global___GetDatasetParam = GetDatasetParam
