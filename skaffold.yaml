@@ -30,8 +30,8 @@ deploy:
           scheduler.image: substra/substra-backend
           worker.image: substra/substra-backend
           schedulerWorker.image: substra/substra-backend
-          worker_events.image: substra/substra-backend
-          api_events.image: substra/substra-backend
+          worker.events.image: substra/substra-backend
+          api.events.image: substra/substra-backend
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -47,8 +47,8 @@ deploy:
           scheduler.image: substra/substra-backend
           worker.image: substra/substra-backend
           schedulerWorker.image: substra/substra-backend
-          worker_events.image: substra/substra-backend
-          api_events.image: substra/substra-backend
+          worker.events.image: substra/substra-backend
+          api.events.image: substra/substra-backend
         skipBuildDependencies: true # deps already built by other org-1 release
   kubectl:
     manifests:

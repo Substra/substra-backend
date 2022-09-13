@@ -1,4 +1,4 @@
-{{- if .Values.api_events.enabled }}
+{{- if .Values.api.events.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,21 +26,21 @@ spec:
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
         checksum-secret-redis: {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
     spec:
-      {{- with .Values.api_events.image.pullSecrets }}
+      {{- with .Values.api.events.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.api_events.podSecurityContext.enabled }}
+      {{- if .Values.api.events.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.api_events.podSecurityContext.fsGroup }}
-        runAsUser: {{ .Values.api_events.podSecurityContext.runAsUser }}
-        runAsGroup: {{ .Values.api_events.podSecurityContext.runAsGroup }}
+        fsGroup: {{ .Values.api.events.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.api.events.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.api.events.podSecurityContext.runAsGroup }}
       {{- end }}
-      serviceAccountName: {{ include "substra.api_events.serviceAccountName" . }}
+      serviceAccountName: {{ include "substra.api.events.serviceAccountName" . }}
       containers:
         - name: api-event-app
-          image: {{ include "common.images.name" .Values.api_events.image }}
-          imagePullPolicy: {{ .Values.api_events.image.pullPolicy }}
+          image: {{ include "common.images.name" .Values.api.events.image }}
+          imagePullPolicy: {{ .Values.api.events.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]
@@ -73,7 +73,7 @@ spec:
                   fieldRef:
                     fieldPath: metadata.namespace
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.api_events.{{ .Values.settings }}
+              value: backend.settings.api.events.{{ .Values.settings }}
           volumeMounts:
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
@@ -113,7 +113,7 @@ spec:
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
         - name: wait-init-migrations
-          image: {{ include "common.images.name" .Values.api_events.image }}
+          image: {{ include "common.images.name" .Values.api.events.image }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
           volumeMounts:
             - name: volume-wait-init-migrations
@@ -152,15 +152,15 @@ spec:
           secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-    {{- with .Values.api_events.nodeSelector }}
+    {{- with .Values.api.events.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.api_events.affinity }}
+    {{- with .Values.api.events.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.api_events.tolerations }}
+    {{- with .Values.api.events.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

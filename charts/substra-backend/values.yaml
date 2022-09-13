@@ -333,6 +333,53 @@ worker:
       fsGroup: 1001
       runAsUser: 1001
       runAsGroup: 1001
+  events:
+    ## @param worker.events.enabled Enable event service
+    ##
+    enabled: true
+    ## @param worker.events.image.registry Substra event app image registry
+    ## @param worker.events.image.repository Substra event app image repository
+    ## @param worker.events.image.tag Substra event app image tag
+    ## @param worker.events.image.pullPolicy Substra event app image pull policy
+    ## @param worker.events.image.pullSecrets Specify image pull secrets
+    ##
+    image:
+      registry: ghcr.io
+      repository: substra/substra-backend
+      tag: 0.29.0
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    ## @param worker.events.podSecurityContext.enabled Enable security context
+    ## @param worker.events.podSecurityContext.runAsUser User ID for the pod
+    ## @param worker.events.podSecurityContext.runAsGroup Group ID for the pod
+    ## @param worker.events.podSecurityContext.fsGroup FileSystem group ID for the pod
+    ##
+    podSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+    ## @param worker.events.nodeSelector Node labels for pod assignment
+    ##
+    nodeSelector: {}
+    ## @param worker.events.tolerations Toleration labels for pod assignment
+    ##
+    tolerations: []
+    ## @param worker.events.affinity Affinity settings for pod assignment
+    ##
+    affinity: {}
+    ## @param worker.events.rbac.create Create a role and service account for the event app
+    ##
+    rbac:
+      create: true
+    serviceAccount:
+      ## @param worker.events.serviceAccount.create Create a service account for the event app
+      ##
+      create: true
+      ## @param worker.events.serviceAccount.name The name of the ServiceAccount to use
+      ## If not set and create is true, a name is generated using the substra.fullname template
+      ##
+      name: ""
 
 ## @section Substra periodic tasks worker settings
 ##
@@ -449,105 +496,56 @@ containerRegistry:
   ##
   prepopulate: []
 
-## @section Worker event app settings
-##
-worker_events:
-  ## @param worker_events.enabled Enable event service
-  ##
-  enabled: true
-  ## @param worker_events.image.registry Substra event app image registry
-  ## @param worker_events.image.repository Substra event app image repository
-  ## @param worker_events.image.tag Substra event app image tag
-  ## @param worker_events.image.pullPolicy Substra event app image pull policy
-  ## @param worker_events.image.pullSecrets Specify image pull secrets
-  ##
-  image:
-    registry: ghcr.io
-    repository: substra/substra-backend
-    tag: 0.29.0
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  ## @param worker_events.podSecurityContext.enabled Enable security context
-  ## @param worker_events.podSecurityContext.runAsUser User ID for the pod
-  ## @param worker_events.podSecurityContext.runAsGroup Group ID for the pod
-  ## @param worker_events.podSecurityContext.fsGroup FileSystem group ID for the pod
-  ##
-  podSecurityContext:
-    enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
-  ## @param worker_events.nodeSelector Node labels for pod assignment
-  ##
-  nodeSelector: {}
-  ## @param worker_events.tolerations Toleration labels for pod assignment
-  ##
-  tolerations: []
-  ## @param worker_events.affinity Affinity settings for pod assignment
-  ##
-  affinity: {}
-  ## @param worker_events.rbac.create Create a role and service account for the event app
-  ##
-  rbac:
-    create: true
-  serviceAccount:
-    ## @param worker_events.serviceAccount.create Create a service account for the event app
-    ##
-    create: true
-    ## @param worker_events.serviceAccount.name The name of the ServiceAccount to use
-    ## If not set and create is true, a name is generated using the substra.fullname template
-    ##
-    name: ""
-
 ## @section Api event app settings
 ##
-api_events:
-  ## @param api_events.enabled Enable event service
-  ##
-  enabled: true
-  ## @param api_events.image.registry Substra event app image registry
-  ## @param api_events.image.repository Substra event app image repository
-  ## @param api_events.image.tag Substra event app image tag
-  ## @param api_events.image.pullPolicy Substra event app image pull policy
-  ## @param api_events.image.pullSecrets Specify image pull secrets
-  ##
-  image:
-    registry: ghcr.io
-    repository: substra/substra-backend
-    tag: 0.29.0
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  ## @param api_events.podSecurityContext.enabled Enable security context
-  ## @param api_events.podSecurityContext.runAsUser User ID for the pod
-  ## @param api_events.podSecurityContext.runAsGroup Group ID for the pod
-  ## @param api_events.podSecurityContext.fsGroup FileSystem group ID for the pod
-  ##
-  podSecurityContext:
+api:
+  events:
+    ## @param api.events.enabled Enable event service
+    ##
     enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
-  ## @param api_events.nodeSelector Node labels for pod assignment
-  ##
-  nodeSelector: {}
-  ## @param api_events.tolerations Toleration labels for pod assignment
-  ##
-  tolerations: []
-  ## @param api_events.affinity Affinity settings for pod assignment
-  ##
-  affinity: {}
-  ## @param api_events.rbac.create Create a role and service account for the event app
-  ##
-  rbac:
-    create: true
-  serviceAccount:
-    ## @param api_events.serviceAccount.create Create a service account for the event app
+    ## @param api.events.image.registry Substra event app image registry
+    ## @param api.events.image.repository Substra event app image repository
+    ## @param api.events.image.tag Substra event app image tag
+    ## @param api.events.image.pullPolicy Substra event app image pull policy
+    ## @param api.events.image.pullSecrets Specify image pull secrets
     ##
-    create: true
-    ## @param api_events.serviceAccount.name The name of the ServiceAccount to use
-    ## If not set and create is true, a name is generated using the substra.fullname template
+    image:
+      registry: ghcr.io
+      repository: substra/substra-backend
+      tag: 0.29.0
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    ## @param api.events.podSecurityContext.enabled Enable security context
+    ## @param api.events.podSecurityContext.runAsUser User ID for the pod
+    ## @param api.events.podSecurityContext.runAsGroup Group ID for the pod
+    ## @param api.events.podSecurityContext.fsGroup FileSystem group ID for the pod
     ##
-    name: ""
+    podSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+    ## @param api.events.nodeSelector Node labels for pod assignment
+    ##
+    nodeSelector: {}
+    ## @param api.events.tolerations Toleration labels for pod assignment
+    ##
+    tolerations: []
+    ## @param api.events.affinity Affinity settings for pod assignment
+    ##
+    affinity: {}
+    ## @param api.events.rbac.create Create a role and service account for the event app
+    ##
+    rbac:
+      create: true
+    serviceAccount:
+      ## @param api.events.serviceAccount.create Create a service account for the event app
+      ##
+      create: true
+      ## @param api.events.serviceAccount.name The name of the ServiceAccount to use
+      ## If not set and create is true, a name is generated using the substra.fullname template
+      ##
+      name: ""
 
 ## @section Orchestrator settings
 ##

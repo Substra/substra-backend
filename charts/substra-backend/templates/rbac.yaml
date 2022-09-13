@@ -52,7 +52,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 
-{{- if .Values.worker_events.serviceAccount.create }}
+{{- if .Values.worker.events.serviceAccount.create }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -62,7 +62,7 @@ metadata:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
 {{- end -}}
-{{- if .Values.worker_events.rbac.create }}
+{{- if .Values.worker.events.rbac.create }}
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -85,13 +85,13 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "substra.worker_events.serviceAccountName" . }}
+    name: {{ include "substra.worker.events.serviceAccountName" . }}
 roleRef:
   kind: Role
   name: {{ template "substra.fullname" . }}worker-event
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
-{{- if .Values.api_events.serviceAccount.create }}
+{{- if .Values.api.events.serviceAccount.create }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -101,7 +101,7 @@ metadata:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
 {{- end -}}
-{{- if .Values.api_events.rbac.create }}
+{{- if .Values.api.events.rbac.create }}
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -124,7 +124,7 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "substra.api_events.serviceAccountName" . }}
+    name: {{ include "substra.api.events.serviceAccountName" . }}
 roleRef:
   kind: Role
   name: {{ template "substra.fullname" . }}api-event

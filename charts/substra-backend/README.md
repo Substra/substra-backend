@@ -130,6 +130,22 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.computePod.securityContext.fsGroup`    | Set the filesystem group for the Compute pod                                                                                                       | `1001`                    |
 | `worker.computePod.securityContext.runAsUser`  | Set the user for the Compute pod                                                                                                                   | `1001`                    |
 | `worker.computePod.securityContext.runAsGroup` | Set the group for the Compute pod                                                                                                                  | `1001`                    |
+| `worker.events.enabled`                        | Enable event service                                                                                                                               | `true`                    |
+| `worker.events.image.registry`                 | Substra event app image registry                                                                                                                   | `ghcr.io`                 |
+| `worker.events.image.repository`               | Substra event app image repository                                                                                                                 | `substra/substra-backend` |
+| `worker.events.image.tag`                      | Substra event app image tag                                                                                                                        | `0.29.0`                  |
+| `worker.events.image.pullPolicy`               | Substra event app image pull policy                                                                                                                | `IfNotPresent`            |
+| `worker.events.image.pullSecrets`              | Specify image pull secrets                                                                                                                         | `[]`                      |
+| `worker.events.podSecurityContext.enabled`     | Enable security context                                                                                                                            | `true`                    |
+| `worker.events.podSecurityContext.runAsUser`   | User ID for the pod                                                                                                                                | `1001`                    |
+| `worker.events.podSecurityContext.runAsGroup`  | Group ID for the pod                                                                                                                               | `1001`                    |
+| `worker.events.podSecurityContext.fsGroup`     | FileSystem group ID for the pod                                                                                                                    | `1001`                    |
+| `worker.events.nodeSelector`                   | Node labels for pod assignment                                                                                                                     | `{}`                      |
+| `worker.events.tolerations`                    | Toleration labels for pod assignment                                                                                                               | `[]`                      |
+| `worker.events.affinity`                       | Affinity settings for pod assignment                                                                                                               | `{}`                      |
+| `worker.events.rbac.create`                    | Create a role and service account for the event app                                                                                                | `true`                    |
+| `worker.events.serviceAccount.create`          | Create a service account for the event app                                                                                                         | `true`                    |
+| `worker.events.serviceAccount.name`            | The name of the ServiceAccount to use                                                                                                              | `""`                      |
 
 
 ### Substra periodic tasks worker settings
@@ -186,48 +202,26 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `containerRegistry.prepopulate` | Images to add to the container registry                                                         | `[]`        |
 
 
-### Worker event app settings
-
-| Name                                          | Description                                         | Value                     |
-| --------------------------------------------- | --------------------------------------------------- | ------------------------- |
-| `worker_events.enabled`                       | Enable event service                                | `true`                    |
-| `worker_events.image.registry`                | Substra event app image registry                    | `ghcr.io`                 |
-| `worker_events.image.repository`              | Substra event app image repository                  | `substra/substra-backend` |
-| `worker_events.image.tag`                     | Substra event app image tag                         | `0.29.0`                  |
-| `worker_events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`            |
-| `worker_events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                      |
-| `worker_events.podSecurityContext.enabled`    | Enable security context                             | `true`                    |
-| `worker_events.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                    |
-| `worker_events.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                    |
-| `worker_events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                    |
-| `worker_events.nodeSelector`                  | Node labels for pod assignment                      | `{}`                      |
-| `worker_events.tolerations`                   | Toleration labels for pod assignment                | `[]`                      |
-| `worker_events.affinity`                      | Affinity settings for pod assignment                | `{}`                      |
-| `worker_events.rbac.create`                   | Create a role and service account for the event app | `true`                    |
-| `worker_events.serviceAccount.create`         | Create a service account for the event app          | `true`                    |
-| `worker_events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                      |
-
-
 ### Api event app settings
 
 | Name                                       | Description                                         | Value                     |
 | ------------------------------------------ | --------------------------------------------------- | ------------------------- |
-| `api_events.enabled`                       | Enable event service                                | `true`                    |
-| `api_events.image.registry`                | Substra event app image registry                    | `ghcr.io`                 |
-| `api_events.image.repository`              | Substra event app image repository                  | `substra/substra-backend` |
-| `api_events.image.tag`                     | Substra event app image tag                         | `0.29.0`                  |
-| `api_events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`            |
-| `api_events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                      |
-| `api_events.podSecurityContext.enabled`    | Enable security context                             | `true`                    |
-| `api_events.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                    |
-| `api_events.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                    |
-| `api_events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                    |
-| `api_events.nodeSelector`                  | Node labels for pod assignment                      | `{}`                      |
-| `api_events.tolerations`                   | Toleration labels for pod assignment                | `[]`                      |
-| `api_events.affinity`                      | Affinity settings for pod assignment                | `{}`                      |
-| `api_events.rbac.create`                   | Create a role and service account for the event app | `true`                    |
-| `api_events.serviceAccount.create`         | Create a service account for the event app          | `true`                    |
-| `api_events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                      |
+| `api.events.enabled`                       | Enable event service                                | `true`                    |
+| `api.events.image.registry`                | Substra event app image registry                    | `ghcr.io`                 |
+| `api.events.image.repository`              | Substra event app image repository                  | `substra/substra-backend` |
+| `api.events.image.tag`                     | Substra event app image tag                         | `0.29.0`                  |
+| `api.events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`            |
+| `api.events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                      |
+| `api.events.podSecurityContext.enabled`    | Enable security context                             | `true`                    |
+| `api.events.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                    |
+| `api.events.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                    |
+| `api.events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                    |
+| `api.events.nodeSelector`                  | Node labels for pod assignment                      | `{}`                      |
+| `api.events.tolerations`                   | Toleration labels for pod assignment                | `[]`                      |
+| `api.events.affinity`                      | Affinity settings for pod assignment                | `{}`                      |
+| `api.events.rbac.create`                   | Create a role and service account for the event app | `true`                    |
+| `api.events.serviceAccount.create`         | Create a service account for the event app          | `true`                    |
+| `api.events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                      |
 
 
 ### Orchestrator settings

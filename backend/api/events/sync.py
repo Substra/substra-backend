@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
 from api.errors import AlreadyExistsError
+from api.events.dynamic_fields import parse_computetask_dates_from_event
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskOutput
@@ -23,7 +24,6 @@ from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
-from api_events.dynamic_fields import parse_computetask_dates_from_event
 from orchestrator import client as orc_client
 from orchestrator import computetask
 

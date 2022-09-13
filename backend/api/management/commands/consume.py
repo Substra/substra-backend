@@ -3,10 +3,10 @@ import time
 import structlog
 from django.core.management.base import BaseCommand
 
-from api_events import health
-from api_events.reactor import consume
+from api.events import health
+from api.events.reactor import consume
 
-logger = structlog.get_logger("api_events")
+logger = structlog.get_logger("events")
 
 
 class Command(BaseCommand):

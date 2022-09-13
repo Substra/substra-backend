@@ -1,6 +1,6 @@
-from ..deps.ledger import *
-from ..deps.orchestrator import *
-from ..dev import *
+from ...deps.ledger import *
+from ...deps.orchestrator import *
+from ...dev import *
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -8,7 +8,6 @@ INSTALLED_APPS = [
     "django_celery_results",
     "rest_framework",
     "api",
-    "worker_events",
     "substrapp",
     "users",
     "organization",

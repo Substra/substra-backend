@@ -5,12 +5,12 @@ from django.conf import settings
 from django.db import close_old_connections
 
 import orchestrator
+from api.events import health
+from api.events import sync
 from api.models import LastEvent
-from api_events import health
-from api_events import sync
 from substrapp.orchestrator import get_orchestrator_client
 
-logger = structlog.get_logger("api_events")
+logger = structlog.get_logger("events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
 
