@@ -10,45 +10,45 @@ class DataSampleServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.RegisterDataSamplesParam,
-        datasample_pb2.RegisterDataSamplesResponse]
-
+        datasample_pb2.RegisterDataSamplesResponse,
+    ]
     UpdateDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.UpdateDataSamplesParam,
-        datasample_pb2.UpdateDataSamplesResponse]
-
+        datasample_pb2.UpdateDataSamplesResponse,
+    ]
     QueryDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.QueryDataSamplesParam,
-        datasample_pb2.QueryDataSamplesResponse]
-
+        datasample_pb2.QueryDataSamplesResponse,
+    ]
     GetDataSample: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.GetDataSampleParam,
-        datasample_pb2.DataSample]
-
+        datasample_pb2.DataSample,
+    ]
 
 class DataSampleServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterDataSamples(self,
+    def RegisterDataSamples(
+        self,
         request: datasample_pb2.RegisterDataSamplesParam,
         context: grpc.ServicerContext,
     ) -> datasample_pb2.RegisterDataSamplesResponse: ...
-
     @abc.abstractmethod
-    def UpdateDataSamples(self,
+    def UpdateDataSamples(
+        self,
         request: datasample_pb2.UpdateDataSamplesParam,
         context: grpc.ServicerContext,
     ) -> datasample_pb2.UpdateDataSamplesResponse: ...
-
     @abc.abstractmethod
-    def QueryDataSamples(self,
+    def QueryDataSamples(
+        self,
         request: datasample_pb2.QueryDataSamplesParam,
         context: grpc.ServicerContext,
     ) -> datasample_pb2.QueryDataSamplesResponse: ...
-
     @abc.abstractmethod
-    def GetDataSample(self,
+    def GetDataSample(
+        self,
         request: datasample_pb2.GetDataSampleParam,
         context: grpc.ServicerContext,
     ) -> datasample_pb2.DataSample: ...
-
 
 def add_DataSampleServiceServicer_to_server(servicer: DataSampleServiceServicer, server: grpc.Server) -> None: ...

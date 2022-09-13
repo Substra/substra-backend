@@ -10,45 +10,45 @@ class DataManagerServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.NewDataManager,
-        datamanager_pb2.DataManager]
-
+        datamanager_pb2.DataManager,
+    ]
     GetDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.GetDataManagerParam,
-        datamanager_pb2.DataManager]
-
+        datamanager_pb2.DataManager,
+    ]
     QueryDataManagers: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.QueryDataManagersParam,
-        datamanager_pb2.QueryDataManagersResponse]
-
+        datamanager_pb2.QueryDataManagersResponse,
+    ]
     UpdateDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.UpdateDataManagerParam,
-        datamanager_pb2.UpdateDataManagerResponse]
-
+        datamanager_pb2.UpdateDataManagerResponse,
+    ]
 
 class DataManagerServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterDataManager(self,
+    def RegisterDataManager(
+        self,
         request: datamanager_pb2.NewDataManager,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.DataManager: ...
-
     @abc.abstractmethod
-    def GetDataManager(self,
+    def GetDataManager(
+        self,
         request: datamanager_pb2.GetDataManagerParam,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.DataManager: ...
-
     @abc.abstractmethod
-    def QueryDataManagers(self,
+    def QueryDataManagers(
+        self,
         request: datamanager_pb2.QueryDataManagersParam,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.QueryDataManagersResponse: ...
-
     @abc.abstractmethod
-    def UpdateDataManager(self,
+    def UpdateDataManager(
+        self,
         request: datamanager_pb2.UpdateDataManagerParam,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.UpdateDataManagerResponse: ...
-
 
 def add_DataManagerServiceServicer_to_server(servicer: DataManagerServiceServicer, server: grpc.Server) -> None: ...

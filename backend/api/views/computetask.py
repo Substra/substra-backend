@@ -63,9 +63,7 @@ def _compute_extra_data(orc_task, task_data):
         }
 
     elif orc_task["category"] == ComputeTask.Category.TASK_AGGREGATE:
-        return {
-            "worker": task_data["worker"],
-        }
+        return {}
 
     elif orc_task["category"] == ComputeTask.Category.TASK_COMPOSITE:
         return {
@@ -154,6 +152,9 @@ def _register_in_orchestrator(tasks_data, channel_name):
 
         extra_data_field = EXTRA_DATA_FIELD[orc_task["category"]]
         orc_task[extra_data_field] = _compute_extra_data(orc_task, task_data)
+
+        if "worker" in task_data:
+            orc_task["worker"] = task_data["worker"]
 
         batch[orc_task["key"]] = orc_task
 

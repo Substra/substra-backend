@@ -10,15 +10,15 @@ class InfoServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     QueryVersion: grpc.UnaryUnaryMultiCallable[
         info_pb2.QueryVersionParam,
-        info_pb2.QueryVersionResponse]
-
+        info_pb2.QueryVersionResponse,
+    ]
 
 class InfoServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def QueryVersion(self,
+    def QueryVersion(
+        self,
         request: info_pb2.QueryVersionParam,
         context: grpc.ServicerContext,
     ) -> info_pb2.QueryVersionResponse: ...
-
 
 def add_InfoServiceServicer_to_server(servicer: InfoServiceServicer, server: grpc.Server) -> None: ...

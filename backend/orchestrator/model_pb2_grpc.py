@@ -29,18 +29,8 @@ class ModelServiceStub(object):
                 request_serializer=model__pb2.GetModelParam.SerializeToString,
                 response_deserializer=model__pb2.Model.FromString,
                 )
-        self.QueryModels = channel.unary_unary(
-                '/orchestrator.ModelService/QueryModels',
-                request_serializer=model__pb2.QueryModelsParam.SerializeToString,
-                response_deserializer=model__pb2.QueryModelsResponse.FromString,
-                )
         self.GetComputeTaskOutputModels = channel.unary_unary(
                 '/orchestrator.ModelService/GetComputeTaskOutputModels',
-                request_serializer=model__pb2.GetComputeTaskModelsParam.SerializeToString,
-                response_deserializer=model__pb2.GetComputeTaskModelsResponse.FromString,
-                )
-        self.GetComputeTaskInputModels = channel.unary_unary(
-                '/orchestrator.ModelService/GetComputeTaskInputModels',
                 request_serializer=model__pb2.GetComputeTaskModelsParam.SerializeToString,
                 response_deserializer=model__pb2.GetComputeTaskModelsResponse.FromString,
                 )
@@ -77,19 +67,7 @@ class ModelServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def QueryModels(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetComputeTaskOutputModels(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetComputeTaskInputModels(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -125,18 +103,8 @@ def add_ModelServiceServicer_to_server(servicer, server):
                     request_deserializer=model__pb2.GetModelParam.FromString,
                     response_serializer=model__pb2.Model.SerializeToString,
             ),
-            'QueryModels': grpc.unary_unary_rpc_method_handler(
-                    servicer.QueryModels,
-                    request_deserializer=model__pb2.QueryModelsParam.FromString,
-                    response_serializer=model__pb2.QueryModelsResponse.SerializeToString,
-            ),
             'GetComputeTaskOutputModels': grpc.unary_unary_rpc_method_handler(
                     servicer.GetComputeTaskOutputModels,
-                    request_deserializer=model__pb2.GetComputeTaskModelsParam.FromString,
-                    response_serializer=model__pb2.GetComputeTaskModelsResponse.SerializeToString,
-            ),
-            'GetComputeTaskInputModels': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetComputeTaskInputModels,
                     request_deserializer=model__pb2.GetComputeTaskModelsParam.FromString,
                     response_serializer=model__pb2.GetComputeTaskModelsResponse.SerializeToString,
             ),
@@ -212,23 +180,6 @@ class ModelService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def QueryModels(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/QueryModels',
-            model__pb2.QueryModelsParam.SerializeToString,
-            model__pb2.QueryModelsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def GetComputeTaskOutputModels(request,
             target,
             options=(),
@@ -240,23 +191,6 @@ class ModelService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/GetComputeTaskOutputModels',
-            model__pb2.GetComputeTaskModelsParam.SerializeToString,
-            model__pb2.GetComputeTaskModelsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetComputeTaskInputModels(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/GetComputeTaskInputModels',
             model__pb2.GetComputeTaskModelsParam.SerializeToString,
             model__pb2.GetComputeTaskModelsResponse.FromString,
             options, channel_credentials,

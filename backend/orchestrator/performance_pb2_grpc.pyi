@@ -10,25 +10,25 @@ class PerformanceServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterPerformance: grpc.UnaryUnaryMultiCallable[
         performance_pb2.NewPerformance,
-        performance_pb2.Performance]
-
+        performance_pb2.Performance,
+    ]
     QueryPerformances: grpc.UnaryUnaryMultiCallable[
         performance_pb2.QueryPerformancesParam,
-        performance_pb2.QueryPerformancesResponse]
-
+        performance_pb2.QueryPerformancesResponse,
+    ]
 
 class PerformanceServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterPerformance(self,
+    def RegisterPerformance(
+        self,
         request: performance_pb2.NewPerformance,
         context: grpc.ServicerContext,
     ) -> performance_pb2.Performance: ...
-
     @abc.abstractmethod
-    def QueryPerformances(self,
+    def QueryPerformances(
+        self,
         request: performance_pb2.QueryPerformancesParam,
         context: grpc.ServicerContext,
     ) -> performance_pb2.QueryPerformancesResponse: ...
-
 
 def add_PerformanceServiceServicer_to_server(servicer: PerformanceServiceServicer, server: grpc.Server) -> None: ...

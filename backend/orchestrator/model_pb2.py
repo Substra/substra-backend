@@ -17,7 +17,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmodel.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xfb\x01\n\x05Model\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x06 \x01(\t\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xb4\x01\n\x08NewModel\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x05 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\"=\n\x13RegisterModelsParam\x12&\n\x06models\x18\x01 \x03(\x0b\x32\x16.orchestrator.NewModel\"=\n\x16RegisterModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\"5\n\x19GetComputeTaskModelsParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\"C\n\x1cGetComputeTaskModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\")\n\x14\x43\x61nDisableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\".\n\x17\x43\x61nDisableModelResponse\x12\x13\n\x0b\x63\x61n_disable\x18\x01 \x01(\x08\"&\n\x11\x44isableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\"\x1c\n\rGetModelParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"h\n\x10QueryModelsParam\x12-\n\x08\x63\x61tegory\x18\x01 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x12\n\npage_token\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\r\"S\n\x13QueryModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x16\n\x14\x44isableModelResponse*D\n\rModelCategory\x12\x11\n\rMODEL_UNKNOWN\x10\x00\x12\x10\n\x0cMODEL_SIMPLE\x10\x01\x12\x0e\n\nMODEL_HEAD\x10\x02\x32\xd4\x05\n\x0cModelService\x12\x41\n\rRegisterModel\x12\x16.orchestrator.NewModel\x1a\x13.orchestrator.Model\"\x03\x88\x02\x01\x12Y\n\x0eRegisterModels\x12!.orchestrator.RegisterModelsParam\x1a$.orchestrator.RegisterModelsResponse\x12<\n\x08GetModel\x12\x1b.orchestrator.GetModelParam\x1a\x13.orchestrator.Model\x12P\n\x0bQueryModels\x12\x1e.orchestrator.QueryModelsParam\x1a!.orchestrator.QueryModelsResponse\x12q\n\x1aGetComputeTaskOutputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12p\n\x19GetComputeTaskInputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12\\\n\x0f\x43\x61nDisableModel\x12\".orchestrator.CanDisableModelParam\x1a%.orchestrator.CanDisableModelResponse\x12S\n\x0c\x44isableModel\x12\x1f.orchestrator.DisableModelParam\x1a\".orchestrator.DisableModelResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmodel.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xfb\x01\n\x05Model\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x06 \x01(\t\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xb4\x01\n\x08NewModel\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x05 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\"=\n\x13RegisterModelsParam\x12&\n\x06models\x18\x01 \x03(\x0b\x32\x16.orchestrator.NewModel\"=\n\x16RegisterModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\"5\n\x19GetComputeTaskModelsParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\"C\n\x1cGetComputeTaskModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\")\n\x14\x43\x61nDisableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\".\n\x17\x43\x61nDisableModelResponse\x12\x13\n\x0b\x63\x61n_disable\x18\x01 \x01(\x08\"&\n\x11\x44isableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\"\x1c\n\rGetModelParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x16\n\x14\x44isableModelResponse*D\n\rModelCategory\x12\x11\n\rMODEL_UNKNOWN\x10\x00\x12\x10\n\x0cMODEL_SIMPLE\x10\x01\x12\x0e\n\nMODEL_HEAD\x10\x02\x32\x90\x04\n\x0cModelService\x12\x41\n\rRegisterModel\x12\x16.orchestrator.NewModel\x1a\x13.orchestrator.Model\"\x03\x88\x02\x01\x12Y\n\x0eRegisterModels\x12!.orchestrator.RegisterModelsParam\x1a$.orchestrator.RegisterModelsResponse\x12<\n\x08GetModel\x12\x1b.orchestrator.GetModelParam\x1a\x13.orchestrator.Model\x12q\n\x1aGetComputeTaskOutputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12\\\n\x0f\x43\x61nDisableModel\x12\".orchestrator.CanDisableModelParam\x1a%.orchestrator.CanDisableModelResponse\x12S\n\x0c\x44isableModel\x12\x1f.orchestrator.DisableModelParam\x1a\".orchestrator.DisableModelResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 _MODELCATEGORY = DESCRIPTOR.enum_types_by_name['ModelCategory']
 ModelCategory = enum_type_wrapper.EnumTypeWrapper(_MODELCATEGORY)
@@ -36,8 +36,6 @@ _CANDISABLEMODELPARAM = DESCRIPTOR.message_types_by_name['CanDisableModelParam']
 _CANDISABLEMODELRESPONSE = DESCRIPTOR.message_types_by_name['CanDisableModelResponse']
 _DISABLEMODELPARAM = DESCRIPTOR.message_types_by_name['DisableModelParam']
 _GETMODELPARAM = DESCRIPTOR.message_types_by_name['GetModelParam']
-_QUERYMODELSPARAM = DESCRIPTOR.message_types_by_name['QueryModelsParam']
-_QUERYMODELSRESPONSE = DESCRIPTOR.message_types_by_name['QueryModelsResponse']
 _DISABLEMODELRESPONSE = DESCRIPTOR.message_types_by_name['DisableModelResponse']
 Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
   'DESCRIPTOR' : _MODEL,
@@ -109,20 +107,6 @@ GetModelParam = _reflection.GeneratedProtocolMessageType('GetModelParam', (_mess
   })
 _sym_db.RegisterMessage(GetModelParam)
 
-QueryModelsParam = _reflection.GeneratedProtocolMessageType('QueryModelsParam', (_message.Message,), {
-  'DESCRIPTOR' : _QUERYMODELSPARAM,
-  '__module__' : 'model_pb2'
-  # @@protoc_insertion_point(class_scope:orchestrator.QueryModelsParam)
-  })
-_sym_db.RegisterMessage(QueryModelsParam)
-
-QueryModelsResponse = _reflection.GeneratedProtocolMessageType('QueryModelsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _QUERYMODELSRESPONSE,
-  '__module__' : 'model_pb2'
-  # @@protoc_insertion_point(class_scope:orchestrator.QueryModelsResponse)
-  })
-_sym_db.RegisterMessage(QueryModelsResponse)
-
 DisableModelResponse = _reflection.GeneratedProtocolMessageType('DisableModelResponse', (_message.Message,), {
   'DESCRIPTOR' : _DISABLEMODELRESPONSE,
   '__module__' : 'model_pb2'
@@ -137,8 +121,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._serialized_options = b'Z)github.com/substra/orchestrator/lib/asset'
   _MODELSERVICE.methods_by_name['RegisterModel']._options = None
   _MODELSERVICE.methods_by_name['RegisterModel']._serialized_options = b'\210\002\001'
-  _MODELCATEGORY._serialized_start=1139
-  _MODELCATEGORY._serialized_end=1207
+  _MODELCATEGORY._serialized_start=948
+  _MODELCATEGORY._serialized_end=1016
   _MODEL._serialized_start=77
   _MODEL._serialized_end=328
   _NEWMODEL._serialized_start=331
@@ -159,12 +143,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _DISABLEMODELPARAM._serialized_end=892
   _GETMODELPARAM._serialized_start=894
   _GETMODELPARAM._serialized_end=922
-  _QUERYMODELSPARAM._serialized_start=924
-  _QUERYMODELSPARAM._serialized_end=1028
-  _QUERYMODELSRESPONSE._serialized_start=1030
-  _QUERYMODELSRESPONSE._serialized_end=1113
-  _DISABLEMODELRESPONSE._serialized_start=1115
-  _DISABLEMODELRESPONSE._serialized_end=1137
-  _MODELSERVICE._serialized_start=1210
-  _MODELSERVICE._serialized_end=1934
+  _DISABLEMODELRESPONSE._serialized_start=924
+  _DISABLEMODELRESPONSE._serialized_end=946
+  _MODELSERVICE._serialized_start=1019
+  _MODELSERVICE._serialized_end=1547
 # @@protoc_insertion_point(module_scope)

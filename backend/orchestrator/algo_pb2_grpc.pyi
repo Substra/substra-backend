@@ -10,45 +10,45 @@ class AlgoServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterAlgo: grpc.UnaryUnaryMultiCallable[
         algo_pb2.NewAlgo,
-        algo_pb2.Algo]
-
+        algo_pb2.Algo,
+    ]
     GetAlgo: grpc.UnaryUnaryMultiCallable[
         algo_pb2.GetAlgoParam,
-        algo_pb2.Algo]
-
+        algo_pb2.Algo,
+    ]
     QueryAlgos: grpc.UnaryUnaryMultiCallable[
         algo_pb2.QueryAlgosParam,
-        algo_pb2.QueryAlgosResponse]
-
+        algo_pb2.QueryAlgosResponse,
+    ]
     UpdateAlgo: grpc.UnaryUnaryMultiCallable[
         algo_pb2.UpdateAlgoParam,
-        algo_pb2.UpdateAlgoResponse]
-
+        algo_pb2.UpdateAlgoResponse,
+    ]
 
 class AlgoServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterAlgo(self,
+    def RegisterAlgo(
+        self,
         request: algo_pb2.NewAlgo,
         context: grpc.ServicerContext,
     ) -> algo_pb2.Algo: ...
-
     @abc.abstractmethod
-    def GetAlgo(self,
+    def GetAlgo(
+        self,
         request: algo_pb2.GetAlgoParam,
         context: grpc.ServicerContext,
     ) -> algo_pb2.Algo: ...
-
     @abc.abstractmethod
-    def QueryAlgos(self,
+    def QueryAlgos(
+        self,
         request: algo_pb2.QueryAlgosParam,
         context: grpc.ServicerContext,
     ) -> algo_pb2.QueryAlgosResponse: ...
-
     @abc.abstractmethod
-    def UpdateAlgo(self,
+    def UpdateAlgo(
+        self,
         request: algo_pb2.UpdateAlgoParam,
         context: grpc.ServicerContext,
     ) -> algo_pb2.UpdateAlgoResponse: ...
-
 
 def add_AlgoServiceServicer_to_server(servicer: AlgoServiceServicer, server: grpc.Server) -> None: ...

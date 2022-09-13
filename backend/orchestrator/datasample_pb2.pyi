@@ -3,12 +3,17 @@
 isort:skip_file
 """
 import builtins
+import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
-import typing
-import typing_extensions
+import sys
+
+if sys.version_info >= (3, 8):
+    import typing as typing_extensions
+else:
+    import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
@@ -16,156 +21,186 @@ class DataSample(google.protobuf.message.Message):
     """DataSample represent a data sample that will be processed by an
     algorithm to produce or test a model.
     """
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEY_FIELD_NUMBER: builtins.int
     DATA_MANAGER_KEYS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     TEST_ONLY_FIELD_NUMBER: builtins.int
     CHECKSUM_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
-    key: typing.Text
+    key: builtins.str
     @property
-    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]:
+    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]:
         """mutable"""
-        pass
-    owner: typing.Text
+    owner: builtins.str
     test_only: builtins.bool
-    checksum: typing.Text
+    checksum: builtins.str
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        key: typing.Text = ...,
-        data_manager_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        owner: typing.Text = ...,
+        key: builtins.str = ...,
+        data_manager_keys: collections.abc.Iterable[builtins.str] | None = ...,
+        owner: builtins.str = ...,
         test_only: builtins.bool = ...,
-        checksum: typing.Text = ...,
-        creation_date: typing.Optional[google.protobuf.timestamp_pb2.Timestamp] = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["creation_date",b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["checksum",b"checksum","creation_date",b"creation_date","data_manager_keys",b"data_manager_keys","key",b"key","owner",b"owner","test_only",b"test_only"]) -> None: ...
+        checksum: builtins.str = ...,
+        creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "creation_date", b"creation_date", "data_manager_keys", b"data_manager_keys", "key", b"key", "owner", b"owner", "test_only", b"test_only"]) -> None: ...
+
 global___DataSample = DataSample
 
 class NewDataSample(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEY_FIELD_NUMBER: builtins.int
     DATA_MANAGER_KEYS_FIELD_NUMBER: builtins.int
     TEST_ONLY_FIELD_NUMBER: builtins.int
     CHECKSUM_FIELD_NUMBER: builtins.int
-    key: typing.Text
+    key: builtins.str
     @property
-    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
+    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
     test_only: builtins.bool
-    checksum: typing.Text
-    def __init__(self,
+    checksum: builtins.str
+    def __init__(
+        self,
         *,
-        key: typing.Text = ...,
-        data_manager_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
+        key: builtins.str = ...,
+        data_manager_keys: collections.abc.Iterable[builtins.str] | None = ...,
         test_only: builtins.bool = ...,
-        checksum: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["checksum",b"checksum","data_manager_keys",b"data_manager_keys","key",b"key","test_only",b"test_only"]) -> None: ...
+        checksum: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "data_manager_keys", b"data_manager_keys", "key", b"key", "test_only", b"test_only"]) -> None: ...
+
 global___NewDataSample = NewDataSample
 
 class RegisterDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     SAMPLES_FIELD_NUMBER: builtins.int
     @property
     def samples(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NewDataSample]: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        samples: typing.Optional[typing.Iterable[global___NewDataSample]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["samples",b"samples"]) -> None: ...
+        samples: collections.abc.Iterable[global___NewDataSample] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["samples", b"samples"]) -> None: ...
+
 global___RegisterDataSamplesParam = RegisterDataSamplesParam
 
 class RegisterDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     DATA_SAMPLES_FIELD_NUMBER: builtins.int
     @property
     def data_samples(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___DataSample]: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        data_samples: typing.Optional[typing.Iterable[global___DataSample]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_samples",b"data_samples"]) -> None: ...
+        data_samples: collections.abc.Iterable[global___DataSample] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_samples", b"data_samples"]) -> None: ...
+
 global___RegisterDataSamplesResponse = RegisterDataSamplesResponse
 
 class UpdateDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYS_FIELD_NUMBER: builtins.int
     DATA_MANAGER_KEYS_FIELD_NUMBER: builtins.int
     @property
-    def keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
+    def keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
     @property
-    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    def __init__(self,
+    def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
+    def __init__(
+        self,
         *,
-        keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        data_manager_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_keys",b"data_manager_keys","keys",b"keys"]) -> None: ...
+        keys: collections.abc.Iterable[builtins.str] | None = ...,
+        data_manager_keys: collections.abc.Iterable[builtins.str] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_manager_keys", b"data_manager_keys", "keys", b"keys"]) -> None: ...
+
 global___UpdateDataSamplesParam = UpdateDataSamplesParam
 
 class UpdateDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
-    def __init__(self,
-        ) -> None: ...
+
+    def __init__(
+        self,
+    ) -> None: ...
+
 global___UpdateDataSamplesResponse = UpdateDataSamplesResponse
 
 class DataSampleQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEYS_FIELD_NUMBER: builtins.int
     @property
-    def keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
-    def __init__(self,
+    def keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
+    def __init__(
+        self,
         *,
-        keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["keys",b"keys"]) -> None: ...
+        keys: collections.abc.Iterable[builtins.str] | None = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["keys", b"keys"]) -> None: ...
+
 global___DataSampleQueryFilter = DataSampleQueryFilter
 
 class QueryDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     PAGE_TOKEN_FIELD_NUMBER: builtins.int
     PAGE_SIZE_FIELD_NUMBER: builtins.int
     FILTER_FIELD_NUMBER: builtins.int
-    page_token: typing.Text
+    page_token: builtins.str
     page_size: builtins.int
     @property
     def filter(self) -> global___DataSampleQueryFilter: ...
-    def __init__(self,
+    def __init__(
+        self,
         *,
-        page_token: typing.Text = ...,
+        page_token: builtins.str = ...,
         page_size: builtins.int = ...,
-        filter: typing.Optional[global___DataSampleQueryFilter] = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["filter",b"filter"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["filter",b"filter","page_size",b"page_size","page_token",b"page_token"]) -> None: ...
+        filter: global___DataSampleQueryFilter | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["filter", b"filter"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["filter", b"filter", "page_size", b"page_size", "page_token", b"page_token"]) -> None: ...
+
 global___QueryDataSamplesParam = QueryDataSamplesParam
 
 class QueryDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     DATA_SAMPLES_FIELD_NUMBER: builtins.int
     NEXT_PAGE_TOKEN_FIELD_NUMBER: builtins.int
     @property
     def data_samples(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___DataSample]: ...
-    next_page_token: typing.Text
-    def __init__(self,
+    next_page_token: builtins.str
+    def __init__(
+        self,
         *,
-        data_samples: typing.Optional[typing.Iterable[global___DataSample]] = ...,
-        next_page_token: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_samples",b"data_samples","next_page_token",b"next_page_token"]) -> None: ...
+        data_samples: collections.abc.Iterable[global___DataSample] | None = ...,
+        next_page_token: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_samples", b"data_samples", "next_page_token", b"next_page_token"]) -> None: ...
+
 global___QueryDataSamplesResponse = QueryDataSamplesResponse
 
 class GetDataSampleParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
     KEY_FIELD_NUMBER: builtins.int
-    key: typing.Text
-    def __init__(self,
+    key: builtins.str
+    def __init__(
+        self,
         *,
-        key: typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key",b"key"]) -> None: ...
+        key: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key", b"key"]) -> None: ...
+
 global___GetDataSampleParam = GetDataSampleParam
