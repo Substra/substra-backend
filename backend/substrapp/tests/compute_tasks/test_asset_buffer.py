@@ -290,7 +290,7 @@ class AssetBufferTests(APITestCase):
             address=Address(uri="some storage address", checksum=self.model_checksum),
         )
 
-        organization_id = "organization 1"
+        organization_id = "OrgA"
         storage_address = "some storage address"
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
