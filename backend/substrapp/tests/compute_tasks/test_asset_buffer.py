@@ -290,11 +290,11 @@ class AssetBufferTests(APITestCase):
             address=Address(uri="some storage address", checksum=self.model_checksum),
         )
 
-        organization_id = "organization 1"
+        organization_id = "OrgA"
         storage_address = "some storage address"
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
-            _add_model_to_buffer(CHANNEL, model, organization_id)
+            _add_model_to_buffer(CHANNEL, model)
 
             mdownload.assert_called_once_with(
                 CHANNEL,
@@ -345,7 +345,7 @@ class AssetBufferTests(APITestCase):
 
         with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload:
             mdownload.side_effect = download_model
-            _add_model_to_buffer(CHANNEL, model, "organization 1")
+            _add_model_to_buffer(CHANNEL, model)
 
         # load from buffer into task dir
         dest = os.path.join(self.dirs.task_dir, TaskDirName.InModels, self.model_key)

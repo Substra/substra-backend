@@ -1,7 +1,7 @@
 import os
 import shutil
+import typing
 from functools import wraps
-from typing import Callable
 
 import structlog
 from billiard import Process
@@ -17,7 +17,6 @@ from substrapp.compute_tasks.directories import AssetBufferDirName
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.lock_local import lock_resource
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_dir_hash
 from substrapp.utils import get_owner
 from substrapp.utils import uncompress_content
@@ -75,7 +74,7 @@ def clear_assets_buffer() -> None:
                 logger.exception("failed to delete asset from Asset Buffer", asset=file_path, e=e)
 
 
-def add_to_buffer_safe(add_function) -> Callable:
+def add_to_buffer_safe(add_function: typing.Callable) -> typing.Callable:
     """
     Decorator to safely add an asset to the buffer.
 
@@ -87,8 +86,11 @@ def add_to_buffer_safe(add_function) -> Callable:
     """
 
     @wraps(add_function)
-    def wrap_function(*args, **kwargs):
-        dst = kwargs["dst"]
+    def wrap_function(*args: tuple, **kwargs: dict[str, typing.Any]) -> None:
+        if kwargs["dst"] and isinstance(kwargs["dst"], str):
+            dst: str = kwargs["dst"]
+        else:
+            raise TypeError("dst argument should be present and should be a string")
 
         if os.path.exists(dst):
             return  # asset already exists
@@ -233,9 +235,7 @@ def _add_models_to_buffer(channel_name: str, models: list[Model]) -> None:
     exceptions = []
 
     for model in models:
-        with get_orchestrator_client(channel_name) as client:
-            parent_task = client.query_task(model.compute_task_key)
-        args = (channel_name, model, parent_task.worker)
+        args = (channel_name, model)
         proc = Process(target=_add_model_to_buffer_with_lock, args=args)
         procs.append((proc, args))
         proc.start()
@@ -253,16 +253,16 @@ def _add_models_to_buffer(channel_name: str, models: list[Model]) -> None:
         raise Exception(exceptions)
 
 
-def _add_model_to_buffer(channel_name: str, model: Model, organization_id: str) -> None:
+def _add_model_to_buffer(channel_name: str, model: Model) -> None:
     dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model.key)
-    _add_model_to_buffer_internal(channel_name, model, organization_id, dst=dst)
+    _add_model_to_buffer_internal(channel_name, model, dst=dst)
 
 
 @add_to_buffer_safe
-def _add_model_to_buffer_internal(channel_name: str, model: Model, organization_id: str, dst: str) -> None:
+def _add_model_to_buffer_internal(channel_name: str, model: Model, dst: str) -> None:
     organization_client.download(
         channel_name,
-        organization_id,
+        model.owner,
         model.address.uri,
         dst,
         model.address.checksum,
@@ -270,9 +270,9 @@ def _add_model_to_buffer_internal(channel_name: str, model: Model, organization_
     )
 
 
-def _add_model_to_buffer_with_lock(channel_name: str, model: Model, organization_id: str) -> None:
+def _add_model_to_buffer_with_lock(channel_name: str, model: Model) -> None:
     with lock_resource("model", model.key, ttl=LOCK_FETCH_ASSET_TTL):
-        return _add_model_to_buffer(channel_name, model, organization_id)
+        return _add_model_to_buffer(channel_name, model)
 
 
 def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: list[str]):
