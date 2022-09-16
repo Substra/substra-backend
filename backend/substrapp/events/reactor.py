@@ -9,11 +9,10 @@ import orchestrator
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
-from api.models import LastEvent
-from events import handler_compute_engine
-from events import health
-from events import localsync
 from orchestrator import model_pb2
+from substrapp.events import handler_compute_engine
+from substrapp.events import health
+from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
@@ -121,9 +120,7 @@ def on_message_compute_engine(payload):
 def on_event(payload):
     try:
         logger.debug("Received payload", payload=payload)
-        localsync.sync_on_event_message(payload)
         on_message_compute_engine(payload)
-
     except Exception as e:
         logger.exception("Error processing message", e=e)
         raise
@@ -139,7 +136,7 @@ def consume_channel(client: orchestrator.Client, channel_name: str, exception_ra
         structlog.contextvars.bind_contextvars(channel_name=channel_name)
         logger.info("Attempting to connect to orchestrator gRPC stream")
 
-        last_event, _ = LastEvent.objects.get_or_create(channel=channel_name)
+        last_event, _ = WorkerLastEvent.objects.get_or_create(channel=channel_name)
 
         logger.info("Starting to consume messages from orchestrator gRPC stream", start_event_id=last_event.event_id)
         for event in client.subscribe_to_events(channel_name=channel_name, start_event_id=last_event.event_id):

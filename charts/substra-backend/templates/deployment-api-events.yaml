@@ -1,0 +1,167 @@
+{{- if .Values.api.events.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-api-events
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
+        {{ include "substra.selectorLabels" . | nindent 8}}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-api-events
+        {{ include "substra.labels" . | nindent 8 }}
+      annotations:
+        # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
+        checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
+        checksum-cm-settings: {{ include (print $.Template.BasePath "/configmap-settings.yaml") . | sha256sum }}
+        checksum-cm-db: {{ include (print $.Template.BasePath "/configmap-database.yaml") . | sha256sum }}
+        checksum-cm-redis: {{ include (print $.Template.BasePath "/configmap-redis.yaml") . | sha256sum }}
+        checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
+        checksum-secret-redis: {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.api.events.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.api.events.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.api.events.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.api.events.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.api.events.podSecurityContext.runAsGroup }}
+      {{- end }}
+      serviceAccountName: {{ include "substra.api.events.serviceAccountName" . }}
+      containers:
+        - name: api-event-app
+          image: {{ include "common.images.name" .Values.api.events.image }}
+          imagePullPolicy: {{ .Values.api.events.image.pullPolicy }}
+          command: ["/bin/bash"]
+          {{- if eq .Values.settings "prod" }}
+          args: ["-c", "python manage.py consume"]
+          {{- else }}
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python manage.py consume"]
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-redis
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-redis
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
+          readinessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/ready
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.api.events.{{ .Values.settings }}
+          volumeMounts:
+            {{- if .Values.privateCa.enabled }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
+            {{- end }}
+            {{ if $.Values.orchestrator.tls.enabled }}
+            - name: orchestrator-tls-cacert
+              mountPath: /var/substra/orchestrator/tls/server
+            {{ if $.Values.orchestrator.tls.mtls.enabled }}
+            - name: orchestrator-tls-client-pair
+              mountPath: /var/substra/orchestrator/tls/client
+            {{ end }}
+            {{ end }}
+      initContainers:
+        {{- if .Values.privateCa.enabled }}
+        - name: add-cert
+          image: {{ include "common.images.name" .Values.privateCa.image }}
+          imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command: ['sh', '-c']
+          args:
+          - |
+            {{- if .Values.privateCa.image.apkAdd }}
+            apt update
+            apt install -y ca-certificates openssl
+            {{- end }}
+            update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /tmp/certs/
+              name: ssl-certs
+        {{- end }}
+        - name: wait-postgresql
+          image: jwilder/dockerize:0.6.1
+          command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+        - name: wait-init-migrations
+          image: {{ include "common.images.name" .Values.api.events.image }}
+          command: ['bash', '/usr/src/app/wait-init-migration.sh']
+          volumeMounts:
+            - name: volume-wait-init-migrations
+              mountPath: /usr/src/app/wait-init-migration.sh
+              subPath: wait-init-migration.sh
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.{{ .Values.settings }}
+      volumes:
+      - name: volume-wait-init-migrations
+        configMap:
+          name: {{ include "substra.fullname" . }}-wait-init-migrations
+      {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
+      {{- end }}
+      {{ if $.Values.orchestrator.tls.enabled }}
+      - name: orchestrator-tls-cacert
+        configMap:
+          name: {{ $.Values.orchestrator.tls.cacert }}
+      {{ if $.Values.orchestrator.tls.mtls.enabled }}
+      - name: orchestrator-tls-client-pair
+        secret:
+          secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
+      {{ end }}
+      {{ end }}
+    {{- with .Values.api.events.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.api.events.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.api.events.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}

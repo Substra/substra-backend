@@ -155,12 +155,23 @@ Return the user list
 {{- end -}}
 
 {{/*
-    Create the name fo the service account to use for the event app
+    Create the name fo the service account to use for the worker event app
 */}}
-{{- define "substra.events.serviceAccountName" -}}
-{{- if .Values.events.serviceAccount.create -}}
-    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.events.serviceAccount.name }}
+{{- define "substra.worker.events.serviceAccountName" -}}
+{{- if .Values.worker.events.serviceAccount.create -}}
+    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.events.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.events.serviceAccount.name }}
+    {{ default "default" .Values.worker.events.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+    Create the name fo the service account to use for the api event app
+*/}}
+{{- define "substra.api.events.serviceAccountName" -}}
+{{- if .Values.api.events.serviceAccount.create -}}
+    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.api.events.serviceAccount.name }}
 {{- end -}}
 {{- end -}}

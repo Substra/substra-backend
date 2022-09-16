@@ -1,21 +1,21 @@
-{{- if .Values.events.enabled }}
+{{- if .Values.worker.events.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "substra.fullname" . }}-events
+  name: {{ template "substra.fullname" . }}-worker-events
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}-events
+    app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
 spec:
   replicas: 1
   selector:
     matchLabels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
         {{ include "substra.selectorLabels" . | nindent 8}}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/name: {{ template "substra.name" . }}-worker-events
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
@@ -26,21 +26,21 @@ spec:
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
         checksum-secret-redis: {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
     spec:
-      {{- with .Values.events.image.pullSecrets }}
+      {{- with .Values.worker.events.image.pullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.events.podSecurityContext.enabled }}
+      {{- if .Values.worker.events.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.events.podSecurityContext.fsGroup }}
-        runAsUser: {{ .Values.events.podSecurityContext.runAsUser }}
-        runAsGroup: {{ .Values.events.podSecurityContext.runAsGroup }}
+        fsGroup: {{ .Values.worker.events.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.worker.events.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.worker.events.podSecurityContext.runAsGroup }}
       {{- end }}
-      serviceAccountName: {{ include "substra.events.serviceAccountName" . }}
+      serviceAccountName: {{ include "substra.worker.events.serviceAccountName" . }}
       containers:
-        - name: event-app
-          image: {{ include "common.images.name" .Values.events.image }}
-          imagePullPolicy: {{ .Values.events.image.pullPolicy }}
+        - name: worker-event-app
+          image: {{ include "common.images.name" .Values.worker.events.image }}
+          imagePullPolicy: {{ .Values.worker.events.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]
@@ -73,7 +73,7 @@ spec:
                   fieldRef:
                     fieldPath: metadata.namespace
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.events.{{ .Values.settings }}
+              value: backend.settings.worker.events.{{ .Values.settings }}
           volumeMounts:
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
@@ -113,7 +113,7 @@ spec:
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
         - name: wait-init-migrations
-          image: {{ include "common.images.name" .Values.events.image }}
+          image: {{ include "common.images.name" .Values.worker.events.image }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
           volumeMounts:
             - name: volume-wait-init-migrations
@@ -152,15 +152,15 @@ spec:
           secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-    {{- with .Values.events.nodeSelector }}
+    {{- with .Values.worker.events.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.events.affinity }}
+    {{- with .Values.worker.events.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.events.tolerations }}
+    {{- with .Values.worker.events.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

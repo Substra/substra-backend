@@ -3,7 +3,7 @@ from pytest_mock import MockerFixture
 
 import orchestrator
 import orchestrator.mock as orc_mock
-from events import handler_compute_engine
+from substrapp.events import handler_compute_engine
 
 
 @pytest.mark.parametrize(
@@ -129,7 +129,7 @@ def test_handle_task_outputs(mocker: MockerFixture):
         orc_mock.ComputeTaskInputFactory(parent_task_key="parent_task", parent_task_output_identifier="id2"),
     ]
     orc_client = mocker.Mock()
-    m_schedule_task = mocker.patch("events.handler_compute_engine.queue_disable_transient_outputs")
+    m_schedule_task = mocker.patch("substrapp.events.handler_compute_engine.queue_disable_transient_outputs")
     handler_compute_engine._MY_ORGANIZATION = "my_worker"
 
     id1 = orc_mock.ComputeTaskOutputFactory(transient=True)
@@ -148,7 +148,7 @@ def test_handle_task_outputs(mocker: MockerFixture):
 def test_handle_finished_task(mocker: MockerFixture):
     orc_client = mocker.Mock()
     task = orc_mock.ComputeTaskFactory(status=orchestrator.ComputeTaskStatus.STATUS_DONE)
-    m_handle_task_outputs = mocker.patch("events.handler_compute_engine._handle_task_outputs")
+    m_handle_task_outputs = mocker.patch("substrapp.events.handler_compute_engine._handle_task_outputs")
 
     handler_compute_engine.handle_finished_tasks(orc_client, "mychannel", task)
 
@@ -158,7 +158,7 @@ def test_handle_finished_task(mocker: MockerFixture):
 class TestHandleDisabledModel:
     def test_disable_foreign_model(self, mocker: MockerFixture):
         m_queue_remove_intermediary_model = mocker.patch(
-            "events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
+            "substrapp.events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
         )
         model = orc_mock.ModelFactory(owner="notme")
         handler_compute_engine.handle_disabled_model("mychannel", model)
@@ -167,10 +167,10 @@ class TestHandleDisabledModel:
 
     def test_disable_local_model(self, mocker: MockerFixture):
         m_queue_remove_intermediary_model_ab = mocker.patch(
-            "events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
+            "substrapp.events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
         )
         m_queue_remove_intermediary_model_db = mocker.patch(
-            "events.handler_compute_engine.queue_remove_intermediary_models_from_db_new"
+            "substrapp.events.handler_compute_engine.queue_remove_intermediary_models_from_db_new"
         )
         model = orc_mock.ModelFactory(owner="my_worker")
         handler_compute_engine._MY_ORGANIZATION = "my_worker"
