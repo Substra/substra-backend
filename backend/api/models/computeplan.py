@@ -23,7 +23,6 @@ class ComputePlan(models.Model):
 
     key = models.UUIDField(primary_key=True)
     owner = models.CharField(max_length=100)
-    delete_intermediary_models = models.BooleanField(null=True)
     status = models.CharField(max_length=64, choices=Status.choices, default=Status.PLAN_STATUS_EMPTY)
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)

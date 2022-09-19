@@ -61,7 +61,6 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         fields = [
             "key",
             "owner",
-            "delete_intermediary_models",
             "tag",
             "name",
             "creation_date",
