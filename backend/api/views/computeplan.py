@@ -42,7 +42,6 @@ def _register_in_orchestrator(data, channel_name):
         "tag": data.get("tag"),
         "name": data.get("name"),
         "metadata": data.get("metadata"),
-        "delete_intermediary_models": data.get("delete_intermediary_models", False),
     }
     with get_orchestrator_client(channel_name) as client:
         return client.register_compute_plan(orc_cp)
@@ -61,7 +60,6 @@ def create(request, get_success_headers):
         "tag": request.data.get("tag"),
         "name": request.data.get("name"),
         "metadata": request.data.get("metadata"),
-        "delete_intermediary_models": request.data.get("clean_models", False),
     }
     api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
 

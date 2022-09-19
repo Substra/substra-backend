@@ -11,7 +11,6 @@ from api.models import LastEvent
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger("events")
-_MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
 
 def on_event(payload):

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- BREAKING: remove `delete_intermediary_models` field from the `compute_plan` view.
+
 ## [0.30.0] 2022-09-19
 
 ### Changed
