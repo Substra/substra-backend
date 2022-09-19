@@ -57,6 +57,7 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
 from api.models import ComputeTaskOutput
+from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
@@ -338,13 +339,14 @@ def create_model(
     compute_task: ComputeTask,
     key: uuid.UUID = None,
     category: int = Model.Category.MODEL_SIMPLE,
+    identifier: str = "model",
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
     public: bool = False,
 ) -> Model:
     if key is None:
         key = uuid.uuid4()
-    return Model.objects.create(
+    model = Model.objects.create(
         compute_task=compute_task,
         key=key,
         category=category,
@@ -355,21 +357,34 @@ def create_model(
         channel=channel,
         **get_permissions(owner, public),
     )
+    ComputeTaskOutputAsset.objects.create(
+        task_output=compute_task.outputs.get(identifier=identifier),
+        asset_kind=ComputeTaskOutputAsset.Kind.ASSET_MODEL,
+        asset_key=model.key,
+    )
+    return model
 
 
 def create_performance(
     compute_task: ComputeTask,
     metric: Algo,
+    identifier: str = "performance",
     value: float = 1.0,
     channel: str = DEFAULT_CHANNEL,
 ) -> Performance:
-    return Performance.objects.create(
+    performance = Performance.objects.create(
         value=value,
         creation_date=timezone.now(),
         channel=channel,
         metric=metric,
         compute_task=compute_task,
     )
+    ComputeTaskOutputAsset.objects.create(
+        task_output=compute_task.outputs.get(identifier=identifier),
+        asset_kind=ComputeTaskOutputAsset.Kind.ASSET_PERFORMANCE,
+        asset_key=f"{compute_task.key}|{metric.key}",
+    )
+    return performance
 
 
 def create_algo_data(
