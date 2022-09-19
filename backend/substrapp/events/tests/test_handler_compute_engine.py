@@ -170,7 +170,7 @@ class TestHandleDisabledModel:
             "substrapp.events.handler_compute_engine.queue_remove_intermediary_models_from_buffer"
         )
         m_queue_remove_intermediary_model_db = mocker.patch(
-            "substrapp.events.handler_compute_engine.queue_remove_intermediary_models_from_db_new"
+            "substrapp.events.handler_compute_engine.queue_remove_intermediary_model_from_db"
         )
         model = orc_mock.ModelFactory(owner="my_worker")
         handler_compute_engine._MY_ORGANIZATION = "my_worker"
