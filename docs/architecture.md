@@ -9,4 +9,4 @@ In figure 1, you can see that the backend is the single point through which user
 
 - **Kubernetes.** To launch user-provided containers
 - **The Orchestrator.** To share metadata with the whole network and retrieve tasks that it should perform.
-- **Other Substra backends.** To download models computed in other organizations. To download Algorithms created by other data scientists.
+- **Other Substra backends.** To download models computed in other organizations. To download Algorithms created by data scientists from other organizations.
