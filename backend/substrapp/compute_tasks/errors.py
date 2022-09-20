@@ -100,12 +100,6 @@ class InvalidContextError(_ComputeTaskError, CeleryNoRetryError):
     error_type = ComputeTaskErrorType.INTERNAL_ERROR
 
 
-class OutputPathNotFound(CeleryNoRetryError):
-    """Exception raised when the path does not match a known task output"""
-
-    pass
-
-
 class UnsupportedOutputAsset(CeleryNoRetryError):
     """Exception raised when an output asset is of an unsupported kind"""
 
