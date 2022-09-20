@@ -33,9 +33,9 @@ Allow user to modify their own password (user must be authenticated)
 Body : `{"password": {new_password}}`
 
 
-![Reset password link generation](./schemas/reset-password-request.png)
+![Reset password link generation](./schemas/reset-password-request.svg)
 
-![Reset password flow](./schemas/reset-password-flow.png)
+![Reset password flow](./schemas/reset-password-flow.svg)
 
 
 

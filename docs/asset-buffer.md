@@ -27,6 +27,6 @@ When a new Compute Task is received by the worker:
 
 You can see these two steps in action on this graph:
 
-![](./schemas/asset-buffer.png)
+![](./schemas/asset-buffer.svg)
 
 At the end of each Compute Task, `task_dir` is entirely cleared of all its contents, leaving a clean slate for the next task. When the next Compute Task is received, `task_dir` is populated again, using the 2 steps described above.
