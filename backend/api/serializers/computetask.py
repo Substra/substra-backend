@@ -6,11 +6,11 @@ from rest_framework import serializers
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from api.models import Algo
+from api.models import AlgoOutput
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
 from api.models import ComputeTaskOutput
-from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
@@ -70,10 +70,10 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
     def get_value(self, task_output):
         data = []
         for output_asset in task_output.assets.all():
-            if output_asset.asset_kind == ComputeTaskOutputAsset.Kind.ASSET_MODEL:
+            if output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=output_asset.asset_key)
                 data.append(ModelSerializer(instance=model).data)
-            elif output_asset.asset_kind == ComputeTaskOutputAsset.Kind.ASSET_PERFORMANCE:
+            elif output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
                 task_key, metric_key = output_asset.asset_key.split("|")
                 perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
                 data.append(perf.value)
@@ -263,10 +263,19 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
 
         for position, input in enumerate(inputs):
-            ComputeTaskInput.objects.create(task=compute_task, position=position, **input)
+            ComputeTaskInput.objects.create(
+                channel=compute_task.channel,
+                task=compute_task,
+                position=position,
+                **input,
+            )
 
         for output in outputs:
-            ComputeTaskOutput.objects.create(task=compute_task, **output)
+            ComputeTaskOutput.objects.create(
+                channel=compute_task.channel,
+                task=compute_task,
+                **output,
+            )
 
         compute_task.refresh_from_db()
         return compute_task

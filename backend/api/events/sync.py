@@ -11,6 +11,7 @@ from api.errors import AlreadyExistsError
 from api.events.dynamic_fields import parse_computetask_dates_from_event
 from api.models import ComputePlan
 from api.models import ComputeTask
+from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
@@ -217,15 +218,16 @@ def _create_computetask_output_asset(
     asset_kind: str,
     asset_key: str,
 ) -> None:
-    task = ComputeTask.objects.get(
-        key=compute_task_key,
+    task_output = ComputeTaskOutput.objects.get(
+        task__key=compute_task_key,
+        identifier=identifier,
         channel=channel,
     )
-    task_output = task.outputs.get(identifier=identifier)
     ComputeTaskOutputAsset.objects.create(
         task_output=task_output,
         asset_kind=asset_kind,
         asset_key=asset_key,
+        channel=channel,
     )
 
 

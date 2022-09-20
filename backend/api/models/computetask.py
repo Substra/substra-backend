@@ -1,9 +1,9 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+from api.models.algo import AlgoOutput
 from api.models.datasample import DataSample
 from api.models.utils import AssetPermissionMixin
 from api.models.utils import URLValidatorWithOptionalTLD
@@ -13,9 +13,11 @@ class ComputeTaskInput(models.Model):
     task = models.ForeignKey("ComputeTask", on_delete=models.CASCADE, related_name="inputs")
     identifier = models.CharField(max_length=100)
     position = models.IntegerField()
+    # either asset_key or (parent task, output identifier) is specified by the user
     asset_key = models.UUIDField(null=True, blank=True)
     parent_task_key = models.ForeignKey("ComputeTask", on_delete=models.SET_NULL, null=True, blank=True)
     parent_task_output_identifier = models.CharField(max_length=100, null=True, blank=True)
+    channel = models.CharField(max_length=100)
 
     class Meta:
         unique_together = (("task", "identifier", "position"),)
@@ -30,19 +32,17 @@ class ComputeTaskOutput(models.Model):
     permissions_process_public = models.BooleanField()
     permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     transient = models.BooleanField(default=False)
+    channel = models.CharField(max_length=100)
 
     class Meta:
         unique_together = (("task", "identifier"),)
 
 
 class ComputeTaskOutputAsset(models.Model):
-    class Kind(models.TextChoices):
-        ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
-        ASSET_PERFORMANCE = common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
-
     task_output = models.ForeignKey("ComputeTaskOutput", on_delete=models.CASCADE, related_name="assets")
-    asset_kind = models.CharField(max_length=64, choices=Kind.choices)
+    asset_kind = models.CharField(max_length=64, choices=AlgoOutput.Kind.choices)
     asset_key = models.CharField(max_length=73)  # performance have composite key: key1|key2
+    channel = models.CharField(max_length=100)
 
 
 class ComputeTask(models.Model, AssetPermissionMixin):

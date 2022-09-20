@@ -86,11 +86,19 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         algo_inputs = AlgoInputSerializer(data=inputs, many=True)
         algo_inputs.is_valid(raise_exception=True)
         for algo_input in algo_inputs.validated_data:
-            AlgoInput.objects.create(algo=algo, **algo_input)
+            AlgoInput.objects.create(
+                channel=algo.channel,
+                algo=algo,
+                **algo_input,
+            )
 
         algo_outputs = AlgoOutputSerializer(data=outputs, many=True)
         algo_outputs.is_valid(raise_exception=True)
         for algo_output in algo_outputs.validated_data:
-            AlgoOutput.objects.create(algo=algo, **algo_output)
+            AlgoOutput.objects.create(
+                channel=algo.channel,
+                algo=algo,
+                **algo_output,
+            )
 
         return algo
