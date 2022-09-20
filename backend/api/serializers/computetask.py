@@ -263,10 +263,19 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
 
         for position, input in enumerate(inputs):
-            ComputeTaskInput.objects.create(task=compute_task, position=position, **input)
+            ComputeTaskInput.objects.create(
+                channel=compute_task.channel,
+                task=compute_task,
+                position=position,
+                **input,
+            )
 
         for output in outputs:
-            ComputeTaskOutput.objects.create(task=compute_task, **output)
+            ComputeTaskOutput.objects.create(
+                channel=compute_task.channel,
+                task=compute_task,
+                **output,
+            )
 
         compute_task.refresh_from_db()
         return compute_task
