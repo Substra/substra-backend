@@ -29,7 +29,7 @@ As a result: **it is necessary to bind compute tasks and post processing tasks t
 
 We put together a mechanism to make sure that **"tasks belonging to one compute plan are always scheduled on the worker on which a compute pod for this compute plan is running"**.
 
-This implies: 
+This implies:
 - having one Celery task queue that is specific to a single worker: worker `i` listens to queue `{orgname}.worker-{i}`.
 - in order to keep track of which compute plan is scheduled on which worker, introducing a new table in the PostgreSQL database: `ComputePlanWorkerMapping`. The compute plans are identified by a compute plan key. The workers are identified by the index of their replica.
 
@@ -38,7 +38,7 @@ Here is the algorithm to route a compute plan on a worker:
 - get the first of these workers (according to their replica index).
 
 Why getting the "first of these workers"?
-- This can be useful when managing statefulsets: as worker pods are controlled by statefulsets, when scaling workers down we have to shut down first the higher indexes. This algorithm maximizes the chances for the workers with a lower index to be busier - so the ones with the higher index are more likely to be free and can be switched off. 
+- This can be useful when managing statefulsets: as worker pods are controlled by statefulsets, when scaling workers down we have to shut down first the higher indexes. This algorithm maximizes the chances for the workers with a lower index to be busier - so the ones with the higher index are more likely to be free and can be switched off.
 - Plus this makes the algorithm process deterministic, and it makes troubleshooting easier.
 
 When a compute plan is finished, the compute pod is removed and a release date is added to the specific mapping line in `ComputePlanWorkerMapping`. The CP is not routed to the worker anymore. If a new task is scheduled on this compute plan, as the compute pod was removed, we can re-create a new compute pod on any worker. A new routing is created in `ComputePlanWorkerMapping`. So a compute plan may be executed on different workers, but only one at a time.

@@ -1,0 +1,24 @@
+C4Context
+  title System context diagram for Substra backend
+
+  Enterprise_Boundary(b0, "Organization 1 boundary") {
+    Person(DataScientist, "Data scientist", "An user that want to train ML models.")
+    System(Backend0rg1, "Substra Backend", "Allow users to create ML models using tasks chained together.<br/>Allow users to create assets.<br/>Allow users to track taks progress.")
+    System_Ext(Kubernetes, "Kubernetes", "A System managing containers orchestration.")
+    System_Ext(Orchestrator, "Orchestrator", "Store metadata of assets.<br/>Orchestrate tasks processing.")
+  }
+
+  Enterprise_Boundary(b1, "Organization 2 boundary") {
+    System_Ext(BackendOrg2, "Substra Backend", "Process tasks, store outputs, store assets")
+  }
+
+  Rel(DataScientist, Backend0rg1, "Create Compute plans,<br/>Track progress of tasks,<br/>Download outputs.", "http")
+  BiRel(Backend0rg1, BackendOrg2, "Gets models trained on other nodes,<br/>Gets Algos stored on other nodes.", "http")
+  Rel(Backend0rg1, Kubernetes, "Launch containers.", "gRPC")
+  Rel(Backend0rg1, Orchestrator, "Sends assets metadata,<br/>Update assets metadata.", "gRPC")
+  Rel(Orchestrator, Backend0rg1, "Sends events about new assets,<br/>Sends events about assets updates.", "gRPC")
+
+
+  UpdateRelStyle(Backend0rg1, Orchestrator, $offsetX="-130", $offsetY="20")
+  UpdateRelStyle(Orchestrator, Backend0rg1, $offsetX="45")
+  UpdateRelStyle(Backend0rg1, Kubernetes, $offsetX="-100")
