@@ -28,6 +28,7 @@ from api.views.filters_utils import MetadataFilterBackend
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from api.views.utils import to_string_uuid
+from api.views.utils import validate_metadata
 from libs.pagination import SmallPageNumberPagination
 from substrapp.orchestrator import get_orchestrator_client
 
@@ -59,7 +60,7 @@ def create(request, get_success_headers):
         "key": to_string_uuid(request.data.get("key")),
         "tag": request.data.get("tag"),
         "name": request.data.get("name"),
-        "metadata": request.data.get("metadata"),
+        "metadata": validate_metadata(request.data.get("metadata")),
     }
     api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
 

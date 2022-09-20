@@ -32,6 +32,7 @@ from api.views.utils import TASK_CATEGORY
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
+from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from orchestrator import computetask
 from substrapp.orchestrator import get_orchestrator_client
@@ -91,6 +92,7 @@ def _register_in_orchestrator(tasks_data, channel_name):
         if "__tag__" in orc_task["metadata"]:
             raise Exception('"__tag__" cannot be used as a metadata key')
         else:
+            validate_metadata(orc_task["metadata"])
             orc_task["metadata"]["__tag__"] = task_data.get("tag") or ""
 
         extra_data_field = EXTRA_DATA_FIELD[orc_task["category"]]

@@ -525,6 +525,10 @@ class AlgoViewTests(APITestCase):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    # def test_algo_create_fail(self, _):
+    #     response = self.client.post(self.url, data={}, format="json")
+    #     self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def test_algo_retrieve(self):
         url = reverse("api:algo-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
