@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: remove `delete_intermediary_models` field from the `compute_plan` view.
 - Use task output asset in API response
+- Add channel column to input/output tables.
 
 ## [0.30.0] 2022-09-19
 

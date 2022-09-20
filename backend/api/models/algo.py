@@ -18,6 +18,7 @@ class AlgoInput(models.Model):
     kind = models.CharField(max_length=64, choices=Kind.choices)
     optional = models.BooleanField(default=False)
     multiple = models.BooleanField(default=False)
+    channel = models.CharField(max_length=100)
 
     class Meta:
         unique_together = (("algo", "identifier"),)
@@ -33,6 +34,7 @@ class AlgoOutput(models.Model):
     identifier = models.CharField(max_length=100)
     kind = models.CharField(max_length=64, choices=Kind.choices)
     multiple = models.BooleanField(default=False)
+    channel = models.CharField(max_length=100)
 
     class Meta:
         unique_together = (("algo", "identifier"),)

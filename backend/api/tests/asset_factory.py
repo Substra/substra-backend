@@ -177,9 +177,19 @@ def create_algo(
     )
 
     for identifier, algo_input in ALGO_INPUTS_PER_CATEGORY[category].items():
-        AlgoInput.objects.create(algo=algo, identifier=identifier, **algo_input)
+        AlgoInput.objects.create(
+            algo=algo,
+            identifier=identifier,
+            channel=channel,
+            **algo_input,
+        )
     for identifier, algo_output in ALGO_OUTPUTS_PER_CATEGORY[category].items():
-        AlgoOutput.objects.create(algo=algo, identifier=identifier, **algo_output)
+        AlgoOutput.objects.create(
+            algo=algo,
+            identifier=identifier,
+            channel=channel,
+            **algo_output,
+        )
 
     return algo
 
@@ -320,6 +330,7 @@ def create_computetask(
             identifier=input.identifier,
             asset_key=INPUT_ASSET_KEY,
             position=position,
+            channel=channel,
         )
 
     for output in compute_task.algo.outputs.all().order_by("identifier"):
@@ -330,6 +341,7 @@ def create_computetask(
             permissions_download_authorized_ids=[owner],
             permissions_process_public=public,
             permissions_process_authorized_ids=[owner],
+            channel=channel,
         )
 
     return compute_task
@@ -359,8 +371,9 @@ def create_model(
     )
     ComputeTaskOutputAsset.objects.create(
         task_output=compute_task.outputs.get(identifier=identifier),
-        asset_kind=ComputeTaskOutputAsset.Kind.ASSET_MODEL,
+        asset_kind=AlgoOutput.Kind.ASSET_MODEL,
         asset_key=model.key,
+        channel=channel,
     )
     return model
 
@@ -381,8 +394,9 @@ def create_performance(
     )
     ComputeTaskOutputAsset.objects.create(
         task_output=compute_task.outputs.get(identifier=identifier),
-        asset_kind=ComputeTaskOutputAsset.Kind.ASSET_PERFORMANCE,
+        asset_kind=AlgoOutput.Kind.ASSET_PERFORMANCE,
         asset_key=f"{compute_task.key}|{metric.key}",
+        channel=channel,
     )
     return performance
 
