@@ -4,8 +4,8 @@ from django.conf import settings
 
 import orchestrator
 from substrapp.tasks.tasks_outputs import queue_disable_transient_outputs
+from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_model_from_db
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_buffer
-from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db_new
 
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
 
@@ -68,4 +68,4 @@ def handle_finished_tasks(orc_client: orchestrator.Client, channel_name: str, ta
 def handle_disabled_model(channel_name: str, model: orchestrator.Model) -> None:
     queue_remove_intermediary_models_from_buffer(model.key)
     if model.owner == _MY_ORGANIZATION:
-        queue_remove_intermediary_models_from_db_new(channel_name, model.key)
+        queue_remove_intermediary_model_from_db(channel_name, model.key)

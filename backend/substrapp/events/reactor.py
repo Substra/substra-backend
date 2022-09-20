@@ -16,7 +16,6 @@ from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
-from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_db
 
 logger = structlog.get_logger("events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
@@ -40,19 +39,6 @@ def on_computetask_event(payload):
     ]:
         with get_orchestrator_client(channel_name) as client:
             handler_compute_engine.handle_finished_tasks(client, channel_name, orc_task)
-
-            # Handle intermediary models
-            models = []
-            for parent_key in task["parent_task_keys"]:
-                models.extend(client.get_computetask_output_models(parent_key))
-
-            model_keys = [
-                model["key"]
-                for model in models
-                if model["owner"] == _MY_ORGANIZATION and client.can_disable_model(model["key"])
-            ]
-            if model_keys:
-                queue_remove_intermediary_models_from_db(channel_name, model_keys)
 
             # Handle compute plan if necessary
             compute_plan = client.query_compute_plan(orc_task.compute_plan_key)
