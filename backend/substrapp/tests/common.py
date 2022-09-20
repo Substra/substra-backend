@@ -7,8 +7,6 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from google.protobuf.json_format import MessageToDict
 
 import orchestrator.algo_pb2 as algo_pb2
-from orchestrator import computetask_pb2 as computetask_pb2
-from orchestrator import model_pb2 as model_pb2
 from orchestrator.algo_pb2 import ALGO_AGGREGATE
 from orchestrator.algo_pb2 import ALGO_COMPOSITE
 from orchestrator.algo_pb2 import ALGO_METRIC
@@ -21,13 +19,6 @@ from orchestrator.common_pb2 import ASSET_DATA_MANAGER
 from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
-
-_TASK_CATEGORY_NAME_TRAIN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
-_TASK_CATETGORY_NAME_COMPOSITE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_COMPOSITE)
-_TASK_CATEGORY_NAME_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_AGGREGATE)
-
-_MODEL_CATEGORY_NAME_SIMPLE = model_pb2.ModelCategory.Name(model_pb2.MODEL_SIMPLE)
-_MODEL_CATEGORY_NAME_HEAD = model_pb2.ModelCategory.Name(model_pb2.MODEL_HEAD)
 
 
 @dataclass
