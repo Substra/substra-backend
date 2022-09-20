@@ -1,5 +1,4 @@
 import datetime
-import functools
 import hashlib
 import io
 import json
@@ -160,17 +159,6 @@ def delete_dir(path: str) -> None:
     finally:
         if os.path.exists(path):
             logger.info("Failed to delete directory", path=path)
-
-
-def do_not_raise(fn):
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception as e:
-            logger.exception(e)
-
-    return wrapper
 
 
 def remove_directory_contents(folder: str) -> None:
