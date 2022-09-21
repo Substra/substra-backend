@@ -1,14 +1,12 @@
 import json
 
 import orchestrator
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.mock as orc_mock
 from orchestrator.resources import ComputeTaskInputAsset
 from substrapp.compute_tasks import context
 from substrapp.compute_tasks.command import _get_args
 from substrapp.compute_tasks.directories import Directories
 from substrapp.tests.common import InputIdentifiers
-from substrapp.tests.orchestrator_factory import AlgoFactory
 
 _CHANNEL = "mychannel"
 
@@ -337,7 +335,7 @@ def test_get_args_predict_after_composite():
 
 
 def test_get_args_test_after_predict():
-    algo = AlgoFactory(category=algo_pb2.AlgoCategory.ALGO_METRIC)
+    algo = orc_mock.AlgoFactory()
     pred = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()

@@ -10,7 +10,6 @@ from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.errors import InvalidContextError
-from substrapp.compute_tasks.errors import OutputPathNotFound
 from substrapp.compute_tasks.errors import UnsupportedOutputAsset
 from substrapp.orchestrator import get_orchestrator_client
 
@@ -151,15 +150,6 @@ class Context:
 
     def get_compute_pod(self, algo_key: str) -> ComputePod:
         return ComputePod(self.compute_plan_key, algo_key)
-
-    def get_output_resource(self, abs_path: str) -> OutputResource:
-        """return the task output from output path, raise if not found"""
-        path = os.path.relpath(abs_path, self.directories.task_dir)
-        for output in self._outputs:
-            if output.rel_path == path:
-                return output
-
-        raise OutputPathNotFound(f"path {abs_path} does not match a known output")
 
     def _get_output_path(self, kind: orchestrator.AssetKind, identifier: str) -> str:
         if kind == orchestrator.AssetKind.ASSET_MODEL:
