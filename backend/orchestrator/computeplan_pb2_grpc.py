@@ -39,6 +39,11 @@ class ComputePlanServiceStub(object):
                 request_serializer=computeplan__pb2.UpdateComputePlanParam.SerializeToString,
                 response_deserializer=computeplan__pb2.UpdateComputePlanResponse.FromString,
                 )
+        self.IsPlanRunning = channel.unary_unary(
+                '/orchestrator.ComputePlanService/IsPlanRunning',
+                request_serializer=computeplan__pb2.IsPlanRunningParam.SerializeToString,
+                response_deserializer=computeplan__pb2.IsPlanRunningResponse.FromString,
+                )
 
 
 class ComputePlanServiceServicer(object):
@@ -74,6 +79,12 @@ class ComputePlanServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IsPlanRunning(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ComputePlanServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -101,6 +112,11 @@ def add_ComputePlanServiceServicer_to_server(servicer, server):
                     servicer.UpdatePlan,
                     request_deserializer=computeplan__pb2.UpdateComputePlanParam.FromString,
                     response_serializer=computeplan__pb2.UpdateComputePlanResponse.SerializeToString,
+            ),
+            'IsPlanRunning': grpc.unary_unary_rpc_method_handler(
+                    servicer.IsPlanRunning,
+                    request_deserializer=computeplan__pb2.IsPlanRunningParam.FromString,
+                    response_serializer=computeplan__pb2.IsPlanRunningResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -194,5 +210,22 @@ class ComputePlanService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.ComputePlanService/UpdatePlan',
             computeplan__pb2.UpdateComputePlanParam.SerializeToString,
             computeplan__pb2.UpdateComputePlanResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def IsPlanRunning(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.ComputePlanService/IsPlanRunning',
+            computeplan__pb2.IsPlanRunningParam.SerializeToString,
+            computeplan__pb2.IsPlanRunningResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

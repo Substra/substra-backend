@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models import Count
 from django.db.models import Q
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
 from api.models.computetask import ComputeTask
 
 logger = structlog.get_logger(__name__)
@@ -13,13 +12,13 @@ class ComputePlan(models.Model):
     """ComputePlan represent a compute plan and its associated metadata"""
 
     class Status(models.TextChoices):
-        PLAN_STATUS_WAITING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_WAITING)
-        PLAN_STATUS_TODO = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO)
-        PLAN_STATUS_DOING = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DOING)
-        PLAN_STATUS_DONE = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_DONE)
-        PLAN_STATUS_CANCELED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_CANCELED)
-        PLAN_STATUS_FAILED = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_FAILED)
-        PLAN_STATUS_EMPTY = computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_EMPTY)
+        PLAN_STATUS_WAITING = "PLAN_STATUS_WAITING"
+        PLAN_STATUS_TODO = "PLAN_STATUS_TODO"
+        PLAN_STATUS_DOING = "PLAN_STATUS_DOING"
+        PLAN_STATUS_DONE = "PLAN_STATUS_DONE"
+        PLAN_STATUS_CANCELED = "PLAN_STATUS_CANCELED"
+        PLAN_STATUS_FAILED = "PLAN_STATUS_FAILED"
+        PLAN_STATUS_EMPTY = "PLAN_STATUS_EMPTY"
 
     key = models.UUIDField(primary_key=True)
     owner = models.CharField(max_length=100)
@@ -67,10 +66,7 @@ class ComputePlan(models.Model):
         )
 
     def update_status(self) -> None:
-        """
-        Compute cp status from tasks counts.
-        See: `orchestrator/lib/persistence/computeplan_dbal.go`
-        """
+        """Compute cp status from tasks counts."""
         stats = self.get_task_stats()
         if stats["task_count"] == 0:
             compute_plan_status = self.Status.PLAN_STATUS_EMPTY

@@ -5,7 +5,6 @@ from .resources import Algo
 from .resources import AlgoInput
 from .resources import AssetKind
 from .resources import ComputePlan
-from .resources import ComputePlanStatus
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
@@ -105,7 +104,8 @@ class ComputePlanFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     tag = ""
-    status = ComputePlanStatus.PLAN_STATUS_DOING
+    cancelation_date = None
+    failure_date = None
 
 
 class PermissionFactory(factory.Factory):

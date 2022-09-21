@@ -6,7 +6,6 @@ from .resources import AlgoInput
 from .resources import AlgoOutput
 from .resources import AssetKind
 from .resources import ComputePlan
-from .resources import ComputePlanStatus
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
@@ -37,7 +36,6 @@ __all__ = (
     "InvalidInputAsset",
     "Client",
     "ComputePlan",
-    "ComputePlanStatus",
     "Algo",
     "OrcError",
     "AlgoInput",
