@@ -11,10 +11,30 @@ class Command(BaseCommand):
     help = "Generate fixtures"
 
     def handle(self, *args, **options):
-        simple_algo = factory.create_algo(name="Simple algo", category=Algo.Category.ALGO_SIMPLE)
-        aggregate_algo = factory.create_algo(name="Aggregate algo", category=Algo.Category.ALGO_AGGREGATE)
-        composite_algo = factory.create_algo(name="Composite algo", category=Algo.Category.ALGO_COMPOSITE)
-        metric_algo = factory.create_algo(name="Metric algo", category=Algo.Category.ALGO_METRIC)
+        simple_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
+            outputs=factory.build_algo_outputs(["model"]),
+            category=Algo.Category.ALGO_SIMPLE,
+            name="simple algo",
+        )
+        aggregate_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["model"]),
+            outputs=factory.build_algo_outputs(["model"]),
+            category=Algo.Category.ALGO_AGGREGATE,
+            name="aggregate",
+        )
+        composite_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
+            outputs=factory.build_algo_outputs(["local", "shared"]),
+            category=Algo.Category.ALGO_COMPOSITE,
+            name="composite",
+        )
+        metric_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
+            outputs=factory.build_algo_outputs(["performance"]),
+            category=Algo.Category.ALGO_METRIC,
+            name="metric",
+        )
 
         data_manager = factory.create_datamanager()
         train_data_sample = factory.create_datasample([data_manager])
@@ -47,9 +67,15 @@ class Command(BaseCommand):
                 "regression_weight": "0.75",
             },
         )
+        train_input_keys = {
+            "opener": [data_manager.key],
+            "datasamples": [train_data_sample.key],
+        }
         factory.create_computetask(
             todo_cp,
             simple_algo,
+            inputs=factory.build_computetask_inputs(simple_algo, train_input_keys),
+            outputs=factory.build_computetask_outputs(simple_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_TRAIN,
@@ -64,6 +90,8 @@ class Command(BaseCommand):
         train_task_1 = factory.create_computetask(
             doing_cp,
             simple_algo,
+            inputs=factory.build_computetask_inputs(simple_algo, train_input_keys),
+            outputs=factory.build_computetask_outputs(simple_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_TRAIN,
@@ -73,15 +101,22 @@ class Command(BaseCommand):
         train_task_2 = factory.create_computetask(
             doing_cp,
             simple_algo,
+            inputs=factory.build_computetask_inputs(simple_algo, train_input_keys),
+            outputs=factory.build_computetask_outputs(simple_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_DONE,
         )
         model_2 = factory.create_model(train_task_2, identifier="model")
+        aggregate_input_keys = {
+            "model": [train_task_1.key, train_task_2.key],
+        }
         factory.create_computetask(
             doing_cp,
             aggregate_algo,
+            inputs=factory.build_computetask_inputs(aggregate_algo, aggregate_input_keys),
+            outputs=factory.build_computetask_outputs(aggregate_algo),
             parent_tasks=[train_task_1.key, train_task_2.key],
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
@@ -97,15 +132,23 @@ class Command(BaseCommand):
         train_task = factory.create_computetask(
             done_cp,
             simple_algo,
+            inputs=factory.build_computetask_inputs(simple_algo, train_input_keys),
+            outputs=factory.build_computetask_outputs(simple_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_DONE,
         )
         model_3 = factory.create_model(train_task, identifier="model")
+        test_input_keys = {
+            "opener": [data_manager.key],
+            "datasamples": [test_data_sample.key],
+        }
         test_task = factory.create_computetask(
             done_cp,
             metric_algo,
+            inputs=factory.build_computetask_inputs(metric_algo, test_input_keys),
+            outputs=factory.build_computetask_outputs(metric_algo),
             parent_tasks=[train_task.key],
             data_manager=data_manager,
             data_samples=[test_data_sample.key],
@@ -119,9 +162,15 @@ class Command(BaseCommand):
             name="CP with a done composite train task and a failed test task",
             status=ComputePlan.Status.PLAN_STATUS_FAILED,
         )
+        composite_input_keys = {
+            "opener": [data_manager.key],
+            "datasamples": [train_data_sample.key],
+        }
         composite_task = factory.create_computetask(
             failed_cp,
             composite_algo,
+            inputs=factory.build_computetask_inputs(composite_algo, composite_input_keys),
+            outputs=factory.build_computetask_outputs(composite_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_COMPOSITE,
@@ -131,6 +180,8 @@ class Command(BaseCommand):
         failed_task = factory.create_computetask(
             failed_cp,
             metric_algo,
+            inputs=factory.build_computetask_inputs(metric_algo, test_input_keys),
+            outputs=factory.build_computetask_outputs(metric_algo),
             parent_tasks=[composite_task.key],
             data_manager=data_manager,
             data_samples=[test_data_sample.key],
@@ -149,6 +200,8 @@ class Command(BaseCommand):
         factory.create_computetask(
             canceled_cp,
             simple_algo,
+            inputs=factory.build_computetask_inputs(simple_algo, train_input_keys),
+            outputs=factory.build_computetask_outputs(simple_algo),
             data_manager=data_manager,
             data_samples=[train_data_sample.key],
             category=ComputeTask.Category.TASK_TRAIN,

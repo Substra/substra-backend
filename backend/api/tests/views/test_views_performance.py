@@ -36,11 +36,15 @@ class CPPerformanceViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:compute_plan_perf-list", args=[self.compute_plan.key])
 
-        self.metric = factory.create_algo(category=Algo.Category.ALGO_METRIC)
+        self.metric = factory.create_algo(
+            outputs=factory.build_algo_outputs(["performance"]),
+            category=Algo.Category.ALGO_METRIC,
+        )
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plan,
-                algo=self.metric,
+                self.metric,
+                outputs=factory.build_computetask_outputs(self.metric),
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
                 category=ComputeTask.Category.TASK_TEST,
@@ -51,7 +55,14 @@ class CPPerformanceViewTests(APITestCase):
             )
             for i in range(3)
         ]
-        self.performances = [factory.create_performance(self.compute_tasks[i], self.metric) for i in range(3)]
+        self.performances = [
+            factory.create_performance(
+                self.compute_tasks[i],
+                self.metric,
+                identifier="performance",
+            )
+            for i in range(3)
+        ]
         self.expected_stats = {
             "compute_tasks_distinct_ranks": [1, 2, 3],
             "compute_tasks_distinct_rounds": [1],
@@ -164,11 +175,18 @@ class PerformanceViewTests(APITestCase):
         self.export_extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "*/*"}
         self.export_url = reverse("api:performance-export")
 
-        self.metrics = [factory.create_algo(category=Algo.Category.ALGO_METRIC) for _ in range(3)]
+        self.metrics = [
+            factory.create_algo(
+                outputs=factory.build_algo_outputs(["performance"]),
+                category=Algo.Category.ALGO_METRIC,
+            )
+            for _ in range(3)
+        ]
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plans[i],
-                algo=self.metrics[i],
+                self.metrics[i],
+                outputs=factory.build_computetask_outputs(self.metrics[i]),
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
                 category=ComputeTask.Category.TASK_TEST,
@@ -177,8 +195,24 @@ class PerformanceViewTests(APITestCase):
             )
             for i in range(2)
         ]
-        self.performances = [factory.create_performance(self.compute_tasks[0], self.metrics[i]) for i in range(3)]
-        self.performances.extend([factory.create_performance(self.compute_tasks[1], self.metrics[i]) for i in range(3)])
+        self.performances = [
+            factory.create_performance(
+                self.compute_tasks[0],
+                self.metrics[i],
+                identifier="performance",
+            )
+            for i in range(3)
+        ]
+        self.performances.extend(
+            [
+                factory.create_performance(
+                    self.compute_tasks[1],
+                    self.metrics[i],
+                    identifier="performance",
+                )
+                for i in range(3)
+            ]
+        )
         self.expected_results = [
             {
                 "compute_plan_key": self.compute_plans[0],

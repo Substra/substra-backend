@@ -70,27 +70,77 @@ from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
 from substrapp.models import Model as ModelFiles
-from substrapp.tests import common
 from substrapp.utils import get_hash
 
 DEFAULT_OWNER = "MyOrg1MSP"
 DEFAULT_WORKER = "MyOrg1MSP"
 DEFAULT_CHANNEL = "mychannel"
 DUMMY_CHECKSUM = "dummy-checksum"
-INPUT_ASSET_KEY = "5f23ae53-6541-45c1-ba78-fdfc56c51a52"
 
 
-ALGO_INPUTS_PER_CATEGORY = common.ALGO_INPUTS_PER_CATEGORY_DICT
-ALGO_OUTPUTS_PER_CATEGORY = common.ALGO_OUTPUTS_PER_CATEGORY_DICT
+# Inputs and outputs values belongs to the business logic and are handled at the substra SDK level.
+# We use them here only to have realistic test data, but the API should remained agnostic from them.
 
-
-TASK_CATEGORY_TO_ALGO_CATEGORY = {
-    ComputeTask.Category.TASK_TRAIN: Algo.Category.ALGO_SIMPLE,
-    ComputeTask.Category.TASK_COMPOSITE: Algo.Category.ALGO_COMPOSITE,
-    ComputeTask.Category.TASK_AGGREGATE: Algo.Category.ALGO_AGGREGATE,
-    ComputeTask.Category.TASK_PREDICT: Algo.Category.ALGO_PREDICT,
-    ComputeTask.Category.TASK_TEST: Algo.Category.ALGO_METRIC,
+ALGO_INPUTS = {
+    "datasamples": dict(kind=AlgoInput.Kind.ASSET_DATA_SAMPLE, multiple=True, optional=False),
+    "opener": dict(kind=AlgoInput.Kind.ASSET_DATA_MANAGER, multiple=False, optional=False),
+    "model": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "local": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "shared": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "predictions": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=False),
 }
+ALGO_OUTPUTS = {
+    "model": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
+    "local": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
+    "shared": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
+    "predictions": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
+    "performance": dict(kind=AlgoOutput.Kind.ASSET_PERFORMANCE, multiple=False),
+}
+
+
+def build_algo_inputs(identifiers: list[str]) -> list[AlgoInput]:
+    return [AlgoInput(identifier=identifier, **ALGO_INPUTS[identifier]) for identifier in identifiers]
+
+
+def build_algo_outputs(identifiers: list[str]) -> list[AlgoOutput]:
+    return [AlgoOutput(identifier=identifier, **ALGO_OUTPUTS[identifier]) for identifier in identifiers]
+
+
+def build_computetask_inputs(
+    algo: Algo,
+    keys: dict[str : list[uuid.UUID]],
+) -> list[ComputeTaskInput]:
+    task_inputs = []
+    for algo_input in algo.inputs.all():
+        for position, key in enumerate(keys.get(algo_input.identifier, [])):
+            task_input = ComputeTaskInput(
+                identifier=algo_input.identifier,
+                position=position,
+            )
+            if algo_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
+                task_input.asset_key = key
+            else:  # we assume that all other assets are produced by parent tasks
+                task_input.parent_task_key_id = key
+                task_input.parent_task_output_identifier = algo_input.identifier
+            task_inputs.append(task_input)
+    return task_inputs
+
+
+def build_computetask_outputs(
+    algo: Algo,
+    owner: str = DEFAULT_OWNER,
+    public: bool = False,
+) -> list[ComputeTaskOutput]:
+    return [
+        ComputeTaskOutput(
+            identifier=algo_output.identifier,
+            permissions_download_public=public,
+            permissions_download_authorized_ids=[owner],
+            permissions_process_public=public,
+            permissions_process_authorized_ids=[owner],
+        )
+        for algo_output in algo.outputs.all()
+    ]
 
 
 def get_storage_address(asset_kind: str, key: str, field: str) -> str:
@@ -150,6 +200,8 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
 
 
 def create_algo(
+    inputs: list[AlgoInput] = None,
+    outputs: list[AlgoInput] = None,
     key: uuid.UUID = None,
     name: str = "algo",
     category: int = Algo.Category.ALGO_SIMPLE,
@@ -176,20 +228,16 @@ def create_algo(
         **get_permissions(owner, public),
     )
 
-    for identifier, algo_input in ALGO_INPUTS_PER_CATEGORY[category].items():
-        AlgoInput.objects.create(
-            algo=algo,
-            identifier=identifier,
-            channel=channel,
-            **algo_input,
-        )
-    for identifier, algo_output in ALGO_OUTPUTS_PER_CATEGORY[category].items():
-        AlgoOutput.objects.create(
-            algo=algo,
-            identifier=identifier,
-            channel=channel,
-            **algo_output,
-        )
+    if inputs:
+        for algo_input in inputs:
+            algo_input.algo = algo
+            algo_input.channel = channel
+            algo_input.save()
+    if outputs:
+        for algo_output in outputs:
+            algo_output.algo = algo
+            algo_output.channel = channel
+            algo_output.save()
 
     return algo
 
@@ -277,6 +325,8 @@ def create_computeplan(
 def create_computetask(
     compute_plan: ComputePlan,
     algo: Algo,
+    inputs: list[ComputeTaskInput] = None,
+    outputs: list[ComputeTaskOutput] = None,
     parent_tasks: list[uuid.UUID] = None,
     data_manager: DataManager = None,
     data_samples: list[uuid.UUID] = None,
@@ -324,25 +374,17 @@ def create_computetask(
             TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)
         compute_task.refresh_from_db()
 
-    for position, input in enumerate(compute_task.algo.inputs.all().order_by("identifier")):
-        ComputeTaskInput.objects.create(
-            task=compute_task,
-            identifier=input.identifier,
-            asset_key=INPUT_ASSET_KEY,
-            position=position,
-            channel=channel,
-        )
+    if inputs:
+        for task_input in inputs:
+            task_input.task = compute_task
+            task_input.channel = channel
+            task_input.save()
 
-    for output in compute_task.algo.outputs.all().order_by("identifier"):
-        ComputeTaskOutput.objects.create(
-            task=compute_task,
-            identifier=output.identifier,
-            permissions_download_public=public,
-            permissions_download_authorized_ids=[owner],
-            permissions_process_public=public,
-            permissions_process_authorized_ids=[owner],
-            channel=channel,
-        )
+    if outputs:
+        for task_output in outputs:
+            task_output.task = compute_task
+            task_output.channel = channel
+            task_output.save()
 
     return compute_task
 

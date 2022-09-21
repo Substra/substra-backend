@@ -37,18 +37,42 @@ class AlgoViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        self.maxDiff = None
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("api:algo-list")
 
-        simple_algo = factory.create_algo(category=Algo.Category.ALGO_SIMPLE, name="simple algo")
-        aggregate_algo = factory.create_algo(category=Algo.Category.ALGO_AGGREGATE, name="aggregate")
-        composite_algo = factory.create_algo(category=Algo.Category.ALGO_COMPOSITE, name="composite")
-        predict_algo = factory.create_algo(category=Algo.Category.ALGO_PREDICT, name="predict")
-        metric_algo = factory.create_algo(category=Algo.Category.ALGO_METRIC, name="metric")
+        simple_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
+            outputs=factory.build_algo_outputs(["model"]),
+            category=Algo.Category.ALGO_SIMPLE,
+            name="simple algo",
+        )
+        aggregate_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["model"]),
+            outputs=factory.build_algo_outputs(["model"]),
+            category=Algo.Category.ALGO_AGGREGATE,
+            name="aggregate",
+        )
+        composite_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
+            outputs=factory.build_algo_outputs(["local", "shared"]),
+            category=Algo.Category.ALGO_COMPOSITE,
+            name="composite",
+        )
+        predict_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "model", "shared"]),
+            outputs=factory.build_algo_outputs(["predictions"]),
+            category=Algo.Category.ALGO_PREDICT,
+            name="predict",
+        )
+        metric_algo = factory.create_algo(
+            inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
+            outputs=factory.build_algo_outputs(["performance"]),
+            category=Algo.Category.ALGO_METRIC,
+            name="metric",
+        )
 
         self.algos = [simple_algo, aggregate_algo, composite_algo, predict_algo]
         self.expected_algos = [
@@ -77,8 +101,14 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{simple_algo.key}/file/",
                 },
-                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
-                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                "inputs": {
+                    "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                    "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                    "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                },
+                "outputs": {
+                    "model": {"kind": "ASSET_MODEL", "multiple": False},
+                },
             },
             {
                 "key": str(aggregate_algo.key),
@@ -105,8 +135,12 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{aggregate_algo.key}/file/",
                 },
-                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_AGGREGATE"],
-                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_AGGREGATE"],
+                "inputs": {
+                    "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                },
+                "outputs": {
+                    "model": {"kind": "ASSET_MODEL", "multiple": False},
+                },
             },
             {
                 "key": str(composite_algo.key),
@@ -133,8 +167,16 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{composite_algo.key}/file/",
                 },
-                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
-                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_COMPOSITE"],
+                "inputs": {
+                    "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                    "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                    "local": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    "shared": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                },
+                "outputs": {
+                    "local": {"kind": "ASSET_MODEL", "multiple": False},
+                    "shared": {"kind": "ASSET_MODEL", "multiple": False},
+                },
             },
             {
                 "key": str(predict_algo.key),
@@ -161,8 +203,15 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{predict_algo.key}/file/",
                 },
-                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_PREDICT"],
-                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_PREDICT"],
+                "inputs": {
+                    "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                    "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                    "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    "shared": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                },
+                "outputs": {
+                    "predictions": {"kind": "ASSET_MODEL", "multiple": False},
+                },
             },
             {
                 "key": str(metric_algo.key),
@@ -189,8 +238,14 @@ class AlgoViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{metric_algo.key}/file/",
                 },
-                "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_METRIC"],
-                "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_METRIC"],
+                "inputs": {
+                    "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                    "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                    "predictions": {"kind": "ASSET_MODEL", "optional": False, "multiple": False},
+                },
+                "outputs": {
+                    "performance": {"kind": "ASSET_PERFORMANCE", "multiple": False},
+                },
             },
         ]
 
@@ -432,8 +487,14 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
-                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY.get(category, {}),
-                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY.get(category, {}),
+                    "inputs": {
+                        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                        "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                        "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    },
+                    "outputs": {
+                        "model": {"kind": "ASSET_MODEL", "multiple": False},
+                    },
                 }
             ),
             "file": open(algorithm_path, "rb"),
@@ -468,8 +529,14 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
                     },
-                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
-                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "inputs": {
+                        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                        "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                        "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    },
+                    "outputs": {
+                        "model": {"kind": "ASSET_MODEL", "multiple": False},
+                    },
                 }
             ),
             "file": open(algorithm_path, "rb"),
@@ -504,8 +571,14 @@ class AlgoViewTests(APITestCase):
                         "public": True,
                         "authorized_ids": [],
                     },
-                    "inputs": factory.ALGO_INPUTS_PER_CATEGORY["ALGO_SIMPLE"],
-                    "outputs": factory.ALGO_OUTPUTS_PER_CATEGORY["ALGO_SIMPLE"],
+                    "inputs": {
+                        "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                        "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                        "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    },
+                    "outputs": {
+                        "model": {"kind": "ASSET_MODEL", "multiple": False},
+                    },
                 }
             ),
             "file": open(algorithm_path, "rb"),
