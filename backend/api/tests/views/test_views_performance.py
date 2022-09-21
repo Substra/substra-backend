@@ -14,7 +14,7 @@ from api.models import ComputeTask
 from api.models import Performance
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
-from ..common import InputIdentifiers
+from substrapp.tests.common import InputIdentifiers
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
