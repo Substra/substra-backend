@@ -19,33 +19,6 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-class _ComputePlanStatus:
-    ValueType = typing.NewType("ValueType", builtins.int)
-    V: typing_extensions.TypeAlias = ValueType
-
-class _ComputePlanStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputePlanStatus.ValueType], builtins.type):  # noqa: F821
-    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
-    PLAN_STATUS_UNKNOWN: _ComputePlanStatus.ValueType  # 0
-    PLAN_STATUS_WAITING: _ComputePlanStatus.ValueType  # 1
-    PLAN_STATUS_TODO: _ComputePlanStatus.ValueType  # 2
-    PLAN_STATUS_DOING: _ComputePlanStatus.ValueType  # 3
-    PLAN_STATUS_DONE: _ComputePlanStatus.ValueType  # 4
-    PLAN_STATUS_CANCELED: _ComputePlanStatus.ValueType  # 5
-    PLAN_STATUS_FAILED: _ComputePlanStatus.ValueType  # 6
-    PLAN_STATUS_EMPTY: _ComputePlanStatus.ValueType  # 7
-
-class ComputePlanStatus(_ComputePlanStatus, metaclass=_ComputePlanStatusEnumTypeWrapper): ...
-
-PLAN_STATUS_UNKNOWN: ComputePlanStatus.ValueType  # 0
-PLAN_STATUS_WAITING: ComputePlanStatus.ValueType  # 1
-PLAN_STATUS_TODO: ComputePlanStatus.ValueType  # 2
-PLAN_STATUS_DOING: ComputePlanStatus.ValueType  # 3
-PLAN_STATUS_DONE: ComputePlanStatus.ValueType  # 4
-PLAN_STATUS_CANCELED: ComputePlanStatus.ValueType  # 5
-PLAN_STATUS_FAILED: ComputePlanStatus.ValueType  # 6
-PLAN_STATUS_EMPTY: ComputePlanStatus.ValueType  # 7
-global___ComputePlanStatus = ComputePlanStatus
-
 class _ComputePlanAction:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
@@ -81,17 +54,15 @@ class ComputePlan(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
-    STATUS_FIELD_NUMBER: builtins.int
     DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     TAG_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     CANCELATION_DATE_FIELD_NUMBER: builtins.int
+    FAILURE_DATE_FIELD_NUMBER: builtins.int
     key: builtins.str
     owner: builtins.str
-    status: global___ComputePlanStatus.ValueType
-    """Dynamic data, not persisted and set on query"""
     delete_intermediary_models: builtins.bool
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
@@ -101,21 +72,23 @@ class ComputePlan(google.protobuf.message.Message):
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     @property
     def cancelation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
+    @property
+    def failure_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         owner: builtins.str = ...,
-        status: global___ComputePlanStatus.ValueType = ...,
         delete_intermediary_models: builtins.bool = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         tag: builtins.str = ...,
         name: builtins.str = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         cancelation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+        failure_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "delete_intermediary_models", b"delete_intermediary_models", "key", b"key", "metadata", b"metadata", "name", b"name", "owner", b"owner", "status", b"status", "tag", b"tag"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "failure_date", b"failure_date"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "delete_intermediary_models", b"delete_intermediary_models", "failure_date", b"failure_date", "key", b"key", "metadata", b"metadata", "name", b"name", "owner", b"owner", "tag", b"tag"]) -> None: ...
 
 global___ComputePlan = ComputePlan
 
@@ -280,3 +253,31 @@ class UpdateComputePlanResponse(google.protobuf.message.Message):
     ) -> None: ...
 
 global___UpdateComputePlanResponse = UpdateComputePlanResponse
+
+class IsPlanRunningParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_FIELD_NUMBER: builtins.int
+    key: builtins.str
+    def __init__(
+        self,
+        *,
+        key: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key", b"key"]) -> None: ...
+
+global___IsPlanRunningParam = IsPlanRunningParam
+
+class IsPlanRunningResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    IS_RUNNING_FIELD_NUMBER: builtins.int
+    is_running: builtins.bool
+    def __init__(
+        self,
+        *,
+        is_running: builtins.bool = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["is_running", b"is_running"]) -> None: ...
+
+global___IsPlanRunningResponse = IsPlanRunningResponse

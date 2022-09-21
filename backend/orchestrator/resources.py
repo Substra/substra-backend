@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import enum
 from typing import Optional
 from typing import Union
@@ -310,33 +311,32 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
         return f'ComputeTaskInputAsset(identifier="{self.identifier}",kind="{self.kind}",asset={self.asset})'
 
 
-class ComputePlanStatus(AutoNameEnum):
-    PLAN_STATUS_UNKNOWN = enum.auto()
-    PLAN_STATUS_WAITING = enum.auto()
-    PLAN_STATUS_TODO = enum.auto()
-    PLAN_STATUS_DOING = enum.auto()
-    PLAN_STATUS_DONE = enum.auto()
-    PLAN_STATUS_CANCELED = enum.auto()
-    PLAN_STATUS_FAILED = enum.auto()
-    PLAN_STATUS_EMPTY = enum.auto()
-
-    @classmethod
-    def from_grpc(cls, s: computeplan_pb2.ComputePlanStatus.ValueType) -> ComputePlanStatus:
-        return cls(computeplan_pb2.ComputePlanStatus.Name(s))
-
-
 class ComputePlan(_Base):
     key: str
-    status: ComputePlanStatus
     tag: str
+    cancelation_date: Optional[datetime.datetime]
+    failure_date: Optional[datetime.datetime]
 
     @classmethod
     def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> ComputePlan:
+        cancelation_date = None
+        if compute_plan.HasField("cancelation_date"):
+            cancelation_date = compute_plan.cancelation_date.ToDatetime(tzinfo=datetime.timezone.utc)
+
+        failure_date = None
+        if compute_plan.HasField("failure_date"):
+            failure_date = compute_plan.failure_date.ToDatetime(tzinfo=datetime.timezone.utc)
+
         return cls(
             key=compute_plan.key,
-            status=ComputePlanStatus.from_grpc(compute_plan.status),
             tag=compute_plan.tag,
+            cancelation_date=cancelation_date,
+            failure_date=failure_date,
         )
+
+    @property
+    def is_runnable(self) -> bool:
+        return self.cancelation_date is None and self.failure_date is None
 
 
 class InvalidInputAsset(Exception):

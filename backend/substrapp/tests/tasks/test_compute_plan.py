@@ -8,7 +8,7 @@ from substrapp.tasks import tasks_compute_plan
 
 def test_teardown_compute_plan_resources_cp_doing(mocker: MockerFixture):
     client = mocker.Mock()
-    client.is_compute_plan_doing.return_value = True
+    client.is_compute_plan_running.return_value = True
     mocked_teardown = mocker.patch("substrapp.tasks.tasks_compute_plan._teardown_pods_and_dirs")
     mocked_algo_delete = mocker.patch("substrapp.tasks.tasks_compute_plan._delete_compute_plan_algos_images")
 
@@ -16,14 +16,14 @@ def test_teardown_compute_plan_resources_cp_doing(mocker: MockerFixture):
 
     tasks_compute_plan._teardown_compute_plan_resources(client, cp_key)
 
-    client.is_compute_plan_doing.assert_called_once()
+    client.is_compute_plan_running.assert_called_once()
     mocked_teardown.assert_not_called()
     mocked_algo_delete.assert_not_called()
 
 
 def test_teardown_compute_plan_resources_cp_done(mocker: MockerFixture):
     client = mocker.Mock()
-    client.is_compute_plan_doing.return_value = False
+    client.is_compute_plan_running.return_value = False
     mocked_teardown = mocker.patch("substrapp.tasks.tasks_compute_plan._teardown_pods_and_dirs")
     mocked_algo_delete = mocker.patch("substrapp.tasks.tasks_compute_plan._delete_compute_plan_algos_images")
 
@@ -31,7 +31,7 @@ def test_teardown_compute_plan_resources_cp_done(mocker: MockerFixture):
 
     tasks_compute_plan._teardown_compute_plan_resources(client, cp_key)
 
-    client.is_compute_plan_doing.assert_called_once()
+    client.is_compute_plan_running.assert_called_once()
     mocked_teardown.assert_called_once()
     mocked_algo_delete.assert_called_once()
 

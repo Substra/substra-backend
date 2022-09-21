@@ -40,23 +40,17 @@ def on_computetask_event(payload):
         with get_orchestrator_client(channel_name) as client:
             handler_compute_engine.handle_finished_tasks(client, channel_name, orc_task)
 
-            # Handle compute plan if necessary
-            compute_plan = client.query_compute_plan(orc_task.compute_plan_key)
-
-            if compute_plan.status in [
-                orchestrator.ComputePlanStatus.PLAN_STATUS_DONE,
-                orchestrator.ComputePlanStatus.PLAN_STATUS_CANCELED,
-                orchestrator.ComputePlanStatus.PLAN_STATUS_FAILED,
-            ]:
+            if not client.is_compute_plan_running(orc_task.compute_plan_key):
                 logger.info(
                     "Compute plan finished",
-                    plan=compute_plan.key,
-                    status=compute_plan.status,
+                    plan=orc_task.compute_plan_key,
                     asset_key=asset_key,
                     kind=event_kind,
                 )
 
-                queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan=compute_plan)
+                queue_delete_cp_pod_and_dirs_and_optionally_images(
+                    channel_name, compute_plan_key=orc_task.compute_plan_key
+                )
 
     if orc_task.status != orchestrator.ComputeTaskStatus.STATUS_TODO:
         return
