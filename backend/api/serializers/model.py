@@ -21,7 +21,6 @@ class ModelSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         model = Model
         fields = [
             "address",
-            "category",
             "channel",
             "compute_task_key",
             "creation_date",

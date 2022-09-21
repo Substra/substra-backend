@@ -84,17 +84,11 @@ class ComputeTaskViewTests(APITestCase):
                 )
 
         done_train_task = self.compute_tasks[ComputeTask.Category.TASK_TRAIN][ComputeTask.Status.STATUS_DONE]
-        self.train_model = factory.create_model(
-            done_train_task, category=Model.Category.MODEL_SIMPLE, identifier="model"
-        )
+        self.train_model = factory.create_model(done_train_task, identifier="model")
 
         done_composite_task = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE][ComputeTask.Status.STATUS_DONE]
-        self.local_model = factory.create_model(
-            done_composite_task, category=Model.Category.MODEL_HEAD, identifier="local"
-        )
-        self.shared_model = factory.create_model(
-            done_composite_task, category=Model.Category.MODEL_SIMPLE, identifier="shared"
-        )
+        self.local_model = factory.create_model(done_composite_task, identifier="local")
+        self.shared_model = factory.create_model(done_composite_task, identifier="shared")
 
         done_failed_task = self.compute_tasks[ComputeTask.Category.TASK_TEST][ComputeTask.Status.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.algos[Algo.Category.ALGO_METRIC])

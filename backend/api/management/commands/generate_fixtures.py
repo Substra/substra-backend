@@ -4,7 +4,6 @@ from django.core.management.base import BaseCommand
 from api.models import Algo
 from api.models import ComputePlan
 from api.models import ComputeTask
-from api.models import Model
 from api.tests import asset_factory as factory
 
 
@@ -70,7 +69,7 @@ class Command(BaseCommand):
             category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_DONE,
         )
-        model_1 = factory.create_model(train_task_1, category=Model.Category.MODEL_SIMPLE, identifier="model")
+        model_1 = factory.create_model(train_task_1, identifier="model")
         train_task_2 = factory.create_computetask(
             doing_cp,
             simple_algo,
@@ -79,7 +78,7 @@ class Command(BaseCommand):
             category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_DONE,
         )
-        model_2 = factory.create_model(train_task_2, category=Model.Category.MODEL_SIMPLE, identifier="model")
+        model_2 = factory.create_model(train_task_2, identifier="model")
         factory.create_computetask(
             doing_cp,
             aggregate_algo,
@@ -103,7 +102,7 @@ class Command(BaseCommand):
             category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_DONE,
         )
-        model_3 = factory.create_model(train_task, category=Model.Category.MODEL_SIMPLE, identifier="model")
+        model_3 = factory.create_model(train_task, identifier="model")
         test_task = factory.create_computetask(
             done_cp,
             metric_algo,
@@ -128,7 +127,7 @@ class Command(BaseCommand):
             category=ComputeTask.Category.TASK_COMPOSITE,
             status=ComputeTask.Status.STATUS_DONE,
         )
-        model_4 = factory.create_model(composite_task, category=Model.Category.MODEL_HEAD, identifier="local")
+        model_4 = factory.create_model(composite_task, identifier="local")
         failed_task = factory.create_computetask(
             failed_cp,
             metric_algo,
