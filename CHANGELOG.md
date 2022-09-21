@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: model categories
 
+### Added
+
+- output identifier add in metric response object in `compute_plan perf` view.
+
 ## [0.31.0] 2022-09-26
 
 ### Changed

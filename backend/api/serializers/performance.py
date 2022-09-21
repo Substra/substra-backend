@@ -42,8 +42,6 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
         model = Algo
         fields = ["key", "name", "output_identifier"]
 
-    # TODO: Now we have to match output only by algo key, once the link asset<->output is implemented in localrep the
-    # relation performance<->output_identifier will be more starightforward and unambiguous.
     def get_output_identifier(self, obj):
         try:
             performance_output = AlgoOutput.objects.get(
