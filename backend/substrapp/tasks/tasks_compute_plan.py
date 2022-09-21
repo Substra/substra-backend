@@ -17,15 +17,13 @@ from substrapp.task_routing import release_worker
 logger = structlog.get_logger(__name__)
 
 
-def queue_delete_cp_pod_and_dirs_and_optionally_images(
-    channel_name: str, compute_plan: orchestrator.ComputePlan
-) -> None:
+def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan_key: str) -> None:
     if settings.DEBUG_KEEP_POD_AND_DIRS:
         return
 
     from substrapp.task_routing import get_existing_worker_queue
 
-    worker_queue = get_existing_worker_queue(compute_plan.key)
+    worker_queue = get_existing_worker_queue(compute_plan_key)
 
     if worker_queue is None:
         # Since we receive events for all compute tasks, including tasks that belong to compute plans which are
@@ -37,11 +35,11 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(
             "the compute plan dirs because the compute plan is not mapped to any worker. This is expected behavior "
             "in some cases, including: - This CP has no compute task ran on this organisation - Another process/task "
             "already called this function for the same compute plan.",
-            compute_plan_key=compute_plan.key,
+            compute_plan_key=compute_plan_key,
         )
         return
 
-    delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan.key), queue=worker_queue)
+    delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan_key), queue=worker_queue)
 
 
 @app.task(ignore_result=False)
@@ -54,7 +52,7 @@ def _teardown_compute_plan_resources(orc_client: orchestrator.Client, compute_pl
     structlog.contextvars.bind_contextvars(compute_plan_key=compute_plan_key)
 
     with acquire_compute_plan_lock(compute_plan_key):
-        if orc_client.is_compute_plan_doing(compute_plan_key):
+        if orc_client.is_compute_plan_running(compute_plan_key):
             logger.info("Skipping teardown, compute plan is still running")
             return
         _teardown_pods_and_dirs(compute_plan_key)

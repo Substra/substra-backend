@@ -34,7 +34,6 @@ from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
 from orchestrator.resources import Algo
 from orchestrator.resources import ComputePlan
-from orchestrator.resources import ComputePlanStatus
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
 from orchestrator.resources import OrchestratorVersion
@@ -55,6 +54,7 @@ def grpc_retry(func):
     """Decorator to handle grpc errors from the orchestrator.
     It retries on UNKNOWN or UNAVAILABLE error and wraps the returned error as an OrcError.
     """
+
     # In case of grpc status code unknown, we retry 5 times spaced by 1s
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -337,6 +337,13 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
+    def is_compute_plan_running(self, key: str) -> bool:
+        resp: computeplan_pb2.IsPlanRunningResponse = self._computeplan_client.IsPlanRunning(
+            computeplan_pb2.IsPlanRunningParam(key=key), metadata=self._metadata
+        )
+        return resp.is_running
+
+    @grpc_retry
     def get_computetask_output_models(self, compute_task_key):
         data = self._model_client.GetComputeTaskOutputModels(
             model_pb2.GetComputeTaskModelsParam(compute_task_key=compute_task_key),
@@ -369,10 +376,6 @@ class OrchestratorClient:
             performance_pb2.NewPerformance(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
-
-    def is_compute_plan_doing(self, key):
-        cp = self.query_compute_plan(key)
-        return cp.status == ComputePlanStatus.PLAN_STATUS_DOING
 
     def subscribe_to_events(self, channel_name=None, start_event_id=""):
 

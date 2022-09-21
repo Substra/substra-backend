@@ -177,7 +177,7 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
     datastore = get_datastore(channel=channel_name)
     try:
         _run(self, channel_name, task, compute_plan_key, datastore)
-    except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError) as exception:
+    except (task_utils.ComputePlanNonRunnableError, task_utils.TaskNonRunnableStatusError) as exception:
         logger.exception(exception)
         raise celery.exceptions.Ignore
     except compute_task_errors.CeleryNoRetryError as exception:

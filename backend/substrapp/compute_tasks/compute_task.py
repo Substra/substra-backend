@@ -1,17 +1,15 @@
+import datetime
+from typing import Optional
+
 import structlog
 
 import orchestrator
-import orchestrator.computetask_pb2 as computetask_pb2
+from orchestrator import computetask_pb2
 from orchestrator.error import OrcError
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskStatus
 
 _RUNNABLE_TASK_STATUSES = [ComputeTaskStatus.STATUS_TODO]
-
-_RUNNABLE_COMPUTE_PLAN_STATUSES = [
-    orchestrator.ComputePlanStatus.PLAN_STATUS_TODO,
-    orchestrator.ComputePlanStatus.PLAN_STATUS_DOING,
-]
 
 logger = structlog.get_logger(__name__)
 
@@ -23,16 +21,7 @@ def _is_task_status_runnable(task: ComputeTask, allow_doing: bool) -> bool:
     return task.status in _RUNNABLE_TASK_STATUSES
 
 
-def _is_compute_plan_status_runnable(compute_plan: orchestrator.ComputePlan) -> bool:
-    return compute_plan.status in _RUNNABLE_COMPUTE_PLAN_STATUSES
-
-
-class _NonRunnableStatusError(RuntimeError):
-    def __init__(self, status: str) -> None:
-        self.status = status
-
-
-class TaskNonRunnableStatusError(_NonRunnableStatusError):
+class TaskNonRunnableStatusError(RuntimeError):
     """The compute task status prevents running the task.
 
     Attributes:
@@ -40,14 +29,18 @@ class TaskNonRunnableStatusError(_NonRunnableStatusError):
 
     """
 
+    def __init__(self, status: str) -> None:
+        self.status = status
 
-class ComputePlanNonRunnableStatusError(_NonRunnableStatusError):
-    """The compute plan status prevents running the task.
 
-    Attributes:
-        status: the status of the compute plan.
+class ComputePlanNonRunnableError(RuntimeError):
+    """The compute plan state prevents running the task."""
 
-    """
+    def __init__(
+        self, cancelation_date: Optional[datetime.datetime], failure_date: Optional[datetime.datetime]
+    ) -> None:
+        self.cancelation_date = cancelation_date
+        self.failure_date = failure_date
 
 
 def _raise_if_task_not_runnable(
@@ -81,8 +74,8 @@ def _raise_if_task_not_runnable(
         raise TaskNonRunnableStatusError(task.status.name)
 
     compute_plan = client.query_compute_plan(task.compute_plan_key)
-    if not _is_compute_plan_status_runnable(compute_plan):
-        raise ComputePlanNonRunnableStatusError(compute_plan.status.name)
+    if not compute_plan.is_runnable:
+        raise ComputePlanNonRunnableError(compute_plan.cancelation_date, compute_plan.failure_date)
 
 
 def is_task_runnable(task_key: str, client: orchestrator.Client, allow_doing: bool = False) -> bool:
@@ -99,7 +92,7 @@ def is_task_runnable(task_key: str, client: orchestrator.Client, allow_doing: bo
     """
     try:
         _raise_if_task_not_runnable(task_key, client, allow_doing)
-    except (TaskNonRunnableStatusError, ComputePlanNonRunnableStatusError):
+    except (TaskNonRunnableStatusError, ComputePlanNonRunnableError):
         return False
     else:
         return True
@@ -128,12 +121,16 @@ def abort_task_if_not_runnable(
     """
     try:
         _raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing, existing_task=task)
-    except ComputePlanNonRunnableStatusError as exc:
-        logger.info("Compute plan not runnable. Canceling task.", compute_plan_status=exc.status)
+    except ComputePlanNonRunnableError as exc:
+        logger.info(
+            "Compute plan not runnable. Canceling task.",
+            compute_plan_cancelation_date=exc.cancelation_date,
+            compute_plan_failure_date=exc.failure_date,
+        )
         client.update_task_status(
             task_key,
             computetask_pb2.TASK_ACTION_CANCELED,
-            log=f"Compute plan has a non-runnable status: {exc.status}",
+            log="Compute plan is not runnable",
         )
         raise
 
