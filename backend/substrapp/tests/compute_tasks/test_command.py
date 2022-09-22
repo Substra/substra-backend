@@ -400,7 +400,11 @@ def test_get_args_test_after_predict():
     ]
 
     expected_outputs = [
-        {"id": InputIdentifiers.PERFORMANCE, "value": f"/substra_internal/perf/{InputIdentifiers.PERFORMANCE}-perf.json", "multiple": False},
+        {
+            "id": InputIdentifiers.PERFORMANCE,
+            "value": f"/substra_internal/perf/{InputIdentifiers.PERFORMANCE}-perf.json",
+            "multiple": False,
+        },
     ]
 
     actual = _get_args(ctx)
