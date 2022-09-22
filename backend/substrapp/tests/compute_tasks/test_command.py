@@ -405,6 +405,8 @@ def test_get_args_test_after_predict():
 
     actual = _get_args(ctx)
     assert actual == [
+        "--rank",
+        "0",
         "--inputs",
         f"'{json.dumps(expected_inputs)}'",
         "--outputs",
