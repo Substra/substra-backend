@@ -335,7 +335,6 @@ def test_get_args_predict_after_composite():
 
 
 def test_get_args_test_after_predict():
-    algo = orc_mock.AlgoFactory()
     pred = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()
@@ -343,6 +342,15 @@ def test_get_args_test_after_predict():
     task = orc_mock.ComputeTaskFactory(
         category=orchestrator.ComputeTaskCategory.TASK_TEST,
         rank=0,
+    )
+    algo = orc_mock.AlgoFactory(
+        inputs={
+            InputIdentifiers.PREDICTIONS: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+            InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+            InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
+            ),
+        }
     )
 
     input_assets = [
@@ -380,17 +388,25 @@ def test_get_args_test_after_predict():
         ),
     ]
 
-    cmd = [
-        "--input-predictions-path",
-        f"/substra_internal/in_models/{pred.key}",
-        "--opener-path",
-        f"/substra_internal/openers/{data_manager.key}/__init__.py",
-        "--data-sample-paths",
+    expected_inputs = [
+        {"id": InputIdentifiers.PREDICTIONS, "value": f"/substra_internal/in_models/{pred.key}", "multiple": False},
+        {
+            "id": InputIdentifiers.OPENER,
+            "value": f"/substra_internal/openers/{data_manager.key}/__init__.py",
+            "multiple": False,
+        },
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds1.key}", "multiple": True},
+        {"id": InputIdentifiers.DATASAMPLES, "value": f"/substra_internal/data_samples/{ds2.key}", "multiple": True},
     ]
-    cmd.extend([f"/substra_internal/data_samples/{ds.key}" for ds in [ds1, ds2]])
-    cmd.append("--output-perf-path")
-    cmd.append(f"/substra_internal/perf/{InputIdentifiers.PERFORMANCE}-perf.json")
+
+    expected_outputs = [
+        {"id": InputIdentifiers.PERFORMANCE, "value": f"/substra_internal/perf/{InputIdentifiers.PERFORMANCE}-perf.json", "multiple": False},
+    ]
 
     actual = _get_args(ctx)
-
-    assert actual == cmd
+    assert actual == [
+        "--inputs",
+        f"'{json.dumps(expected_inputs)}'",
+        "--outputs",
+        f"'{json.dumps(expected_outputs)}'",
+    ]
