@@ -25,7 +25,6 @@ from api.views.utils import ApiResponse
 from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
-from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
@@ -58,7 +57,7 @@ def _register_in_orchestrator(request, instance):
             "public": permissions.get("public"),
             "authorized_ids": permissions.get("authorized_ids"),
         },
-        "metadata": validate_metadata(request.data.get("metadata")),
+        "metadata": request.data.get("metadata"),
         "logs_permission": {
             "public": logs_permission.get("public"),
             "authorized_ids": logs_permission.get("authorized_ids"),

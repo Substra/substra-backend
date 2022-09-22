@@ -25,7 +25,6 @@ from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
-from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from substrapp.models import Algo as AlgoFiles
 from substrapp.orchestrator import get_orchestrator_client
@@ -63,7 +62,7 @@ def _register_in_orchestrator(request, basename, instance):
             "public": permissions.get("public"),
             "authorized_ids": permissions.get("authorized_ids"),
         },
-        "metadata": validate_metadata(request.data.get("metadata")),
+        "metadata": request.data.get("metadata"),
         "inputs": request.data["inputs"],
         "outputs": request.data["outputs"],
     }

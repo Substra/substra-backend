@@ -173,25 +173,6 @@ def validate_key(key) -> str:
     return uid
 
 
-def validate_metadata(metadata: dict) -> dict:
-    """Validates an asset metadata keys and return the validated metadata dict.
-
-    Args:
-        metadata (dict): A metadata dict
-
-    Raises:
-        BadRequestError: Raised if `__` is present in one of the metadata keys.
-
-    Returns:
-        dict: A valid dict of metadata
-    """
-
-    if metadata and any("__" in key for key in metadata):
-        raise BadRequestError('"__" cannot be used in a metadata key, please use simple underscore instead')
-    else:
-        return metadata
-
-
 def validate_sort(sort):
     if sort not in ["asc", "desc"]:
         raise BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")

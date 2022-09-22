@@ -493,7 +493,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "number": 1,
             "float": 1.0,
             "string": "foo",
-            'special "?= %` chars': "foo",
+            'special ."?= %` chars': "foo",
             "special_chars": 'special "?= %` chars',
         }
         self.expected_results[0]["metadata"] = metadata
@@ -618,7 +618,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         )
 
         # special chars in key (works)
-        params = urlencode({"metadata": json.dumps([{"key": 'special "?= %` chars', "type": "is", "value": "foo"}])})
+        params = urlencode({"metadata": json.dumps([{"key": 'special ."?= %` chars', "type": "is", "value": "foo"}])})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_results[:1]}

@@ -4,18 +4,14 @@ import tempfile
 import uuid
 from unittest import mock
 
-import pytest
 import responses
 from django.test import override_settings
 from django.urls import reverse
-from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.errors import BadRequestError
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
-from api.views.utils import validate_metadata
 from organization.authentication import OrganizationUser
 from organization.models import OutgoingOrganization
 from substrapp.models import Algo as AlgoFiles
@@ -104,22 +100,3 @@ class PermissionMixinDownloadFileTests(APITestCase):
         response = self.client.get(self.algo_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-
-@parameterized.expand(
-    [
-        ({}, False),
-        ({"foo": "bar"}, False),
-        ({"_foo_": "bar"}, False),
-        ({"foo": "bar__"}, False),
-        ({"foo__bar": "foo"}, True),
-        ({"__foo": "bar"}, True),
-        ({"foo__": "bar"}, True),
-    ]
-)
-def test_validate_metadata(metadata, raises):
-    if raises:
-        with pytest.raises(BadRequestError):
-            validate_metadata(metadata)
-    else:
-        validate_metadata(metadata)
