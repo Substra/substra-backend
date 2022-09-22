@@ -139,9 +139,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 out_data = {
                     "key": in_data["key"],
                     "category": in_data["category"],
-                    "algo": {
-                        "key": in_data["algo_key"],
-                    },
+                    "algo_key": in_data["algo_key"],
                     "compute_plan_key": in_data["compute_plan_key"],
                     "parent_task_keys": [self._parent_task_key],
                     "rank": 0,
