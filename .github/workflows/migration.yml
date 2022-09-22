@@ -1,0 +1,28 @@
+name: "Test migrations"
+
+on:  
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  test-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Run initial migration and feed data
+        run: |
+          ls
+          make install
+          make quickstart
+          make fixtures
+      - uses: actions/checkout@v3
+      - name: Run migration on the feature branch
+        run: |
+          python backend/manage.py migrate --settings backend.settings.test
