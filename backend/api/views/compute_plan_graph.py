@@ -21,10 +21,7 @@ logger = structlog.get_logger(__name__)
 TASK_CATEGORY_INPUTS = {
     ComputeTask.Category.TASK_TRAIN: [{"id": "in/model", "kind": "model"}],
     ComputeTask.Category.TASK_TEST: [{"id": "in/predictions", "kind": "model"}],
-    ComputeTask.Category.TASK_COMPOSITE: [
-        {"id": "in/head_model", "kind": "model"},
-        {"id": "in/trunk_model", "kind": "model"},
-    ],
+    ComputeTask.Category.TASK_COMPOSITE: [{"id": "in/head_model", "kind": "model"}, {"id": "in/trunk_model", "kind": "model"}],
     ComputeTask.Category.TASK_AGGREGATE: [{"id": "in/models[]", "kind": "model"}],
     ComputeTask.Category.TASK_PREDICT: [{"id": "in/tested_model", "kind": "model"}],
 }
@@ -32,10 +29,7 @@ TASK_CATEGORY_INPUTS = {
 TASK_CATEGORY_OUTPUTS = {
     ComputeTask.Category.TASK_TRAIN: [{"id": "out/model", "kind": "model"}],
     ComputeTask.Category.TASK_TEST: [{"id": "out/perf", "kind": "performance"}],
-    ComputeTask.Category.TASK_COMPOSITE: [
-        {"id": "out/head_model", "kind": "model"},
-        {"id": "out/trunk_model", "kind": "model"},
-    ],
+    ComputeTask.Category.TASK_COMPOSITE: [{"id": "out/head_model", "kind": "model"}, {"id": "out/trunk_model", "kind": "model"}],
     ComputeTask.Category.TASK_AGGREGATE: [{"id": "out/model", "kind": "model"}],
     ComputeTask.Category.TASK_PREDICT: [{"id": "out/predictions", "kind": "model"}],
 }
@@ -53,7 +47,7 @@ def _get_task_outputs(category):
 
 def _get_target_input(edge):
     target_category = edge.get("target_task_category")
-    inputs = [input["id"] for input in TASK_CATEGORY_INPUTS.get(target_category, [])]
+    inputs = [input['id'] for input in TASK_CATEGORY_INPUTS.get(target_category, [])]
     if TASK_CATEGORY_INPUTS.get(target_category) is None:
         raise Exception(
             (
@@ -98,12 +92,13 @@ def get_cp_graph(request, compute_plan_pk):
     """Return a workflow graph for each task of the computeplan"""
     validate_key(compute_plan_pk)
 
-    tasks = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).values(
+    tasks = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).prefetch_related("algo").values(
         "key",
         "rank",
         "worker",
         "status",
         "category",
+        "algo"
     )
 
     # Set a task limitation for performances issues
