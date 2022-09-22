@@ -1,7 +1,8 @@
 from .algo import AlgoSerializer
 from .computeplan import ComputePlanSerializer
 from .computetask import ComputeTaskSerializer
-from .computetask import ComputeTaskWithRelationshipsSerializer
+from .computetask import LegacyComputeTaskSerializer
+from .computetask import LegacyComputeTaskWithRelationshipsSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
@@ -16,7 +17,8 @@ __all__ = [
     "AlgoSerializer",
     "ComputePlanSerializer",
     "ComputeTaskSerializer",
-    "ComputeTaskWithRelationshipsSerializer",
+    "LegacyComputeTaskSerializer",
+    "LegacyComputeTaskWithRelationshipsSerializer",
     "DataManagerSerializer",
     "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
