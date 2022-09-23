@@ -27,6 +27,10 @@ from .deps.org import *
 TRUE_VALUES = {"t", "T", "y", "Y", "yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "1", 1, True}
 
 
+def must_get_env(key) -> str:
+    return os.environ[key]
+
+
 def to_bool(value):
     return value in TRUE_VALUES
 
@@ -130,7 +134,6 @@ MIDDLEWARE = [
     "django_structlog.middlewares.RequestMiddleware",
     "django_structlog.middlewares.CeleryMiddleware",
 ]
-
 
 DJANGO_LOG_SQL_QUERIES = to_bool(os.environ.get("DJANGO_LOG_SQL_QUERIES", "True"))
 if DJANGO_LOG_SQL_QUERIES:
@@ -282,7 +285,6 @@ WORKER_PVC_DOCKER_CACHE = os.environ.get("WORKER_PVC_DOCKER_CACHE")
 WORKER_PVC_SUBTUPLE = os.environ.get("WORKER_PVC_SUBTUPLE")
 WORKER_REPLICA_SET_NAME = os.environ.get("WORKER_REPLICA_SET_NAME")
 
-
 NAMESPACE = os.getenv("NAMESPACE")
 HOSTNAME = os.getenv("HOSTNAME")
 
@@ -315,7 +317,6 @@ if ENABLE_METRICS:
         + MIDDLEWARE
         + ["django_prometheus.middleware.PrometheusAfterMiddleware"]
     )
-
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 

@@ -72,7 +72,10 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
-| int | `ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS` | `5000` |  |
+| int | `ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA` | nil |  |
+| int | `ORCHESTRATOR_GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS` | nil |  |
+| int | `ORCHESTRATOR_GRPC_KEEPALIVE_TIMEOUT_MS` | nil |  |
+| int | `ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS` | nil |  |
 | string | `ORCHESTRATOR_HOST` | nil |  |
 | bool | `ORCHESTRATOR_MTLS_ENABLED` | nil |  |
 | string | `ORCHESTRATOR_PORT` | nil |  |
