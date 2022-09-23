@@ -29,8 +29,7 @@ jobs:
           pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
       - name: Run initial migration and feed data
         run: |
-          python manage.py check --database default 2>/dev/null
+          make db
+          make quickstart
+          make fixtures
       - uses: actions/checkout@v3
-      - name: Run migration on the feature branch
-        run: |
-          python backend/manage.py migrate --settings backend.settings.test
