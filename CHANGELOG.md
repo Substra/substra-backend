@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add channel column to input/output tables.
 - The test task uses the same CLI arguments format as the other tasks.
 
+### Fixed
+
+- Bug when executing compute tasks with too many data samples (command line length exceeding max.) The substra-tools arguments are now passed using a file.
+
 ## [0.30.0] 2022-09-19
 
 ### Changed

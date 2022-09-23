@@ -15,10 +15,15 @@ def test_exec_success(mocker: MockerFixture):
     mock_get_exec_stream = mocker.patch("substrapp.compute_tasks.execute.execute")
     mock_get_exec_stream.return_value = execution_stream
 
+    ctx = mocker.Mock()
+    ctx.directories = mocker.Mock()
     pod = compute_pod.ComputePod(str(uuid.uuid4()), str(uuid.uuid4()))
-    cmd = ["ls", "/tmp"]
 
-    execute._exec(pod, cmd)
+    mocker.patch("substrapp.compute_tasks.execute.get_exec_command", return_value=["ls", "/tmp"])
+    mocker.patch("substrapp.compute_tasks.execute.get_exec_command_args")
+    mocker.patch("substrapp.compute_tasks.execute.write_command_args_file")
+
+    execute._exec(ctx, pod)
 
     mock_get_exec_stream.assert_called_once()
 
@@ -31,11 +36,16 @@ def test_exec_failure(mocker: MockerFixture):
     mock_get_exec_stream = mocker.patch("substrapp.compute_tasks.execute.execute")
     mock_get_exec_stream.return_value = execution_stream
 
+    ctx = mocker.Mock()
+    ctx.directories = mocker.Mock()
     pod = compute_pod.ComputePod(str(uuid.uuid4()), str(uuid.uuid4()))
-    cmd = ["l", "/tmp"]
+
+    mocker.patch("substrapp.compute_tasks.execute.get_exec_command", return_value=["ls", "/tmp"])
+    mocker.patch("substrapp.compute_tasks.execute.get_exec_command_args")
+    mocker.patch("substrapp.compute_tasks.execute.write_command_args_file")
 
     with pytest.raises(ExecutionError) as exc:
-        execute._exec(pod, cmd)
+        execute._exec(ctx, pod)
 
     assert str(retcode) in str(exc.value)
     mock_get_exec_stream.assert_called_once()
