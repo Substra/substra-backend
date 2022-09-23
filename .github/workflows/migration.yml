@@ -20,8 +20,7 @@ jobs:
         run: |
           ls
           make install
-          make quickstart
-          make fixtures
+          python manage.py check --database default 2>/dev/null
       - uses: actions/checkout@v3
       - name: Run migration on the feature branch
         run: |
