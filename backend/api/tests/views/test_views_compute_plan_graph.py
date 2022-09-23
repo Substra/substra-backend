@@ -72,6 +72,7 @@ class ComputePlanGraphViewTests(APITestCase):
             compute_plan, algo=algo, category=ComputeTask.Category.TASK_AGGREGATE, parent_tasks=[composite_task.key]
         )
 
+        self.maxDiff = None
         expected_results = {
             "tasks": [
                 {
@@ -80,8 +81,8 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_TRAIN",
-                    "inputs": ["in/model"],
-                    "outputs": ["out/model"],
+                    "inputs": [{"id": "in/model", "kind": "model"}],
+                    "outputs": [{"id": "out/model", "kind": "model"}],
                 },
                 {
                     "key": str(predict_task.key),
@@ -89,8 +90,8 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_PREDICT",
-                    "inputs": ["in/tested_model"],
-                    "outputs": ["out/predictions"],
+                    "inputs": [{"id": "in/tested_model", "kind": "model"}],
+                    "outputs": [{"id": "out/predictions", "kind": "model"}],
                 },
                 {
                     "key": str(test_task.key),
@@ -98,8 +99,8 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_TEST",
-                    "inputs": ["in/predictions"],
-                    "outputs": [],
+                    "inputs": [{"id": "in/predictions", "kind": "model"}],
+                    "outputs": [{"id": "out/perf", "kind": "performance"}],
                 },
                 {
                     "key": str(composite_task.key),
@@ -107,8 +108,8 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_COMPOSITE",
-                    "inputs": ["in/head_model", "in/trunk_model"],
-                    "outputs": ["out/head_model", "out/trunk_model"],
+                    "inputs": [{"id": "in/head_model", "kind": "model"}, {"id": "in/trunk_model", "kind": "model"}],
+                    "outputs": [{"id": "out/head_model", "kind": "model"}, {"id": "out/trunk_model", "kind": "model"}],
                 },
                 {
                     "key": str(aggregate_task.key),
@@ -116,8 +117,8 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_AGGREGATE",
-                    "inputs": ["in/models[]"],
-                    "outputs": ["out/model"],
+                    "inputs": [{"id": "in/models[]", "kind": "model"}],
+                    "outputs": [{"id": "out/model", "kind": "model"}],
                 },
             ],
             "edges": [
