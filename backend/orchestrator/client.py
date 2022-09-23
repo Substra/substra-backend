@@ -10,7 +10,6 @@ from google.protobuf.json_format import MessageToDict
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask as computetask
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
 import orchestrator.datasample_pb2 as datasample_pb2
@@ -256,11 +255,33 @@ class OrchestratorClient:
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
+    def _get_task_input(self, input: dict) -> computetask_pb2.ComputeTaskInput:
+        """Convert a dict into a computetask_pb2.ComputeTaskInput"""
+
+        if input["asset_key"]:
+            return computetask_pb2.ComputeTaskInput(
+                identifier=input["identifier"],
+                asset_key=input["asset_key"],
+            )
+
+        return computetask_pb2.ComputeTaskInput(
+            identifier=input["identifier"],
+            parent_task_output=computetask_pb2.ParentTaskOutputRef(
+                parent_task_key=input["parent_task_key"],
+                output_identifier=input["parent_task_output_identifier"],
+            ),
+        )
+
     @grpc_retry
     def register_tasks(self, args):
         for task in args["tasks"]:
-            task = computetask.api_to_orc(task)
-
+            task["inputs"] = [self._get_task_input(input) for input in task["inputs"]]
+            task["outputs"] = {
+                identifier: computetask_pb2.NewComputeTaskOutput(
+                    permissions=output["permissions"], transient=output.get("transient")
+                )
+                for identifier, output in task["outputs"].items()
+            }
         data = self._computetask_client.RegisterTasks(
             computetask_pb2.RegisterTasksParam(**args), metadata=self._metadata
         )
