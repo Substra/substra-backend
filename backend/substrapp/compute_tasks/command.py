@@ -46,15 +46,6 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
 
     inputs = []
     outputs = []
-
-    if task_category == orchestrator.ComputeTaskCategory.TASK_TEST:
-        perf_output = [o for o in ctx.outputs if o.kind == orchestrator.AssetKind.ASSET_PERFORMANCE][0]
-        command = ["--input-predictions-path", os.path.join(in_models_dir, ctx.input_models[0].key)]
-        command += ["--opener-path", os.path.join(openers_dir, ctx.data_manager.key, Filenames.Opener)]
-        command += ["--data-sample-paths"] + [os.path.join(datasamples_dir, key) for key in ctx.data_sample_keys]
-        command += ["--output-perf-path", os.path.join(SANDBOX_DIR, perf_output.rel_path)]
-        return command
-
     command = []
 
     # TODO: refactor path handling in context to iterate over all inputs at once
