@@ -92,13 +92,12 @@ def get_cp_graph(request, compute_plan_pk):
     """Return a workflow graph for each task of the computeplan"""
     validate_key(compute_plan_pk)
 
-    tasks = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).prefetch_related("algo").values(
+    tasks = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request)).values(
         "key",
         "rank",
         "worker",
         "status",
         "category",
-        "algo"
     )
 
     # Set a task limitation for performances issues
