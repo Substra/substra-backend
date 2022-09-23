@@ -80,9 +80,12 @@ def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
         error.details = "orchestrator unavailable"
         error.code = lambda: StatusCode.UNAVAILABLE
         client.register_models.side_effect = error
+    else:
+        client.register_models.return_value = []
 
     add_model_from_path = mocker.patch("substrapp.compute_tasks.outputs.add_model_from_path")
     mocker.patch("substrapp.compute_tasks.outputs.get_orchestrator_client", return_value=client)
+    organization_client_post = mocker.patch("substrapp.compute_tasks.outputs.organization_client.post")
 
     try:
         saver.save_outputs()
@@ -93,8 +96,10 @@ def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
     client.register_models.assert_called_once()
     if not orc_raise:
         add_model_from_path.assert_called_once()
+        organization_client_post.assert_called_once()
     else:
         add_model_from_path.assert_not_called()
+        organization_client_post.assert_not_called()
 
     models = Model.objects.all()
     filtered_model_keys = [str(model.key) for model in models]

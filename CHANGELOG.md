@@ -37,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: algo categories
 - Outdated information on patching RabbitMQ for Apple Silicon chips.
 
+### Added
+
+- Add `create` api from model view to submit compute task output.
+
+
 ## [0.31.0] 2022-09-26
 
 ### Changed

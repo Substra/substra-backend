@@ -6,13 +6,13 @@ from django.conf import settings
 from django.urls import reverse
 
 import orchestrator
-from api.errors import AlreadyExistsError
-from api.serializers import ModelSerializer as ModelRepSerializer
+from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import context
 from substrapp.compute_tasks import directories
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_hash
+from substrapp.utils import retry
 
 logger = structlog.get_logger(__name__)
 
@@ -53,11 +53,13 @@ class OutputSaver:
     def _save_models(self, models: list[context.OutputResource]):
         logger.info("saving models")
 
+        # Save models files
         new_models = []
         for model in models:
             new_model = self._save_model_to_local_storage(model)
             new_models.append(new_model)
 
+        # Register models in the orchestrator
         try:
             with get_orchestrator_client(self._ctx.channel_name) as client:
                 registered_models = client.register_models({"models": new_models})
@@ -66,14 +68,10 @@ class OutputSaver:
                 self._delete_model(model["key"])
             raise exc
 
-        for registered_model in registered_models:
-            registered_model["channel"] = self._ctx.channel_name
-            serializer = ModelRepSerializer(data=registered_model)
-            try:
-                serializer.save_if_not_exists()
-            except AlreadyExistsError:
-                pass
+        # Register models in the api
+        self._register_models_in_api(registered_models)
 
+        # Add models into asset buffer
         for model, local in zip(models, new_models):
             path = os.path.join(self._ctx.directories.task_dir, model.rel_path)
             add_model_from_path(path, local["key"])
@@ -87,6 +85,7 @@ class OutputSaver:
 
         with open(path, "rb") as f:
             instance.file.save("model", f)
+
         current_site = settings.DEFAULT_DOMAIN
         storage_address = f'{current_site}{reverse("api:model-file", args=[instance.key])}'
 
@@ -101,6 +100,15 @@ class OutputSaver:
                 "storage_address": storage_address,
             },
         }
+
+    @retry(raise_exception=True)
+    def _register_models_in_api(self, registered_models: dict):
+        return organization_client.post(
+            self._ctx.channel_name,
+            settings.LEDGER_MSP_ID,
+            settings.DEFAULT_DOMAIN + reverse("api:model-list"),
+            data={"metadata": json.dumps(registered_models)},
+        )
 
     def _delete_model(self, key: str):
         """Delete model from local storage in case something went wrong during registration"""
