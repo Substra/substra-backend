@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use task output asset in API response
 - Add channel column to input/output tables.
 - The test task uses the same CLI arguments format as the other tasks.
+- Add inputs and output kinds in the workflow_graph response
 
 ## [0.30.0] 2022-09-19
 
