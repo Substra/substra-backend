@@ -27,7 +27,7 @@ from .deps.org import *
 TRUE_VALUES = {"t", "T", "y", "Y", "yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "1", 1, True}
 
 
-def must_get_env(key) -> str:
+def must_get_env(key: str) -> str:
     return os.environ[key]
 
 
