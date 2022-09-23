@@ -16,6 +16,8 @@ from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.command import get_exec_command
+from substrapp.compute_tasks.command import get_exec_command_args
+from substrapp.compute_tasks.command import write_command_args_file
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.compute_pod import create_pod
@@ -46,7 +48,6 @@ def execute_compute_task(ctx: Context) -> None:
 
     env = get_environment(ctx)
     image = get_container_image_name(container_image_tag)
-    exec_command = get_exec_command(ctx)
 
     k8s_client = _get_k8s_client()
 
@@ -77,7 +78,7 @@ def execute_compute_task(ctx: Context) -> None:
     if not settings.WORKER_PVC_IS_HOSTPATH:
         _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-    _exec(compute_pod, exec_command)
+    _exec(ctx, compute_pod)
 
 
 def _get_k8s_client():
@@ -106,11 +107,16 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(compute_pod: ComputePod, exec_command: list[str]):
+def _exec(ctx: Context, compute_pod: ComputePod):
     """Execute a command on a compute pod"""
-    logger.debug("Running command", command=exec_command)
 
-    resp = execute(compute_pod.name, exec_command)
+    command = get_exec_command(ctx)
+    command_args = get_exec_command_args(ctx)
+
+    logger.debug("Running command", command=command, command_args=command_args)
+
+    write_command_args_file(ctx.directories, command_args)
+    resp = execute(compute_pod.name, command)
 
     def print_log(lines):
         for line in filter(None, lines.split("\n")):

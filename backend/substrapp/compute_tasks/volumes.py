@@ -17,6 +17,7 @@ def get_volumes(ctx: Context):
     # ...
     volume_mounts.extend(
         [
+            _create_mount(dirs.task_dir, TaskDirName.CliArgs, read_only=True),
             _create_mount(dirs.task_dir, TaskDirName.Datasamples, read_only=True),
             _create_mount(dirs.task_dir, TaskDirName.Export),
             _create_mount(dirs.task_dir, TaskDirName.InModels, read_only=True),
