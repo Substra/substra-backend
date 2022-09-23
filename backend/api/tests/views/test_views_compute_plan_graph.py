@@ -72,7 +72,6 @@ class ComputePlanGraphViewTests(APITestCase):
             compute_plan, algo=algo, category=ComputeTask.Category.TASK_AGGREGATE, parent_tasks=[composite_task.key]
         )
 
-        self.maxDiff = None
         expected_results = {
             "tasks": [
                 {
