@@ -16,10 +16,19 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
+      - uses: actions/cache@v3.0.8
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
       - name: Run initial migration and feed data
         run: |
-          ls
-          make install
           python manage.py check --database default 2>/dev/null
       - uses: actions/checkout@v3
       - name: Run migration on the feature branch
