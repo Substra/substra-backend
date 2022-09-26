@@ -30,6 +30,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `COMPUTE_POD_RUN_AS_GROUP` | nil |  |
 | string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
 | int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
+| json | `CSRF_TRUSTED_ORIGINS` | `[]` |  |
 | int | `DATA_UPLOAD_MAX_SIZE` | `1073741824` (`1024 * 1024 * 1024`) | bytes |
 | bool | `DEBUG_KEEP_POD_AND_DIRS` | `False` |  |
 | bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
