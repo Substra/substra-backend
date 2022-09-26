@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] 2022-09-26
+
 ### Changed
 
 - Don't use the `status` field of the compute plan protocol buffer messages.
