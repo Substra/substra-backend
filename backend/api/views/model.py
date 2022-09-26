@@ -12,10 +12,8 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AssetPermissionError
-from api.errors import BadRequestError
 from api.models import Model
 from api.serializers import ModelSerializer
-from api.views.filters_utils import ChoiceInFilter
 from api.views.utils import PermissionMixin
 from api.views.utils import get_channel_name
 from api.views.utils import if_true
@@ -27,22 +25,8 @@ from substrapp.utils import get_owner
 logger = structlog.get_logger(__name__)
 
 
-def validate_category(key, values):
-    if key == "category":
-        try:
-            for value in values:
-                getattr(Model.Category, value)
-        except AttributeError as e:
-            raise BadRequestError(f"Wrong {key} value: {e}")
-    return key, values
-
-
 class ModelFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    category = ChoiceInFilter(
-        field_name="category",
-        choices=Model.Category.choices,
-    )
     compute_task_key = BaseInFilter(field_name="compute_task__key")
 
     class Meta:
