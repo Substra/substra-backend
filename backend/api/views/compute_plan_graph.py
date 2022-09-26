@@ -21,8 +21,10 @@ MAX_TASKS_DISPLAYED = 1000
 
 from rest_framework import serializers
 
+
 class AlgoInputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
     id = serializers.CharField(source="identifier")
+
     class Meta:
         model = AlgoInput
         fields = [
@@ -33,12 +35,14 @@ class AlgoInputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMix
 
 class AlgoOutputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
     id = serializers.CharField(source="identifier")
+
     class Meta:
         model = AlgoOutput
         fields = [
             "id",
             "kind",
         ]
+
 
 class AlgoSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
     inputs = AlgoInputSerializerForGraph(many=True)
@@ -50,20 +54,15 @@ class AlgoSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
             "inputs",
             "outputs",
         ]
+
+
 class TaskSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
 
     algo = AlgoSerializerForGraph()
 
     class Meta:
         model = ComputeTask
-        fields = [
-            "key",
-            "rank",
-            "worker",
-            "status",
-            "category",
-            "algo"
-            ]
+        fields = ["key", "rank", "worker", "status", "category", "algo"]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -96,9 +95,8 @@ def get_cp_graph(request, compute_plan_pk):
         source_task_key=F("parent_task_key"),
         source_output_name=F("parent_task_output_identifier"),
         target_task_key=F("task__key"),
-        target_input_name=F("identifier")
-    ).values(
-        "source_task_key", "source_output_name", "target_task_key", "target_input_name")
+        target_input_name=F("identifier"),
+    ).values("source_task_key", "source_output_name", "target_task_key", "target_input_name")
 
     return ApiResponse(
         data={
