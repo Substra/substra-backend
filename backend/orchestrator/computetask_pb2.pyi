@@ -331,7 +331,6 @@ class NewComputeTask(google.protobuf.message.Message):
     ALGO_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
     WORKER_FIELD_NUMBER: builtins.int
-    PARENT_TASK_KEYS_FIELD_NUMBER: builtins.int
     TEST_FIELD_NUMBER: builtins.int
     TRAIN_FIELD_NUMBER: builtins.int
     COMPOSITE_FIELD_NUMBER: builtins.int
@@ -345,9 +344,6 @@ class NewComputeTask(google.protobuf.message.Message):
     algo_key: builtins.str
     compute_plan_key: builtins.str
     worker: builtins.str
-    @property
-    def parent_task_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]:
-        """This property is now ignored, task parents are determined from the inputs."""
     @property
     def test(self) -> global___NewTestTaskData: ...
     @property
@@ -372,7 +368,6 @@ class NewComputeTask(google.protobuf.message.Message):
         algo_key: builtins.str = ...,
         compute_plan_key: builtins.str = ...,
         worker: builtins.str = ...,
-        parent_task_keys: collections.abc.Iterable[builtins.str] | None = ...,
         test: global___NewTestTaskData | None = ...,
         train: global___NewTrainTaskData | None = ...,
         composite: global___NewCompositeTrainTaskData | None = ...,
@@ -383,7 +378,7 @@ class NewComputeTask(google.protobuf.message.Message):
         outputs: collections.abc.Mapping[builtins.str, global___NewComputeTaskOutput] | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "composite", b"composite", "data", b"data", "predict", b"predict", "test", b"test", "train", b"train"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "algo_key", b"algo_key", "category", b"category", "composite", b"composite", "compute_plan_key", b"compute_plan_key", "data", b"data", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "outputs", b"outputs", "parent_task_keys", b"parent_task_keys", "predict", b"predict", "test", b"test", "train", b"train", "worker", b"worker"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "algo_key", b"algo_key", "category", b"category", "composite", b"composite", "compute_plan_key", b"compute_plan_key", "data", b"data", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "outputs", b"outputs", "predict", b"predict", "test", b"test", "train", b"train", "worker", b"worker"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["data", b"data"]) -> typing_extensions.Literal["test", "train", "composite", "aggregate", "predict"] | None: ...
 
 global___NewComputeTask = NewComputeTask
@@ -544,15 +539,9 @@ global___AggregateTrainTaskData = AggregateTrainTaskData
 class NewAggregateTrainTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    WORKER_FIELD_NUMBER: builtins.int
-    worker: builtins.str
-    """worker property is deprecated, pass the worker through NewComputeTask.Worker"""
     def __init__(
         self,
-        *,
-        worker: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["worker", b"worker"]) -> None: ...
 
 global___NewAggregateTrainTaskData = NewAggregateTrainTaskData
 
