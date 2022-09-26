@@ -34,16 +34,6 @@ class ModelServiceStub(object):
                 request_serializer=model__pb2.GetComputeTaskModelsParam.SerializeToString,
                 response_deserializer=model__pb2.GetComputeTaskModelsResponse.FromString,
                 )
-        self.CanDisableModel = channel.unary_unary(
-                '/orchestrator.ModelService/CanDisableModel',
-                request_serializer=model__pb2.CanDisableModelParam.SerializeToString,
-                response_deserializer=model__pb2.CanDisableModelResponse.FromString,
-                )
-        self.DisableModel = channel.unary_unary(
-                '/orchestrator.ModelService/DisableModel',
-                request_serializer=model__pb2.DisableModelParam.SerializeToString,
-                response_deserializer=model__pb2.DisableModelResponse.FromString,
-                )
 
 
 class ModelServiceServicer(object):
@@ -73,18 +63,6 @@ class ModelServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CanDisableModel(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DisableModel(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_ModelServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -107,16 +85,6 @@ def add_ModelServiceServicer_to_server(servicer, server):
                     servicer.GetComputeTaskOutputModels,
                     request_deserializer=model__pb2.GetComputeTaskModelsParam.FromString,
                     response_serializer=model__pb2.GetComputeTaskModelsResponse.SerializeToString,
-            ),
-            'CanDisableModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.CanDisableModel,
-                    request_deserializer=model__pb2.CanDisableModelParam.FromString,
-                    response_serializer=model__pb2.CanDisableModelResponse.SerializeToString,
-            ),
-            'DisableModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.DisableModel,
-                    request_deserializer=model__pb2.DisableModelParam.FromString,
-                    response_serializer=model__pb2.DisableModelResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -193,39 +161,5 @@ class ModelService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/GetComputeTaskOutputModels',
             model__pb2.GetComputeTaskModelsParam.SerializeToString,
             model__pb2.GetComputeTaskModelsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def CanDisableModel(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/CanDisableModel',
-            model__pb2.CanDisableModelParam.SerializeToString,
-            model__pb2.CanDisableModelResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def DisableModel(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/DisableModel',
-            model__pb2.DisableModelParam.SerializeToString,
-            model__pb2.DisableModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

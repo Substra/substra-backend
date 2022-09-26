@@ -24,14 +24,6 @@ class ModelServiceStub:
         model_pb2.GetComputeTaskModelsParam,
         model_pb2.GetComputeTaskModelsResponse,
     ]
-    CanDisableModel: grpc.UnaryUnaryMultiCallable[
-        model_pb2.CanDisableModelParam,
-        model_pb2.CanDisableModelResponse,
-    ]
-    DisableModel: grpc.UnaryUnaryMultiCallable[
-        model_pb2.DisableModelParam,
-        model_pb2.DisableModelResponse,
-    ]
 
 class ModelServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -58,17 +50,5 @@ class ModelServiceServicer(metaclass=abc.ABCMeta):
         request: model_pb2.GetComputeTaskModelsParam,
         context: grpc.ServicerContext,
     ) -> model_pb2.GetComputeTaskModelsResponse: ...
-    @abc.abstractmethod
-    def CanDisableModel(
-        self,
-        request: model_pb2.CanDisableModelParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.CanDisableModelResponse: ...
-    @abc.abstractmethod
-    def DisableModel(
-        self,
-        request: model_pb2.DisableModelParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.DisableModelResponse: ...
 
 def add_ModelServiceServicer_to_server(servicer: ModelServiceServicer, server: grpc.Server) -> None: ...
