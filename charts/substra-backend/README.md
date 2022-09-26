@@ -238,10 +238,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `orchestrator.channels[0].mychannel.restricted`           | Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel | `false`              |
 | `orchestrator.channels[0].mychannel.model_export_enabled` | Allow logged-in users to download models trained on this organization                                                          | `false`              |
 | `orchestrator.channels[0].mychannel.chaincode.name`       | The name of the chaincode instantiated on this channel                                                                         | `mycc`               |
-| `orchestrator.grpc.keepalive.timeMs`                      | The period (in milliseconds) after which a keepalive ping is sent on the transport.                                            | `60000`              |
-| `orchestrator.grpc.keepalive.timeoutMs`                   | The amount of time (in milliseconds) the sender of the keepalive ping waits for an acknowledgement.                            | `20000`              |
-| `orchestrator.grpc.keepalive.permitWithoutCalls`          | If set to 1 (0: false; 1: true), allows keepalive pings to be sent even if there are no calls in flight.                       | `0`                  |
-| `orchestrator.grpc.keepalive.maxPingsWithoutData`         | The maximum number of pings that can be sent when there is no data/header frame to be sent.                                    | `0`                  |
 
 
 ### Kaniko settings
