@@ -47,7 +47,7 @@ GRPC_RETRYABLE_ERRORS = [
 
 
 def add_tag_from_metadata(task: dict) -> None:
-    task["tag"] = task["metadata"].pop("_tag_", task["metadata"].pop("__tag__", ""))
+    task["tag"] = task["metadata"].pop("__tag__", "")
 
 
 def grpc_retry(func):

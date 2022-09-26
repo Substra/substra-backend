@@ -255,7 +255,7 @@ class ComputeTask(_Base):
 
     @classmethod
     def from_grpc(cls, t: computetask_pb2.ComputeTask) -> ComputeTask:
-        tag = t.metadata.pop("_tag_", t.metadata.pop("__tag__", ""))
+        tag = t.metadata.pop("__tag__", "")
 
         return cls(
             key=t.key,

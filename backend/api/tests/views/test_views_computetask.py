@@ -238,7 +238,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "_tag_": "",
+                    "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -281,7 +281,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "_tag_": "",
+                    "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -322,7 +322,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "_tag_": "",
+                    "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -365,7 +365,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "_tag_": "",
+                    "__tag__": "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
