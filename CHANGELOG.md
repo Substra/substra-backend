@@ -18,11 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - output identifier add in metric response object in `compute_plan perf` view.
 - Prevent use of `__` in asset metadata keys
 - Task input asset
+- Accept `CSRF_TRUSTED_ORIGINS` env var as settings option
 
 ### Fixed
 
 - Bug in migration 0028_data_migration_compute_task_output.
-
 
 ### Removed
 
