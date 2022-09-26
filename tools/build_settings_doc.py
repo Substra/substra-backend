@@ -74,7 +74,7 @@ def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:
             ):
                 return False
             f_name = resolve_attribute_chain(node.func)
-            return f_name in ["os.environ.get", "os.getenv", "common.must_get_env"]
+            return f_name in ["os.environ.get", "os.getenv"]
 
         for node in ast.walk(root):
             if not is_env_query(node):
