@@ -4,7 +4,7 @@ import orchestrator
 import orchestrator.mock as orc_mock
 from orchestrator.resources import ComputeTaskInputAsset
 from substrapp.compute_tasks import context
-from substrapp.compute_tasks.command import _get_args
+from substrapp.compute_tasks.command import get_exec_command_args
 from substrapp.compute_tasks.directories import Directories
 from substrapp.tests.common import InputIdentifiers
 
@@ -77,14 +77,14 @@ def test_get_args_train_task():
         {"id": InputIdentifiers.MODEL, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    actual = _get_args(ctx)
+    actual = get_exec_command_args(ctx)
     assert actual == [
         "--rank",
         "0",
         "--inputs",
-        f"'{json.dumps(expected_inputs)}'",
+        json.dumps(expected_inputs),
         "--outputs",
-        f"'{json.dumps(expected_outputs)}'",
+        json.dumps(expected_outputs),
     ]
 
 
@@ -167,14 +167,14 @@ def test_get_args_composite_task():
         {"id": InputIdentifiers.SHARED, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    actual = _get_args(ctx)
+    actual = get_exec_command_args(ctx)
     assert actual == [
         "--rank",
         "0",
         "--inputs",
-        f"'{json.dumps(expected_inputs)}'",
+        json.dumps(expected_inputs),
         "--outputs",
-        f"'{json.dumps(expected_outputs)}'",
+        json.dumps(expected_outputs),
     ]
 
 
@@ -244,12 +244,12 @@ def test_get_args_predict_after_train():
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    actual = _get_args(ctx)
+    actual = get_exec_command_args(ctx)
     assert actual == [
         "--inputs",
-        f"'{json.dumps(expected_inputs)}'",
+        json.dumps(expected_inputs),
         "--outputs",
-        f"'{json.dumps(expected_outputs)}'",
+        json.dumps(expected_outputs),
     ]
 
 
@@ -325,12 +325,12 @@ def test_get_args_predict_after_composite():
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    actual = _get_args(ctx)
+    actual = get_exec_command_args(ctx)
     assert actual == [
         "--inputs",
-        f"'{json.dumps(expected_inputs)}'",
+        json.dumps(expected_inputs),
         "--outputs",
-        f"'{json.dumps(expected_outputs)}'",
+        json.dumps(expected_outputs),
     ]
 
 
@@ -407,12 +407,12 @@ def test_get_args_test_after_predict():
         },
     ]
 
-    actual = _get_args(ctx)
+    actual = get_exec_command_args(ctx)
     assert actual == [
         "--rank",
         "0",
         "--inputs",
-        f"'{json.dumps(expected_inputs)}'",
+        json.dumps(expected_inputs),
         "--outputs",
-        f"'{json.dumps(expected_outputs)}'",
+        json.dumps(expected_outputs),
     ]

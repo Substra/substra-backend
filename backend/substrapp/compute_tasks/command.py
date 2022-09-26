@@ -7,6 +7,7 @@ import orchestrator
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.context import TaskResource
 from substrapp.compute_tasks.directories import SANDBOX_DIR
+from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.models.image_entrypoint import ImageEntrypoint
 
@@ -19,6 +20,7 @@ TASK_IO_CHAINKEYS = "chainkeys"
 
 class Filenames:
     Opener = "__init__.py"
+    CliArgs = "arguments.txt"
 
 
 def get_exec_command(ctx: Context) -> list[str]:
@@ -29,13 +31,14 @@ def get_exec_command(ctx: Context) -> list[str]:
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
-    args = _get_args(ctx)
+    # Pass the command line arguments via a file
+    command.append("@" + os.path.join(SANDBOX_DIR, TaskDirName.CliArgs, Filenames.CliArgs))
 
-    return command + args
+    return command
 
 
-# TODO: '_get_args' is too complex, consider refactoring
-def _get_args(ctx: Context) -> list[str]:  # noqa: C901
+def get_exec_command_args(ctx: Context) -> list[str]:
+    """Return the substra-tools command line arguments"""
     task = ctx.task
     task_category = ctx.task.category
 
@@ -46,7 +49,7 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
 
     inputs = []
     outputs = []
-    command = []
+
 
     # TODO: refactor path handling in context to iterate over all inputs at once
     inputs.extend(
@@ -86,15 +89,30 @@ def _get_args(ctx: Context) -> list[str]:  # noqa: C901
     for output in ctx.outputs:
         outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
 
+    args = []
+
     rank = str(task.rank)
     if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:
-        command += ["--rank", rank]
+        args += ["--rank", rank]
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
 
-    command += ["--inputs", f"'{json.dumps(inputs)}'"]
-    command += ["--outputs", f"'{json.dumps(outputs)}'"]
+    args += ["--inputs", json.dumps(inputs)]
+    args += ["--outputs", json.dumps(outputs)]
 
-    logger.debug("Generated task command", command=command)
+    logger.debug("Generated substra-tools arguments", args=args)
 
-    return command
+    return args
+
+
+def write_command_args_file(dirs: Directories, command_args: list[str]) -> None:
+    """Write the substra-tools command line arguments to a file.
+
+    The format uses one line per argument. See
+    https://docs.python.org/3/library/argparse.html#fromfile-prefix-chars
+    """
+    path = os.path.join(dirs.task_dir, TaskDirName.CliArgs, Filenames.CliArgs)
+
+    with open(path, "w") as f:
+        for item in command_args:
+            f.write(item + "\n")

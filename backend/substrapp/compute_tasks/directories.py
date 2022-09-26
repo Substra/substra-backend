@@ -14,16 +14,17 @@ SANDBOX_DIR = "/substra_internal"
 
 
 # /var/medias/substra/subtuple     <- SUBTUPLE_DIR
-#
-# └── asset_buffer                 <- ASSET_BUFFER_DIR
-#     ├── data_samples
-#     ├── models
-#     └── openers
-#
+# |
+# ├── asset_buffer                 <- ASSET_BUFFER_DIR
+# |   ├── data_samples
+# |   ├── models
+# |   └── openers
+# |
 # └── <compute_plan_key>           <- compute_plan_dir
 #     ├── chainkeys
 #     └── task                     <- task_dir
 #         ├── chainkeys
+#         ├── cli-args
 #         ├── data_samples
 #         ├── export
 #         ├── in_models
@@ -50,6 +51,7 @@ class CPDirName:
 
 class TaskDirName:
     Chainkeys = "chainkeys"
+    CliArgs = "cli-args"
     Datasamples = "data_samples"
     Export = "export"
     InModels = "in_models"
@@ -57,7 +59,7 @@ class TaskDirName:
     OutModels = "out_models"
     Perf = "perf"
 
-    All = [Chainkeys, Datasamples, Export, InModels, Openers, OutModels, Perf]
+    All = [Chainkeys, CliArgs, Datasamples, Export, InModels, Openers, OutModels, Perf]
 
 
 class Directories:

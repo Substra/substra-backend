@@ -7,13 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed 
+
+- Replace `algo` by `algo_key` in gRPC communication
+
+## [0.31.0] 2022-09-26
+
 ### Changed
 
 - Don't use the `status` field of the compute plan protocol buffer messages.
 - BREAKING: remove `delete_intermediary_models` field from the `compute_plan` view.
 - Use task output asset in API response
 - Add channel column to input/output tables.
-- Replace `algo` by `algo_key` in gRPC communication.
+- The test task uses the same CLI arguments format as the other tasks.
+
+### Fixed
+
+- Bug when executing compute tasks with too many data samples (command line length exceeding max.) The substra-tools arguments are now passed using a file.
 
 ## [0.30.0] 2022-09-19
 
