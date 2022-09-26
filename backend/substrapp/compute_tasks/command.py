@@ -50,7 +50,6 @@ def get_exec_command_args(ctx: Context) -> list[str]:
     inputs = []
     outputs = []
 
-
     # TODO: refactor path handling in context to iterate over all inputs at once
     inputs.extend(
         [
