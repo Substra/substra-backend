@@ -3,7 +3,10 @@ Utility module to create fixtures.
 
 Basic example:
 
->>> algo = create_algo(category=Algo.Category.ALGO_SIMPLE)
+>>> algo = create_algo(
+...     inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
+...     outputs=factory.build_algo_outputs(["model"]),
+... )
 >>> data_manager = create_datamanager()
 >>> data_sample = create_datasample([data_manager])
 >>> compute_plan = create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
@@ -11,24 +14,44 @@ Basic example:
 >>> train_task = create_computetask(
 ...     compute_plan,
 ...     algo,
+...     inputs=factory.build_computetask_inputs(
+...         algo,
+...         {
+...             "opener": [data_manager.key],
+...             "datasamples": [data_sample.key],
+...         },
+...     ),
+...     outputs=factory.build_computetask_outputs(algo),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample.key],
 ...     category=ComputeTask.Category.TASK_TRAIN,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
->>> model = create_model(train_task)
+>>> model = create_model(train_task, identifier="model")
 
->>> metric = create_algo(category=Algo.Category.ALGO_METRIC)
+>>> metric = create_algo(
+...     inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
+...     outputs=factory.build_algo_outputs(["performance"]),
+... )
 >>> test_task = create_computetask(
 ...     compute_plan,
 ...     metric,
+...     inputs=factory.build_computetask_inputs(
+...         metric,
+...         {
+...             "opener": [data_manager.key],
+...             "datasamples": [data_sample.key],
+...             "model": [train_task.key],
+...         },
+...     ),
+...     outputs=factory.build_computetask_outputs(metric),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample],
 ...     parent_tasks=[train_task.key],
 ...     category=ComputeTask.Category.TASK_TEST,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
->>> performance = create_performance(test_task, metric)
+>>> performance = create_performance(test_task, metric, identifier="performance")
 
 Customized example:
 

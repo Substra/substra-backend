@@ -202,11 +202,11 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         }
         model_input = {
             "identifier": "model",
-            "asset_key": str(self.done_train_task.key),
-            "parent_task_key": None,
-            "parent_task_output_identifier": None,
+            "asset_key": None,
+            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_output_identifier": "model",
             # FIXME: "addressable": self.train_model_data["address"],
-            # FIXME: "permissions": self.train_model_data["permissions"],
+            "permissions": self.train_model_data["permissions"],
         }
         shared_input = {**model_input}
         shared_input["identifier"] = "shared"
