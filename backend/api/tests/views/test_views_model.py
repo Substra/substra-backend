@@ -352,8 +352,8 @@ class ModelViewTests(APITestCase):
             )
 
     def test_model_download_file(self):
-        model_data = factory.create_model_data()
-        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        model_files = factory.create_model_files()
+        model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
         url = reverse("api:model-file", args=[model.key])
         with mock.patch("api.views.utils.get_owner", return_value=model.owner), mock.patch(
             "api.views.model.type", return_value=OrganizationUser
@@ -361,20 +361,20 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(content, model_data.file.read())
-        self.assertEqual(compute_hash(content), model_data.checksum)
+        self.assertEqual(content, model_files.file.read())
+        self.assertEqual(compute_hash(content), model_files.checksum)
 
     def test_model_download_file_wrong_user(self):
-        model_data = factory.create_model_data()
-        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        model_files = factory.create_model_files()
+        model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
         url = reverse("api:model-file", args=[model.key])
         with mock.patch("api.views.utils.get_owner", return_value=model.owner):
             response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_model_download_file_wrong_owner(self):
-        model_data = factory.create_model_data()
-        model = factory.create_model(self.train_task, key=model_data.key, owner="owkin")
+        model_files = factory.create_model_files()
+        model = factory.create_model(self.train_task, key=model_files.key, owner="owkin")
         url = reverse("api:model-file", args=[model.key])
         with mock.patch("api.views.utils.get_owner", return_value=model.owner), mock.patch(
             "api.views.model.type", return_value=OrganizationUser
@@ -383,8 +383,8 @@ class ModelViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_model_download_file_deleted(self):
-        model_data = factory.create_model_data()
-        model = factory.create_model(self.train_task, key=model_data.key, owner="substra")
+        model_files = factory.create_model_files()
+        model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
         # delete intermediary model
         model.model_address = None
         model.save()

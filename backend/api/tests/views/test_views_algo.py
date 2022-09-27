@@ -555,25 +555,25 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_download_file(self):
-        algo_data = factory.create_algo_data()
-        algo = factory.create_algo(key=algo_data.key)
+        algo_files = factory.create_algo_files()
+        algo = factory.create_algo(key=algo_files.key)
         url = reverse("api:algo-file", args=[algo.key])
         with mock.patch("api.views.utils.get_owner", return_value=algo.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(content, algo_data.file.read())
-        self.assertEqual(compute_hash(content), algo_data.checksum)
+        self.assertEqual(content, algo_files.file.read())
+        self.assertEqual(compute_hash(content), algo_files.checksum)
 
     def test_algo_download_description(self):
-        algo_data = factory.create_algo_data()
-        algo = factory.create_algo(key=algo_data.key)
+        algo_files = factory.create_algo_files()
+        algo = factory.create_algo(key=algo_files.key)
         url = reverse("api:algo-description", args=[algo.key])
         with mock.patch("api.views.utils.get_owner", return_value=algo.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(content, algo_data.description.read())
+        self.assertEqual(content, algo_files.description.read())
 
     def test_algo_update(self):
         algo = self.expected_algos[0]
