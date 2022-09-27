@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.conf import settings
 
 from api.models.computetask import ComputeTask
+from users.models import UserChannel
 
 logger = structlog.get_logger(__name__)
 
@@ -26,7 +27,7 @@ class ComputePlan(models.Model):
     status = models.CharField(max_length=64, choices=Status.choices, default=Status.PLAN_STATUS_EMPTY)
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="creator", null=True)
+    creator = models.ForeignKey(UserChannel, on_delete=models.PROTECT, related_name="creator", null=True)
     creation_date = models.DateTimeField()
     cancelation_date = models.DateTimeField(null=True)
     start_date = models.DateTimeField(null=True)
