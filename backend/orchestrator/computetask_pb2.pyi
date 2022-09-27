@@ -211,7 +211,6 @@ class ComputeTask(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     CATEGORY_FIELD_NUMBER: builtins.int
-    ALGO_KEY_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
     PARENT_TASK_KEYS_FIELD_NUMBER: builtins.int
@@ -228,9 +227,9 @@ class ComputeTask(google.protobuf.message.Message):
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
+    ALGO_KEY_FIELD_NUMBER: builtins.int
     key: builtins.str
     category: global___ComputeTaskCategory.ValueType
-    algo_key: builtins.str
     owner: builtins.str
     compute_plan_key: builtins.str
     @property
@@ -260,12 +259,12 @@ class ComputeTask(google.protobuf.message.Message):
     def inputs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ComputeTaskInput]: ...
     @property
     def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___ComputeTaskOutput]: ...
+    algo_key: builtins.str
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         category: global___ComputeTaskCategory.ValueType = ...,
-        algo_key: builtins.str = ...,
         owner: builtins.str = ...,
         compute_plan_key: builtins.str = ...,
         parent_task_keys: collections.abc.Iterable[builtins.str] | None = ...,
@@ -282,6 +281,7 @@ class ComputeTask(google.protobuf.message.Message):
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Iterable[global___ComputeTaskInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___ComputeTaskOutput] | None = ...,
+        algo_key: builtins.str = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "composite", b"composite", "creation_date", b"creation_date", "data", b"data", "logs_permission", b"logs_permission", "predict", b"predict", "test", b"test", "train", b"train"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "algo_key", b"algo_key", "category", b"category", "composite", b"composite", "compute_plan_key", b"compute_plan_key", "creation_date", b"creation_date", "data", b"data", "inputs", b"inputs", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "outputs", b"outputs", "owner", b"owner", "parent_task_keys", b"parent_task_keys", "predict", b"predict", "rank", b"rank", "status", b"status", "test", b"test", "train", b"train", "worker", b"worker"]) -> None: ...

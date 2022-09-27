@@ -7,48 +7,27 @@ import collections.abc
 import common_pb2
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
-import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
 import sys
-import typing
 
-if sys.version_info >= (3, 10):
+if sys.version_info >= (3, 8):
     import typing as typing_extensions
 else:
     import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-class _ModelCategory:
-    ValueType = typing.NewType("ValueType", builtins.int)
-    V: typing_extensions.TypeAlias = ValueType
-
-class _ModelCategoryEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ModelCategory.ValueType], builtins.type):  # noqa: F821
-    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
-    MODEL_UNKNOWN: _ModelCategory.ValueType  # 0
-    MODEL_SIMPLE: _ModelCategory.ValueType  # 1
-    MODEL_HEAD: _ModelCategory.ValueType  # 2
-
-class ModelCategory(_ModelCategory, metaclass=_ModelCategoryEnumTypeWrapper): ...
-
-MODEL_UNKNOWN: ModelCategory.ValueType  # 0
-MODEL_SIMPLE: ModelCategory.ValueType  # 1
-MODEL_HEAD: ModelCategory.ValueType  # 2
-global___ModelCategory = ModelCategory
-
 class Model(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KEY_FIELD_NUMBER: builtins.int
-    CATEGORY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
     ADDRESS_FIELD_NUMBER: builtins.int
     PERMISSIONS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     key: builtins.str
-    category: global___ModelCategory.ValueType
     compute_task_key: builtins.str
     @property
     def address(self) -> common_pb2.Addressable: ...
@@ -61,7 +40,6 @@ class Model(google.protobuf.message.Message):
         self,
         *,
         key: builtins.str = ...,
-        category: global___ModelCategory.ValueType = ...,
         compute_task_key: builtins.str = ...,
         address: common_pb2.Addressable | None = ...,
         permissions: common_pb2.Permissions | None = ...,
@@ -69,7 +47,7 @@ class Model(google.protobuf.message.Message):
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["address", b"address", "creation_date", b"creation_date", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "category", b"category", "compute_task_key", b"compute_task_key", "creation_date", b"creation_date", "key", b"key", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "compute_task_key", b"compute_task_key", "creation_date", b"creation_date", "key", b"key", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
 
 global___Model = Model
 
@@ -77,12 +55,10 @@ class NewModel(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KEY_FIELD_NUMBER: builtins.int
-    CATEGORY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
     ADDRESS_FIELD_NUMBER: builtins.int
     key: builtins.str
-    category: global___ModelCategory.ValueType
     compute_task_key: builtins.str
     compute_task_output_identifier: builtins.str
     @property
@@ -91,13 +67,12 @@ class NewModel(google.protobuf.message.Message):
         self,
         *,
         key: builtins.str = ...,
-        category: global___ModelCategory.ValueType = ...,
         compute_task_key: builtins.str = ...,
         compute_task_output_identifier: builtins.str = ...,
         address: common_pb2.Addressable | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["address", b"address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "category", b"category", "compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "key", b"key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["address", b"address", "compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "key", b"key"]) -> None: ...
 
 global___NewModel = NewModel
 
