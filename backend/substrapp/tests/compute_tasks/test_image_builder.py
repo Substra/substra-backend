@@ -39,14 +39,14 @@ class TestBuildImageIfMissing:
         m_container_image_exists = mocker.patch(
             "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
         )
-        m_build_asset_image = mocker.patch("substrapp.compute_tasks.image_builder._build_asset_image")
+        m_build_algo_image = mocker.patch("substrapp.compute_tasks.image_builder._build_algo_image")
         algo_image_tag = utils.container_image_tag_from_algo(algo)
 
         image_builder.build_image_if_missing(datastore=ds, algo=algo)
 
         m_container_image_exists.assert_called_once_with(algo_image_tag)
-        m_build_asset_image.assert_called_once()
-        assert m_build_asset_image.call_args.args[1] == algo
+        m_build_algo_image.assert_called_once()
+        assert m_build_algo_image.call_args.args[1] == algo
 
 
 class TestGetEntrypointFromDockerfile:
@@ -71,4 +71,4 @@ class TestGetEntrypointFromDockerfile:
         with pytest.raises(compute_task_errors.BuildError) as exc:
             image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
 
-        assert expected_exc_content in str(exc.value)
+        assert expected_exc_content in bytes.decode(exc.value.logs.read())
