@@ -160,6 +160,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
+# @CSRF_TRUSTED_ORIGINS: A list of origins that are allowed to use unsafe HTTP methods
 CSRF_TRUSTED_ORIGINS = json.loads(os.environ.get("CSRF_TRUSTED_ORIGINS", "[]"))
 
 # Database
