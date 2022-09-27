@@ -64,7 +64,9 @@ class _ComputeTaskError(RuntimeError):
 class BuildError(_ComputeTaskError, CeleryRetryError):
     """An error occurred during the build of a container image.
 
-    The constructor takes a string argument."""
+    Args:
+        logs (str): the container image build logs
+    """
 
     error_type = ComputeTaskErrorType.BUILD_ERROR
 
@@ -76,7 +78,9 @@ class BuildError(_ComputeTaskError, CeleryRetryError):
 class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
     """An error occurred during the execution of a command in a container image.
 
-    The constructor takes a BinaryIO argument."""
+    Args:
+        logs (BinaryIO): the compute task execution logs
+    """
 
     error_type = ComputeTaskErrorType.EXECUTION_ERROR
 
