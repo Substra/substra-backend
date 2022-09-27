@@ -232,16 +232,13 @@ def pod_exists_by_label_selector(k8s_client: kubernetes.client.CoreV1Api, label_
 
 
 @timeit
-def get_pod_logs(k8s_client, name: str, container: str) -> str:
-    logs = f"No logs for pod {name}"
-
-    if pod_exists(k8s_client, name):
-        try:
-            logs = k8s_client.read_namespaced_pod_log(name=name, namespace=NAMESPACE, container=container)
-        except kubernetes.client.ApiException:
-            pass
-
-    return logs
+def get_pod_logs(k8s_client, name: str, container: str, ignore_pod_not_found: bool = False) -> str:
+    try:
+        return k8s_client.read_namespaced_pod_log(name=name, namespace=NAMESPACE, container=container)
+    except kubernetes.client.ApiException as exc:
+        if ignore_pod_not_found and exc.reason == "Not Found":
+            return f"Pod not found: {NAMESPACE}/{name} ({container})"
+        raise
 
 
 def delete_pod(k8s_client, name: str) -> None:

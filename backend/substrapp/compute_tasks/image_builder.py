@@ -143,8 +143,10 @@ def _build_container_image(path: str, tag: str) -> None:
         build_exc = e
 
     finally:
+        logs = None
+
         if create_pod:
-            logs = _get_container_logs(pod_name, ignore_errors=True)
+            logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
             delete_pod(k8s_client, pod_name)
             for line in (logs or "").split("\n"):
                 logger.info(line, pod_name=pod_name)
@@ -160,18 +162,6 @@ def _assert_dockerfile_exist(dockerfile_path):
     dockerfile_fullpath = os.path.join(dockerfile_path, "Dockerfile")
     if not os.path.exists(dockerfile_fullpath):
         raise compute_task_errors.BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")
-
-
-def _get_container_logs(pod_name: str, ignore_errors: bool = False) -> str:
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    try:
-        return get_pod_logs(k8s_client, name=pod_name, container=KANIKO_CONTAINER_NAME)
-    except Exception:
-        if ignore_errors:
-            return None
-        raise
 
 
 def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.V1Pod:
