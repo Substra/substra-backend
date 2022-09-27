@@ -25,6 +25,7 @@ from api.tests.common import AuthenticatedClient
 from api.tests.common import internal_server_error_on_exception
 from api.views.computetask import EXTRA_DATA_FIELD
 from orchestrator.client import OrchestratorClient
+from orchestrator.resources import TAG_KEY
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -84,17 +85,11 @@ class ComputeTaskViewTests(APITestCase):
                 )
 
         done_train_task = self.compute_tasks[ComputeTask.Category.TASK_TRAIN][ComputeTask.Status.STATUS_DONE]
-        self.train_model = factory.create_model(
-            done_train_task, category=Model.Category.MODEL_SIMPLE, identifier="model"
-        )
+        self.train_model = factory.create_model(done_train_task, identifier="model")
 
         done_composite_task = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE][ComputeTask.Status.STATUS_DONE]
-        self.local_model = factory.create_model(
-            done_composite_task, category=Model.Category.MODEL_HEAD, identifier="local"
-        )
-        self.shared_model = factory.create_model(
-            done_composite_task, category=Model.Category.MODEL_SIMPLE, identifier="shared"
-        )
+        self.local_model = factory.create_model(done_composite_task, identifier="local")
+        self.shared_model = factory.create_model(done_composite_task, identifier="shared")
 
         done_failed_task = self.compute_tasks[ComputeTask.Category.TASK_TEST][ComputeTask.Status.STATUS_DONE]
         self.performance = factory.create_performance(done_failed_task, self.algos[Algo.Category.ALGO_METRIC])
@@ -244,7 +239,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -287,7 +282,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -328,7 +323,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -371,7 +366,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],

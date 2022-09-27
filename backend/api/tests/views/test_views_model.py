@@ -51,16 +51,15 @@ class ModelViewTests(APITestCase):
         compute_plan = factory.create_computeplan()
 
         self.train_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_TRAIN)
-        simple_model_1 = factory.create_model(self.train_task, category=Model.Category.MODEL_SIMPLE)
-        simple_model_2 = factory.create_model(self.train_task, category=Model.Category.MODEL_SIMPLE)
+        simple_model_1 = factory.create_model(self.train_task)
+        simple_model_2 = factory.create_model(self.train_task)
 
         composite_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_COMPOSITE)
-        head_model = factory.create_model(composite_task, category=Model.Category.MODEL_HEAD)
+        head_model = factory.create_model(composite_task)
 
         self.expected_results = [
             {
                 "key": str(simple_model_1.key),
-                "category": "MODEL_SIMPLE",
                 "compute_task_key": str(self.train_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
@@ -81,7 +80,6 @@ class ModelViewTests(APITestCase):
             },
             {
                 "key": str(simple_model_2.key),
-                "category": "MODEL_SIMPLE",
                 "compute_task_key": str(self.train_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
@@ -102,7 +100,6 @@ class ModelViewTests(APITestCase):
             },
             {
                 "key": str(head_model.key),
-                "category": "MODEL_HEAD",
                 "compute_task_key": str(composite_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
@@ -187,44 +184,6 @@ class ModelViewTests(APITestCase):
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
-
-    @parameterized.expand(
-        [
-            ("MODEL_SIMPLE",),
-            ("MODEL_HEAD",),
-            ("MODEL_XXX",),  # INVALID
-        ]
-    )
-    def test_model_list_filter_by_category(self, category):
-        """Filter model on category."""
-        filtered_models = [task for task in self.expected_results if task["category"] == category]
-        params = urlencode({"category": category})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        if category != "MODEL_XXX":
-            self.assertEqual(
-                response.json(),
-                {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @parameterized.expand(
-        [
-            (["MODEL_SIMPLE", "MODEL_HEAD"],),
-        ]
-    )
-    def test_model_list_filter_by_category_in(self, categories):
-        """Filter model on several categories."""
-        filtered_models = [task for task in self.expected_results if task["category"] in categories]
-        params = urlencode({"category": ",".join(categories)})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        if "MODEL_XXX" not in categories:
-            self.assertEqual(
-                response.json(),
-                {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
-            )
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @parameterized.expand(
         [

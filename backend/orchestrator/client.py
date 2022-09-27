@@ -32,6 +32,7 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.resources import TAG_KEY
 from orchestrator.resources import Algo
 from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputeTask
@@ -47,7 +48,7 @@ GRPC_RETRYABLE_ERRORS = [
 
 
 def add_tag_from_metadata(task: dict) -> None:
-    task["tag"] = task["metadata"].pop("__tag__", "")
+    task["tag"] = task["metadata"].pop(TAG_KEY, "")
 
 
 def grpc_retry(func):

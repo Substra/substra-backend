@@ -131,7 +131,6 @@ MIDDLEWARE = [
     "django_structlog.middlewares.CeleryMiddleware",
 ]
 
-
 DJANGO_LOG_SQL_QUERIES = to_bool(os.environ.get("DJANGO_LOG_SQL_QUERIES", "True"))
 if DJANGO_LOG_SQL_QUERIES:
     MIDDLEWARE.append("libs.sql_printing_middleware.SQLPrintingMiddleware")
@@ -282,7 +281,6 @@ WORKER_PVC_DOCKER_CACHE = os.environ.get("WORKER_PVC_DOCKER_CACHE")
 WORKER_PVC_SUBTUPLE = os.environ.get("WORKER_PVC_SUBTUPLE")
 WORKER_REPLICA_SET_NAME = os.environ.get("WORKER_REPLICA_SET_NAME")
 
-
 NAMESPACE = os.getenv("NAMESPACE")
 HOSTNAME = os.getenv("HOSTNAME")
 
@@ -315,7 +313,6 @@ if ENABLE_METRICS:
         + MIDDLEWARE
         + ["django_prometheus.middleware.PrometheusAfterMiddleware"]
     )
-
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
