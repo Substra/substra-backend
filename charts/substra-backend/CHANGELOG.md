@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.1.3
+
+### Fixed
+- ingressClassName is now set correctly on the ingress.
+
 ## 22.1.2
 
 ### Changed

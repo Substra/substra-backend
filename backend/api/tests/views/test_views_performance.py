@@ -14,6 +14,7 @@ from api.models import ComputeTask
 from api.models import Performance
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
+from substrapp.tests.common import InputIdentifiers
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -69,6 +70,7 @@ class CPPerformanceViewTests(APITestCase):
                 "metric": {
                     "key": str(self.metric.key),
                     "name": self.metric.name,
+                    "output_identifier": InputIdentifiers.PERFORMANCE,
                 },
                 "perf": self.performances[0].value,
             },
@@ -85,6 +87,7 @@ class CPPerformanceViewTests(APITestCase):
                 "metric": {
                     "key": str(self.metric.key),
                     "name": self.metric.name,
+                    "output_identifier": InputIdentifiers.PERFORMANCE,
                 },
                 "perf": self.performances[1].value,
             },
@@ -101,6 +104,7 @@ class CPPerformanceViewTests(APITestCase):
                 "metric": {
                     "key": str(self.metric.key),
                     "name": self.metric.name,
+                    "output_identifier": InputIdentifiers.PERFORMANCE,
                 },
                 "perf": self.performances[2].value,
             },

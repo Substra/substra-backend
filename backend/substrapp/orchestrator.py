@@ -23,6 +23,11 @@ def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:
     if channel_name is not None:
         chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
 
-    opts = (("grpc.keepalive_time_ms", settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS),)
+    opts = (
+        ("grpc.keepalive_time_ms", settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS),
+        ("grpc.keepalive_timeout_ms", settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIMEOUT_MS),
+        ("grpc.keepalive_permit_without_calls", settings.ORCHESTRATOR_GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS),
+        ("grpc.http2.max_pings_without_data", settings.ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA),
+    )
 
     return OrchestratorClient(host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=opts)

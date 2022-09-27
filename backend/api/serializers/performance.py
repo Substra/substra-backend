@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
 from api.models import Algo
+from api.models import AlgoOutput
 from api.models import ComputeTask
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
+from orchestrator import common_pb2
 
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -34,9 +36,21 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 
 class _PerformanceMetricSerializer(serializers.ModelSerializer):
+    output_identifier = serializers.SerializerMethodField()
+
     class Meta:
         model = Algo
-        fields = ["key", "name"]
+        fields = ["key", "name", "output_identifier"]
+
+    def get_output_identifier(self, obj):
+        try:
+            performance_output = AlgoOutput.objects.get(
+                algo_id=obj.key, kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
+            )
+        except (AlgoOutput.MultipleObjectsReturned, AlgoOutput.DoesNotExist) as e:
+            raise Exception(f"Couldn't associate an output identifier to performance for algo '{obj.key}', error : {e}")
+
+        return performance_output.identifier
 
 
 class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):

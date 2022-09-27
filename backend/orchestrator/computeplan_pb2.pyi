@@ -54,7 +54,6 @@ class ComputePlan(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
-    DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     TAG_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
@@ -63,7 +62,6 @@ class ComputePlan(google.protobuf.message.Message):
     FAILURE_DATE_FIELD_NUMBER: builtins.int
     key: builtins.str
     owner: builtins.str
-    delete_intermediary_models: builtins.bool
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     tag: builtins.str
@@ -79,7 +77,6 @@ class ComputePlan(google.protobuf.message.Message):
         *,
         key: builtins.str = ...,
         owner: builtins.str = ...,
-        delete_intermediary_models: builtins.bool = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         tag: builtins.str = ...,
         name: builtins.str = ...,
@@ -88,7 +85,7 @@ class ComputePlan(google.protobuf.message.Message):
         failure_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "failure_date", b"failure_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "delete_intermediary_models", b"delete_intermediary_models", "failure_date", b"failure_date", "key", b"key", "metadata", b"metadata", "name", b"name", "owner", b"owner", "tag", b"tag"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["cancelation_date", b"cancelation_date", "creation_date", b"creation_date", "failure_date", b"failure_date", "key", b"key", "metadata", b"metadata", "name", b"name", "owner", b"owner", "tag", b"tag"]) -> None: ...
 
 global___ComputePlan = ComputePlan
 
@@ -114,13 +111,11 @@ class NewComputePlan(google.protobuf.message.Message):
     TAG_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
-    DELETE_INTERMEDIARY_MODELS_FIELD_NUMBER: builtins.int
     key: builtins.str
     tag: builtins.str
     name: builtins.str
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
-    delete_intermediary_models: builtins.bool
     def __init__(
         self,
         *,
@@ -128,9 +123,8 @@ class NewComputePlan(google.protobuf.message.Message):
         tag: builtins.str = ...,
         name: builtins.str = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
-        delete_intermediary_models: builtins.bool = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["delete_intermediary_models", b"delete_intermediary_models", "key", b"key", "metadata", b"metadata", "name", b"name", "tag", b"tag"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "metadata", b"metadata", "name", b"name", "tag", b"tag"]) -> None: ...
 
 global___NewComputePlan = NewComputePlan
 

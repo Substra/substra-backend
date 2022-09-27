@@ -537,15 +537,9 @@ global___AggregateTrainTaskData = AggregateTrainTaskData
 class NewAggregateTrainTaskData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    WORKER_FIELD_NUMBER: builtins.int
-    worker: builtins.str
-    """worker property is deprecated, pass the worker through NewComputeTask.Worker"""
     def __init__(
         self,
-        *,
-        worker: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["worker", b"worker"]) -> None: ...
 
 global___NewAggregateTrainTaskData = NewAggregateTrainTaskData
 

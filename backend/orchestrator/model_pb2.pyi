@@ -160,48 +160,6 @@ class GetComputeTaskModelsResponse(google.protobuf.message.Message):
 
 global___GetComputeTaskModelsResponse = GetComputeTaskModelsResponse
 
-class CanDisableModelParam(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    MODEL_KEY_FIELD_NUMBER: builtins.int
-    model_key: builtins.str
-    def __init__(
-        self,
-        *,
-        model_key: builtins.str = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["model_key", b"model_key"]) -> None: ...
-
-global___CanDisableModelParam = CanDisableModelParam
-
-class CanDisableModelResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    CAN_DISABLE_FIELD_NUMBER: builtins.int
-    can_disable: builtins.bool
-    def __init__(
-        self,
-        *,
-        can_disable: builtins.bool = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["can_disable", b"can_disable"]) -> None: ...
-
-global___CanDisableModelResponse = CanDisableModelResponse
-
-class DisableModelParam(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    MODEL_KEY_FIELD_NUMBER: builtins.int
-    model_key: builtins.str
-    def __init__(
-        self,
-        *,
-        model_key: builtins.str = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["model_key", b"model_key"]) -> None: ...
-
-global___DisableModelParam = DisableModelParam
-
 class GetModelParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -215,12 +173,3 @@ class GetModelParam(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["key", b"key"]) -> None: ...
 
 global___GetModelParam = GetModelParam
-
-class DisableModelResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    def __init__(
-        self,
-    ) -> None: ...
-
-global___DisableModelResponse = DisableModelResponse

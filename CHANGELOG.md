@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed 
+### Changed
 
 - Replace `algo` by `algo_key` in gRPC communication
+### Added
+
+- Allow configuring gRPC keepalive
+- output identifier add in metric response object in `compute_plan perf` view.
+- Prevent use of `__` in asset metadata keys
+
+### Removed
+
+- BREAKING: model categories
 
 ## [0.31.0] 2022-09-26
 

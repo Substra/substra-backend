@@ -339,7 +339,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 # get parent task output permissions
                 try:
                     outputs = ComputeTaskOutput.objects.filter(task_id=input.get("parent_task_key")).all()
-                    models = Model.objects.filter(compute_task_id=input.get("parent_task_key")).all()
                 except ObjectDoesNotExist:
                     input["permissions"] = None
                     input["addressable"] = None
@@ -349,11 +348,11 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                     for output in outputs:
                         if output.identifier == output_identifier:
                             input["permissions"] = make_download_process_permission_serializer()(output).data
-                    request = self.context.get("request")
-                    if request:
-                        for model in models:
-                            model_category = OUTPUT_MODEL_CATEGORY[output_identifier]
-                            if model.category == model_category:
+                            request = self.context.get("request")
+                            assets = output.assets.all()
+                            if request and assets:
+                                model_key = assets[0].asset_key
+                                model = Model.objects.get(pk=model_key)
                                 input["addressable"] = make_addressable_serializer("model")(model).data
                                 input["addressable"]["storage_address"] = request.build_absolute_uri(
                                     reverse("api:model-file", args=[model.key])

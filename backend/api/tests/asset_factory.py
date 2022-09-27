@@ -16,7 +16,7 @@ Basic example:
 ...     category=ComputeTask.Category.TASK_TRAIN,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
->>> model = create_model(train_task, category=Model.Category.MODEL_SIMPLE)
+>>> model = create_model(train_task)
 
 >>> metric = create_algo(category=Algo.Category.ALGO_METRIC)
 >>> test_task = create_computetask(
@@ -350,7 +350,6 @@ def create_computetask(
 def create_model(
     compute_task: ComputeTask,
     key: uuid.UUID = None,
-    category: int = Model.Category.MODEL_SIMPLE,
     identifier: str = "model",
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -361,7 +360,6 @@ def create_model(
     model = Model.objects.create(
         compute_task=compute_task,
         key=key,
-        category=category,
         model_address=get_storage_address("model", key, "file"),
         model_checksum=DUMMY_CHECKSUM,
         creation_date=timezone.now(),
