@@ -16,6 +16,8 @@ from orchestrator import datasample_pb2
 from orchestrator import info_pb2
 from orchestrator import model_pb2
 
+TAG_KEY = "__tag__"
+
 
 class AutoNameEnum(enum.Enum):
     def _generate_next_value_(name, start, count, last_values):  # noqa: N805
@@ -255,7 +257,7 @@ class ComputeTask(_Base):
 
     @classmethod
     def from_grpc(cls, t: computetask_pb2.ComputeTask) -> ComputeTask:
-        tag = t.metadata.pop("__tag__", "")
+        tag = t.metadata.pop(TAG_KEY, "")
 
         return cls(
             key=t.key,
