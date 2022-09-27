@@ -71,6 +71,9 @@ class ComputePlanGraphViewTests(APITestCase):
         aggregate_task = factory.create_computetask(
             compute_plan, algo=algo, category=ComputeTask.Category.TASK_AGGREGATE, parent_tasks=[composite_task.key]
         )
+        factory.connect_input_output(train_task, "model", predict_task, "model")
+        factory.connect_input_output(predict_task, "model", test_task, "model")
+        factory.connect_input_output(composite_task, "model", aggregate_task, "model")
 
         expected_results = {
             "tasks": [
@@ -80,8 +83,12 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_TRAIN",
-                    "inputs": [{"id": "in/model", "kind": "model"}],
-                    "outputs": [{"id": "out/model", "kind": "model"}],
+                    "inputs": [
+                        {"id": "datasamples", "kind": "ASSET_DATA_SAMPLE"},
+                        {"id": "model", "kind": "ASSET_MODEL"},
+                        {"id": "opener", "kind": "ASSET_DATA_MANAGER"},
+                    ],
+                    "outputs": [{"id": "model", "kind": "ASSET_MODEL"}],
                 },
                 {
                     "key": str(predict_task.key),
@@ -89,8 +96,12 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_PREDICT",
-                    "inputs": [{"id": "in/tested_model", "kind": "model"}],
-                    "outputs": [{"id": "out/predictions", "kind": "model"}],
+                    "inputs": [
+                        {"id": "datasamples", "kind": "ASSET_DATA_SAMPLE"},
+                        {"id": "model", "kind": "ASSET_MODEL"},
+                        {"id": "opener", "kind": "ASSET_DATA_MANAGER"},
+                    ],
+                    "outputs": [{"id": "model", "kind": "ASSET_MODEL"}],
                 },
                 {
                     "key": str(test_task.key),
@@ -98,8 +109,12 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_TEST",
-                    "inputs": [{"id": "in/predictions", "kind": "model"}],
-                    "outputs": [{"id": "out/perf", "kind": "performance"}],
+                    "inputs": [
+                        {"id": "datasamples", "kind": "ASSET_DATA_SAMPLE"},
+                        {"id": "model", "kind": "ASSET_MODEL"},
+                        {"id": "opener", "kind": "ASSET_DATA_MANAGER"},
+                    ],
+                    "outputs": [{"id": "model", "kind": "ASSET_MODEL"}],
                 },
                 {
                     "key": str(composite_task.key),
@@ -107,8 +122,12 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_COMPOSITE",
-                    "inputs": [{"id": "in/head_model", "kind": "model"}, {"id": "in/trunk_model", "kind": "model"}],
-                    "outputs": [{"id": "out/head_model", "kind": "model"}, {"id": "out/trunk_model", "kind": "model"}],
+                    "inputs": [
+                        {"id": "datasamples", "kind": "ASSET_DATA_SAMPLE"},
+                        {"id": "model", "kind": "ASSET_MODEL"},
+                        {"id": "opener", "kind": "ASSET_DATA_MANAGER"},
+                    ],
+                    "outputs": [{"id": "model", "kind": "ASSET_MODEL"}],
                 },
                 {
                     "key": str(aggregate_task.key),
@@ -116,34 +135,32 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "category": "TASK_AGGREGATE",
-                    "inputs": [{"id": "in/models[]", "kind": "model"}],
-                    "outputs": [{"id": "out/model", "kind": "model"}],
+                    "inputs": [
+                        {"id": "datasamples", "kind": "ASSET_DATA_SAMPLE"},
+                        {"id": "model", "kind": "ASSET_MODEL"},
+                        {"id": "opener", "kind": "ASSET_DATA_MANAGER"},
+                    ],
+                    "outputs": [{"id": "model", "kind": "ASSET_MODEL"}],
                 },
             ],
             "edges": [
                 {
-                    "source_task_key": str(train_task.key),
-                    "source_task_category": "TASK_TRAIN",
-                    "target_task_key": str(predict_task.key),
-                    "target_task_category": "TASK_PREDICT",
-                    "source_output_name": "out/model",
-                    "target_input_name": "in/tested_model",
+                    "source_task_key": str(composite_task.key),
+                    "target_task_key": str(aggregate_task.key),
+                    "source_output_name": "model",
+                    "target_input_name": "model",
                 },
                 {
                     "source_task_key": str(predict_task.key),
-                    "source_task_category": "TASK_PREDICT",
                     "target_task_key": str(test_task.key),
-                    "target_task_category": "TASK_TEST",
-                    "source_output_name": "out/predictions",
-                    "target_input_name": "in/predictions",
+                    "source_output_name": "model",
+                    "target_input_name": "model",
                 },
                 {
-                    "source_task_key": str(composite_task.key),
-                    "source_task_category": "TASK_COMPOSITE",
-                    "target_task_key": str(aggregate_task.key),
-                    "target_task_category": "TASK_AGGREGATE",
-                    "source_output_name": "out/trunk_model",
-                    "target_input_name": "in/models[]",
+                    "source_task_key": str(train_task.key),
+                    "target_task_key": str(predict_task.key),
+                    "source_output_name": "model",
+                    "target_input_name": "model",
                 },
             ],
         }
