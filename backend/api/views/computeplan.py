@@ -55,6 +55,14 @@ def create(request, get_success_headers):
     - Register asset in the orchestrator.
     - Save metadata in local database.
     """
+
+    # Find author from request
+    # Update CP model to store the author
+    # Update CP serializer
+    # Migration: keep null values ?
+    # Test: Need to deploy cluster with orc to register a new CP
+    # Front
+
     # Step1: register asset in orchestrator
     compute_plan_data = {
         "key": to_string_uuid(request.data.get("key")),
