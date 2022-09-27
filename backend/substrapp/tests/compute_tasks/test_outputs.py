@@ -7,13 +7,11 @@ from grpc import StatusCode
 from pytest_mock import MockerFixture
 
 import orchestrator
-import orchestrator.model_pb2 as model_pb2
 from orchestrator import mock
 from substrapp.compute_tasks import context
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.outputs import OutputSaver
-from substrapp.compute_tasks.outputs import _get_model_category
 
 
 @pytest.mark.parametrize(
@@ -101,18 +99,3 @@ def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
     models = Model.objects.all()
     filtered_model_keys = [str(model.key) for model in models]
     assert len(filtered_model_keys) == (0 if orc_raise else 1)
-
-
-@pytest.mark.parametrize(
-    "identifier,expected_category",
-    [
-        ("local", model_pb2.MODEL_HEAD),
-        ("head", model_pb2.MODEL_HEAD),
-        ("shared", model_pb2.MODEL_SIMPLE),
-        ("model", model_pb2.MODEL_SIMPLE),
-        ("predictions", model_pb2.MODEL_SIMPLE),
-        ("somethingelse", model_pb2.MODEL_SIMPLE),
-    ],
-)
-def test_model_category_inference(identifier: str, expected_category: model_pb2.ModelCategory.ValueType):
-    assert _get_model_category(identifier) == expected_category
