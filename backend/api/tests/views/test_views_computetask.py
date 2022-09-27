@@ -25,6 +25,7 @@ from api.tests.common import AuthenticatedClient
 from api.tests.common import internal_server_error_on_exception
 from api.views.computetask import EXTRA_DATA_FIELD
 from orchestrator.client import OrchestratorClient
+from orchestrator.resources import TAG_KEY
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -238,7 +239,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -281,7 +282,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -322,7 +323,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
@@ -365,7 +366,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "public": False,
                 },
                 "metadata": {
-                    "__tag__": "",
+                    TAG_KEY: "",
                 },
                 "owner": "MyOrg1MSP",
                 "parent_task_keys": [self._parent_task_key],
