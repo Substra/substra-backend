@@ -546,22 +546,22 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_datamanager_download_opener(self):
-        data_manager_data = factory.create_datamanager_data()
-        data_manager = factory.create_datamanager(key=data_manager_data.key)
+        data_manager_files = factory.create_datamanager_files()
+        data_manager = factory.create_datamanager(key=data_manager_files.key)
         url = reverse("api:data_manager-opener", args=[data_manager.key])
         with mock.patch("api.views.utils.get_owner", return_value=data_manager.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(content, data_manager_data.data_opener.read())
-        self.assertEqual(compute_hash(content), data_manager_data.checksum)
+        self.assertEqual(content, data_manager_files.data_opener.read())
+        self.assertEqual(compute_hash(content), data_manager_files.checksum)
 
     def test_datamanager_download_description(self):
-        data_manager_data = factory.create_datamanager_data()
-        data_manager = factory.create_datamanager(key=data_manager_data.key)
+        data_manager_files = factory.create_datamanager_files()
+        data_manager = factory.create_datamanager(key=data_manager_files.key)
         url = reverse("api:data_manager-description", args=[data_manager.key])
         with mock.patch("api.views.utils.get_owner", return_value=data_manager.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(content, data_manager_data.description.read())
+        self.assertEqual(content, data_manager_files.description.read())

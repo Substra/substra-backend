@@ -32,7 +32,7 @@ Basic example:
 
 Customized example:
 
->>> algo_data = create_algo_data()
+>>> algo_data = create_algo_files()
 >>> algo = create_algo(
 ...     key=algo_data.key,
 ...     name="Random forest",
@@ -65,11 +65,11 @@ from api.models import Performance
 from api.models import ProfilingStep
 from api.models import TaskProfiling
 from api.models.computetask import TaskDataSamples
-from substrapp.models import Algo as AlgoData
+from substrapp.models import Algo as AlgoFiles
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
-from substrapp.models import DataManager as DataManagerData
-from substrapp.models import DataSample as DataSampleData
-from substrapp.models import Model as ModelData
+from substrapp.models import DataManager as DataManagerFiles
+from substrapp.models import DataSample as DataSampleFiles
+from substrapp.models import Model as ModelFiles
 from substrapp.tests import common
 from substrapp.utils import get_hash
 
@@ -399,11 +399,11 @@ def create_performance(
     return performance
 
 
-def create_algo_data(
+def create_algo_files(
     key: uuid.UUID = None,
     file: files.File = None,
     description: files.File = None,
-) -> AlgoData:
+) -> AlgoFiles:
     if key is None:
         key = uuid.uuid4()
     if file is None:
@@ -411,21 +411,21 @@ def create_algo_data(
     if description is None:
         description = files.base.ContentFile("dummy content")
 
-    algo_data = AlgoData.objects.create(
+    algo_files = AlgoFiles.objects.create(
         key=key,
         checksum=get_hash(file),
     )
-    algo_data.file.save("algo", file)
-    algo_data.description.save("description", description)
-    return algo_data
+    algo_files.file.save("algo", file)
+    algo_files.description.save("description", description)
+    return algo_files
 
 
-def create_datamanager_data(
+def create_datamanager_files(
     key: uuid.UUID = None,
     name: str = "datamanager",
     opener: files.File = None,
     description: files.File = None,
-) -> DataManagerData:
+) -> DataManagerFiles:
     if key is None:
         key = uuid.uuid4()
     if opener is None:
@@ -433,48 +433,48 @@ def create_datamanager_data(
     if description is None:
         description = files.base.ContentFile("dummy content")
 
-    data_manager_data = DataManagerData.objects.create(
+    data_manager_files = DataManagerFiles.objects.create(
         key=key,
         name=name,
         checksum=get_hash(opener),
     )
-    data_manager_data.data_opener.save("opener", opener)
-    data_manager_data.description.save("description", description)
-    return data_manager_data
+    data_manager_files.data_opener.save("opener", opener)
+    data_manager_files.description.save("description", description)
+    return data_manager_files
 
 
-def create_datasample_data(
+def create_datasample_files(
     key: uuid.UUID = None,
     file: files.File = None,
-) -> DataSampleData:
+) -> DataSampleFiles:
     if key is None:
         key = uuid.uuid4()
     if file is None:
         file = files.base.ContentFile("dummy content")
 
-    data_sample_data = DataSampleData.objects.create(
+    data_sample_files = DataSampleFiles.objects.create(
         key=key,
         checksum=get_hash(file),
     )
-    data_sample_data.file.save("datasample", file)
-    return data_sample_data
+    data_sample_files.file.save("datasample", file)
+    return data_sample_files
 
 
-def create_model_data(
+def create_model_files(
     key: uuid.UUID = None,
     file: files.File = None,
-) -> ModelData:
+) -> ModelFiles:
     if key is None:
         key = uuid.uuid4()
     if file is None:
         file = files.base.ContentFile("dummy content")
 
-    model_data = ModelData.objects.create(
+    model_files = ModelFiles.objects.create(
         key=key,
         checksum=get_hash(file),
     )
-    model_data.file.save("model", file)
-    return model_data
+    model_files.file.save("model", file)
+    return model_files
 
 
 def create_computetask_logs(
