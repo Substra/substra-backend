@@ -5,6 +5,7 @@ def orc_to_api(data: dict) -> dict:
     """Convert a compute task from the orchestrator format to the api format"""
 
     res = copy.deepcopy(data)
+    res["algo"] = {"key": res.pop("algo_key")}
     res["inputs"] = [_input_to_api(input) for input in res["inputs"]]
     res["outputs"] = [{"identifier": identifier, **output} for identifier, output in res["outputs"].items()]
     return res

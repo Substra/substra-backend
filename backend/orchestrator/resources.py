@@ -264,7 +264,7 @@ class ComputeTask(_Base):
             category=ComputeTaskCategory.from_grpc(t.category),
             owner=t.owner,
             compute_plan_key=t.compute_plan_key,
-            algo_key=t.algo.key,
+            algo_key=t.algo_key,
             rank=t.rank,
             status=ComputeTaskStatus.from_grpc(t.status),
             worker=t.worker,
