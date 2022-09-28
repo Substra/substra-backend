@@ -19,6 +19,7 @@ from api.tests.common import internal_server_error_on_exception
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from orchestrator.error import StatusCode
+from substrapp.tests.common import AlgoCategory
 from substrapp.utils import compute_hash
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -46,31 +47,26 @@ class AlgoViewTests(APITestCase):
         simple_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_SIMPLE,
             name="simple algo",
         )
         aggregate_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_AGGREGATE,
             name="aggregate",
         )
         composite_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
             outputs=factory.build_algo_outputs(["local", "shared"]),
-            category=Algo.Category.ALGO_COMPOSITE,
             name="composite",
         )
         predict_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model", "shared"]),
             outputs=factory.build_algo_outputs(["predictions"]),
-            category=Algo.Category.ALGO_PREDICT,
             name="predict",
         )
         metric_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
             outputs=factory.build_algo_outputs(["performance"]),
-            category=Algo.Category.ALGO_METRIC,
             name="metric",
         )
 
@@ -91,7 +87,6 @@ class AlgoViewTests(APITestCase):
                     },
                 },
                 "metadata": {},
-                "category": "ALGO_SIMPLE",
                 "creation_date": simple_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
@@ -125,7 +120,6 @@ class AlgoViewTests(APITestCase):
                     },
                 },
                 "metadata": {},
-                "category": "ALGO_AGGREGATE",
                 "creation_date": aggregate_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
@@ -157,7 +151,6 @@ class AlgoViewTests(APITestCase):
                     },
                 },
                 "metadata": {},
-                "category": "ALGO_COMPOSITE",
                 "creation_date": composite_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
@@ -193,7 +186,6 @@ class AlgoViewTests(APITestCase):
                     },
                 },
                 "metadata": {},
-                "category": "ALGO_PREDICT",
                 "creation_date": predict_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
@@ -217,7 +209,6 @@ class AlgoViewTests(APITestCase):
                 "key": str(metric_algo.key),
                 "name": "metric",
                 "owner": "MyOrg1MSP",
-                "category": "ALGO_METRIC",
                 "metadata": {},
                 "permissions": {
                     "process": {
@@ -442,12 +433,11 @@ class AlgoViewTests(APITestCase):
         [
             (category, filename)
             for category in [
-                "ALGO_SIMPLE",
-                "ALGO_AGGREGATE",
-                "ALGO_COMPOSITE",
-                "ALGO_METRIC",
-                "ALGO_PREDICT",
-                "ALGO_XXX",
+                AlgoCategory.simple,
+                AlgoCategory.aggregate,
+                AlgoCategory.composite,
+                AlgoCategory.metric,
+                AlgoCategory.predict,
             ]
             for filename in [
                 "algo.tar.gz",
@@ -467,7 +457,6 @@ class AlgoViewTests(APITestCase):
                     "download": data["new_permissions"],
                 },
                 "metadata": {},
-                "category": data["category"],
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "description": data["description"],
                 "algorithm": data["algorithm"],
@@ -482,7 +471,6 @@ class AlgoViewTests(APITestCase):
                 {
                     "name": "Logistic regression",
                     "metric_key": "some key",
-                    "category": category,
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
@@ -503,13 +491,10 @@ class AlgoViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_algo", side_effect=mock_orc_response):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        if category != "ALGO_XXX":
-            self.assertIsNotNone(response.data["key"])
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            # asset created in local db
-            self.assertEqual(Algo.objects.count(), len(self.expected_algos) + 1)
-        else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsNotNone(response.data["key"])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # asset created in local db
+        self.assertEqual(Algo.objects.count(), len(self.expected_algos) + 1)
 
         data["file"].close()
         data["description"].close()
@@ -524,7 +509,6 @@ class AlgoViewTests(APITestCase):
                 {
                     "name": "Logistic regression",
                     "metric_key": "some key",
-                    "category": "ALGO_SIMPLE",
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
@@ -566,7 +550,6 @@ class AlgoViewTests(APITestCase):
                 {
                     "name": "Logistic regression",
                     "metric_key": "some key",
-                    "category": "ALGO_SIMPLE",
                     "permissions": {
                         "public": True,
                         "authorized_ids": [],

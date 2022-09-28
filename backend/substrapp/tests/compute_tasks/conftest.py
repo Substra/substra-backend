@@ -26,7 +26,6 @@ def orc_metric() -> dict[str, Any]:
     return {
         "key": "fca0f83f-381e-4a2a-ab54-d009fb00b4af",
         "name": "my metric",
-        "category": 4,
         "owner": "Org1MSP",
         "description": {"checksum": "", "storage_address": ""},
         "algorithm": {"checksum": "", "storage_address": ""},

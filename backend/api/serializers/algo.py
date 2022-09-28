@@ -43,7 +43,6 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         model = Algo
         fields = [
             "algorithm",
-            "category",
             "channel",
             "creation_date",
             "description",

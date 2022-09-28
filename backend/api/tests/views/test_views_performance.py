@@ -8,7 +8,6 @@ from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Algo
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import Performance
@@ -38,7 +37,6 @@ class CPPerformanceViewTests(APITestCase):
 
         self.metric = factory.create_algo(
             outputs=factory.build_algo_outputs(["performance"]),
-            category=Algo.Category.ALGO_METRIC,
         )
         self.compute_tasks = [
             factory.create_computetask(
@@ -178,7 +176,6 @@ class PerformanceViewTests(APITestCase):
         self.metrics = [
             factory.create_algo(
                 outputs=factory.build_algo_outputs(["performance"]),
-                category=Algo.Category.ALGO_METRIC,
             )
             for _ in range(3)
         ]

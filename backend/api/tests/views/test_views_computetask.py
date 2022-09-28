@@ -13,7 +13,6 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Algo
 from api.models import ComputeTask
 from api.models import Model
 from api.models import Performance
@@ -45,31 +44,26 @@ class ComputeTaskViewTests(APITestCase):
         self.simple_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_SIMPLE,
             name="simple algo",
         )
         self.aggregate_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_AGGREGATE,
             name="aggregate",
         )
         self.composite_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
             outputs=factory.build_algo_outputs(["local", "shared"]),
-            category=Algo.Category.ALGO_COMPOSITE,
             name="composite",
         )
         self.predict_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model", "shared"]),
             outputs=factory.build_algo_outputs(["predictions"]),
-            category=Algo.Category.ALGO_PREDICT,
             name="predict",
         )
         self.metric_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
             outputs=factory.build_algo_outputs(["performance"]),
-            category=Algo.Category.ALGO_METRIC,
             name="metric",
         )
         self.data_manager = factory.create_datamanager()
