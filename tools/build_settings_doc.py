@@ -4,7 +4,6 @@ import difflib
 import pathlib
 import tempfile
 from dataclasses import dataclass
-from os import name
 from typing import Collection
 from typing import Optional
 from typing import Union
@@ -49,7 +48,7 @@ class Setting:
     comment: str = ""
 
 
-def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:
+def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:  # noqa C901
     """Opens a settings file an look for all the occurrences of os.getenv() or os.environ.get()
 
     Args:

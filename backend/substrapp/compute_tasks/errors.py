@@ -1,6 +1,7 @@
 """Objects to manage errors occurring in a compute task."""
 
 import enum
+from io import BytesIO
 from typing import BinaryIO
 
 from orchestrator import failure_report_pb2
@@ -61,13 +62,25 @@ class _ComputeTaskError(RuntimeError):
 
 
 class BuildError(_ComputeTaskError, CeleryRetryError):
-    """An error occurred during the build of a container image."""
+    """An error occurred during the build of a container image.
+
+    Args:
+        logs (str): the container image build logs
+    """
 
     error_type = ComputeTaskErrorType.BUILD_ERROR
 
+    def __init__(self, logs: str, *args, **kwargs):
+        self.logs = BytesIO(str.encode(logs))
+        super().__init__(*args, **kwargs)
+
 
 class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
-    """An error occurred during the execution of a command in a container image."""
+    """An error occurred during the execution of a command in a container image.
+
+    Args:
+        logs (BinaryIO): the compute task execution logs
+    """
 
     error_type = ComputeTaskErrorType.EXECUTION_ERROR
 

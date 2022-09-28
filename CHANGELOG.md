@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Container image build error logs are now saved to the DB and served via the API.
 - Replace `algo` by `algo_key` in gRPC communication
+
 ### Added
 
 - Allow configuring gRPC keepalive

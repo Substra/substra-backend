@@ -19,7 +19,7 @@ class TestComputeTaskErrorType:
 @pytest.mark.parametrize(
     ("exc", "expected"),
     [
-        (errors.BuildError(), failure_report_pb2.ERROR_TYPE_BUILD),
+        (errors.BuildError(logs="some build error"), failure_report_pb2.ERROR_TYPE_BUILD),
         (errors.ExecutionError(logs=io.BytesIO()), failure_report_pb2.ERROR_TYPE_EXECUTION),
         (Exception(), failure_report_pb2.ERROR_TYPE_INTERNAL),
     ],

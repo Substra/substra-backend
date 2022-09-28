@@ -6,7 +6,6 @@ from django.conf import settings
 from django.urls import reverse
 
 import orchestrator
-import orchestrator.model_pb2 as model_pb2
 from api.errors import AlreadyExistsError
 from api.serializers import ModelSerializer as ModelRepSerializer
 from substrapp.compute_tasks import context
@@ -100,7 +99,6 @@ class OutputSaver:
             "key": str(instance.key),
             "compute_task_key": self._ctx.task.key,
             "compute_task_output_identifier": model.identifier,
-            "category": _get_model_category(model.identifier),
             "address": {
                 "checksum": checksum,
                 "storage_address": storage_address,
@@ -127,14 +125,3 @@ def _get_perf(perf_path: str) -> float:
     with open(perf_path, "r") as perf_file:
         perf = json.load(perf_file)["all"]
         return float(perf)
-
-
-def _get_model_category(identifier: str) -> str:
-    """Temporarily hardcode a match between model identifier and category.
-
-    This is based on the following assumptions and should be removed once we drop model categories:
-    - all models are SIMPLE
-    - except "local" or "head" outputs
-    """
-
-    return model_pb2.MODEL_HEAD if identifier.lower() in OUTPUT_HEAD_MODEL_IDENTIFIERS else model_pb2.MODEL_SIMPLE

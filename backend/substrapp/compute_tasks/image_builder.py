@@ -51,14 +51,16 @@ def build_image_if_missing(datastore: Datastore, algo: orchestrator.Algo) -> Non
             logger.info("Reusing existing image", image=container_image_tag)
         else:
             asset_content = datastore.get_algo(algo)
-            _build_asset_image(asset_content, algo)
+            _build_algo_image(asset_content, algo)
 
 
-def _build_asset_image(asset: bytes, algo: orchestrator.Algo) -> None:
+def _build_algo_image(asset: bytes, algo: orchestrator.Algo) -> None:
     """
-    Build an asset's container image. Perform multiple steps:
-    1. Download the asset (algo or metric) using the provided asset storage_address/owner. Verify its checksum and
-       uncompress the data to a temporary folder.
+    Build an algo's container image.
+
+    Perform multiple steps:
+    1. Download the algo using the provided asset storage_address/owner. Verify its checksum and uncompress the data
+       to a temporary folder.
     2. Extract the ENTRYPOINT from the Dockerfile.
     3. Build the container image using Kaniko.
     4. Save the ENTRYPOINT to the DB
@@ -110,7 +112,7 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
 
 
 @timeit
-def _build_container_image(path: str, tag: str) -> None:  # noqa: C901
+def _build_container_image(path: str, tag: str) -> None:
     _assert_dockerfile_exist(path)
 
     kubernetes.config.load_incluster_config()
@@ -129,37 +131,37 @@ def _build_container_image(path: str, tag: str) -> None:  # noqa: C901
                 f"Error creating pod {NAMESPACE}/{pod_name}. Reason: {e.reason}, status: {e.status}, body: {e.body}"
             ) from e
 
+    build_exc = None
+
     try:
         watch_pod(k8s_client, pod_name)
+
     except Exception as e:
-        # In case of concurrent build, it may fail
-        # check if image exists
-        if not container_image_exists(tag):
-            raise compute_task_errors.BuildError from e
+        # In case of concurrent builds, it may fail. Check if the image exists.
+        if container_image_exists(tag):
+            return
+        build_exc = e
+
     finally:
+        logs = None
+
         if create_pod:
-            _log_container_logs(pod_name)
+            logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
             delete_pod(k8s_client, pod_name)
+            for line in (logs or "").split("\n"):
+                logger.info(line, pod_name=pod_name)
+
+        if build_exc:
+            err_msg = str(build_exc)
+            if logs:
+                err_msg += "\n\n" + logs
+            raise compute_task_errors.BuildError(err_msg)
 
 
 def _assert_dockerfile_exist(dockerfile_path):
     dockerfile_fullpath = os.path.join(dockerfile_path, "Dockerfile")
     if not os.path.exists(dockerfile_fullpath):
         raise compute_task_errors.BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")
-
-
-def _log_container_logs(pod_name: str) -> None:
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    container_logs = get_pod_logs(k8s_client, name=pod_name, container=KANIKO_CONTAINER_NAME)
-    if isinstance(container_logs, bytes):
-        logs = [log for log in container_logs.decode().split("\n")]
-    else:
-        logs = [log for log in container_logs.split("\n")]
-
-    for log in logs:
-        logger.info(log, pod_name=pod_name)
 
 
 def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.V1Pod:
