@@ -1,10 +1,10 @@
 from django.core.files.base import ContentFile as _
 from django.core.management.base import BaseCommand
 
-from api.models import Algo
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.tests import asset_factory as factory
+from substrapp.tests.common import AlgoCategory
 
 
 class Command(BaseCommand):
@@ -14,25 +14,25 @@ class Command(BaseCommand):
         simple_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_SIMPLE,
+            category=AlgoCategory.simple,
             name="simple algo",
         )
         aggregate_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            category=Algo.Category.ALGO_AGGREGATE,
+            category=AlgoCategory.aggregate,
             name="aggregate",
         )
         composite_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
             outputs=factory.build_algo_outputs(["local", "shared"]),
-            category=Algo.Category.ALGO_COMPOSITE,
+            category=AlgoCategory.composite,
             name="composite",
         )
         metric_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
             outputs=factory.build_algo_outputs(["performance"]),
-            category=Algo.Category.ALGO_METRIC,
+            category=AlgoCategory.metric,
             name="metric",
         )
 

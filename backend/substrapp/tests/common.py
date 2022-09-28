@@ -1,17 +1,12 @@
 import os
 from dataclasses import dataclass
+from enum import Enum
 from io import BytesIO
 from io import StringIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from google.protobuf.json_format import MessageToDict
 
-import orchestrator.algo_pb2 as algo_pb2
-from orchestrator.algo_pb2 import ALGO_AGGREGATE
-from orchestrator.algo_pb2 import ALGO_COMPOSITE
-from orchestrator.algo_pb2 import ALGO_METRIC
-from orchestrator.algo_pb2 import ALGO_PREDICT
-from orchestrator.algo_pb2 import ALGO_SIMPLE
 from orchestrator.algo_pb2 import AlgoInput
 from orchestrator.algo_pb2 import AlgoOutput
 from orchestrator.client import CONVERT_SETTINGS
@@ -32,28 +27,37 @@ class InputIdentifiers:
     SHARED = "shared"
 
 
+class AlgoCategory(str, Enum):
+    simple = "ALGO_SIMPLE"
+    composite = "ALGO_COMPOSITE"
+    aggregate = "ALGO_AGGREGATE"
+    metric = "ALGO_METRIC"
+    predict = "ALGO_PREDICT"
+    predict_composite = "ALGO_PREDICT_COMPOSITE"
+
+
 # Algo inputs, protobuf format
 ALGO_INPUTS_PER_CATEGORY = {
-    ALGO_SIMPLE: {
+    AlgoCategory.simple: {
         InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
         InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
         InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
     },
-    ALGO_AGGREGATE: {
+    AlgoCategory.aggregate: {
         InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=True, optional=False),
     },
-    ALGO_COMPOSITE: {
+    AlgoCategory.composite: {
         InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
         InputIdentifiers.LOCAL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
         InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
         InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
     },
-    ALGO_METRIC: {
+    AlgoCategory.metric: {
         InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
         InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
         InputIdentifiers.PREDICTIONS: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
     },
-    ALGO_PREDICT: {
+    AlgoCategory.predict: {
         InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
         InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
         InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
@@ -64,27 +68,27 @@ ALGO_INPUTS_PER_CATEGORY = {
 
 # Algo outputs, protobuf format
 ALGO_OUTPUTS_PER_CATEGORY = {
-    ALGO_SIMPLE: {
+    AlgoCategory.simple: {
         InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
     },
-    ALGO_AGGREGATE: {
+    AlgoCategory.aggregate: {
         InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
     },
-    ALGO_COMPOSITE: {
+    AlgoCategory.composite: {
         InputIdentifiers.LOCAL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
         InputIdentifiers.SHARED: AlgoOutput(kind=ASSET_MODEL, multiple=False),
     },
-    ALGO_METRIC: {
+    AlgoCategory.metric: {
         InputIdentifiers.PERFORMANCE: AlgoOutput(kind=ASSET_PERFORMANCE, multiple=False),
     },
-    ALGO_PREDICT: {
+    AlgoCategory.predict: {
         InputIdentifiers.PREDICTIONS: AlgoOutput(kind=ASSET_MODEL, multiple=False),
     },
 }
 
 # Algo inputs, dictionary format
 ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
-    algo_pb2.AlgoCategory.Name(category): {
+    category: {
         identifier: MessageToDict(input_proto, **CONVERT_SETTINGS)
         for identifier, input_proto in inputs_by_identifier.items()
     }
@@ -93,7 +97,7 @@ ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
 
 # Algo outputs, dictionary format
 ALGO_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
-    algo_pb2.AlgoCategory.Name(category): {
+    category: {
         identifier: MessageToDict(output_proto, **CONVERT_SETTINGS)
         for identifier, output_proto in outputs_by_identifier.items()
     }

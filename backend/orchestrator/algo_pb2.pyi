@@ -7,41 +7,16 @@ import collections.abc
 import common_pb2
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
-import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
 import sys
-import typing
 
-if sys.version_info >= (3, 10):
+if sys.version_info >= (3, 8):
     import typing as typing_extensions
 else:
     import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
-
-class _AlgoCategory:
-    ValueType = typing.NewType("ValueType", builtins.int)
-    V: typing_extensions.TypeAlias = ValueType
-
-class _AlgoCategoryEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_AlgoCategory.ValueType], builtins.type):  # noqa: F821
-    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
-    ALGO_UNKNOWN: _AlgoCategory.ValueType  # 0
-    ALGO_SIMPLE: _AlgoCategory.ValueType  # 1
-    ALGO_AGGREGATE: _AlgoCategory.ValueType  # 2
-    ALGO_COMPOSITE: _AlgoCategory.ValueType  # 3
-    ALGO_METRIC: _AlgoCategory.ValueType  # 4
-    ALGO_PREDICT: _AlgoCategory.ValueType  # 5
-
-class AlgoCategory(_AlgoCategory, metaclass=_AlgoCategoryEnumTypeWrapper): ...
-
-ALGO_UNKNOWN: AlgoCategory.ValueType  # 0
-ALGO_SIMPLE: AlgoCategory.ValueType  # 1
-ALGO_AGGREGATE: AlgoCategory.ValueType  # 2
-ALGO_COMPOSITE: AlgoCategory.ValueType  # 3
-ALGO_METRIC: AlgoCategory.ValueType  # 4
-ALGO_PREDICT: AlgoCategory.ValueType  # 5
-global___AlgoCategory = AlgoCategory
 
 class AlgoInput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
@@ -138,7 +113,6 @@ class Algo(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
-    CATEGORY_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
     ALGORITHM_FIELD_NUMBER: builtins.int
     PERMISSIONS_FIELD_NUMBER: builtins.int
@@ -149,7 +123,6 @@ class Algo(google.protobuf.message.Message):
     OUTPUTS_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
-    category: global___AlgoCategory.ValueType
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
@@ -170,7 +143,6 @@ class Algo(google.protobuf.message.Message):
         *,
         key: builtins.str = ...,
         name: builtins.str = ...,
-        category: global___AlgoCategory.ValueType = ...,
         description: common_pb2.Addressable | None = ...,
         algorithm: common_pb2.Addressable | None = ...,
         permissions: common_pb2.Permissions | None = ...,
@@ -181,7 +153,7 @@ class Algo(google.protobuf.message.Message):
         outputs: collections.abc.Mapping[builtins.str, global___AlgoOutput] | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "creation_date", b"creation_date", "description", b"description", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "category", b"category", "creation_date", b"creation_date", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "creation_date", b"creation_date", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
 
 global___Algo = Algo
 
@@ -243,7 +215,6 @@ class NewAlgo(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
-    CATEGORY_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
     ALGORITHM_FIELD_NUMBER: builtins.int
     NEW_PERMISSIONS_FIELD_NUMBER: builtins.int
@@ -252,7 +223,6 @@ class NewAlgo(google.protobuf.message.Message):
     OUTPUTS_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
-    category: global___AlgoCategory.ValueType
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
@@ -270,7 +240,6 @@ class NewAlgo(google.protobuf.message.Message):
         *,
         key: builtins.str = ...,
         name: builtins.str = ...,
-        category: global___AlgoCategory.ValueType = ...,
         description: common_pb2.Addressable | None = ...,
         algorithm: common_pb2.Addressable | None = ...,
         new_permissions: common_pb2.NewPermissions | None = ...,
@@ -279,7 +248,7 @@ class NewAlgo(google.protobuf.message.Message):
         outputs: collections.abc.Mapping[builtins.str, global___AlgoOutput] | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "description", b"description", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "category", b"category", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
 
 global___NewAlgo = NewAlgo
 

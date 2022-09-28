@@ -35,13 +35,6 @@ TASK_CATEGORY_FIELDS = {
     ComputeTask.Category.TASK_AGGREGATE: "aggregate",
 }
 
-OUTPUT_MODEL_CATEGORY = {
-    "model": "MODEL_SIMPLE",
-    "predictions": "MODEL_SIMPLE",
-    "shared": "MODEL_SIMPLE",
-    "local": "MODEL_HEAD",
-}
-
 
 class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:

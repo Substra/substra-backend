@@ -1,7 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
 from api.models.utils import AssetPermissionMixin
 from api.models.utils import URLValidatorWithOptionalTLD
@@ -44,17 +43,8 @@ class AlgoOutput(models.Model):
 class Algo(models.Model, AssetPermissionMixin):
     """Algo represent an algorithm and its associated metadata"""
 
-    class Category(models.TextChoices):
-        ALGO_SIMPLE = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_SIMPLE)
-        ALGO_AGGREGATE = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_AGGREGATE)
-        ALGO_COMPOSITE = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_COMPOSITE)
-        ALGO_METRIC = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_METRIC)
-        ALGO_PREDICT = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_PREDICT)
-        ALGO_UNKNOWN = algo_pb2.AlgoCategory.Name(algo_pb2.ALGO_UNKNOWN)
-
     key = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=100)
-    category = models.CharField(max_length=64, choices=Category.choices)
     description_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
     description_checksum = models.CharField(max_length=64)
     algorithm_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])

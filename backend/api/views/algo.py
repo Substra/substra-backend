@@ -10,7 +10,6 @@ from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
@@ -38,19 +37,12 @@ logger = structlog.get_logger(__name__)
 def _register_in_orchestrator(request, basename, instance):
     """Register algo in orchestrator."""
 
-    category = request.data["category"]
-    try:
-        getattr(Algo.Category, category)  # validate category
-    except AttributeError:
-        raise ValidationError({"category": "Invalid category"})
-
     current_site = settings.DEFAULT_DOMAIN
     permissions = request.data.get("permissions", {})
 
     orc_algo = {
         "key": str(instance.key),
         "name": request.data.get("name"),
-        "category": category,
         "description": {
             "checksum": get_hash(instance.description),
             "storage_address": current_site + reverse("api:algo-description", args=[instance.key]),

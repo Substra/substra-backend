@@ -59,7 +59,7 @@ Customized example:
 >>> algo = create_algo(
 ...     key=algo_data.key,
 ...     name="Random forest",
-...     category=Algo.Category.ALGO_SIMPLE,
+...     category=AlgoCategory.simple,
 ...     metadata={"foo": "bar"},
 ...     owner="MyOrg2MSP",
 ...     channel="yourchannel",
@@ -227,7 +227,6 @@ def create_algo(
     outputs: list[AlgoInput] = None,
     key: uuid.UUID = None,
     name: str = "algo",
-    category: int = Algo.Category.ALGO_SIMPLE,
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -239,7 +238,6 @@ def create_algo(
     algo = Algo.objects.create(
         key=key,
         name=name,
-        category=category,
         metadata=metadata or {},
         algorithm_address=get_storage_address("algo", key, "file"),
         algorithm_checksum=DUMMY_CHECKSUM,
@@ -398,10 +396,13 @@ def create_computetask(
         compute_task.refresh_from_db()
 
     if inputs:
+        pos = 0
         for task_input in inputs:
             task_input.task = compute_task
             task_input.channel = channel
+            task_input.position = pos
             task_input.save()
+            pos += 1
 
     if outputs:
         for task_output in outputs:

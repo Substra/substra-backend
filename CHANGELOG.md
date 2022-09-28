@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - BREAKING: model categories
+- BREAKING: algo categories
 
 ## [0.31.0] 2022-09-26
 

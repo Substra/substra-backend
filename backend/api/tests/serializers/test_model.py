@@ -43,7 +43,6 @@ class ModelSerializerTests(TestCase):
 
         data = {
             "key": str(uuid4()),
-            "category": "MODEL_SIMPLE",
             "compute_task_key": str(compute_task.key),
             "permissions": {
                 "process": {
