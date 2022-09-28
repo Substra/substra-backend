@@ -36,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug when executing compute tasks with too many data samples (command line length exceeding max.) The substra-tools arguments are now passed using a file.
 
+### Added
+
+- CI job to test forward migrations.
+
 ## [0.30.0] 2022-09-19
 
 ### Changed

@@ -1,0 +1,62 @@
+name: "Test migrations"
+
+on:  
+  pull_request:
+    paths: 
+    - 'backend/**/migrations/**'
+  
+env:
+  DJANGO_SETTINGS_MODULE: backend.settings.test
+  BACKEND_DB_NAME: substra
+  BACKEND_DB_USER: postgres
+  BACKEND_DB_PWD: postgres
+  BACKEND_DB_HOST: localhost
+  BACKEND_DB_PORT: 5432
+jobs:
+  test-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: substra
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - uses: actions/cache@v3.0.8
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
+      - name: Run initial migration and feed data
+        run: |
+          cd backend
+          python manage.py migrate
+          python manage.py generate_fixtures
+          echo fixture generated
+      - name: Checkout local branch
+        uses: actions/checkout@v3
+      - name: Test migration
+        run: |
+          python backend/manage.py migrate
+
