@@ -47,15 +47,30 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("api:model-list")
 
-        algo = factory.create_algo()
         compute_plan = factory.create_computeplan()
 
-        self.train_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_TRAIN)
-        simple_model_1 = factory.create_model(self.train_task)
-        simple_model_2 = factory.create_model(self.train_task)
+        simple_algo = factory.create_algo(
+            outputs=factory.build_algo_outputs(["model"]),
+        )
+        self.train_task = factory.create_computetask(
+            compute_plan,
+            simple_algo,
+            outputs=factory.build_computetask_outputs(simple_algo),
+            category=ComputeTask.Category.TASK_TRAIN,
+        )
+        simple_model_1 = factory.create_model(self.train_task, identifier="model")
+        simple_model_2 = factory.create_model(self.train_task, identifier="model")
 
-        composite_task = factory.create_computetask(compute_plan, algo, category=ComputeTask.Category.TASK_COMPOSITE)
-        head_model = factory.create_model(composite_task)
+        composite_algo = factory.create_algo(
+            outputs=factory.build_algo_outputs(["local", "shared"]),
+        )
+        composite_task = factory.create_computetask(
+            compute_plan,
+            composite_algo,
+            outputs=factory.build_computetask_outputs(composite_algo),
+            category=ComputeTask.Category.TASK_COMPOSITE,
+        )
+        local_model = factory.create_model(composite_task, identifier="local")
 
         self.expected_results = [
             {
@@ -99,11 +114,11 @@ class ModelViewTests(APITestCase):
                 "creation_date": simple_model_2.creation_date.isoformat().replace("+00:00", "Z"),
             },
             {
-                "key": str(head_model.key),
+                "key": str(local_model.key),
                 "compute_task_key": str(composite_task.key),
                 "address": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/model/{head_model.key}/file/",
+                    "storage_address": f"http://testserver/model/{local_model.key}/file/",
                 },
                 "permissions": {
                     "process": {
@@ -116,7 +131,7 @@ class ModelViewTests(APITestCase):
                     },
                 },
                 "owner": "MyOrg1MSP",
-                "creation_date": head_model.creation_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": local_model.creation_date.isoformat().replace("+00:00", "Z"),
             },
         ]
 
