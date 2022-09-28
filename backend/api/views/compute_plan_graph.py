@@ -19,19 +19,25 @@ Field.register_lookup(Any)
 logger = structlog.get_logger(__name__)
 
 TASK_CATEGORY_INPUTS = {
-    ComputeTask.Category.TASK_TRAIN: ["in/model"],
-    ComputeTask.Category.TASK_TEST: ["in/predictions"],
-    ComputeTask.Category.TASK_COMPOSITE: ["in/head_model", "in/trunk_model"],
-    ComputeTask.Category.TASK_AGGREGATE: ["in/models[]"],
-    ComputeTask.Category.TASK_PREDICT: ["in/tested_model"],
+    ComputeTask.Category.TASK_TRAIN: [{"id": "in/model", "kind": "model"}],
+    ComputeTask.Category.TASK_TEST: [{"id": "in/predictions", "kind": "model"}],
+    ComputeTask.Category.TASK_COMPOSITE: [
+        {"id": "in/head_model", "kind": "model"},
+        {"id": "in/trunk_model", "kind": "model"},
+    ],
+    ComputeTask.Category.TASK_AGGREGATE: [{"id": "in/models[]", "kind": "model"}],
+    ComputeTask.Category.TASK_PREDICT: [{"id": "in/tested_model", "kind": "model"}],
 }
 
 TASK_CATEGORY_OUTPUTS = {
-    ComputeTask.Category.TASK_TRAIN: ["out/model"],
-    ComputeTask.Category.TASK_TEST: [],
-    ComputeTask.Category.TASK_COMPOSITE: ["out/head_model", "out/trunk_model"],
-    ComputeTask.Category.TASK_AGGREGATE: ["out/model"],
-    ComputeTask.Category.TASK_PREDICT: ["out/predictions"],
+    ComputeTask.Category.TASK_TRAIN: [{"id": "out/model", "kind": "model"}],
+    ComputeTask.Category.TASK_TEST: [{"id": "out/perf", "kind": "performance"}],
+    ComputeTask.Category.TASK_COMPOSITE: [
+        {"id": "out/head_model", "kind": "model"},
+        {"id": "out/trunk_model", "kind": "model"},
+    ],
+    ComputeTask.Category.TASK_AGGREGATE: [{"id": "out/model", "kind": "model"}],
+    ComputeTask.Category.TASK_PREDICT: [{"id": "out/predictions", "kind": "model"}],
 }
 
 MAX_TASKS_DISPLAYED = 1000
@@ -47,7 +53,7 @@ def _get_task_outputs(category):
 
 def _get_target_input(edge):
     target_category = edge.get("target_task_category")
-    inputs = TASK_CATEGORY_INPUTS.get(target_category, [])
+    inputs = [input["id"] for input in TASK_CATEGORY_INPUTS.get(target_category, [])]
     if TASK_CATEGORY_INPUTS.get(target_category) is None:
         raise Exception(
             (
@@ -68,7 +74,7 @@ def _get_target_input(edge):
 
 def _get_source_output(edge):
     source_category = edge.get("source_task_category")
-    outputs = TASK_CATEGORY_OUTPUTS.get(source_category, [])
+    outputs = [output["id"] for output in TASK_CATEGORY_OUTPUTS.get(source_category, [])]
     if TASK_CATEGORY_OUTPUTS.get(source_category) is None:
         raise Exception(
             (
