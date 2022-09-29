@@ -3,6 +3,7 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+from api.models.algo import AlgoInput
 from api.models.algo import AlgoOutput
 from api.models.datasample import DataSample
 from api.models.utils import AssetPermissionMixin
@@ -36,6 +37,13 @@ class ComputeTaskOutput(models.Model):
 
     class Meta:
         unique_together = (("task", "identifier"),)
+
+
+class ComputeTaskInputAsset(models.Model):
+    task_input = models.OneToOneField("ComputeTaskInput", on_delete=models.CASCADE, related_name="asset")
+    asset_kind = models.CharField(max_length=64, choices=AlgoInput.Kind.choices)
+    asset_key = models.UUIDField()
+    channel = models.CharField(max_length=100)
 
 
 class ComputeTaskOutputAsset(models.Model):

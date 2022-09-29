@@ -1,15 +1,15 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.urls import reverse
 from rest_framework import serializers
 
-import orchestrator.common_pb2 as common_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from api.models import Algo
+from api.models import AlgoInput
 from api.models import AlgoOutput
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
+from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutput
 from api.models import DataManager
 from api.models import DataSample
@@ -44,7 +44,33 @@ class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixi
             "asset_key",
             "parent_task_key",
             "parent_task_output_identifier",
+            "asset",
         ]
+
+    asset = serializers.SerializerMethodField(source="*", read_only=True)
+
+    def to_representation(self, data):
+        data = super().to_representation(data)
+        asset_data = data.pop("asset")
+        data.update(asset_data)
+        return data
+
+    def get_asset(self, task_input):
+        data = {}
+        try:
+            if task_input.asset.asset_kind == AlgoInput.Kind.ASSET_DATA_MANAGER:
+                data_manager = DataManager.objects.get(key=task_input.asset.asset_key)
+                data_manager_data = DataManagerSerializer(instance=data_manager).data
+                data["addressable"] = data_manager_data["opener"]
+                data["permissions"] = data_manager_data["permissions"]
+            elif task_input.asset.asset_kind == AlgoInput.Kind.ASSET_MODEL:
+                model = Model.objects.get(key=task_input.asset.asset_key)
+                model_data = ModelSerializer(instance=model).data
+                data["addressable"] = model_data["address"]
+                data["permissions"] = model_data["permissions"]
+        except ComputeTaskInputAsset.DoesNotExist:
+            pass
+        return data
 
 
 class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -251,17 +277,41 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         outputs = validated_data.pop("outputs")
 
         compute_task = super().create(validated_data)
+        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.algo.inputs.all()}
 
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
 
         for position, input in enumerate(inputs):
-            ComputeTaskInput.objects.create(
+            task_input = ComputeTaskInput.objects.create(
                 channel=compute_task.channel,
                 task=compute_task,
                 position=position,
                 **input,
             )
+            # task input asset could be known during task registration
+            # or could be resolved later if it does not exist yet
+            if task_input.asset_key:
+                ComputeTaskInputAsset.objects.create(
+                    channel=compute_task.channel,
+                    task_input=task_input,
+                    asset_key=task_input.asset_key,
+                    asset_kind=input_kinds[task_input.identifier],
+                )
+            elif task_input.parent_task_key:
+                task_output = ComputeTaskOutput.objects.get(
+                    task=task_input.parent_task_key,
+                    identifier=task_input.parent_task_output_identifier,
+                )
+                # this only supports a single asset per output for now
+                task_output_asset = task_output.assets.first()
+                if task_output_asset:
+                    ComputeTaskInputAsset.objects.create(
+                        channel=compute_task.channel,
+                        task_input=task_input,
+                        asset_key=task_output_asset.asset_key,
+                        asset_kind=input_kinds[task_input.identifier],
+                    )
 
         for output in outputs:
             ComputeTaskOutput.objects.create(
@@ -312,69 +362,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 "permissions"
             ]
 
-        # set data inputs
-        self._inputs_to_representation(data)
-
         return data
-
-    def _inputs_to_representation(self, data):  # noqa: C901
-        # Include asset kind and asset addressable if exists in input field
-        # TODO: Move this in ComputeTaskInputSerializer
-        #  + Use the actual asset<->input association to find the assets
-        # to remove C901 complexity warning (should be done once generic task is done)
-        for input in data["inputs"]:
-            input_kind = self._find_input_kind(data, input.get("identifier"))
-            if input_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER):
-                input["addressable"] = self._get_opener_addressable(input.get("asset_key"))
-                input["permissions"] = self._get_opener_permissions(input.get("asset_key"))
-
-            if input_kind == common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL):
-                # get parent task output permissions
-                try:
-                    outputs = ComputeTaskOutput.objects.filter(task_id=input.get("parent_task_key")).all()
-                except ObjectDoesNotExist:
-                    input["permissions"] = None
-                    input["addressable"] = None
-                    continue
-                else:
-                    output_identifier = input.get("parent_task_output_identifier")
-                    for output in outputs:
-                        if output.identifier == output_identifier:
-                            input["permissions"] = make_download_process_permission_serializer()(output).data
-                            request = self.context.get("request")
-                            assets = output.assets.all()
-                            if request and assets:
-                                model_key = assets[0].asset_key
-                                model = Model.objects.get(pk=model_key)
-                                input["addressable"] = make_addressable_serializer("model")(model).data
-                                input["addressable"]["storage_address"] = request.build_absolute_uri(
-                                    reverse("api:model-file", args=[model.key])
-                                )
-
-    def _find_input_kind(self, data, input_id):
-        return data["algo"]["inputs"][input_id]["kind"]
-
-    def _get_opener_addressable(self, key):
-        request = self.context.get("request")
-        if request:
-            try:
-                data_manager = DataManager.objects.filter(key=key).get()
-            except ObjectDoesNotExist:
-                return None
-            else:
-                addressable = make_addressable_serializer("opener")(data_manager).data
-                addressable["storage_address"] = request.build_absolute_uri(
-                    reverse("api:data_manager-opener", args=[key])
-                )
-            return addressable
-
-    def _get_opener_permissions(self, key):
-        try:
-            data_manager = DataManager.objects.filter(key=key).get()
-        except ObjectDoesNotExist:
-            return None
-        else:
-            return make_download_process_permission_serializer()(data_manager).data
 
     def _replace_storage_addresses(self, task):
         request = self.context.get("request")

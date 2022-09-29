@@ -331,11 +331,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             ]
         }
 
-        # FIXME: issues with CREATE view, fixed in #458
-        self.opener_input_with_value["addressable"] = None
-        del self.model_input_with_value["addressable"]
-        del self.shared_input_with_value["addressable"]
-        del self.predictions_input_with_value["addressable"]
         expected_response = [
             {
                 "key": train_task_key,
