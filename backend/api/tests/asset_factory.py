@@ -417,15 +417,16 @@ def create_computetask(
 
     return compute_task
 
-def connect_input_output(source_task: ComputeTask, source_output_identifier: str, target_task: ComputeTask, target_input_identifier: str):
 
-    task_input = ComputeTaskInput.objects.filter(
-        task=target_task,
-        identifier=target_input_identifier
-    ).first()
+def connect_input_output(
+    source_task: ComputeTask, source_output_identifier: str, target_task: ComputeTask, target_input_identifier: str
+):
+
+    task_input = ComputeTaskInput.objects.filter(task=target_task, identifier=target_input_identifier).first()
     task_input.parent_task_key = source_task
     task_input.parent_task_output_identifier = source_output_identifier
     task_input.save()
+
 
 def create_model(
     compute_task: ComputeTask,

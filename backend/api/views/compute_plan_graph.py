@@ -23,23 +23,19 @@ from rest_framework import serializers
 
 
 class AlgoInputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    id = serializers.CharField(source="identifier")
-
     class Meta:
         model = AlgoInput
         fields = [
-            "id",
+            "identifier",
             "kind",
         ]
 
 
 class AlgoOutputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    id = serializers.CharField(source="identifier")
-
     class Meta:
         model = AlgoOutput
         fields = [
-            "id",
+            "identifier",
             "kind",
         ]
 
@@ -57,7 +53,6 @@ class AlgoSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
 
 
 class TaskSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-
     algo = AlgoSerializerForGraph()
 
     class Meta:
@@ -78,6 +73,7 @@ def get_cp_graph(request, compute_plan_pk):
     validate_key(compute_plan_pk)
 
     tasks_qs = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
+    tasks_qs = tasks_qs.prefetch_related("algo", "algo__inputs", "algo__outputs")
     tasks = TaskSerializerForGraph(tasks_qs, many=True).data
 
     # Set a task limitation for performances issues
