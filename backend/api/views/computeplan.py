@@ -56,7 +56,6 @@ def create(request, get_success_headers):
     - Save metadata in local database.
     """
 
-    # Find author from request
     # Update CP model to store the author
     # Update CP serializer
     # Migration: keep null values ?
@@ -69,11 +68,14 @@ def create(request, get_success_headers):
         "tag": request.data.get("tag"),
         "name": request.data.get("name"),
         "metadata": validate_metadata(request.data.get("metadata")),
+        "creator": request.user
     }
-    api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
+    #api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
+    api_data = compute_plan_data
 
     # Step2: save metadata in local database
     api_data["channel"] = get_channel_name(request)
+    api_data["creator"] = request.user
     api_serializer = ComputePlanSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
