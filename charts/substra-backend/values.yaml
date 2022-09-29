@@ -667,12 +667,17 @@ redis:
     password: redis
   master:
     persistence:
-      enabled: false
+      enabled: true
     service:
       ports:
         redis: 6379
   replica:
     replicaCount: 0
+  commonConfiguration: |-
+    # Enable AOF https://redis.io/topics/persistence
+    appendonly yes
+    # Disable RDB persistence since AOF persistence is enabled
+    save ""
 
 ## @skip docker-registry
 ##
