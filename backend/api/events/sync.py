@@ -273,6 +273,7 @@ def _update_datamanager(key: str, data: dict) -> None:
 
     datamanager = DataManager.objects.get(key=key)
     datamanager.name = data["name"]
+    datamanager.archived = data["archived"]
     datamanager.save()
 
 

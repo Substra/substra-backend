@@ -7,7 +7,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0039_computetaskinputasset"),
+        ("api", "0040_add_archived_datamanager"),
     ]
 
     operations = [

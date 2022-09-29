@@ -112,11 +112,12 @@ class DataManager(pydantic.BaseModel):
 
     key: str
     opener: Address
+    archived: bool
 
     @classmethod
     def from_grpc(cls, m: datamanager_pb2.DataManager) -> DataManager:
         """Creates a DataManager from grpc message"""
-        return cls(key=m.key, opener=Address.from_grpc(m.opener))
+        return cls(key=m.key, opener=Address.from_grpc(m.opener), archived=m.archived)
 
 
 class AlgoInput(pydantic.BaseModel):

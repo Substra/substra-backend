@@ -46,6 +46,7 @@ class DataManager(google.protobuf.message.Message):
     CREATION_DATE_FIELD_NUMBER: builtins.int
     LOGS_PERMISSION_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
+    ARCHIVED_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
     owner: builtins.str
@@ -62,6 +63,7 @@ class DataManager(google.protobuf.message.Message):
     def logs_permission(self) -> common_pb2.Permission: ...
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
+    archived: builtins.bool
     def __init__(
         self,
         *,
@@ -75,9 +77,10 @@ class DataManager(google.protobuf.message.Message):
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         logs_permission: common_pb2.Permission | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
+        archived: builtins.bool = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "logs_permission", b"logs_permission", "opener", b"opener", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "name", b"name", "opener", b"opener", "owner", b"owner", "permissions", b"permissions", "type", b"type"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["archived", b"archived", "creation_date", b"creation_date", "description", b"description", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "name", b"name", "opener", b"opener", "owner", b"owner", "permissions", b"permissions", "type", b"type"]) -> None: ...
 
 global___DataManager = DataManager
 
@@ -203,6 +206,23 @@ class UpdateDataManagerParam(google.protobuf.message.Message):
 
 global___UpdateDataManagerParam = UpdateDataManagerParam
 
+class ArchiveDataManagerParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    KEY_FIELD_NUMBER: builtins.int
+    ARCHIVED_FIELD_NUMBER: builtins.int
+    key: builtins.str
+    archived: builtins.bool
+    def __init__(
+        self,
+        *,
+        key: builtins.str = ...,
+        archived: builtins.bool = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["archived", b"archived", "key", b"key"]) -> None: ...
+
+global___ArchiveDataManagerParam = ArchiveDataManagerParam
+
 class UpdateDataManagerResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -211,3 +231,12 @@ class UpdateDataManagerResponse(google.protobuf.message.Message):
     ) -> None: ...
 
 global___UpdateDataManagerResponse = UpdateDataManagerResponse
+
+class ArchiveDataManagerResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    def __init__(
+        self,
+    ) -> None: ...
+
+global___ArchiveDataManagerResponse = ArchiveDataManagerResponse

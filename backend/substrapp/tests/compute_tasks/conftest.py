@@ -5,8 +5,10 @@ import pytest
 
 import orchestrator
 import orchestrator.mock as orc_mock
+from orchestrator.resources import AssetKind
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import Directories
+from substrapp.tests.common import InputIdentifiers
 
 DOCKERFILE = """
 FROM ubuntu:16.04
@@ -47,6 +49,25 @@ def testtuple_context(orc_metric) -> Context:
         compute_plan_tag="",
         input_assets=[],
         algo=orc_metric,
+        directories=Directories(cp_key),
+        has_chainkeys=False,
+    )
+
+
+@pytest.fixture
+def archived_datamanager_task_input_context():
+    cp_key = str(uuid.uuid4())
+    archived_dm = orc_mock.DataManagerFactory(archived=True)
+    task_input = orc_mock.ComputeTaskInputAsset(
+        identifier=InputIdentifiers.OPENER, kind=AssetKind.ASSET_DATA_MANAGER, data_manager=archived_dm
+    )
+
+    return Context(
+        channel_name="mychannel",
+        task=orc_mock.ComputeTaskFactory(),
+        compute_plan={},
+        input_assets=[task_input],
+        algo=orc_mock.AlgoFactory(),
         directories=Directories(cp_key),
         has_chainkeys=False,
     )

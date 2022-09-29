@@ -13,6 +13,8 @@ from django_filters.rest_framework import UUIDFilter
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.filters import SearchFilter
 
+from backend.settings.common import to_bool
+
 logger = structlog.get_logger(__name__)
 
 
@@ -141,3 +143,15 @@ class MetadataFilterBackend(BaseFilterBackend):
             django_filters[f'metadata_filters__{f["key"]}__icontains'] = f["value"]
 
         return queryset.filter(**django_filters)
+
+
+class ArchiveFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        # apply filters to queryset
+        if view.action == "list":
+            archived = to_bool(request.query_params.get("archived"))
+            if archived:
+                return queryset
+            return queryset.filter(archived=False)
+        else:
+            return queryset

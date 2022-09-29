@@ -24,6 +24,10 @@ class DataManagerServiceStub:
         datamanager_pb2.UpdateDataManagerParam,
         datamanager_pb2.UpdateDataManagerResponse,
     ]
+    ArchiveDataManager: grpc.UnaryUnaryMultiCallable[
+        datamanager_pb2.ArchiveDataManagerParam,
+        datamanager_pb2.ArchiveDataManagerResponse,
+    ]
 
 class DataManagerServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -50,5 +54,11 @@ class DataManagerServiceServicer(metaclass=abc.ABCMeta):
         request: datamanager_pb2.UpdateDataManagerParam,
         context: grpc.ServicerContext,
     ) -> datamanager_pb2.UpdateDataManagerResponse: ...
+    @abc.abstractmethod
+    def ArchiveDataManager(
+        self,
+        request: datamanager_pb2.ArchiveDataManagerParam,
+        context: grpc.ServicerContext,
+    ) -> datamanager_pb2.ArchiveDataManagerResponse: ...
 
 def add_DataManagerServiceServicer_to_server(servicer: DataManagerServiceServicer, server: grpc.Server) -> None: ...

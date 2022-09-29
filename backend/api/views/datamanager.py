@@ -26,6 +26,7 @@ from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from api.views.utils import validate_metadata
+from backend.settings.common import to_bool
 from libs.pagination import DefaultPageNumberPagination
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
@@ -191,7 +192,7 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         datamanager = self.get_object()
         name = request.data.get("name")
 
-        orc_algo = {
+        orc_datamanager = {
             "key": str(datamanager.key),
             "name": name,
         }
@@ -199,7 +200,24 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         # send update to orchestrator
         # the modification in local db will be done upon corresponding event reception
         with get_orchestrator_client(get_channel_name(request)) as client:
-            client.update_datamanager(orc_algo)
+            client.update_datamanager(orc_datamanager)
+
+        return ApiResponse({}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["PUT"])
+    def archive(self, request, *args, **kwargs):
+        datamanager = self.get_object()
+        archived = request.data.get("archived")
+
+        orc_algo = {
+            "key": str(datamanager.key),
+            "archived": to_bool(archived),
+        }
+
+        # send archiving message to orchestrator
+        # the modification in local db will be done upon corresponding event reception
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.archive_datamanager(orc_algo)
 
         return ApiResponse({}, status=status.HTTP_200_OK)
 
