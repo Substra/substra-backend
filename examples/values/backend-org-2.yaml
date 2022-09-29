@@ -14,6 +14,11 @@ postgresql:
     persistence:
       enabled: false
 
+redis:
+  master:
+    persistence:
+      enabled: false
+
 docker-registry:
   service:
     type: NodePort

@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.2.0
+
+### Change
+- Enable Redis persistence using append-only file (AOF)
+
 ## 22.1.3
 
 ### Fixed
