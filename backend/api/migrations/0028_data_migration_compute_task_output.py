@@ -7,16 +7,29 @@
 # DB.
 
 from django.db import migrations
+from django.db import models
+
+
+class ComputeTaskCategory(models.TextChoices):
+    TASK_TRAIN = "TASK_TRAIN"
+    TASK_AGGREGATE = "TASK_AGGREGATE"
+    TASK_COMPOSITE = "TASK_COMPOSITE"
+    TASK_PREDICT = "TASK_PREDICT"
+    TASK_TEST = "TASK_TEST"
+
+
+class ModelCategory(models.TextChoices):
+    MODEL_SIMPLE = "MODEL_SIMPLE"
+    MODEL_HEAD = "MODEL_HEAD"
 
 
 def add_missing_compute_task_outputs(apps, schema_editor):
     compute_task_model = apps.get_model("api", "computetask")
-    model_model = apps.get_model("api", "model")
 
     for task in compute_task_model.objects.filter(outputs__isnull=True):
 
         # TRAIN / AGGREGATE
-        if task.category in [compute_task_model.Category.TASK_TRAIN, compute_task_model.Category.TASK_AGGREGATE]:
+        if task.category in [ComputeTaskCategory.TASK_TRAIN, ComputeTaskCategory.TASK_AGGREGATE]:
             permission_public = True
             permission_authorized_ids = []
 
@@ -25,11 +38,11 @@ def add_missing_compute_task_outputs(apps, schema_editor):
                 permission_public = models[0].permissions_process_public
                 permission_authorized_ids = models[0].permissions_process_authorized_ids
 
-            output = create_output(task, "model", permission_public, permission_authorized_ids)
+            output = create_output(apps, task, "model", permission_public, permission_authorized_ids)
             output.save()
 
         # COMPOSITE
-        elif task.category in compute_task_model.Category.TASK_COMPOSITE:
+        elif task.category in ComputeTaskCategory.TASK_COMPOSITE:
             models = task.models.all()
 
             trunk_permission_public = True
@@ -38,11 +51,11 @@ def add_missing_compute_task_outputs(apps, schema_editor):
             head_permission_authorized_ids = []
 
             if models:
-                head_model = [model for model in models if model.category == model_model.Category.MODEL_HEAD][0]
+                head_model = [model for model in models if model.category == ModelCategory.MODEL_HEAD][0]
                 head_permission_public = head_model.permissions_process_public
                 head_permission_authorized_ids = head_model.permissions_process_authorized_ids
 
-                trunk_model = [model for model in models if model.category == model_model.Category.MODEL_SIMPLE][0]
+                trunk_model = [model for model in models if model.category == ModelCategory.MODEL_SIMPLE][0]
                 trunk_permission_public = trunk_model.permissions_process_public
                 trunk_permission_authorized_ids = trunk_model.permissions_process_authorized_ids
 
@@ -53,7 +66,7 @@ def add_missing_compute_task_outputs(apps, schema_editor):
             output_head.save()
 
         # PREDICT
-        elif task.category in compute_task_model.Category.TASK_PREDICT:
+        elif task.category in ComputeTaskCategory.TASK_PREDICT:
             permission_public = True
             permission_authorized_ids = []
 
@@ -66,9 +79,9 @@ def add_missing_compute_task_outputs(apps, schema_editor):
             output.save()
 
         # TEST
-        elif task.category in compute_task_model.Category.TASK_TEST:
+        elif task.category in ComputeTaskCategory.TASK_TEST:
             # perfs are always public
-            output = create_output(task, "performance", True, [])
+            output = create_output(apps, task, "performance", True, [])
             output.save()
 
 
