@@ -1,4 +1,3 @@
-import copy
 import logging
 import os
 import shutil
@@ -125,6 +124,103 @@ class ComputeTaskViewTests(APITestCase):
         self.local_model_data = ModelSerializer(instance=self.local_model).data
         self.shared_model_data = ModelSerializer(instance=self.shared_model).data
 
+        self.prepare_inputs()
+        self.prepare_outputs()
+
+    def prepare_inputs(self):
+        self.datasamples_input = {
+            "identifier": "datasamples",
+            "asset_key": str(self.data_sample.key),
+            "parent_task_key": None,
+            "parent_task_output_identifier": None,
+        }
+        self.opener_input = {
+            "identifier": "opener",
+            "asset_key": str(self.data_manager.key),
+            "parent_task_key": None,
+            "parent_task_output_identifier": None,
+        }
+        self.opener_input_with_value = {**self.opener_input}
+        self.opener_input_with_value["addressable"] = self.data_manager_data["opener"]
+        self.opener_input_with_value["permissions"] = self.data_manager_data["permissions"]
+        self.model_input = {
+            "identifier": "model",
+            "asset_key": None,
+            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_output_identifier": "model",
+        }
+        self.model_input_with_value = {**self.model_input}
+        self.model_input_with_value["addressable"] = self.train_model_data["address"]
+        self.model_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.shared_input = {
+            "identifier": "shared",
+            "asset_key": None,
+            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_output_identifier": "model",
+        }
+        self.shared_input_with_value = {**self.shared_input}
+        self.shared_input_with_value["addressable"] = self.train_model_data["address"]
+        self.shared_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.predictions_input = {
+            "identifier": "predictions",
+            "asset_key": None,
+            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_output_identifier": "model",
+        }
+        self.predictions_input_with_value = {**self.predictions_input}
+        self.predictions_input_with_value["addressable"] = self.train_model_data["address"]
+        self.predictions_input_with_value["permissions"] = self.train_model_data["permissions"]
+
+    def prepare_outputs(self):
+        self.model_output = {
+            "permissions": {
+                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+            },
+            "transient": False,
+            "value": None,
+        }
+        self.model_output_with_value = {**self.model_output}
+        self.model_output_with_value["value"] = self.train_model_data
+        self.predictions_output = {
+            "permissions": {
+                "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+            },
+            "transient": False,
+            "value": None,
+        }
+        self.performance_output = {
+            "permissions": {
+                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+            },
+            "transient": False,
+            "value": None,
+        }
+        self.performance_output_with_value = {**self.performance_output}
+        self.performance_output_with_value["value"] = self.performance.value
+        self.local_output = {
+            "permissions": {
+                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+            },
+            "transient": False,
+            "value": None,
+        }
+        self.local_output_with_value = {**self.local_output}
+        self.local_output_with_value["value"] = self.local_model_data
+        self.shared_output = {
+            "permissions": {
+                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
+            },
+            "transient": False,
+            "value": None,
+        }
+        self.shared_output_with_value = {**self.shared_output}
+        self.shared_output_with_value["value"] = self.shared_model_data
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
@@ -177,33 +273,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         aggregate_task_key = str(uuid.uuid4())
         test_task_key = str(uuid.uuid4())
         predict_task_key = str(uuid.uuid4())
-        datasamples_input = {
-            "identifier": "datasamples",
-            "asset_key": str(self.data_sample.key),
-            "parent_task_key": None,
-            "parent_task_output_identifier": None,
-        }
-        opener_input = {
-            "identifier": "opener",
-            "asset_key": str(self.data_manager.key),
-            "parent_task_key": None,
-            "parent_task_output_identifier": None,
-            # FIXME: "addressable": self.data_manager_data["opener"],
-            "addressable": None,
-            "permissions": self.data_manager_data["permissions"],
-        }
-        model_input = {
-            "identifier": "model",
-            "asset_key": None,
-            "parent_task_key": str(self.done_train_task.key),
-            "parent_task_output_identifier": "model",
-            # FIXME: "addressable": self.train_model_data["address"],
-            "permissions": self.train_model_data["permissions"],
-        }
-        shared_input = {**model_input}
-        shared_input["identifier"] = "shared"
-        predictions_input = {**model_input}
-        predictions_input["identifier"] = "predictions"
         data = {
             "tasks": [
                 {
@@ -213,9 +282,12 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.simple_algo.key,
                     "data_manager_key": self.data_manager.key,
                     "train_data_sample_keys": [self.data_sample.key],
-                    "inputs": [datasamples_input, opener_input, model_input],
+                    "inputs": [self.datasamples_input, self.opener_input, self.model_input],
                     "outputs": {
-                        "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}, "transient": True},
+                        "model": {
+                            "permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
+                            "transient": False,
+                        },
                     },
                 },
                 {
@@ -225,7 +297,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "in_models_keys": [train_task_key, self.done_train_task.key],
                     "algo_key": self.aggregate_algo.key,
                     "worker": "MyOrg1MSP",
-                    "inputs": [model_input],
+                    "inputs": [self.model_input],
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -238,7 +310,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.predict_algo.key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
-                    "inputs": [datasamples_input, opener_input, model_input, shared_input],
+                    "inputs": [self.datasamples_input, self.opener_input, self.model_input, self.shared_input],
                     "outputs": {
                         "predictions": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -251,14 +323,19 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "algo_key": self.metric_algo.key,
                     "data_manager_key": self.data_manager.key,
                     "test_data_sample_keys": [self.data_sample.key],
-                    "inputs": [datasamples_input, opener_input, predictions_input],
+                    "inputs": [self.datasamples_input, self.opener_input, self.predictions_input],
                     "outputs": {
-                        "performance": {"permissions": {"public": True, "authorized_ids": []}},
+                        "performance": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
                 },
             ]
         }
 
+        # FIXME: issues with CREATE view, fixed in #458
+        self.opener_input_with_value["addressable"] = None
+        del self.model_input_with_value["addressable"]
+        del self.shared_input_with_value["addressable"]
+        del self.predictions_input_with_value["addressable"]
         expected_response = [
             {
                 "key": train_task_key,
@@ -291,16 +368,13 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [datasamples_input, opener_input, model_input],
+                "inputs": [
+                    self.datasamples_input,
+                    self.opener_input_with_value,
+                    self.model_input_with_value,
+                ],
                 "outputs": {
-                    "model": {
-                        "permissions": {
-                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                        },
-                        "transient": True,
-                        "value": None,
-                    },
+                    "model": self.model_output,
                 },
             },
             {
@@ -332,16 +406,9 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [model_input],
+                "inputs": [self.model_input_with_value],
                 "outputs": {
-                    "model": {
-                        "permissions": {
-                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                        },
-                        "transient": False,
-                        "value": None,
-                    },
+                    "model": self.model_output,
                 },
             },
             {
@@ -375,16 +442,14 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [datasamples_input, opener_input, model_input, shared_input],
+                "inputs": [
+                    self.datasamples_input,
+                    self.opener_input_with_value,
+                    self.model_input_with_value,
+                    self.shared_input_with_value,
+                ],
                 "outputs": {
-                    "predictions": {
-                        "permissions": {
-                            "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                            "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
-                        },
-                        "transient": False,
-                        "value": None,
-                    },
+                    "predictions": self.predictions_output,
                 },
             },
             {
@@ -414,16 +479,13 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "perfs": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [datasamples_input, opener_input, predictions_input],
+                "inputs": [
+                    self.datasamples_input,
+                    self.opener_input_with_value,
+                    self.predictions_input_with_value,
+                ],
                 "outputs": {
-                    "performance": {
-                        "permissions": {
-                            "process": {"public": True, "authorized_ids": []},
-                            "download": {"public": True, "authorized_ids": []},
-                        },
-                        "transient": False,
-                        "value": None,
-                    },
+                    "performance": self.performance_output,
                 },
             },
         ]
@@ -451,34 +513,6 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         done_train_task = train_tasks[ComputeTask.Status.STATUS_DONE]
         failed_train_task = train_tasks[ComputeTask.Status.STATUS_FAILED]
         canceled_train_task = train_tasks[ComputeTask.Status.STATUS_CANCELED]
-        train_inputs = [
-            {
-                "identifier": "datasamples",
-                "asset_key": str(self.data_sample.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-            },
-            {
-                "identifier": "opener",
-                "asset_key": str(self.data_manager.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-                "addressable": self.data_manager_data["opener"],
-                "permissions": self.data_manager_data["permissions"],
-            },
-        ]
-        train_outputs = {
-            "model": {
-                "permissions": {
-                    "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                    "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                },
-                "transient": False,
-                "value": None,
-            },
-        }
-        done_train_outputs = copy.deepcopy(train_outputs)
-        done_train_outputs["model"]["value"] = self.train_model_data
         self.expected_results = [
             {
                 "key": str(todo_train_task.key),
@@ -516,8 +550,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": train_inputs,
-                "outputs": train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(waiting_train_task.key),
@@ -555,8 +589,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
-                "inputs": train_inputs,
-                "outputs": train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(doing_train_task.key),
@@ -594,8 +628,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": train_inputs,
-                "outputs": train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(done_train_task.key),
@@ -633,8 +667,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": train_inputs,
-                "outputs": done_train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output_with_value},
             },
             {
                 "key": str(failed_train_task.key),
@@ -672,8 +706,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": train_inputs,
-                "outputs": train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(canceled_train_task.key),
@@ -711,8 +745,8 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": train_inputs,
-                "outputs": train_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"model": self.model_output},
             },
         ]
 
@@ -977,34 +1011,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         done_test_task = test_tasks[ComputeTask.Status.STATUS_DONE]
         failed_test_task = test_tasks[ComputeTask.Status.STATUS_FAILED]
         canceled_test_task = test_tasks[ComputeTask.Status.STATUS_CANCELED]
-        test_inputs = [
-            {
-                "identifier": "datasamples",
-                "asset_key": str(self.data_sample.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-            },
-            {
-                "identifier": "opener",
-                "asset_key": str(self.data_manager.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-                "addressable": self.data_manager_data["opener"],
-                "permissions": self.data_manager_data["permissions"],
-            },
-        ]
-        test_outputs = {
-            "performance": {
-                "permissions": {
-                    "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                    "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                },
-                "transient": False,
-                "value": None,
-            },
-        }
-        done_test_outputs = copy.deepcopy(test_outputs)
-        done_test_outputs["performance"]["value"] = self.performance.value
         self.expected_results = [
             {
                 "key": str(todo_test_task.key),
@@ -1032,8 +1038,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": test_inputs,
-                "outputs": test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output},
             },
             {
                 "key": str(waiting_test_task.key),
@@ -1061,8 +1067,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": test_inputs,
-                "outputs": test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output},
             },
             {
                 "key": str(doing_test_task.key),
@@ -1090,8 +1096,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": test_inputs,
-                "outputs": test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output},
             },
             {
                 "key": str(done_test_task.key),
@@ -1119,8 +1125,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": test_inputs,
-                "outputs": done_test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output_with_value},
             },
             {
                 "key": str(failed_test_task.key),
@@ -1148,8 +1154,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": test_inputs,
-                "outputs": test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output},
             },
             {
                 "key": str(canceled_test_task.key),
@@ -1177,8 +1183,8 @@ class TestTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": test_inputs,
-                "outputs": test_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"performance": self.performance_output},
             },
         ]
 
@@ -1409,43 +1415,6 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         done_composite_task = composite_tasks[ComputeTask.Status.STATUS_DONE]
         failed_composite_task = composite_tasks[ComputeTask.Status.STATUS_FAILED]
         canceled_composite_task = composite_tasks[ComputeTask.Status.STATUS_CANCELED]
-        composite_inputs = [
-            {
-                "identifier": "datasamples",
-                "asset_key": str(self.data_sample.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-            },
-            {
-                "identifier": "opener",
-                "asset_key": str(self.data_manager.key),
-                "parent_task_key": None,
-                "parent_task_output_identifier": None,
-                "addressable": self.data_manager_data["opener"],
-                "permissions": self.data_manager_data["permissions"],
-            },
-        ]
-        composite_outputs = {
-            "local": {
-                "permissions": {
-                    "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                    "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                },
-                "transient": False,
-                "value": None,
-            },
-            "shared": {
-                "permissions": {
-                    "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                    "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                },
-                "transient": False,
-                "value": None,
-            },
-        }
-        done_composite_outputs = copy.deepcopy(composite_outputs)
-        done_composite_outputs["local"]["value"] = self.local_model_data
-        done_composite_outputs["shared"]["value"] = self.shared_model_data
         self.expected_results = [
             {
                 "key": str(todo_composite_task.key),
@@ -1493,8 +1462,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": composite_inputs,
-                "outputs": composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
             {
                 "key": str(waiting_composite_task.key),
@@ -1542,8 +1511,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,
-                "inputs": composite_inputs,
-                "outputs": composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
             {
                 "key": str(doing_composite_task.key),
@@ -1591,8 +1560,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": composite_inputs,
-                "outputs": composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
             {
                 "key": str(done_composite_task.key),
@@ -1640,8 +1609,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": composite_inputs,
-                "outputs": done_composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output_with_value, "shared": self.shared_output_with_value},
             },
             {
                 "key": str(failed_composite_task.key),
@@ -1689,8 +1658,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": composite_inputs,
-                "outputs": composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
             {
                 "key": str(canceled_composite_task.key),
@@ -1738,8 +1707,8 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
-                "inputs": composite_inputs,
-                "outputs": composite_outputs,
+                "inputs": [self.datasamples_input, self.opener_input_with_value],
+                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
         ]
 
