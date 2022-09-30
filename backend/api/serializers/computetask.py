@@ -238,7 +238,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         source="compute_plan",
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    parent_task_keys = serializers.ListField(source="parent_tasks", child=serializers.CharField(), required=False)
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
 
     duration = serializers.IntegerField(read_only=True)
@@ -288,7 +287,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "logs_permission",
             "metadata",
             "owner",
-            "parent_task_keys",
             "rank",
             "start_date",
             "status",
@@ -306,6 +304,7 @@ class LegacyComputeTaskSerializer(ComputeTaskSerializer):
     train = TrainTaskSerializer(required=False, source="*")
     aggregate = AggregateTaskSerializer(required=False, source="*")
     composite = CompositeTaskSerializer(required=False, source="*")
+    parent_task_keys = serializers.ListField(source="parent_tasks", child=serializers.CharField(), required=False)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -421,6 +420,7 @@ class LegacyComputeTaskSerializer(ComputeTaskSerializer):
             "predict",
             "test",
             "train",
+            "parent_task_keys",
         ]
 
 
