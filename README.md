@@ -241,5 +241,3 @@ sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framew
 ```
 
 2. Deploy with `skaffold run -p dev,arm64`
-
-3. Run patch `./examples/tools/patch-rabbitmq-arm64.sh`
