@@ -17,6 +17,7 @@ from api.models import Model
 from api.models import Performance
 from api.serializers import AlgoSerializer
 from api.serializers import DataManagerSerializer
+from api.serializers import DataSampleSerializer
 from api.serializers import ModelSerializer
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
@@ -120,6 +121,8 @@ class ComputeTaskViewTests(APITestCase):
         self.predict_algo_data = AlgoSerializer(instance=self.predict_algo).data
         self.metric_algo_data = AlgoSerializer(instance=self.metric_algo).data
         self.data_manager_data = DataManagerSerializer(instance=self.data_manager).data
+        self.data_sample_data = DataSampleSerializer(instance=self.data_sample).data
+        self.data_sample_data["data_manager_keys"] = [str(key) for key in self.data_sample_data["data_manager_keys"]]
         self.train_model_data = ModelSerializer(instance=self.train_model).data
         self.local_model_data = ModelSerializer(instance=self.local_model).data
         self.shared_model_data = ModelSerializer(instance=self.shared_model).data
@@ -2572,3 +2575,35 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_task_list_input_assets(self):
+        url = reverse("api:task-input_assets", args=[self.expected_results[3]["key"]])
+        response = self.client.get(url, **self.extra)
+        expected_results = [
+            {
+                "identifier": "datasamples",
+                "asset": self.data_sample_data,
+            },
+            {
+                "identifier": "opener",
+                "asset": self.data_manager_data,
+            },
+        ]
+        self.assertEqual(
+            response.json(),
+            {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
+        )
+
+    def test_task_list_output_assets(self):
+        url = reverse("api:task-output_assets", args=[self.expected_results[3]["key"]])
+        response = self.client.get(url, **self.extra)
+        expected_results = [
+            {
+                "identifier": "model",
+                "asset": self.train_model_data,
+            },
+        ]
+        self.assertEqual(
+            response.json(),
+            {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
+        )

@@ -11,6 +11,7 @@ from api.models import ComputeTask
 from api.models import ComputeTaskInput
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutput
+from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
@@ -18,6 +19,7 @@ from api.models import Performance
 from api.models.computetask import TaskDataSamples
 from api.serializers.algo import AlgoSerializer
 from api.serializers.datamanager import DataManagerSerializer
+from api.serializers.datasample import DataSampleSerializer
 from api.serializers.model import ModelSerializer
 from api.serializers.performance import PerformanceSerializer
 from api.serializers.utils import SafeSerializerMixin
@@ -104,6 +106,56 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
             return data[0]
         else:
             return data
+
+
+class ComputeTaskInputAssetSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    identifier = serializers.SerializerMethodField(source="*", read_only=True)
+    asset = serializers.SerializerMethodField(source="*", read_only=True)
+
+    class Meta:
+        model = ComputeTaskInputAsset
+        fields = [
+            "identifier",
+            "asset",
+        ]
+
+    def get_identifier(self, task_input_asset):
+        return task_input_asset.task_input.identifier
+
+    def get_asset(self, task_input_asset):
+        if task_input_asset.asset_kind == AlgoInput.Kind.ASSET_DATA_SAMPLE:
+            data_sample = DataSample.objects.get(key=task_input_asset.asset_key)
+            return DataSampleSerializer(context=self.context, instance=data_sample).data
+        elif task_input_asset.asset_kind == AlgoInput.Kind.ASSET_DATA_MANAGER:
+            data_manager = DataManager.objects.get(key=task_input_asset.asset_key)
+            return DataManagerSerializer(context=self.context, instance=data_manager).data
+        elif task_input_asset.asset_kind == AlgoInput.Kind.ASSET_MODEL:
+            model = Model.objects.get(key=task_input_asset.asset_key)
+            return ModelSerializer(context=self.context, instance=model).data
+
+
+class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    identifier = serializers.SerializerMethodField(source="*", read_only=True)
+    asset = serializers.SerializerMethodField(source="*", read_only=True)
+
+    class Meta:
+        model = ComputeTaskOutputAsset
+        fields = [
+            "identifier",
+            "asset",
+        ]
+
+    def get_identifier(self, task_output_asset):
+        return task_output_asset.task_output.identifier
+
+    def get_asset(self, task_output_asset):
+        if task_output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
+            model = Model.objects.get(key=task_output_asset.asset_key)
+            return ModelSerializer(context=self.context, instance=model).data
+        elif task_output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
+            task_key, metric_key = task_output_asset.asset_key.split("|")
+            performance = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+            return PerformanceSerializer(context=self.context, instance=performance).data
 
 
 class AlgoField(serializers.Field):
