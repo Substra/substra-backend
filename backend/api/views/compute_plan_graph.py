@@ -1,16 +1,20 @@
 import structlog
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import Field
+from django.db.models import Func
+from django.db.models import OuterRef
+from django.db.models import Subquery
 from django.db.models.expressions import F
+from django.db.models.expressions import Value
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from api.models import ComputeTask, Algo, AlgoOutput, AlgoInput, ComputeTaskInput
+from api.models import ComputeTask
+from api.models import ComputeTaskInput
 from api.views.sql_utils import Any
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
-
-from api.serializers.utils import SafeSerializerMixin
 
 # register lookup where used as a workaround of import not used error from Flake8
 Field.register_lookup(Any)
@@ -19,52 +23,9 @@ logger = structlog.get_logger(__name__)
 
 MAX_TASKS_DISPLAYED = 1000
 
-from rest_framework import serializers
 
-
-class AlgoInputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    class Meta:
-        model = AlgoInput
-        fields = [
-            "identifier",
-            "kind",
-        ]
-
-
-class AlgoOutputSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    class Meta:
-        model = AlgoOutput
-        fields = [
-            "identifier",
-            "kind",
-        ]
-
-
-class AlgoSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    inputs = AlgoInputSerializerForGraph(many=True)
-    outputs = AlgoOutputSerializerForGraph(many=True)
-
-    class Meta:
-        model = Algo
-        fields = [
-            "inputs",
-            "outputs",
-        ]
-
-
-class TaskSerializerForGraph(serializers.ModelSerializer, SafeSerializerMixin):
-    algo = AlgoSerializerForGraph()
-
-    class Meta:
-        model = ComputeTask
-        fields = ["key", "rank", "worker", "status", "category", "algo"]
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["inputs"] = data["algo"]["inputs"]
-        data["outputs"] = data["algo"]["outputs"]
-        del data["algo"]
-        return data
+class JsonbBuildObj(Func):
+    function = "jsonb_build_object"
 
 
 @api_view(["GET"])
@@ -72,9 +33,31 @@ def get_cp_graph(request, compute_plan_pk):
     """Return a workflow graph for each task of the computeplan"""
     validate_key(compute_plan_pk)
 
-    tasks_qs = ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
-    tasks_qs = tasks_qs.prefetch_related("algo", "algo__inputs", "algo__outputs")
-    tasks = TaskSerializerForGraph(tasks_qs, many=True).data
+    outputs = (
+        ComputeTask.objects.filter(key=OuterRef("pk"))
+        .annotate(
+            outputs_specs=JSONBAgg(
+                JsonbBuildObj(Value("identifier"), F("algo__outputs__identifier"), Value("kind"), "algo__outputs__kind")
+            ),
+        )
+        .values("outputs_specs")
+    )
+
+    inputs = (
+        ComputeTask.objects.filter(key=OuterRef("pk"))
+        .annotate(
+            inputs_specs=JSONBAgg(
+                JsonbBuildObj(Value("identifier"), F("algo__inputs__identifier"), Value("kind"), "algo__inputs__kind")
+            ),
+        )
+        .values("inputs_specs")
+    )
+
+    tasks = (
+        ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
+        .annotate(inputs_specs=Subquery(inputs), outputs_specs=Subquery(outputs))
+        .values("key", "rank", "worker", "status", "inputs_specs", "outputs_specs")
+    )
 
     # Set a task limitation for performances issues
     if len(tasks) > MAX_TASKS_DISPLAYED:
