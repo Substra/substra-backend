@@ -20,6 +20,7 @@ router.register(r"data_manager", views.DataManagerViewSet, basename="data_manage
 router.register(r"data_manager", views.DataManagerPermissionViewSet, basename="data_manager")
 router.register(r"algo", views.AlgoViewSet, basename="algo")
 router.register(r"algo", views.AlgoPermissionViewSet, basename="algo")
+router.register(r"task", views.ComputeTaskViewSet, basename="task")
 router.register(r"traintuple", views.ComputeTaskViewSet, basename="traintuple")
 router.register(r"predicttuple", views.ComputeTaskViewSet, basename="predicttuple")
 router.register(r"testtuple", views.ComputeTaskViewSet, basename="testtuple")
@@ -36,6 +37,7 @@ task_profiling_router = routers.NestedDefaultRouter(router, r"task_profiling", l
 task_profiling_router.register(r"step", views.TaskProfilingStepViewSet, basename="step")
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
+compute_plan_router.register(r"task", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}task")
 compute_plan_router.register(r"traintuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}traintuple")
 compute_plan_router.register(r"aggregatetuple", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}aggregatetuple")
 compute_plan_router.register(
@@ -51,6 +53,5 @@ urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
     path("", include(task_profiling_router.urls)),
-    path(r"task/bulk_create/", views.task_bulk_create_view, name="task_bulk_create"),
     path(r"compute_plan/<compute_plan_pk>/workflow_graph/", views.get_cp_graph, name="workflow_graph"),
 ]

@@ -13,7 +13,7 @@ from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import RangeFilter
 from rest_framework import mixins
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
@@ -22,7 +22,8 @@ from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.serializers import ComputeTaskSerializer
-from api.serializers import ComputeTaskWithRelationshipsSerializer
+from api.serializers import LegacyComputeTaskSerializer
+from api.serializers import LegacyComputeTaskWithRelationshipsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -105,8 +106,7 @@ def _register_in_orchestrator(tasks_data, channel_name):
         return client.register_tasks({"tasks": list(batch.values())})
 
 
-@api_view(["POST"])
-def task_bulk_create_view(request):
+def task_bulk_create(request):
     """Create a batch of tasks (with various categories) with same CP keys
 
     The workflow is composed of several steps:
@@ -129,13 +129,13 @@ def task_bulk_create_view(request):
     for task in orc_data:
         api_data = computetask.orc_to_api(task)
         api_data["channel"] = get_channel_name(request)
-        api_serializer = ComputeTaskSerializer(data=api_data)
+        api_serializer = LegacyComputeTaskSerializer(data=api_data)
         try:
             api_serializer.save_if_not_exists()
         except AlreadyExistsError:
             # May happen if the events app already processed the event pushed by the orchestrator
             compute_task = ComputeTask.objects.get(key=api_data["key"])
-            api_task_data = ComputeTaskSerializer(compute_task).data
+            api_task_data = LegacyComputeTaskSerializer(compute_task).data
         else:
             api_task_data = api_serializer.data
         data.append(api_task_data)
@@ -230,7 +230,6 @@ class ComputeTaskFilter(FilterSet):
 
 
 class ComputeTaskViewSetConfig:
-    serializer_class = ComputeTaskSerializer
     filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskMetadataFilter)
     ordering_fields = [
         "creation_date",
@@ -257,17 +256,26 @@ class ComputeTaskViewSetConfig:
 
     @property
     def category(self):
+        if self.short_basename == "task":
+            return None
         return TASK_CATEGORY[self.short_basename]
 
     def get_serializer_class(self):
+        if not self.category:
+            return ComputeTaskSerializer
         if self.action == "retrieve":
-            return ComputeTaskWithRelationshipsSerializer
-        return ComputeTaskSerializer
+            return LegacyComputeTaskWithRelationshipsSerializer
+        return LegacyComputeTaskSerializer
+
+    @action(methods=["post"], detail=False, url_name="bulk_create")
+    def bulk_create(self, request, *args, **kwargs):
+        return task_bulk_create(request)
 
     def get_queryset(self):
         queryset = (
-            ComputeTask.objects.filter(channel=get_channel_name(self.request), category=self.category)
+            ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .select_related("algo")
+            .prefetch_related("performances", "models")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
@@ -277,10 +285,9 @@ class ComputeTaskViewSetConfig:
                 )
             )
         )
-        if self.category == ComputeTask.Category.TASK_TEST:
-            queryset = queryset.prefetch_related("performances")
-        else:
-            queryset = queryset.prefetch_related("models")
+        if self.category:
+            queryset = queryset.filter(category=self.category)
+
         return queryset
 
 

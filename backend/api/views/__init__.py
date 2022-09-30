@@ -5,7 +5,6 @@ from .compute_plan_graph import get_cp_graph
 from .computeplan import ComputePlanViewSet
 from .computetask import ComputeTaskViewSet
 from .computetask import CPTaskViewSet
-from .computetask import task_bulk_create_view
 from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
@@ -37,7 +36,6 @@ __all__ = [
     "ComputePlanMetadataViewSet",
     "PerformanceViewSet",
     "get_cp_graph",
-    "task_bulk_create_view",
     "TaskProfilingViewSet",
     "TaskProfilingStepViewSet",
 ]

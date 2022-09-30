@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevent use of `__` in asset metadata keys
 - Task input asset
 - Accept `CSRF_TRUSTED_ORIGINS` env var as settings option
+- Generic task endpoint to list/retrieve tasks
 
 ### Fixed
 
