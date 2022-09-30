@@ -50,7 +50,7 @@ class AlgoViewTests(APITestCase):
             name="simple algo",
         )
         aggregate_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
+            inputs=factory.build_algo_inputs(["models"]),
             outputs=factory.build_algo_outputs(["model"]),
             name="aggregate",
         )
@@ -130,7 +130,7 @@ class AlgoViewTests(APITestCase):
                     "storage_address": f"http://testserver/algo/{aggregate_algo.key}/file/",
                 },
                 "inputs": {
-                    "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                    "models": {"kind": "ASSET_MODEL", "optional": True, "multiple": True},
                 },
                 "outputs": {
                     "model": {"kind": "ASSET_MODEL", "multiple": False},

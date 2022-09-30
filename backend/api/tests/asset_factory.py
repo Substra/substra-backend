@@ -109,6 +109,7 @@ ALGO_INPUTS = {
     "datasamples": dict(kind=AlgoInput.Kind.ASSET_DATA_SAMPLE, multiple=True, optional=False),
     "opener": dict(kind=AlgoInput.Kind.ASSET_DATA_MANAGER, multiple=False, optional=False),
     "model": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "models": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=True, optional=True),
     "local": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
     "shared": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
     "predictions": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=False),

@@ -42,7 +42,7 @@ class Command(BaseCommand):
         )
 
         self.aggregate_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
+            inputs=factory.build_algo_inputs(["models"]),
             outputs=factory.build_algo_outputs(["model"]),
             name="aggregate",
         )
