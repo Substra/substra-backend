@@ -1,5 +1,0 @@
-rabbitmq:
-  image:
-    registry: docker.io
-    repository: rabbitmq
-    tag: 3.9
