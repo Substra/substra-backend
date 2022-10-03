@@ -1,5 +1,7 @@
 from .algo import AlgoSerializer
 from .computeplan import ComputePlanSerializer
+from .computetask import ComputeTaskInputAssetSerializer
+from .computetask import ComputeTaskOutputAssetSerializer
 from .computetask import ComputeTaskSerializer
 from .computetask import LegacyComputeTaskSerializer
 from .computetask import LegacyComputeTaskWithRelationshipsSerializer
@@ -17,6 +19,8 @@ __all__ = [
     "AlgoSerializer",
     "ComputePlanSerializer",
     "ComputeTaskSerializer",
+    "ComputeTaskInputAssetSerializer",
+    "ComputeTaskOutputAssetSerializer",
     "LegacyComputeTaskSerializer",
     "LegacyComputeTaskWithRelationshipsSerializer",
     "DataManagerSerializer",

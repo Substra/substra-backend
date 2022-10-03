@@ -21,6 +21,10 @@ from api.errors import AlreadyExistsError
 from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.models import ComputeTask
+from api.models import ComputeTaskInputAsset
+from api.models import ComputeTaskOutputAsset
+from api.serializers import ComputeTaskInputAssetSerializer
+from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
 from api.serializers import LegacyComputeTaskSerializer
 from api.serializers import LegacyComputeTaskWithRelationshipsSerializer
@@ -270,6 +274,36 @@ class ComputeTaskViewSetConfig:
     @action(methods=["post"], detail=False, url_name="bulk_create")
     def bulk_create(self, request, *args, **kwargs):
         return task_bulk_create(request)
+
+    @action(detail=True, url_name="input_assets")
+    def input_assets(self, request, pk):
+        input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by(
+            "task_input__identifier", "task_input__position"
+        )
+
+        context = {"request": request}
+        page = self.paginate_queryset(input_assets)
+        if page is not None:
+            serializer = ComputeTaskInputAssetSerializer(page, many=True, context=context)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ComputeTaskInputAssetSerializer(input_assets, many=True, context=context)
+        return ApiResponse(serializer.data)
+
+    @action(detail=True, url_name="output_assets")
+    def output_assets(self, request, pk):
+        output_assets = ComputeTaskOutputAsset.objects.filter(task_output__task_id=pk).order_by(
+            "task_output__identifier"
+        )
+
+        context = {"request": request}
+        page = self.paginate_queryset(output_assets)
+        if page is not None:
+            serializer = ComputeTaskOutputAssetSerializer(page, many=True, context=context)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ComputeTaskOutputAssetSerializer(output_assets, many=True, context=context)
+        return ApiResponse(serializer.data)
 
     def get_queryset(self):
         queryset = (

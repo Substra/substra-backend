@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Compute task outputs/inputs valid storage address.
 
+### Added
+
+- Endpoints to list task input/output assets
+
 ## [0.32.0] 2022-10-03
 
 ### Changed
