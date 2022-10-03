@@ -101,45 +101,30 @@ class ComputeTaskViewTests(APITestCase):
             "parent_task_key": None,
             "parent_task_output_identifier": None,
         }
-        self.opener_input_with_value = {**self.opener_input}
-        self.opener_input_with_value["addressable"] = self.data_manager_data["opener"]
-        self.opener_input_with_value["permissions"] = self.data_manager_data["permissions"]
         self.model_input = {
             "identifier": "model",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.model_input_with_value = {**self.model_input}
-        self.model_input_with_value["addressable"] = self.model_data["address"]
-        self.model_input_with_value["permissions"] = self.model_data["permissions"]
         self.models_input = {
             "identifier": "models",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.models_input_with_value = {**self.models_input}
-        self.models_input_with_value["addressable"] = self.model_data["address"]
-        self.models_input_with_value["permissions"] = self.model_data["permissions"]
         self.shared_input = {
             "identifier": "shared",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.shared_input_with_value = {**self.shared_input}
-        self.shared_input_with_value["addressable"] = self.model_data["address"]
-        self.shared_input_with_value["permissions"] = self.model_data["permissions"]
         self.predictions_input = {
             "identifier": "predictions",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.predictions_input_with_value = {**self.predictions_input}
-        self.predictions_input_with_value["addressable"] = self.model_data["address"]
-        self.predictions_input_with_value["permissions"] = self.model_data["permissions"]
 
     def prepare_outputs(self):
         self.model_output = {
@@ -148,17 +133,13 @@ class ComputeTaskViewTests(APITestCase):
                 "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
             },
             "transient": False,
-            "value": None,
         }
-        self.model_output_with_value = {**self.model_output}
-        self.model_output_with_value["value"] = self.model_data
         self.predictions_output = {
             "permissions": {
                 "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                 "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
             },
             "transient": False,
-            "value": None,
         }
         self.performance_output = {
             "permissions": {
@@ -166,7 +147,6 @@ class ComputeTaskViewTests(APITestCase):
                 "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
             },
             "transient": False,
-            "value": None,
         }
 
     def tearDown(self):
@@ -254,8 +234,8 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "inputs": [
                     self.datasamples_input,
-                    self.opener_input_with_value,
-                    self.model_input_with_value,
+                    self.opener_input,
+                    self.model_input,
                 ],
                 "outputs": {
                     "model": self.model_output,

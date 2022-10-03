@@ -36,71 +36,19 @@ class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixi
             "asset_key",
             "parent_task_key",
             "parent_task_output_identifier",
-            "asset",
         ]
-
-    asset = serializers.SerializerMethodField(source="*", read_only=True)
-
-    def to_representation(self, data):
-        data = super().to_representation(data)
-        asset_data = data.pop("asset")
-        data.update(asset_data)
-        return data
-
-    def get_asset(self, task_input):
-        data = {}
-        try:
-            if task_input.asset.asset_kind == FunctionInput.Kind.ASSET_DATA_MANAGER:
-                data_manager = DataManager.objects.get(key=task_input.asset.asset_key)
-                data_manager_data = DataManagerSerializer(context=self.context, instance=data_manager).data
-                data["addressable"] = data_manager_data["opener"]
-                data["permissions"] = data_manager_data["permissions"]
-            elif task_input.asset.asset_kind == FunctionInput.Kind.ASSET_MODEL:
-                model = Model.objects.get(key=task_input.asset.asset_key)
-                model_data = ModelSerializer(context=self.context, instance=model).data
-                data["addressable"] = model_data["address"]
-                data["permissions"] = model_data["permissions"]
-        except ComputeTaskInputAsset.DoesNotExist:
-            pass
-        return data
 
 
 class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+    permissions = make_download_process_permission_serializer()(source="*")
+
     class Meta:
         model = ComputeTaskOutput
         fields = [
             "identifier",
             "permissions",
             "transient",
-            "value",
         ]
-
-    permissions = make_download_process_permission_serializer()(source="*")
-    value = serializers.SerializerMethodField(source="*", read_only=True)
-
-    def get_value(self, task_output):
-        data = []
-        for output_asset in task_output.assets.all():
-            if output_asset.asset_kind == FunctionOutput.Kind.ASSET_MODEL:
-                model = Model.objects.get(key=output_asset.asset_key)
-                data.append(ModelSerializer(context=self.context, instance=model).data)
-            elif output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
-                compute_task_key, identifier = output_asset.asset_key.split("|")
-                task_output = ComputeTaskOutput.objects.get(
-                    task=compute_task_key,
-                    identifier=identifier,
-                )
-                perf = Performance.objects.get(compute_task_output=task_output)
-                data.append(perf.value)
-
-        # FIXME: we should better always return a list,
-        # but it may requires some adapations on the frontend side
-        if len(data) == 0:
-            return None
-        elif len(data) == 1:
-            return data[0]
-        else:
-            return data
 
 
 class ComputeTaskInputAssetSerializer(serializers.ModelSerializer, SafeSerializerMixin):

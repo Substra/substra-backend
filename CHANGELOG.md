@@ -81,6 +81,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `IncomingOrganization` password hashed twice when hasher algorithm was updated ([#592](https://github.com/Substra/substra-backend/pull/592))
 
+### Removed
+
+- BREAKING: asset values in compute task inputs/outputs. ([#509](https://github.com/Substra/substra-backend/pull/509))
+
 ## [0.35.0](https://github.com/Substra/substra-backend/releases/tag/0.35.0) 2023-02-06
 
 ### Added
