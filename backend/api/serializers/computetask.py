@@ -59,12 +59,12 @@ class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixi
         try:
             if task_input.asset.asset_kind == AlgoInput.Kind.ASSET_DATA_MANAGER:
                 data_manager = DataManager.objects.get(key=task_input.asset.asset_key)
-                data_manager_data = DataManagerSerializer(instance=data_manager).data
+                data_manager_data = DataManagerSerializer(context=self.context, instance=data_manager).data
                 data["addressable"] = data_manager_data["opener"]
                 data["permissions"] = data_manager_data["permissions"]
             elif task_input.asset.asset_kind == AlgoInput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=task_input.asset.asset_key)
-                model_data = ModelSerializer(instance=model).data
+                model_data = ModelSerializer(context=self.context, instance=model).data
                 data["addressable"] = model_data["address"]
                 data["permissions"] = model_data["permissions"]
         except ComputeTaskInputAsset.DoesNotExist:
@@ -90,7 +90,7 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
         for output_asset in task_output.assets.all():
             if output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=output_asset.asset_key)
-                data.append(ModelSerializer(instance=model).data)
+                data.append(ModelSerializer(context=self.context, instance=model).data)
             elif output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
                 task_key, metric_key = output_asset.asset_key.split("|")
                 perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
