@@ -24,7 +24,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
     duration = serializers.IntegerField(read_only=True)
     status = serializers.ChoiceField(choices=ComputePlan.Status.choices, read_only=True)
-    creator = serializers.SlugRelatedField(slug_field='user__username')
+    creator = serializers.SlugRelatedField(slug_field='user__username', read_only=True)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

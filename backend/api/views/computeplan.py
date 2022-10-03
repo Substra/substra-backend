@@ -56,22 +56,14 @@ def create(request, get_success_headers):
     - Save metadata in local database.
     """
 
-    # Update CP model to store the author
-    # Update CP serializer
-    # Migration: keep null values ?
-    # Test: Need to deploy cluster with orc to register a new CP
-    # Front
-
     # Step1: register asset in orchestrator
     compute_plan_data = {
         "key": to_string_uuid(request.data.get("key")),
         "tag": request.data.get("tag"),
         "name": request.data.get("name"),
         "metadata": validate_metadata(request.data.get("metadata")),
-        "creator": request.user
     }
-    #api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
-    api_data = compute_plan_data
+    api_data = _register_in_orchestrator(compute_plan_data, get_channel_name(request))
 
     # Step2: save metadata in local database
     api_data["channel"] = get_channel_name(request)
