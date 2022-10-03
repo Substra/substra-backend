@@ -72,7 +72,7 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
         for output_asset in task_output.assets.all():
             if output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=output_asset.asset_key)
-                data.append(ModelSerializer(instance=model).data)
+                data.append(ModelSerializer(context=self.context, instance=model).data)
             elif output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
                 task_key, metric_key = output_asset.asset_key.split("|")
                 perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
