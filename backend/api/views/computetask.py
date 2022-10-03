@@ -277,7 +277,9 @@ class ComputeTaskViewSetConfig:
 
     @action(detail=True, url_name="input_assets")
     def input_assets(self, request, pk):
-        input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by("task_input__position")
+        input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by(
+            "task_input__identifier", "task_input__position"
+        )
 
         context = {"request": request}
         page = self.paginate_queryset(input_assets)
