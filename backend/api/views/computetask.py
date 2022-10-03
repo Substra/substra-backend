@@ -279,12 +279,13 @@ class ComputeTaskViewSetConfig:
     def input_assets(self, request, pk):
         input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by("task_input__position")
 
+        context = {"request": request}
         page = self.paginate_queryset(input_assets)
         if page is not None:
-            serializer = ComputeTaskInputAssetSerializer(page, many=True)
+            serializer = ComputeTaskInputAssetSerializer(page, many=True, context=context)
             return self.get_paginated_response(serializer.data)
 
-        serializer = ComputeTaskInputAssetSerializer(input_assets, many=True)
+        serializer = ComputeTaskInputAssetSerializer(input_assets, many=True, context=context)
         return ApiResponse(serializer.data)
 
     @action(detail=True, url_name="output_assets")
@@ -293,12 +294,13 @@ class ComputeTaskViewSetConfig:
             "task_output__identifier"
         )
 
+        context = {"request": request}
         page = self.paginate_queryset(output_assets)
         if page is not None:
-            serializer = ComputeTaskOutputAssetSerializer(page, many=True)
+            serializer = ComputeTaskOutputAssetSerializer(page, many=True, context=context)
             return self.get_paginated_response(serializer.data)
 
-        serializer = ComputeTaskOutputAssetSerializer(output_assets, many=True)
+        serializer = ComputeTaskOutputAssetSerializer(output_assets, many=True, context=context)
         return ApiResponse(serializer.data)
 
     def get_queryset(self):
