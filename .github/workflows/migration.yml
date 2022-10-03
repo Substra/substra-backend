@@ -56,7 +56,7 @@ jobs:
           echo fixture generated
       - name: Checkout local branch
         uses: actions/checkout@v3
-      - name: Install requirements
+      - name: Update requirements
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
