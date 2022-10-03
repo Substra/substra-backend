@@ -2582,10 +2582,12 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         expected_results = [
             {
                 "identifier": "datasamples",
+                "kind": "ASSET_DATA_SAMPLE",
                 "asset": self.data_sample_data,
             },
             {
                 "identifier": "opener",
+                "kind": "ASSET_DATA_MANAGER",
                 "asset": self.data_manager_data,
             },
         ]
@@ -2600,6 +2602,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         expected_results = [
             {
                 "identifier": "model",
+                "kind": "ASSET_MODEL",
                 "asset": self.train_model_data,
             },
         ]

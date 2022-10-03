@@ -110,12 +110,14 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
 
 class ComputeTaskInputAssetSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     identifier = serializers.SerializerMethodField(source="*", read_only=True)
+    kind = serializers.CharField(source="asset_kind", read_only=True)
     asset = serializers.SerializerMethodField(source="*", read_only=True)
 
     class Meta:
         model = ComputeTaskInputAsset
         fields = [
             "identifier",
+            "kind",
             "asset",
         ]
 
@@ -136,12 +138,14 @@ class ComputeTaskInputAssetSerializer(serializers.ModelSerializer, SafeSerialize
 
 class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     identifier = serializers.SerializerMethodField(source="*", read_only=True)
+    kind = serializers.CharField(source="asset_kind", read_only=True)
     asset = serializers.SerializerMethodField(source="*", read_only=True)
 
     class Meta:
         model = ComputeTaskOutputAsset
         fields = [
             "identifier",
+            "kind",
             "asset",
         ]
 
