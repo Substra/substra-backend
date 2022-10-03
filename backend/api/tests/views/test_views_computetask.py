@@ -46,7 +46,7 @@ class ComputeTaskViewTests(APITestCase):
             name="simple algo",
         )
         self.aggregate_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
+            inputs=factory.build_algo_inputs(["models"]),
             outputs=factory.build_algo_outputs(["model"]),
             name="aggregate",
         )
@@ -152,6 +152,15 @@ class ComputeTaskViewTests(APITestCase):
         self.model_input_with_value = {**self.model_input}
         self.model_input_with_value["addressable"] = self.train_model_data["address"]
         self.model_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.models_input = {
+            "identifier": "models",
+            "asset_key": None,
+            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_output_identifier": "model",
+        }
+        self.models_input_with_value = {**self.models_input}
+        self.models_input_with_value["addressable"] = self.train_model_data["address"]
+        self.models_input_with_value["permissions"] = self.train_model_data["permissions"]
         self.shared_input = {
             "identifier": "shared",
             "asset_key": None,
@@ -297,7 +306,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "in_models_keys": [train_task_key, self.done_train_task.key],
                     "algo_key": self.aggregate_algo.key,
                     "worker": "MyOrg1MSP",
-                    "inputs": [self.model_input],
+                    "inputs": [self.models_input],
                     "outputs": {
                         "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
@@ -401,7 +410,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "models": None,
                 },
                 "worker": "MyOrg1MSP",
-                "inputs": [self.model_input_with_value],
+                "inputs": [self.models_input_with_value],
                 "outputs": {
                     "model": self.model_output,
                 },
