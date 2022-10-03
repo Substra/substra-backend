@@ -49,8 +49,8 @@ def _create(request, basename, get_success_headers):
             # May happen if the events app already processed the event pushed by the orchestrator
             model = Model.objects.get(key=registered_model["key"])
             serializer = ModelSerializer(model)
-        else:
-            data.append(serializer.data)
+
+        data.append(serializer.data)
 
     # Return ApiResponse
     headers = get_success_headers(data)
