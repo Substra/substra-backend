@@ -19,13 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Endpoints to list task input/output assets
 
+### Changed
+
+- Add inputs and output kinds in the workflow_graph response
+
 ## [0.32.0] 2022-10-03
 
 ### Changed
 
 - Container image build error logs are now saved to the DB and served via the API.
 - Replace `algo` by `algo_key` in gRPC communication
-- Add inputs and output kinds in the workflow_graph response
 
 ### Added
 
