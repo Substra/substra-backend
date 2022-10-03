@@ -92,6 +92,7 @@ class Command(BaseCommand):
         self.predict_data_sample_keys = []
         self.test_data_sample_keys = []
 
+        # arbitrary number in order to have multiple datasamples
         for _ in range(3):
             train_data_sample = factory.create_datasample([self.data_manager])
             factory.create_datasample_files(key=train_data_sample.key)
