@@ -1,10 +1,10 @@
 name: "Test migrations"
 
-on:  
+on:
   pull_request:
-    paths: 
+    paths:
     - 'backend/**/migrations/**'
-  
+
 env:
   DJANGO_SETTINGS_MODULE: backend.settings.test
   BACKEND_DB_NAME: substra
@@ -56,7 +56,10 @@ jobs:
           echo fixture generated
       - name: Checkout local branch
         uses: actions/checkout@v3
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
       - name: Test migration
         run: |
           python backend/manage.py migrate
-
