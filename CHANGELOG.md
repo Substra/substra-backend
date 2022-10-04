@@ -10,18 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `create` api from model view to submit compute task output.
+- Endpoints to list task input/output assets
 
 ### Fixed
 
 - Compute task outputs/inputs valid storage address.
 
-### Added
-
-- Endpoints to list task input/output assets
-
 ### Changed
 
-- Add inputs and output kinds in the workflow_graph response
+- Extract inputs and outputs from db to build the workflow_graph response.
 
 ## [0.32.0] 2022-10-03
 
@@ -38,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task input asset
 - Accept `CSRF_TRUSTED_ORIGINS` env var as settings option
 - Generic task endpoint to list/retrieve tasks
+- Add inputs and output kinds in the workflow_graph response
 
 ### Fixed
 
