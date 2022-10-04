@@ -17,21 +17,12 @@ from rest_framework.viewsets import ViewSet
 
 from api.errors import AssetPermissionError
 from api.errors import BadRequestError
-from api.models import ComputeTask
 from organization.authentication import OrganizationUser
 from substrapp.clients import organization as organization_client
 from substrapp.storages.minio import MinioStorage
 from substrapp.utils import get_owner
 
 CP_BASENAME_PREFIX = "compute_plan_"
-
-TASK_CATEGORY = {
-    "traintuple": ComputeTask.Category.TASK_TRAIN,
-    "predicttuple": ComputeTask.Category.TASK_PREDICT,
-    "testtuple": ComputeTask.Category.TASK_TEST,
-    "aggregatetuple": ComputeTask.Category.TASK_AGGREGATE,
-    "composite_traintuple": ComputeTask.Category.TASK_COMPOSITE,
-}
 
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
 
