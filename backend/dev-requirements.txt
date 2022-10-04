@@ -7,7 +7,7 @@ isort==5.10.1
 mypy-protobuf==3.3.0
 parameterized==0.8.1
 pep8-naming==0.13.2
-pytest-cov==3.0.0
+pytest-cov==4.0.0
 pytest-mock==3.8.2
 pytest-django==4.5.2
 pytest-xdist[psutil]==2.5.0
