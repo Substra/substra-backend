@@ -1,3 +1,5 @@
+import json
+
 import structlog
 from django.conf import settings
 from django.db import models
@@ -7,13 +9,20 @@ from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
+from rest_framework import status
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
 
+from api.errors import AlreadyExistsError
 from api.errors import AssetPermissionError
 from api.models import Model
 from api.serializers import ModelSerializer
+from api.views.utils import ApiResponse
+from api.views.utils import IsCurrentBackendOrReadOnly
 from api.views.utils import PermissionMixin
 from api.views.utils import get_channel_name
 from api.views.utils import if_true
@@ -23,6 +32,29 @@ from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_owner
 
 logger = structlog.get_logger(__name__)
+
+
+def _create(request, basename, get_success_headers):
+    """Create new models."""
+
+    registered_models = json.loads(request.data["metadata"])
+
+    data = []
+    for registered_model in registered_models:
+        registered_model["channel"] = get_channel_name(request)
+        serializer = ModelSerializer(data=registered_model)
+        try:
+            serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            # May happen if the events app already processed the event pushed by the orchestrator
+            model = Model.objects.get(key=registered_model["key"])
+            serializer = ModelSerializer(model)
+
+        data.append(serializer.data)
+
+    # Return ApiResponse
+    headers = get_success_headers(data)
+    return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ModelFilter(FilterSet):
@@ -52,7 +84,7 @@ class ModelFilter(FilterSet):
         }
 
 
-class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+class ModelViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
     filter_backends = (OrderingFilter, DjangoFilterBackend)
     pagination_class = DefaultPageNumberPagination
     serializer_class = ModelSerializer
@@ -60,8 +92,14 @@ class ModelViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericView
     ordering = ["creation_date", "key"]
     filterset_class = ModelFilter
 
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
+    permission_classes = [IsAuthenticated, IsCurrentBackendOrReadOnly]
+
     def get_queryset(self):
         return Model.objects.filter(channel=get_channel_name(self.request))
+
+    def create(self, request, *args, **kwargs):
+        return _create(request, self.basename, lambda data: self.get_success_headers(data))
 
 
 class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
