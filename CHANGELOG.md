@@ -11,14 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add `create` api from model view to submit compute task output.
 - Add role filter to users list.
+- Endpoints to list task input/output assets
 
 ### Fixed
 
 - Compute task outputs/inputs valid storage address.
 
-### Added
+### Removed
 
-- Endpoints to list task input/output assets
+- Algo creation events aren't included in newsfeed anymore.
 
 ## [0.32.0] 2022-10-03
 
@@ -45,7 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: model categories
 - BREAKING: algo categories
 - Outdated information on patching RabbitMQ for Apple Silicon chips.
-
 
 ## [0.31.0] 2022-09-26
 
@@ -606,8 +606,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
 - Asset filters on attributes from different assets
-exemple : `GET /objective?search=traintuple:key:foo`
-The composed filter that are removed are:
+  example : `GET /objective?search=traintuple:key:foo`
+  The composed filter that are removed are:
 
 ```
     /dataset?search=model:field_key:value

@@ -48,7 +48,6 @@ class NewsFeedViewTests(APITestCase):
         failed_cp.failed_task_category = ComputeTask.Category.TASK_TRAIN
         failed_cp.save()
         done_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
-        algo = factory.create_algo()
         datamanager = factory.create_datamanager()
 
         # we expect items to be sorted from the latest to the earliest
@@ -125,15 +124,6 @@ class NewsFeedViewTests(APITestCase):
                 "timestamp": datamanager.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
-            # ALGO
-            {
-                "asset_kind": "ASSET_ALGO",
-                "asset_key": str(algo.key),
-                "name": str(algo.name),
-                "status": "STATUS_CREATED",
-                "timestamp": algo.creation_date.isoformat().replace("+00:00", "Z"),
-                "detail": {},
-            },
             # PLAN_STATUS_CREATED
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
@@ -185,24 +175,24 @@ class NewsFeedViewTests(APITestCase):
 
     def test_newsfeed_filter_creation_date(self):
         cp = factory.create_computeplan()
-        algo = factory.create_algo()
-        datamanager = factory.create_datamanager()
+        datamanager1 = factory.create_datamanager()
+        datamanager2 = factory.create_datamanager()
 
         expected_results = [
             {
                 "asset_kind": "ASSET_DATA_MANAGER",
-                "asset_key": str(datamanager.key),
-                "name": str(datamanager.name),
+                "asset_key": str(datamanager2.key),
+                "name": str(datamanager2.name),
                 "status": "STATUS_CREATED",
-                "timestamp": datamanager.creation_date.isoformat().replace("+00:00", "Z"),
+                "timestamp": datamanager2.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
-                "asset_kind": "ASSET_ALGO",
-                "asset_key": str(algo.key),
-                "name": str(algo.name),
+                "asset_kind": "ASSET_DATA_MANAGER",
+                "asset_key": str(datamanager1.key),
+                "name": str(datamanager1.name),
                 "status": "STATUS_CREATED",
-                "timestamp": algo.creation_date.isoformat().replace("+00:00", "Z"),
+                "timestamp": datamanager1.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
@@ -305,7 +295,6 @@ class NewsFeedViewTests(APITestCase):
 
     def test_newsfeed_filter_important_news_only(self):
         cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
-        algo = factory.create_algo()
         datamanager = factory.create_datamanager()
 
         expected_results = [
@@ -331,14 +320,6 @@ class NewsFeedViewTests(APITestCase):
                 "name": str(datamanager.name),
                 "status": "STATUS_CREATED",
                 "timestamp": datamanager.creation_date.isoformat().replace("+00:00", "Z"),
-                "detail": {},
-            },
-            {
-                "asset_kind": "ASSET_ALGO",
-                "asset_key": str(algo.key),
-                "name": str(algo.name),
-                "status": "STATUS_CREATED",
-                "timestamp": algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
             {
