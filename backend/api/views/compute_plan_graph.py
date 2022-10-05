@@ -72,10 +72,10 @@ def get_cp_graph(request, compute_plan_pk):
 
     edges = edges_qs.annotate(
         source_task_key=F("parent_task_key"),
-        source_output_name=F("parent_task_output_identifier"),
+        source_output_identifier=F("parent_task_output_identifier"),
         target_task_key=F("task__key"),
-        target_input_name=F("identifier"),
-    ).values("source_task_key", "source_output_name", "target_task_key", "target_input_name")
+        target_input_identifier=F("identifier"),
+    ).values("source_task_key", "source_output_identifier", "target_task_key", "target_input_identifier")
 
     return ApiResponse(
         data={
