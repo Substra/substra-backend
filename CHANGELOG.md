@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `create` api from model view to submit compute task output.
+- Add role filter to users list.
 
 ### Fixed
 
