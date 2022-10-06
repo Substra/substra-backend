@@ -206,3 +206,31 @@ class TestUserEndpoints:
         assert "mychannel" == response.json()["results"][0]["channel"]
         assert "USER" == response.json()["results"][0]["role"]
         assert 1 == response.json()["count"]
+
+    @pytest.mark.django_db
+    def test_filter_user_role(self):
+        # create admin user
+        data = {"username": "toto", "password": "pas$w0rdtestofdrea6S43", "role": "USER"}
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).post(self.url, data=data)
+        assert response.status_code == status.HTTP_201_CREATED
+
+        # list all users (no filter)
+        response = AuthenticatedClient(channel=self.channel).get(self.url, **self.extra)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["count"] == 2
+        assert {user["role"] for user in data["results"]} == {"USER", "ADMIN"}
+
+        # list only admin users
+        response = AuthenticatedClient(channel=self.channel).get(self.url, data={"role": "ADMIN"}, **self.extra)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["count"] == 1
+        assert data["results"][0]["role"] == "ADMIN"
+
+        # list only non admin users
+        response = AuthenticatedClient(channel=self.channel).get(self.url, data={"role": "USER"}, **self.extra)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["count"] == 1
+        assert data["results"][0]["role"] == "USER"

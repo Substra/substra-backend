@@ -6,6 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
 from django.utils.encoding import force_str
+from django_filters.rest_framework import ChoiceFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
 from jwt.exceptions import DecodeError
 from jwt.exceptions import ExpiredSignatureError
 from jwt.exceptions import InvalidTokenError
@@ -84,6 +87,14 @@ class IsSelf(permissions.BasePermission):
         return user.id == request.user.id
 
 
+class UserFilter(FilterSet):
+    role = ChoiceFilter(field_name="channel__role", choices=UserChannel.Role.choices)
+
+    class Meta:
+        model = get_user_model()
+        fields = ["role"]
+
+
 class UserViewSet(
     GenericViewSet,
     CreateModelMixin,
@@ -96,10 +107,11 @@ class UserViewSet(
     pagination_class = DefaultPageNumberPagination
     ordering_fields = ["username"]
     ordering = ["username"]
-    filter_backends = [OrderingFilter, MatchFilter]
+    filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
     lookup_field = "username"
     permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
     search_fields = ["username"]
+    filterset_class = UserFilter
 
     def get_queryset(self):
         channel = get_channel_name(self.request)
