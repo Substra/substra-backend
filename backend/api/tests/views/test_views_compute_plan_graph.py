@@ -51,22 +51,22 @@ class ComputePlanGraphViewTests(APITestCase):
     def test_cp_graph(self):
         compute_plan = factory.create_computeplan()
 
-        algo_data_to_model = factory.create_algo(
+        algo_train = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener"]),
             outputs=factory.build_algo_outputs(["model"]),
         )
 
-        algo_model_to_model = factory.create_algo(
+        algo_predict = factory.create_algo(
             inputs=factory.build_algo_inputs(["model"]),
-            outputs=factory.build_algo_outputs(["model"]),
+            outputs=factory.build_algo_outputs(["predictions"]),
         )
 
-        algo_model_to_performance = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
+        algo_test = factory.create_algo(
+            inputs=factory.build_algo_inputs(["predictions"]),
             outputs=factory.build_algo_outputs(["performance"]),
         )
 
-        algo_multiple_model_to_model = factory.create_algo(
+        algo_aggregate = factory.create_algo(
             inputs=factory.build_algo_inputs(["model"]),
             outputs=factory.build_algo_outputs(["model"]),
         )
@@ -74,54 +74,54 @@ class ComputePlanGraphViewTests(APITestCase):
         train_task = factory.create_computetask(
             compute_plan,
             rank=1,
-            algo=algo_data_to_model,
-            outputs=factory.build_computetask_outputs(algo_data_to_model),
+            algo=algo_train,
+            outputs=factory.build_computetask_outputs(algo_train),
         )
 
         predict_task = factory.create_computetask(
             compute_plan,
             rank=2,
-            algo=algo_model_to_model,
+            algo=algo_predict,
             inputs=factory.build_computetask_inputs(
-                algo_model_to_model,
+                algo_predict,
                 {
                     "model": [train_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_model_to_model),
+            outputs=factory.build_computetask_outputs(algo_predict),
         )
 
         test_task = factory.create_computetask(
             compute_plan,
             rank=3,
-            algo=algo_model_to_performance,
+            algo=algo_test,
             inputs=factory.build_computetask_inputs(
-                algo_model_to_performance,
+                algo_test,
                 {
-                    "model": [predict_task.key],
+                    "predictions": [predict_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_model_to_performance),
+            outputs=factory.build_computetask_outputs(algo_test),
         )
 
         composite_task = factory.create_computetask(
             compute_plan,
             rank=10,
-            algo=algo_data_to_model,
-            outputs=factory.build_computetask_outputs(algo_data_to_model),
+            algo=algo_train,
+            outputs=factory.build_computetask_outputs(algo_train),
         )
 
         aggregate_task = factory.create_computetask(
             compute_plan,
             rank=11,
-            algo=algo_multiple_model_to_model,
+            algo=algo_aggregate,
             inputs=factory.build_computetask_inputs(
-                algo_multiple_model_to_model,
+                algo_aggregate,
                 {
                     "model": [composite_task.key, train_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_multiple_model_to_model),
+            outputs=factory.build_computetask_outputs(algo_aggregate),
         )
 
         expected_results = {
@@ -145,7 +145,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "model"},
                     ],
-                    "outputs_specs": [{"kind": "ASSET_MODEL", "identifier": "model"}],
+                    "outputs_specs": [{"kind": "ASSET_MODEL", "identifier": "predictions"}],
                 },
                 {
                     "key": str(test_task.key),
@@ -153,7 +153,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
-                        {"kind": "ASSET_MODEL", "identifier": "model"},
+                        {"kind": "ASSET_MODEL", "identifier": "predictions"},
                     ],
                     "outputs_specs": [{"kind": "ASSET_PERFORMANCE", "identifier": "performance"}],
                 },
@@ -183,26 +183,26 @@ class ComputePlanGraphViewTests(APITestCase):
                 {
                     "source_task_key": str(train_task.key),
                     "target_task_key": str(predict_task.key),
-                    "source_output_name": "model",
-                    "target_input_name": "model",
+                    "source_output_identifier": "model",
+                    "target_input_identifier": "model",
                 },
                 {
                     "source_task_key": str(predict_task.key),
                     "target_task_key": str(test_task.key),
-                    "source_output_name": "model",
-                    "target_input_name": "model",
+                    "source_output_identifier": "predictions",
+                    "target_input_identifier": "predictions",
                 },
                 {
                     "source_task_key": str(composite_task.key),
                     "target_task_key": str(aggregate_task.key),
-                    "source_output_name": "model",
-                    "target_input_name": "model",
+                    "source_output_identifier": "model",
+                    "target_input_identifier": "model",
                 },
                 {
                     "source_task_key": str(train_task.key),
                     "target_task_key": str(aggregate_task.key),
-                    "source_output_name": "model",
-                    "target_input_name": "model",
+                    "source_output_identifier": "model",
+                    "target_input_identifier": "model",
                 },
             ],
         }

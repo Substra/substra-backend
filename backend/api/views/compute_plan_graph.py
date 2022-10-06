@@ -30,7 +30,9 @@ class JsonbBuildObj(Func):
 
 @api_view(["GET"])
 def get_cp_graph(request, compute_plan_pk):
-    """Return a workflow graph for each task of the computeplan"""
+    """Return a workflow graph for each task of the computeplan.
+    As this view is used to build a graph and therefore cannot be paginated yet,
+    it does not use any serialization for performance optimization"""
     validate_key(compute_plan_pk)
 
     outputs = (
