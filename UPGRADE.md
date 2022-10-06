@@ -1,4 +1,4 @@
-# Rename localrep to api: substra-backend 0.28.0 -> 0.29.0
+# Rename localrep to api: substra-backend 0.29.0 -> 0.30.0
 
 Execute this command in the backend DB, before running django migrations,
 
