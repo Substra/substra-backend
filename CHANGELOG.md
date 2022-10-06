@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add role filter to users list.
 - Endpoints to list task input/output assets
 
+### Changed
+
+- Add compute task category unknown value
+
 ### Fixed
 
 - Compute task outputs/inputs valid storage address.

@@ -57,6 +57,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     """ComputeTask represent a computetask and its associated metadata"""
 
     class Category(models.TextChoices):
+        TASK_UNKNOWN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_UNKNOWN)
         TASK_TRAIN = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
         TASK_AGGREGATE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_AGGREGATE)
         TASK_COMPOSITE = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_COMPOSITE)
@@ -77,7 +78,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
         ERROR_TYPE_INTERNAL = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_INTERNAL)
 
     key = models.UUIDField(primary_key=True)
-    category = models.CharField(max_length=64, choices=Category.choices)
+    category = models.CharField(max_length=64, choices=Category.choices, default=Category.TASK_UNKNOWN)
     algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
