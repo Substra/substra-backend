@@ -23,6 +23,8 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
+from api.models.algo import AlgoInput
+from api.models.algo import AlgoOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
@@ -233,6 +235,22 @@ class ComputeTaskFilter(FilterSet):
         }
 
 
+class InputAssetFilter(FilterSet):
+    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoInput.Kind.choices)
+
+    class Meta:
+        model = ComputeTaskInputAsset
+        fields = ["kind"]
+
+
+class OutputAssetFilter(FilterSet):
+    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoOutput.Kind.choices)
+
+    class Meta:
+        model = ComputeTaskOutputAsset
+        fields = ["kind"]
+
+
 class ComputeTaskViewSetConfig:
     filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskMetadataFilter)
     ordering_fields = [
@@ -280,6 +298,7 @@ class ComputeTaskViewSetConfig:
         input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by(
             "task_input__identifier", "task_input__position"
         )
+        input_assets = InputAssetFilter(request.GET, queryset=input_assets).qs
 
         context = {"request": request}
         page = self.paginate_queryset(input_assets)
@@ -295,6 +314,7 @@ class ComputeTaskViewSetConfig:
         output_assets = ComputeTaskOutputAsset.objects.filter(task_output__task_id=pk).order_by(
             "task_output__identifier"
         )
+        output_assets = OutputAssetFilter(request.GET, queryset=output_assets).qs
 
         context = {"request": request}
         page = self.paginate_queryset(output_assets)

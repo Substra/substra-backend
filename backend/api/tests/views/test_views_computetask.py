@@ -2605,6 +2605,34 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
 
+    def test_task_list_input_assets_filter(self):
+        url = reverse("api:task-input_assets", args=[self.expected_results[3]["key"]])
+
+        # base response should contain a datamanager and a datasample
+        response = self.client.get(url, **self.extra)
+        data = response.json()
+        assert data["count"] == 2
+
+        # single filter
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 1
+
+        # multi filter
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,ASSET_MODEL"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 1
+
+        # invalid filter
+        response = self.client.get(url, data={"kind": "foo"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 2
+
+        # invalid multi filter
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,foo"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 2
+
     def test_task_list_output_assets(self):
         url = reverse("api:task-output_assets", args=[self.expected_results[3]["key"]])
         response = self.client.get(url, **self.extra)
@@ -2619,3 +2647,31 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
+
+    def test_task_list_output_assets_filter(self):
+        url = reverse("api:task-output_assets", args=[self.expected_results[3]["key"]])
+
+        # base response should contain a model
+        response = self.client.get(url, **self.extra)
+        data = response.json()
+        assert data["count"] == 1
+
+        # single filter
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 0
+
+        # multi filter
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,ASSET_MODEL"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 1
+
+        # invalid filter
+        response = self.client.get(url, data={"kind": "foo"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 1
+
+        # invalid multi filter
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,foo"}, **self.extra)
+        data = response.json()
+        assert data["count"] == 1

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `create` api from model view to submit compute task output.
 - Add role filter to users list.
 - Endpoints to list task input/output assets
+- "Kind" filters on task input and ouput assets endpoints.
 
 ### Changed
 
