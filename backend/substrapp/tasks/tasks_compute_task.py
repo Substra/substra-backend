@@ -265,10 +265,9 @@ def _run(
 
             add_assets_to_taskdir(ctx)
 
-            if task.category != orchestrator.ComputeTaskCategory.TASK_TEST:
-                if ctx.has_chainkeys:
-                    _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan.tag)
-                    restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
+            if ctx.has_chainkeys:
+                _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan.tag)
+                restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
 
             # stop inputs loading timer
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
