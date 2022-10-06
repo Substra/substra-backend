@@ -2,9 +2,8 @@ import structlog
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.common_pb2 as common_pb2
-from api.models import Algo as Algo
-from api.models import ComputePlan as ComputePlan
-from api.models import DataManager as DataManager
+from api.models import ComputePlan
+from api.models import DataManager
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
 
@@ -92,23 +91,6 @@ class NewsFeedViewSet(GenericViewSet):
 
         return items
 
-    def get_algo_items(self):
-        items = []
-        channel = get_channel_name(self.request)
-
-        for algo in Algo.objects.filter(channel=channel, **self.date_filters("creation_date")):
-            items.append(
-                {
-                    "asset_kind": common_pb2.AssetKind.Name(common_pb2.ASSET_ALGO),
-                    "asset_key": algo.key,
-                    "name": algo.name,
-                    "status": "STATUS_CREATED",
-                    "timestamp": algo.creation_date,
-                    "detail": {},
-                }
-            )
-        return items
-
     def get_datamanager_items(self):
         items = []
         channel = get_channel_name(self.request)
@@ -133,8 +115,6 @@ class NewsFeedViewSet(GenericViewSet):
                 - STATUS_CREATED with computeplan creation_date
                 - STATUS_DOING with computeplan start_date
                 - STATUS_DONE/FAILED/CANCELED with computeplan end_date
-            - ASSET_ALGO:
-                - STATUS_CREATED with algo creation_date
             - ASSET_DATAMANAGER:
                 - STATUS_CREATED with datamanager creation_date
 
@@ -146,11 +126,7 @@ class NewsFeedViewSet(GenericViewSet):
         if is_important_news_only:
             items = self.get_compute_plan_items(is_important_news_only)
         else:
-            items = (
-                self.get_compute_plan_items(is_important_news_only)
-                + self.get_algo_items()
-                + self.get_datamanager_items()
-            )
+            items = self.get_compute_plan_items(is_important_news_only) + self.get_datamanager_items()
         items.sort(key=lambda x: x["timestamp"], reverse=True)
         items = self.paginate_queryset(items)
         return self.get_paginated_response(items)
