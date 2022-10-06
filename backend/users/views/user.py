@@ -4,8 +4,6 @@ from urllib.parse import unquote
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as djangoValidationError
 from django.utils.encoding import force_str
 from django_filters.rest_framework import ChoiceFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +15,6 @@ from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import GenericViewSet
@@ -36,34 +33,6 @@ def _xor_secrets(secret1, secret2):
     return "".join(list)
 
 
-def _validate_channel(name):
-    if name not in settings.LEDGER_CHANNELS:
-        raise ValidationError({"channel": "Channel does not exist"})
-
-
-def _validate_password(password, user):
-    if not password:
-        raise ValidationError("Missing password")
-    try:
-        validate_password(password, user)
-    except djangoValidationError as err:
-        raise ValidationError(err.error_list)
-
-
-def _validate_username(username):
-    user_model = get_user_model()
-    if user_model.objects.filter(username=username).exists():
-        raise BadRequestError("Username already exists")
-
-
-def _validate_role(role):
-    try:
-        role = UserChannel.Role[role]
-        return role
-    except KeyError:
-        raise ValidationError({"role": "Invalid role"})
-
-
 def _validate_token(token, secret):
     try:
         jwt.decode(token, secret, algorithms=[settings.RESET_JWT_SIGNATURE_ALGORITHM])
@@ -73,10 +42,10 @@ def _validate_token(token, secret):
     return {"is_valid": True, "message": ""}
 
 
-def _save_password(view, instance, password):
-    _validate_password(password, view.user_model(username=instance.username))
-    instance.set_password(password)
-    instance.save()
+def _save_password(instance, password):
+    serializer = UserSerializer(instance=instance, data={"password": password}, partial=True)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
     return UserSerializer(instance=instance).data
 
 
@@ -90,7 +59,10 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 class IsSelf(permissions.BasePermission):
     def has_permission(self, request, view):
-        user = view.get_object()
+        try:
+            user = view.get_object()
+        except BadRequestError:
+            return False
         if not user.is_authenticated:
             return False
 
@@ -130,24 +102,19 @@ class UserViewSet(
     def create(self, request, *args, **kwargs):
         username = request.data.get("username")
         password = request.data.get("password")
-        channel = get_channel_name(self.request)
         role = request.data.get("role")
-
-        _validate_channel(channel)
-        _validate_username(username)
-        _validate_password(password, self.user_model(username=username))
+        channel = get_channel_name(self.request)
 
         channel_data = {"channel_name": channel}
         if role:
-            channel_data["role"] = _validate_role(role)
+            channel_data["role"] = role
 
-        user = self.user_model.objects.create_user(username=username, password=password)
+        data = {"username": username, "password": password, "channel": channel_data}
 
-        channel_data["user"] = user
+        serializer = UserSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-        UserChannel.objects.create(**channel_data)
-
-        user.refresh_from_db()
         data = UserSerializer(instance=user).data
 
         return ApiResponse(data=data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(data))
@@ -155,25 +122,31 @@ class UserViewSet(
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         role = request.data.get("role")
+        ui_preferences = request.data.get("ui_preferences")
+        data = {"channel": {}}
 
         if role:
-            role = _validate_role(role)
-            instance.channel.role = role
-            instance.channel.save()
+            data["channel"]["role"] = role
 
-        instance.save()
-        data = UserSerializer(instance=instance).data
+        if ui_preferences:
+            data["channel"]["ui_preferences"] = ui_preferences
 
-        return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
+        serializer = UserSerializer(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return ApiResponse(data=serializer.data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
     @action(methods=["put"], detail=True, permission_classes=[IsSelf])
     def password(self, request, *args, **kwargs):
         """Allows an authenticated user to modify his own password"""
-        instance = self.get_object()
+
+        username = kwargs.get("username")
+        instance = self.user_model.objects.get(username=username)
         password = request.data.get("password")
 
         if password:
-            data = _save_password(self, instance, password)
+            data = _save_password(instance, password)
             return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
         return ApiResponse(data={"message": "missing password in the request"}, status=status.HTTP_400_BAD_REQUEST)
@@ -181,6 +154,7 @@ class UserViewSet(
     @action(methods=["post"], detail=True, permission_classes=[permissions.AllowAny], url_name="set-password")
     def set_password(self, request, *args, **kwargs):
         """Allows unauthenticated user to set new password if valid reset token is provided"""
+
         token = request.data.get("token")
         new_password = request.data.get("password")
 
@@ -191,7 +165,7 @@ class UserViewSet(
         token_validation = _validate_token(token, secret)
 
         if token_validation.get("is_valid"):
-            data = _save_password(self, instance, new_password)
+            data = _save_password(instance, new_password)
             return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
         return ApiResponse(
@@ -202,6 +176,7 @@ class UserViewSet(
     @action(detail=True, permission_classes=[permissions.AllowAny], url_name="verify-token")
     def verify_token(self, request, *args, **kwargs):
         """Return 200 if reset token is valid 401 otherwise. Accepts unauthenticated request"""
+
         token = request.query_params.get("token", None)
 
         username = unquote(kwargs.get("username"))

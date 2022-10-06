@@ -16,3 +16,4 @@ class UserChannel(models.Model):
         settings.AUTH_USER_MODEL, parent_link=True, on_delete=models.CASCADE, related_name="channel"
     )
     channel_name = models.CharField(max_length=100)
+    ui_preferences = models.JSONField(null=True)
