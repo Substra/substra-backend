@@ -16,7 +16,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"3\n\x16UpdateDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x1b\n\x19UpdateDataManagerResponse2\xfc\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponse\x12\x62\n\x11UpdateDataManager\x12$.orchestrator.UpdateDataManagerParam\x1a\'.orchestrator.UpdateDataManagerResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xb4\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x12\x10\n\x08\x61rchived\x18\x11 \x01(\x08\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"3\n\x16UpdateDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"8\n\x17\x41rchiveDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x10\n\x08\x61rchived\x18\x02 \x01(\x08\"\x1b\n\x19UpdateDataManagerResponse\"\x1c\n\x1a\x41rchiveDataManagerResponse2\xe3\x03\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponse\x12\x62\n\x11UpdateDataManager\x12$.orchestrator.UpdateDataManagerParam\x1a\'.orchestrator.UpdateDataManagerResponse\x12\x65\n\x12\x41rchiveDataManager\x12%.orchestrator.ArchiveDataManagerParam\x1a(.orchestrator.ArchiveDataManagerResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -28,7 +28,9 @@ _GETDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['GetDataManagerParam']
 _QUERYDATAMANAGERSPARAM = DESCRIPTOR.message_types_by_name['QueryDataManagersParam']
 _QUERYDATAMANAGERSRESPONSE = DESCRIPTOR.message_types_by_name['QueryDataManagersResponse']
 _UPDATEDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['UpdateDataManagerParam']
+_ARCHIVEDATAMANAGERPARAM = DESCRIPTOR.message_types_by_name['ArchiveDataManagerParam']
 _UPDATEDATAMANAGERRESPONSE = DESCRIPTOR.message_types_by_name['UpdateDataManagerResponse']
+_ARCHIVEDATAMANAGERRESPONSE = DESCRIPTOR.message_types_by_name['ArchiveDataManagerResponse']
 DataManager = _reflection.GeneratedProtocolMessageType('DataManager', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
@@ -87,12 +89,26 @@ UpdateDataManagerParam = _reflection.GeneratedProtocolMessageType('UpdateDataMan
   })
 _sym_db.RegisterMessage(UpdateDataManagerParam)
 
+ArchiveDataManagerParam = _reflection.GeneratedProtocolMessageType('ArchiveDataManagerParam', (_message.Message,), {
+  'DESCRIPTOR' : _ARCHIVEDATAMANAGERPARAM,
+  '__module__' : 'datamanager_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.ArchiveDataManagerParam)
+  })
+_sym_db.RegisterMessage(ArchiveDataManagerParam)
+
 UpdateDataManagerResponse = _reflection.GeneratedProtocolMessageType('UpdateDataManagerResponse', (_message.Message,), {
   'DESCRIPTOR' : _UPDATEDATAMANAGERRESPONSE,
   '__module__' : 'datamanager_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.UpdateDataManagerResponse)
   })
 _sym_db.RegisterMessage(UpdateDataManagerResponse)
+
+ArchiveDataManagerResponse = _reflection.GeneratedProtocolMessageType('ArchiveDataManagerResponse', (_message.Message,), {
+  'DESCRIPTOR' : _ARCHIVEDATAMANAGERRESPONSE,
+  '__module__' : 'datamanager_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.ArchiveDataManagerResponse)
+  })
+_sym_db.RegisterMessage(ArchiveDataManagerResponse)
 
 _DATAMANAGERSERVICE = DESCRIPTOR.services_by_name['DataManagerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
@@ -104,23 +120,27 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _NEWDATAMANAGER_METADATAENTRY._options = None
   _NEWDATAMANAGER_METADATAENTRY._serialized_options = b'8\001'
   _DATAMANAGER._serialized_start=83
-  _DATAMANAGER._serialized_end=501
-  _DATAMANAGER_METADATAENTRY._serialized_start=454
-  _DATAMANAGER_METADATAENTRY._serialized_end=501
-  _NEWDATAMANAGER._serialized_start=504
-  _NEWDATAMANAGER._serialized_end=873
-  _NEWDATAMANAGER_METADATAENTRY._serialized_start=454
-  _NEWDATAMANAGER_METADATAENTRY._serialized_end=501
-  _GETDATAMANAGERPARAM._serialized_start=875
-  _GETDATAMANAGERPARAM._serialized_end=909
-  _QUERYDATAMANAGERSPARAM._serialized_start=911
-  _QUERYDATAMANAGERSPARAM._serialized_end=974
-  _QUERYDATAMANAGERSRESPONSE._serialized_start=976
-  _QUERYDATAMANAGERSRESPONSE._serialized_end=1078
-  _UPDATEDATAMANAGERPARAM._serialized_start=1080
-  _UPDATEDATAMANAGERPARAM._serialized_end=1131
-  _UPDATEDATAMANAGERRESPONSE._serialized_start=1133
-  _UPDATEDATAMANAGERRESPONSE._serialized_end=1160
-  _DATAMANAGERSERVICE._serialized_start=1163
-  _DATAMANAGERSERVICE._serialized_end=1543
+  _DATAMANAGER._serialized_end=519
+  _DATAMANAGER_METADATAENTRY._serialized_start=472
+  _DATAMANAGER_METADATAENTRY._serialized_end=519
+  _NEWDATAMANAGER._serialized_start=522
+  _NEWDATAMANAGER._serialized_end=891
+  _NEWDATAMANAGER_METADATAENTRY._serialized_start=472
+  _NEWDATAMANAGER_METADATAENTRY._serialized_end=519
+  _GETDATAMANAGERPARAM._serialized_start=893
+  _GETDATAMANAGERPARAM._serialized_end=927
+  _QUERYDATAMANAGERSPARAM._serialized_start=929
+  _QUERYDATAMANAGERSPARAM._serialized_end=992
+  _QUERYDATAMANAGERSRESPONSE._serialized_start=994
+  _QUERYDATAMANAGERSRESPONSE._serialized_end=1096
+  _UPDATEDATAMANAGERPARAM._serialized_start=1098
+  _UPDATEDATAMANAGERPARAM._serialized_end=1149
+  _ARCHIVEDATAMANAGERPARAM._serialized_start=1151
+  _ARCHIVEDATAMANAGERPARAM._serialized_end=1207
+  _UPDATEDATAMANAGERRESPONSE._serialized_start=1209
+  _UPDATEDATAMANAGERRESPONSE._serialized_end=1236
+  _ARCHIVEDATAMANAGERRESPONSE._serialized_start=1238
+  _ARCHIVEDATAMANAGERRESPONSE._serialized_end=1266
+  _DATAMANAGERSERVICE._serialized_start=1269
+  _DATAMANAGERSERVICE._serialized_end=1752
 # @@protoc_insertion_point(module_scope)

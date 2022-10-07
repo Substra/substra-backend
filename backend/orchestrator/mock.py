@@ -1,5 +1,7 @@
 import factory
 
+from substrapp.tests.common import InputIdentifiers
+
 from .resources import Address
 from .resources import Algo
 from .resources import AlgoInput
@@ -8,6 +10,7 @@ from .resources import ComputePlan
 from .resources import ComputeTask
 from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
+from .resources import ComputeTaskInputAsset
 from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
 from .resources import DataManager
@@ -25,6 +28,17 @@ class ComputeTaskInputFactory(factory.Factory):
     asset_key = None
     parent_task_key = None
     parent_task_output_identifier = None
+
+
+class ComputeTaskInputAssetFactory(factory.Factory):
+    class Meta:
+        model = ComputeTaskInputAsset
+
+    identifier = InputIdentifiers.LOCAL
+    kind = AssetKind.ASSET_UNKNOWN
+    model = None
+    data_manager = None
+    data_sample = None
 
 
 class ComputeTaskFactory(factory.Factory):
@@ -76,6 +90,7 @@ class DataManagerFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     opener = factory.SubFactory(AddressFactory)
+    archived = False
 
 
 class AlgoInputFactory(factory.Factory):

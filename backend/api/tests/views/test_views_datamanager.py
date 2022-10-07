@@ -45,7 +45,8 @@ class DataManagerViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        data_manager_1 = factory.create_datamanager(name="datamanager foo")
+        data_manager_1 = factory.create_datamanager(name="datamanager foo", archived=True)
+
         train_data_sample = factory.create_datasample([data_manager_1])
         test_data_sample = factory.create_datasample([data_manager_1], test_only=True)
         # only for retrieve view
@@ -91,6 +92,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "archived": True,
             },
             {
                 "key": str(data_manager_2.key),
@@ -121,6 +123,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "archived": False,
             },
             {
                 "key": str(data_manager_3.key),
@@ -151,6 +154,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "archived": False,
             },
         ]
 
@@ -177,6 +181,28 @@ class DataManagerViewTests(APITestCase):
         error.code = StatusCode.INTERNAL
 
         with mock.patch.object(OrchestratorClient, "update_datamanager", side_effect=error):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_datamanager_archive(self):
+        data_manager = self.expected_results[0]
+        data = {
+            "key": data_manager["key"],
+            "archived": True,
+        }
+
+        url = reverse("api:data_manager-archive", args=[data_manager["key"]])
+        data_manager["archived"] = data["archived"]
+
+        with mock.patch.object(OrchestratorClient, "archive_datamanager", side_effect=data_manager):
+            response = self.client.put(url, data=data, format="json", **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        error = OrcError()
+        error.code = StatusCode.INTERNAL
+
+        with mock.patch.object(OrchestratorClient, "archive_datamanager", side_effect=error):
             response = self.client.put(url, data=data, format="json", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -257,6 +283,11 @@ class DataManagerViewTests(APITestCase):
 
         # filter on data_sample_key
         params = urlencode({"data_sample_key": self.train_data_sample_key_uuid})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json().get("results"), self.expected_results[:1])
+
+    def test_datamanager_archived_filters(self):
+        params = urlencode({"archived": True})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 

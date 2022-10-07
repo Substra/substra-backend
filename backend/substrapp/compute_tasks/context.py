@@ -134,7 +134,13 @@ class Context:
         ]
         if len(dm) > 1:
             raise InvalidContextError("there are too many datamanagers")
-        return dm[0] if dm else None
+
+        if not dm:
+            return None
+
+        if dm[0].archived:
+            raise InvalidContextError(f"datamanager {dm[0].key} is archived and cannot be used for the task")
+        return dm[0]
 
     @property
     def data_sample_keys(self) -> list[str]:

@@ -25,6 +25,7 @@ class DataManager(models.Model, AssetPermissionMixin):
     creation_date = models.DateTimeField()
     metadata = models.JSONField()
     channel = models.CharField(max_length=100)
+    archived = models.BooleanField(default=False)
 
     def get_train_data_samples(self):
         # default ordering is based on an association table `TaskDataSamples`

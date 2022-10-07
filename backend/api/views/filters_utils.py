@@ -13,6 +13,8 @@ from django_filters.rest_framework import UUIDFilter
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.filters import SearchFilter
 
+from backend.settings.common import to_bool
+
 logger = structlog.get_logger(__name__)
 
 

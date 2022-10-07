@@ -34,6 +34,11 @@ class DataManagerServiceStub(object):
                 request_serializer=datamanager__pb2.UpdateDataManagerParam.SerializeToString,
                 response_deserializer=datamanager__pb2.UpdateDataManagerResponse.FromString,
                 )
+        self.ArchiveDataManager = channel.unary_unary(
+                '/orchestrator.DataManagerService/ArchiveDataManager',
+                request_serializer=datamanager__pb2.ArchiveDataManagerParam.SerializeToString,
+                response_deserializer=datamanager__pb2.ArchiveDataManagerResponse.FromString,
+                )
 
 
 class DataManagerServiceServicer(object):
@@ -63,6 +68,12 @@ class DataManagerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ArchiveDataManager(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataManagerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +96,11 @@ def add_DataManagerServiceServicer_to_server(servicer, server):
                     servicer.UpdateDataManager,
                     request_deserializer=datamanager__pb2.UpdateDataManagerParam.FromString,
                     response_serializer=datamanager__pb2.UpdateDataManagerResponse.SerializeToString,
+            ),
+            'ArchiveDataManager': grpc.unary_unary_rpc_method_handler(
+                    servicer.ArchiveDataManager,
+                    request_deserializer=datamanager__pb2.ArchiveDataManagerParam.FromString,
+                    response_serializer=datamanager__pb2.ArchiveDataManagerResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -161,5 +177,22 @@ class DataManagerService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.DataManagerService/UpdateDataManager',
             datamanager__pb2.UpdateDataManagerParam.SerializeToString,
             datamanager__pb2.UpdateDataManagerResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ArchiveDataManager(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.DataManagerService/ArchiveDataManager',
+            datamanager__pb2.ArchiveDataManagerParam.SerializeToString,
+            datamanager__pb2.ArchiveDataManagerResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

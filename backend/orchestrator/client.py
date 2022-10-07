@@ -256,6 +256,13 @@ class OrchestratorClient:
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
+    @grpc_retry
+    def archive_datamanager(self, args):
+        data = self._datamanager_client.ArchiveDataManager(
+            datamanager_pb2.ArchiveDataManagerParam(**args), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
     def _get_task_input(self, input: dict) -> computetask_pb2.ComputeTaskInput:
         """Convert a dict into a computetask_pb2.ComputeTaskInput"""
 

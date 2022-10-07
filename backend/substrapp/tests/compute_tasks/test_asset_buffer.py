@@ -159,7 +159,9 @@ class AssetBufferTests(APITestCase):
         self.opener_storage_address = "some storage address"
         self.data_manager_key = "some_data_manager_key"
         self.data_manager = DataManager(
-            key=self.data_manager_key, opener=Address(uri=self.opener_storage_address, checksum=self.opener_checksum)
+            key=self.data_manager_key,
+            opener=Address(uri=self.opener_storage_address, checksum=self.opener_checksum),
+            archived=False,
         )
 
     def _setup_data_samples(self):
