@@ -7,7 +7,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0039_computetaskinputasset"),
+        ("api", "0040_alter_computeplan_failed_task_category_and_more"),
     ]
 
     operations = [
