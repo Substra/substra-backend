@@ -144,14 +144,3 @@ class MetadataFilterBackend(BaseFilterBackend):
 
         return queryset.filter(**django_filters)
 
-
-class ArchiveFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        # apply filters to queryset
-        if view.action == "list":
-            archived = to_bool(request.query_params.get("archived"))
-            if archived:
-                return queryset
-            return queryset.filter(archived=False)
-        else:
-            return queryset

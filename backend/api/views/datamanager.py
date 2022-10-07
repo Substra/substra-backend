@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -140,6 +141,7 @@ class DataManagerFilter(FilterSet):
     data_sample_key = CharInFilter(
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
+    archived = BooleanFilter(field_name="archived", distinct=True, label="archived")
 
     class Meta:
         model = DataManager
