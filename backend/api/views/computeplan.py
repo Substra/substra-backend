@@ -124,6 +124,7 @@ class ComputePlanFilter(FilterSet):
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
     duration = RangeFilter(label="duration")
+    creator = CharFilter(field_name="creator__user__username", label="creator")
 
     class Meta:
         model = ComputePlan
@@ -173,7 +174,7 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         DjangoFilterBackend,
         ComputePlanMetadataFilter,
     )
-    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration"]
+    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration", "creator"]
     search_fields = ("key", "name")
     filterset_class = ComputePlanFilter
 
