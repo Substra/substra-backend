@@ -100,13 +100,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def _update_ui_preferences(self, instance, value):
         ui_preferences = instance.channel.ui_preferences
+        if not ui_preferences:
+            ui_preferences = {}
         if value:
             for key in value:
                 ui_preferences[key] = value[key]
         return ui_preferences
 
     def update(self, instance, validated_data):
-        instance.set_password(validated_data.get("password"))
+        password = validated_data.get("password")
+        if password:
+            instance.set_password(password)
+
         channel = validated_data.get("channel")
         if channel:
             instance.channel.role = validated_data.get("channel").get("role", instance.channel.role)
@@ -114,5 +119,6 @@ class UserSerializer(serializers.ModelSerializer):
                 instance, validated_data.get("channel").get("ui_preferences", instance.channel.ui_preferences)
             )
             instance.channel.save()
+
         instance.save()
         return instance

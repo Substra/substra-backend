@@ -2,6 +2,7 @@ from urllib.parse import urlencode
 
 import pytest
 from django.urls.base import reverse
+from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -102,22 +103,23 @@ class TestUserEndpoints:
         response = AuthenticatedClient(channel=self.channel).get(url, **self.extra)
         assert response.status_code == status.HTTP_200_OK
 
+    @parameterized.expand(
+        [
+            ({"role": UserChannel.Role.USER},),
+            ({"password": "newpas$w0rdtestofdrea6S43"},),
+            ({"ui_preferences": {"columns": ["col1", "col2"]}},),
+            ({"role": UserChannel.Role.USER, "ui_preferences": {"columns": ["col1"]}},),
+        ]
+    )
     @pytest.mark.django_db
-    def test_update_role(self):
+    def test_update_user(self, data):
         url = reverse("user:users-detail", args=["substra"])
-        data = {"role": UserChannel.Role.USER}
         response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["role"] == UserChannel.Role.USER
-
-    @pytest.mark.django_db
-    def test_update_password(self):
-        url = reverse("user:users-password", args=["substra"])
-        data = {"password": "newpas$w0rdtestofdrea6S43"}
-        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
-
-        assert response.status_code == status.HTTP_200_OK
+        for key in data:
+            if key != "password":
+                assert response.data[key] == data[key]
 
     @pytest.mark.django_db
     def test_update_password_unauthorized(self):
