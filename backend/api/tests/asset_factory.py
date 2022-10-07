@@ -270,7 +270,7 @@ def create_datamanager(
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
     public: bool = False,
-    archived: bool = False
+    archived: bool = False,
 ) -> DataManager:
     if key is None:
         key = uuid.uuid4()

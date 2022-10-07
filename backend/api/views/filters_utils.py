@@ -143,4 +143,3 @@ class MetadataFilterBackend(BaseFilterBackend):
             django_filters[f'metadata_filters__{f["key"]}__icontains'] = f["value"]
 
         return queryset.filter(**django_filters)
-

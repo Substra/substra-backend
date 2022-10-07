@@ -46,7 +46,7 @@ class DataManagerViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
         data_manager_1 = factory.create_datamanager(name="datamanager foo", archived=True)
-        
+
         train_data_sample = factory.create_datasample([data_manager_1])
         test_data_sample = factory.create_datasample([data_manager_1], test_only=True)
         # only for retrieve view
@@ -92,7 +92,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
-                "archived": True
+                "archived": True,
             },
             {
                 "key": str(data_manager_2.key),
