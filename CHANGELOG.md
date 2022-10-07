@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add role filter to users list.
 - Endpoints to list task input/output assets
 - "Kind" filters on task input and ouput assets endpoints.
+- Return train_data_sample_keys and test_data_sample_keys fields in data manager "list" API responses
 
 ### Changed
 
