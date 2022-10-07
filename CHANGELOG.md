@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Add compute task category unknown value
+- Improved validation at user creation.
 
 ### Fixed
 
