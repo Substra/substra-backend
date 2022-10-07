@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Endpoints to list task input/output assets
 
+### Changed
+
+- Remove task category from the compute engine.
+
 ## [0.32.0] 2022-10-03
 
 ### Changed
