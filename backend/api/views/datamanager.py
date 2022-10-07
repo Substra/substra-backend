@@ -179,7 +179,7 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         return DataManager.objects.filter(channel=get_channel_name(self.request))
 
     def get_serializer_class(self):
-        if self.action == "retrieve":
+        if self.action in ["list", "retrieve"]:
             return DataManagerWithRelationsSerializer
         return DataManagerSerializer
 
