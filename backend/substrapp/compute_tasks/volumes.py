@@ -25,16 +25,15 @@ def get_volumes(ctx: Context):
         ]
     )
 
-    if ctx.task.category == orchestrator.ComputeTaskCategory.TASK_TEST:
-        # testtuple
+    if ctx.has_chainkeys:
+        volume_mounts.append(_create_mount(dirs.task_dir, TaskDirName.Chainkeys))
+
+    if ctx.has_output_of_kind(orchestrator.AssetKind.ASSET_PERFORMANCE):
         volume_mounts.append(_create_mount(dirs.task_dir, TaskDirName.Perf))
-    else:
-        # predicttuple and Xtraintuples
-        volume_mounts.extend(
-            [
-                _create_mount(dirs.task_dir, TaskDirName.Chainkeys),
-                _create_mount(dirs.task_dir, TaskDirName.OutModels),
-            ]
+
+    if ctx.has_output_of_kind(orchestrator.AssetKind.ASSET_MODEL):
+        volume_mounts.append(
+            _create_mount(dirs.task_dir, TaskDirName.OutModels),
         )
 
     volumes = [

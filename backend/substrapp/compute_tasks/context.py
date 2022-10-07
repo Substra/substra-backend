@@ -39,7 +39,7 @@ class Context:
     Context represents the execution context of a compute task.
 
     It is scoped to a single compute task. It contains all the context data which is useful during the
-    whole lifetime of a compute task: channel name, task key, category, compute plan key, etc...
+    whole lifetime of a compute task: channel name, task key, compute plan key, etc...
     """
 
     _channel_name: str
@@ -176,3 +176,6 @@ class Context:
             )
 
         return outputs
+
+    def has_output_of_kind(self, kind: orchestrator.AssetKind) -> bool:
+        return any(output.kind == kind for output in self._outputs)

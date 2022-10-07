@@ -13,7 +13,6 @@ from django.core.files import File
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
-import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.mock as orc_mock
 from orchestrator.resources import Address
 from orchestrator.resources import DataManager
@@ -196,7 +195,6 @@ class AssetBufferTests(APITestCase):
             directories = self.dirs
             channel_name = CHANNEL
             compute_plan_key = "some compute plan key"
-            task_category = computetask_pb2.TASK_TRAIN
             metrics = {
                 self.metric_key: {
                     "key": self.metric_key,

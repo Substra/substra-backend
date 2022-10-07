@@ -11,13 +11,12 @@ from substrapp.tests.common import InputIdentifiers
 _CHANNEL = "mychannel"
 
 
-def test_get_args_train_task():
+def test_get_args_task_input_one_model_output_one_model():
     model = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()
     ds2 = orc_mock.DataSampleFactory()
     task = orc_mock.ComputeTaskFactory(
-        category=orchestrator.ComputeTaskCategory.TASK_TRAIN,
         rank=0,
     )
 
@@ -88,14 +87,13 @@ def test_get_args_train_task():
     ]
 
 
-def test_get_args_composite_task():
+def test_get_args_task_input_two_models_output_two_models():
     shared = orc_mock.ModelFactory()
     local = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()
     ds2 = orc_mock.DataSampleFactory()
     task = orc_mock.ComputeTaskFactory(
-        category=orchestrator.ComputeTaskCategory.TASK_COMPOSITE,
         rank=0,
     )
 
@@ -184,7 +182,6 @@ def test_get_args_predict_after_train():
     ds1 = orc_mock.DataSampleFactory()
     ds2 = orc_mock.DataSampleFactory()
     task = orc_mock.ComputeTaskFactory(
-        category=orchestrator.ComputeTaskCategory.TASK_PREDICT,
         rank=0,
     )
 
@@ -246,6 +243,8 @@ def test_get_args_predict_after_train():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
+        "--rank",
+        "0",
         "--inputs",
         json.dumps(expected_inputs),
         "--outputs",
@@ -253,14 +252,13 @@ def test_get_args_predict_after_train():
     ]
 
 
-def test_get_args_predict_after_composite():
+def test_get_args_predict_input_two_models_output_one_model():
     local = orc_mock.ModelFactory()
     shared = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()
     ds2 = orc_mock.DataSampleFactory()
     task = orc_mock.ComputeTaskFactory(
-        category=orchestrator.ComputeTaskCategory.TASK_PREDICT,
         rank=0,
     )
 
@@ -327,6 +325,8 @@ def test_get_args_predict_after_composite():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
+        "--rank",
+        "0",
         "--inputs",
         json.dumps(expected_inputs),
         "--outputs",
@@ -334,13 +334,12 @@ def test_get_args_predict_after_composite():
     ]
 
 
-def test_get_args_test_after_predict():
+def test_get_args_test_input_one_model_output_one_performance():
     pred = orc_mock.ModelFactory()
     data_manager = orc_mock.DataManagerFactory()
     ds1 = orc_mock.DataSampleFactory()
     ds2 = orc_mock.DataSampleFactory()
     task = orc_mock.ComputeTaskFactory(
-        category=orchestrator.ComputeTaskCategory.TASK_TEST,
         rank=0,
     )
     algo = orc_mock.AlgoFactory(
