@@ -28,14 +28,6 @@ from api.serializers.utils import make_download_process_permission_serializer
 from api.serializers.utils import make_permission_serializer
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
 
-TASK_CATEGORY_FIELDS = {
-    ComputeTask.Category.TASK_TRAIN: "train",
-    ComputeTask.Category.TASK_PREDICT: "predict",
-    ComputeTask.Category.TASK_TEST: "test",
-    ComputeTask.Category.TASK_COMPOSITE: "composite",
-    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
-}
-
 
 class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
@@ -170,119 +162,6 @@ class AlgoField(serializers.Field):
         return Algo.objects.get(key=data["key"])
 
 
-class PredictTaskSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["models"] = data["models"] or None  # sdk does not support empty list
-        return data
-
-    data_manager_key = serializers.PrimaryKeyRelatedField(
-        queryset=DataManager.objects.all(),
-        source="data_manager",
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    data_sample_keys = serializers.PrimaryKeyRelatedField(
-        queryset=DataSample.objects.all(),
-        source="data_samples",
-        many=True,
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    models = ModelSerializer(many=True, read_only=True)
-
-    class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "models"]
-
-
-class TestTaskSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["perfs"] = {perf["metric_key"]: perf["performance_value"] for perf in data["perfs"]} or None
-        return data
-
-    data_manager_key = serializers.PrimaryKeyRelatedField(
-        queryset=DataManager.objects.all(),
-        source="data_manager",
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    data_sample_keys = serializers.PrimaryKeyRelatedField(
-        queryset=DataSample.objects.all(),
-        source="data_samples",
-        many=True,
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    perfs = PerformanceSerializer(many=True, read_only=True, source="performances")
-
-    class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "perfs"]
-
-
-class TrainTaskSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["models"] = data["models"] or None  # sdk does not support empty list
-        return data
-
-    data_manager_key = serializers.PrimaryKeyRelatedField(
-        queryset=DataManager.objects.all(),
-        source="data_manager",
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    data_sample_keys = serializers.PrimaryKeyRelatedField(
-        queryset=DataSample.objects.all(),
-        source="data_samples",
-        many=True,
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    models = ModelSerializer(many=True, read_only=True)
-
-    class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "models"]
-
-
-class AggregateTaskSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["models"] = data["models"] or None  # sdk does not support empty list
-        return data
-
-    models = ModelSerializer(many=True, read_only=True)
-
-    class Meta:
-        fields = ["models"]
-
-
-class CompositeTaskSerializer(serializers.Serializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["models"] = data["models"] or None  # sdk does not support empty list
-        return data
-
-    data_manager_key = serializers.PrimaryKeyRelatedField(
-        queryset=DataManager.objects.all(),
-        source="data_manager",
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-
-    data_sample_keys = serializers.PrimaryKeyRelatedField(
-        queryset=DataSample.objects.all(),
-        source="data_samples",
-        many=True,
-        required=False,
-        pk_field=serializers.UUIDField(format="hex_verbose"),
-    )
-    models = ModelSerializer(many=True, read_only=True)
-
-    class Meta:
-        fields = ["data_manager_key", "data_sample_keys", "models"]
-
-
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     logs_permission = make_permission_serializer("logs_permission")(source="*")
     algo = AlgoField()
@@ -299,6 +178,29 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     duration = serializers.IntegerField(read_only=True)
     inputs = ComputeTaskInputSerializer(many=True)
     outputs = ComputeTaskOutputSerializer(many=True)
+
+    class Meta:
+        model = ComputeTask
+        fields = [
+            "algo",
+            "channel",
+            "compute_plan_key",
+            "creation_date",
+            "end_date",
+            "error_type",
+            "key",
+            "logs_permission",
+            "metadata",
+            "owner",
+            "rank",
+            "start_date",
+            "status",
+            "tag",
+            "worker",
+            "duration",
+            "inputs",
+            "outputs",
+        ]
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -329,38 +231,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             task["algo"]["algorithm"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:algo-file", args=[task["algo"]["key"]])
             )
-
-    class Meta:
-        model = ComputeTask
-        fields = [
-            "algo",
-            "channel",
-            "compute_plan_key",
-            "creation_date",
-            "end_date",
-            "error_type",
-            "key",
-            "logs_permission",
-            "metadata",
-            "owner",
-            "rank",
-            "start_date",
-            "status",
-            "tag",
-            "worker",
-            "duration",
-            "inputs",
-            "outputs",
-        ]
-
-
-class LegacyComputeTaskSerializer(ComputeTaskSerializer):
-    predict = PredictTaskSerializer(required=False, source="*")
-    test = TestTaskSerializer(required=False, source="*")
-    train = TrainTaskSerializer(required=False, source="*")
-    aggregate = AggregateTaskSerializer(required=False, source="*")
-    composite = CompositeTaskSerializer(required=False, source="*")
-    parent_task_keys = serializers.ListField(source="parent_tasks", child=serializers.CharField(), required=False)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -417,93 +287,3 @@ class LegacyComputeTaskSerializer(ComputeTaskSerializer):
 
         compute_task.refresh_from_db()
         return compute_task
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-
-        for category, field in TASK_CATEGORY_FIELDS.items():
-            if instance.category != category:
-                del data[field]
-
-        # Fill the legacy permission fields.
-        # This block will be deleted once all clients have stopped using these legacy permissions fields.
-        if instance.category in [ComputeTask.Category.TASK_TRAIN, ComputeTask.Category.TASK_AGGREGATE]:
-            data[TASK_CATEGORY_FIELDS[instance.category]]["model_permissions"] = data["outputs"]["model"]["permissions"]
-        elif instance.category == ComputeTask.Category.TASK_COMPOSITE:
-            data[TASK_CATEGORY_FIELDS[instance.category]]["head_permissions"] = data["outputs"]["local"]["permissions"]
-            data[TASK_CATEGORY_FIELDS[instance.category]]["trunk_permissions"] = data["outputs"]["shared"][
-                "permissions"
-            ]
-        elif instance.category == ComputeTask.Category.TASK_PREDICT:
-            data[TASK_CATEGORY_FIELDS[instance.category]]["prediction_permissions"] = data["outputs"]["predictions"][
-                "permissions"
-            ]
-
-        return data
-
-    def _replace_storage_addresses(self, task):
-        super()._replace_storage_addresses(task)
-
-        request = self.context.get("request")
-        if not request:
-            return task
-
-        # replace in category-dependent relationships
-        task_details = task[TASK_CATEGORY_FIELDS[task["category"]]]
-
-        if "data_manager" in task_details and task_details["data_manager"]:
-            data_manager = task_details["data_manager"]
-            data_manager["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:data_manager-description", args=[data_manager["key"]])
-            )
-            data_manager["opener"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:data_manager-opener", args=[data_manager["key"]])
-            )
-
-        models = task_details.get("models") or []  # field may be set to None
-        for model in models:
-            if "address" in model and model["address"]:
-                model["address"]["storage_address"] = request.build_absolute_uri(
-                    reverse("api:model-file", args=[model["key"]])
-                )
-
-    class Meta:
-        model = ComputeTask
-        fields = ComputeTaskSerializer.Meta.fields + [
-            "category",
-            "aggregate",
-            "composite",
-            "predict",
-            "test",
-            "train",
-            "parent_task_keys",
-        ]
-
-
-class LegacyComputeTaskWithRelationshipsSerializer(LegacyComputeTaskSerializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if instance.category in [
-            ComputeTask.Category.TASK_TRAIN,
-            ComputeTask.Category.TASK_PREDICT,
-            ComputeTask.Category.TASK_TEST,
-            ComputeTask.Category.TASK_COMPOSITE,
-        ]:
-            data_manager = DataManager.objects.get(
-                key=data[TASK_CATEGORY_FIELDS[instance.category]]["data_manager_key"],
-                channel=instance.channel,
-            )
-            data[TASK_CATEGORY_FIELDS[instance.category]]["data_manager"] = DataManagerSerializer(data_manager).data
-
-        # we need to call this again because this time, there are values for data_manager
-        self._replace_storage_addresses(data)
-
-        # parent_tasks
-        parent_tasks = ComputeTask.objects.filter(
-            key__in=data["parent_task_keys"],
-            channel=instance.channel,
-        ).order_by("creation_date", "key")
-        data["parent_tasks"] = LegacyComputeTaskSerializer(parent_tasks, many=True).data
-        for parent_task in data.get("parent_tasks", []):
-            self._replace_storage_addresses(parent_task)
-        return data
