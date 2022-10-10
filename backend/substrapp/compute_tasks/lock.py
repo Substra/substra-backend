@@ -23,14 +23,6 @@ def acquire_compute_plan_lock(compute_plan_key: str) -> AbstractContextManager:
       instance, out-models are stored in the "task directory": if 2 compute tasks belonging to the same compute plan
       run concurrently, one would overwrite the other's out-model.
 
-    - *Make testtuple predictions available to the evaluation step*
-      This is related to the previous point. Ensure that the "predict" and "evaluate" steps of a testtuple are run
-      immediately one after the other. This is necessary because the "evaluate" step needs the pred.json file computed
-      by the "predict" step. This file is stored in a shared folder (task_dir). Executing another compute task in
-      between the two steps would result in the shared folder (task_dir) being altered, and `pred.json` potentially be
-      lost or overwritten. The function `execute_compute_task` takes care of running both the "predict" and "evaluate"
-      steps of the testtuple.
-
     - *Prevent the deletion compute plan resources while the compute plan is running*
       When the last compute task of a compute plan transitions to the "done" state, the compute plan itself transitions
       to the "done" state. As a result, an event is emitted to teardown (delete) the compute plan resources (pods,
