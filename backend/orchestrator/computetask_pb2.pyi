@@ -219,11 +219,6 @@ class ComputeTask(google.protobuf.message.Message):
     WORKER_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     LOGS_PERMISSION_FIELD_NUMBER: builtins.int
-    TEST_FIELD_NUMBER: builtins.int
-    TRAIN_FIELD_NUMBER: builtins.int
-    COMPOSITE_FIELD_NUMBER: builtins.int
-    AGGREGATE_FIELD_NUMBER: builtins.int
-    PREDICT_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
@@ -244,16 +239,6 @@ class ComputeTask(google.protobuf.message.Message):
     @property
     def logs_permission(self) -> common_pb2.Permission: ...
     @property
-    def test(self) -> global___TestTaskData: ...
-    @property
-    def train(self) -> global___TrainTaskData: ...
-    @property
-    def composite(self) -> global___CompositeTrainTaskData: ...
-    @property
-    def aggregate(self) -> global___AggregateTrainTaskData: ...
-    @property
-    def predict(self) -> global___PredictTaskData: ...
-    @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     @property
     def inputs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ComputeTaskInput]: ...
@@ -273,19 +258,13 @@ class ComputeTask(google.protobuf.message.Message):
         worker: builtins.str = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         logs_permission: common_pb2.Permission | None = ...,
-        test: global___TestTaskData | None = ...,
-        train: global___TrainTaskData | None = ...,
-        composite: global___CompositeTrainTaskData | None = ...,
-        aggregate: global___AggregateTrainTaskData | None = ...,
-        predict: global___PredictTaskData | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Iterable[global___ComputeTaskInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___ComputeTaskOutput] | None = ...,
         algo_key: builtins.str = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "composite", b"composite", "creation_date", b"creation_date", "data", b"data", "logs_permission", b"logs_permission", "predict", b"predict", "test", b"test", "train", b"train"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "algo_key", b"algo_key", "category", b"category", "composite", b"composite", "compute_plan_key", b"compute_plan_key", "creation_date", b"creation_date", "data", b"data", "inputs", b"inputs", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "outputs", b"outputs", "owner", b"owner", "parent_task_keys", b"parent_task_keys", "predict", b"predict", "rank", b"rank", "status", b"status", "test", b"test", "train", b"train", "worker", b"worker"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["data", b"data"]) -> typing_extensions.Literal["test", "train", "composite", "aggregate", "predict"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "logs_permission", b"logs_permission"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algo_key", b"algo_key", "category", b"category", "compute_plan_key", b"compute_plan_key", "creation_date", b"creation_date", "inputs", b"inputs", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "outputs", b"outputs", "owner", b"owner", "parent_task_keys", b"parent_task_keys", "rank", b"rank", "status", b"status", "worker", b"worker"]) -> None: ...
 
 global___ComputeTask = ComputeTask
 
@@ -329,11 +308,6 @@ class NewComputeTask(google.protobuf.message.Message):
     ALGO_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
     WORKER_FIELD_NUMBER: builtins.int
-    TEST_FIELD_NUMBER: builtins.int
-    TRAIN_FIELD_NUMBER: builtins.int
-    COMPOSITE_FIELD_NUMBER: builtins.int
-    AGGREGATE_FIELD_NUMBER: builtins.int
-    PREDICT_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
@@ -342,16 +316,6 @@ class NewComputeTask(google.protobuf.message.Message):
     algo_key: builtins.str
     compute_plan_key: builtins.str
     worker: builtins.str
-    @property
-    def test(self) -> global___NewTestTaskData: ...
-    @property
-    def train(self) -> global___NewTrainTaskData: ...
-    @property
-    def composite(self) -> global___NewCompositeTrainTaskData: ...
-    @property
-    def aggregate(self) -> global___NewAggregateTrainTaskData: ...
-    @property
-    def predict(self) -> global___NewPredictTaskData: ...
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     @property
@@ -366,182 +330,13 @@ class NewComputeTask(google.protobuf.message.Message):
         algo_key: builtins.str = ...,
         compute_plan_key: builtins.str = ...,
         worker: builtins.str = ...,
-        test: global___NewTestTaskData | None = ...,
-        train: global___NewTrainTaskData | None = ...,
-        composite: global___NewCompositeTrainTaskData | None = ...,
-        aggregate: global___NewAggregateTrainTaskData | None = ...,
-        predict: global___NewPredictTaskData | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Iterable[global___ComputeTaskInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___NewComputeTaskOutput] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "composite", b"composite", "data", b"data", "predict", b"predict", "test", b"test", "train", b"train"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregate", b"aggregate", "algo_key", b"algo_key", "category", b"category", "composite", b"composite", "compute_plan_key", b"compute_plan_key", "data", b"data", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "outputs", b"outputs", "predict", b"predict", "test", b"test", "train", b"train", "worker", b"worker"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["data", b"data"]) -> typing_extensions.Literal["test", "train", "composite", "aggregate", "predict"] | None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algo_key", b"algo_key", "category", b"category", "compute_plan_key", b"compute_plan_key", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "outputs", b"outputs", "worker", b"worker"]) -> None: ...
 
 global___NewComputeTask = NewComputeTask
-
-class TrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___TrainTaskData = TrainTaskData
-
-class NewTrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___NewTrainTaskData = NewTrainTaskData
-
-class PredictTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___PredictTaskData = PredictTaskData
-
-class NewPredictTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___NewPredictTaskData = NewPredictTaskData
-
-class TestTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___TestTaskData = TestTaskData
-
-class NewTestTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___NewTestTaskData = NewTestTaskData
-
-class CompositeTrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___CompositeTrainTaskData = CompositeTrainTaskData
-
-class NewCompositeTrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_MANAGER_KEY_FIELD_NUMBER: builtins.int
-    DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
-    data_manager_key: builtins.str
-    @property
-    def data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
-    def __init__(
-        self,
-        *,
-        data_manager_key: builtins.str = ...,
-        data_sample_keys: collections.abc.Iterable[builtins.str] | None = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_manager_key", b"data_manager_key", "data_sample_keys", b"data_sample_keys"]) -> None: ...
-
-global___NewCompositeTrainTaskData = NewCompositeTrainTaskData
-
-class AggregateTrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    def __init__(
-        self,
-    ) -> None: ...
-
-global___AggregateTrainTaskData = AggregateTrainTaskData
-
-class NewAggregateTrainTaskData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    def __init__(
-        self,
-    ) -> None: ...
-
-global___NewAggregateTrainTaskData = NewAggregateTrainTaskData
 
 class RegisterTasksParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
