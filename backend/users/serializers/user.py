@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.state import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -23,7 +22,7 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
     def validate(self, attrs):
 
         if "refresh" not in self.context["request"].COOKIES:
-            raise ValidationError("refresh cookie is not present")
+            raise serializers.ValidationError("refresh cookie is not present")
 
         refresh_cookie = self.context["request"].COOKIES["refresh"]
 
@@ -52,12 +51,12 @@ class UserChannelSerializer(serializers.ModelSerializer):
 
     def validate_channel_name(self, value):
         if value not in settings.LEDGER_CHANNELS:
-            raise ValidationError({"channel": "Channel does not exist"})
+            raise serializers.ValidationError({"channel": "Channel does not exist"})
         return value
 
     def validate_ui_preferences(self, value):
         if type(value) is not dict:
-            raise ValidationError({"ui preferences should be a dict"})
+            raise serializers.ValidationError({"UI preferences should be a dict"})
         return value
 
 
@@ -71,16 +70,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate_password(self, value):
         if not value:
-            raise ValidationError("Missing password")
+            raise serializers.ValidationError("Missing password")
         try:
             validate_password(value, self)
         except djangoValidationError as err:
-            raise ValidationError(err.error_list)
+            raise serializers.ValidationError(err.error_list)
         return value
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise ValidationError("Username already exists")
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
