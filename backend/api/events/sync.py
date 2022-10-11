@@ -21,9 +21,9 @@ from api.models import Model
 from api.serializers import AlgoSerializer
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
+from api.serializers import ComputeTaskSerializer
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
-from api.serializers import LegacyComputeTaskSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
@@ -141,7 +141,7 @@ def _create_computetask(
             api_data["logs_address"] = failure_report["logs_address"]
         if "owner" in failure_report:
             api_data["logs_owner"] = failure_report["owner"]
-    serializer = LegacyComputeTaskSerializer(data=api_data)
+    serializer = ComputeTaskSerializer(data=api_data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:

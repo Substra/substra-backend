@@ -23,17 +23,15 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
+from api.models.algo import AlgoInput
+from api.models.algo import AlgoOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
-from api.serializers import LegacyComputeTaskSerializer
-from api.serializers import LegacyComputeTaskWithRelationshipsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import MetadataFilterBackend
-from api.views.utils import CP_BASENAME_PREFIX
-from api.views.utils import TASK_CATEGORY
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from api.views.utils import validate_key
@@ -46,48 +44,13 @@ from substrapp.orchestrator import get_orchestrator_client
 logger = structlog.get_logger(__name__)
 
 
-EXTRA_DATA_FIELD = {
-    ComputeTask.Category.TASK_TRAIN: "train",
-    ComputeTask.Category.TASK_PREDICT: "predict",
-    ComputeTask.Category.TASK_TEST: "test",
-    ComputeTask.Category.TASK_AGGREGATE: "aggregate",
-    ComputeTask.Category.TASK_COMPOSITE: "composite",
-}
-
-
-def _compute_extra_data(orc_task, task_data):
-    if orc_task["category"] == ComputeTask.Category.TASK_TRAIN:
-        return {
-            "data_manager_key": task_data["data_manager_key"],
-            "data_sample_keys": task_data["train_data_sample_keys"],
-        }
-
-    elif orc_task["category"] in [ComputeTask.Category.TASK_PREDICT, ComputeTask.Category.TASK_TEST]:
-        return {
-            "data_manager_key": task_data["data_manager_key"],
-            "data_sample_keys": task_data["test_data_sample_keys"],
-        }
-
-    elif orc_task["category"] == ComputeTask.Category.TASK_AGGREGATE:
-        return {}
-
-    elif orc_task["category"] == ComputeTask.Category.TASK_COMPOSITE:
-        return {
-            "data_manager_key": task_data["data_manager_key"],
-            "data_sample_keys": task_data["train_data_sample_keys"],
-        }
-
-    else:
-        raise Exception(f'Task type "{orc_task["category"]}" not handled')
-
-
 def _register_in_orchestrator(tasks_data, channel_name):
     """Register computetask in orchestrator."""
     batch = {}
     for task_data in tasks_data:
         orc_task = {
             "key": task_data["key"],
-            "category": task_data["category"],
+            "category": ComputeTask.Category.TASK_UNKNOWN,
             "algo_key": task_data.get("algo_key"),
             "compute_plan_key": task_data["compute_plan_key"],
             "inputs": task_data.get("inputs", []),
@@ -97,9 +60,6 @@ def _register_in_orchestrator(tasks_data, channel_name):
 
         validate_metadata(orc_task["metadata"])
         orc_task["metadata"][TAG_KEY] = task_data.get("tag") or ""
-
-        extra_data_field = EXTRA_DATA_FIELD[orc_task["category"]]
-        orc_task[extra_data_field] = _compute_extra_data(orc_task, task_data)
 
         if "worker" in task_data:
             orc_task["worker"] = task_data["worker"]
@@ -133,13 +93,13 @@ def task_bulk_create(request):
     for task in orc_data:
         api_data = computetask.orc_to_api(task)
         api_data["channel"] = get_channel_name(request)
-        api_serializer = LegacyComputeTaskSerializer(data=api_data)
+        api_serializer = ComputeTaskSerializer(data=api_data)
         try:
             api_serializer.save_if_not_exists()
         except AlreadyExistsError:
             # May happen if the events app already processed the event pushed by the orchestrator
             compute_task = ComputeTask.objects.get(key=api_data["key"])
-            api_task_data = LegacyComputeTaskSerializer(compute_task).data
+            api_task_data = ComputeTaskSerializer(compute_task).data
         else:
             api_task_data = api_serializer.data
         data.append(api_task_data)
@@ -233,6 +193,22 @@ class ComputeTaskFilter(FilterSet):
         }
 
 
+class InputAssetFilter(FilterSet):
+    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoInput.Kind.choices)
+
+    class Meta:
+        model = ComputeTaskInputAsset
+        fields = ["kind"]
+
+
+class OutputAssetFilter(FilterSet):
+    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoOutput.Kind.choices)
+
+    class Meta:
+        model = ComputeTaskOutputAsset
+        fields = ["kind"]
+
+
 class ComputeTaskViewSetConfig:
     filter_backends = (ComputePlanKeyOrderingFilter, MatchFilter, DjangoFilterBackend, ComputeTaskMetadataFilter)
     ordering_fields = [
@@ -253,23 +229,7 @@ class ComputeTaskViewSetConfig:
     pagination_class = DefaultPageNumberPagination
     search_fields = ("key",)
     filterset_class = ComputeTaskFilter
-
-    @property
-    def short_basename(self):
-        return self.basename.removeprefix(CP_BASENAME_PREFIX)
-
-    @property
-    def category(self):
-        if self.short_basename == "task":
-            return None
-        return TASK_CATEGORY[self.short_basename]
-
-    def get_serializer_class(self):
-        if not self.category:
-            return ComputeTaskSerializer
-        if self.action == "retrieve":
-            return LegacyComputeTaskWithRelationshipsSerializer
-        return LegacyComputeTaskSerializer
+    serializer_class = ComputeTaskSerializer
 
     @action(methods=["post"], detail=False, url_name="bulk_create")
     def bulk_create(self, request, *args, **kwargs):
@@ -280,6 +240,7 @@ class ComputeTaskViewSetConfig:
         input_assets = ComputeTaskInputAsset.objects.filter(task_input__task_id=pk).order_by(
             "task_input__identifier", "task_input__position"
         )
+        input_assets = InputAssetFilter(request.GET, queryset=input_assets).qs
 
         context = {"request": request}
         page = self.paginate_queryset(input_assets)
@@ -295,6 +256,7 @@ class ComputeTaskViewSetConfig:
         output_assets = ComputeTaskOutputAsset.objects.filter(task_output__task_id=pk).order_by(
             "task_output__identifier"
         )
+        output_assets = OutputAssetFilter(request.GET, queryset=output_assets).qs
 
         context = {"request": request}
         page = self.paginate_queryset(output_assets)
@@ -306,10 +268,9 @@ class ComputeTaskViewSetConfig:
         return ApiResponse(serializer.data)
 
     def get_queryset(self):
-        queryset = (
+        return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .select_related("algo")
-            .prefetch_related("performances", "models")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
@@ -319,10 +280,6 @@ class ComputeTaskViewSetConfig:
                 )
             )
         )
-        if self.category:
-            queryset = queryset.filter(category=self.category)
-
-        return queryset
 
 
 class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):

@@ -91,6 +91,8 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "train_data_sample_keys": self.train_data_sample_keys,
+                "test_data_sample_keys": self.test_data_sample_keys,
             },
             {
                 "key": str(data_manager_2.key),
@@ -121,6 +123,8 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "train_data_sample_keys": [],
+                "test_data_sample_keys": [],
             },
             {
                 "key": str(data_manager_3.key),
@@ -151,6 +155,8 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
+                "train_data_sample_keys": [],
+                "test_data_sample_keys": [],
             },
         ]
 
@@ -486,8 +492,6 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_datamanager_retrieve(self):
-        self.expected_results[0]["train_data_sample_keys"] = self.train_data_sample_keys
-        self.expected_results[0]["test_data_sample_keys"] = self.test_data_sample_keys
         url = reverse("api:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_results[0])

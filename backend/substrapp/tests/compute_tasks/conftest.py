@@ -4,7 +4,6 @@ from typing import Any
 import pytest
 
 import orchestrator
-import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.mock as orc_mock
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import Directories
@@ -42,7 +41,6 @@ def testtuple_context(orc_metric) -> Context:
     return Context(
         channel_name="mychannel",
         task={},
-        task_category=computetask_pb2.TASK_TEST,
         task_key=str(uuid.uuid4()),
         compute_plan={},
         compute_plan_key=cp_key,

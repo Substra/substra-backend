@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add `create` api from model view to submit compute task output.
+- Add role filter to users list.
 - Endpoints to list task input/output assets
+- "Kind" filters on task input and ouput assets endpoints.
+- Return train_data_sample_keys and test_data_sample_keys fields in data manager "list" API responses
 
 ### Fixed
 
@@ -19,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Extract inputs and outputs from db to build the workflow_graph response.
+- Add compute task category unknown value
+- Improved validation at user creation.
+### Removed
+
+- Algo creation events aren't included in newsfeed anymore.
+- Remove task category from the compute engine.
+- BREAKING: compute task specific endpoints.
+- BREAKING: category related fields to create task.
 
 ## [0.32.0] 2022-10-03
 
@@ -46,7 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: model categories
 - BREAKING: algo categories
 - Outdated information on patching RabbitMQ for Apple Silicon chips.
-
 
 ## [0.31.0] 2022-09-26
 
@@ -606,8 +616,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
 - Asset filters on attributes from different assets
-exemple : `GET /objective?search=traintuple:key:foo`
-The composed filter that are removed are:
+  example : `GET /objective?search=traintuple:key:foo`
+  The composed filter that are removed are:
 
 ```
     /dataset?search=model:field_key:value

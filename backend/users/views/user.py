@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import unquote
 
 import jwt
 from django.conf import settings
@@ -6,6 +7,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
 from django.utils.encoding import force_str
+from django_filters.rest_framework import ChoiceFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
 from jwt.exceptions import DecodeError
 from jwt.exceptions import ExpiredSignatureError
 from jwt.exceptions import InvalidTokenError
@@ -18,6 +22,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import GenericViewSet
 
+from api.errors import BadRequestError
 from api.views.filters_utils import MatchFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
@@ -37,10 +42,18 @@ def _validate_channel(name):
 
 
 def _validate_password(password, user):
+    if not password:
+        raise ValidationError("Missing password")
     try:
         validate_password(password, user)
     except djangoValidationError as err:
         raise ValidationError(err.error_list)
+
+
+def _validate_username(username):
+    user_model = get_user_model()
+    if user_model.objects.filter(username=username).exists():
+        raise BadRequestError("Username already exists")
 
 
 def _validate_role(role):
@@ -84,6 +97,14 @@ class IsSelf(permissions.BasePermission):
         return user.id == request.user.id
 
 
+class UserFilter(FilterSet):
+    role = ChoiceFilter(field_name="channel__role", choices=UserChannel.Role.choices)
+
+    class Meta:
+        model = get_user_model()
+        fields = ["role"]
+
+
 class UserViewSet(
     GenericViewSet,
     CreateModelMixin,
@@ -96,10 +117,11 @@ class UserViewSet(
     pagination_class = DefaultPageNumberPagination
     ordering_fields = ["username"]
     ordering = ["username"]
-    filter_backends = [OrderingFilter, MatchFilter]
+    filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
     lookup_field = "username"
     permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
     search_fields = ["username"]
+    filterset_class = UserFilter
 
     def get_queryset(self):
         channel = get_channel_name(self.request)
@@ -112,6 +134,7 @@ class UserViewSet(
         role = request.data.get("role")
 
         _validate_channel(channel)
+        _validate_username(username)
         _validate_password(password, self.user_model(username=username))
 
         channel_data = {"channel_name": channel}
@@ -161,7 +184,7 @@ class UserViewSet(
         token = request.data.get("token")
         new_password = request.data.get("password")
 
-        username = kwargs.get("username")
+        username = unquote(kwargs.get("username"))
         instance = self.user_model.objects.get(username=username)
 
         secret = _xor_secrets(instance.password, force_str(settings.SECRET_KEY))
@@ -181,7 +204,7 @@ class UserViewSet(
         """Return 200 if reset token is valid 401 otherwise. Accepts unauthenticated request"""
         token = request.query_params.get("token", None)
 
-        username = kwargs.get("username")
+        username = unquote(kwargs.get("username"))
         instance = self.user_model.objects.get(username=username)
 
         secret = _xor_secrets(instance.password, force_str(settings.SECRET_KEY))

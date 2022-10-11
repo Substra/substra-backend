@@ -40,7 +40,6 @@ def get_exec_command(ctx: Context) -> list[str]:
 def get_exec_command_args(ctx: Context) -> list[str]:
     """Return the substra-tools command line arguments"""
     task = ctx.task
-    task_category = ctx.task.category
 
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
@@ -88,11 +87,9 @@ def get_exec_command_args(ctx: Context) -> list[str]:
     for output in ctx.outputs:
         outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
 
-    args = []
-
     rank = str(task.rank)
-    if rank and task_category != orchestrator.ComputeTaskCategory.TASK_PREDICT:
-        args += ["--rank", rank]
+    args = ["--rank", rank]
+
     if ctx.has_chainkeys:
         inputs.append(TaskResource(id=TASK_IO_CHAINKEYS, value=chainkeys_folder))
 
