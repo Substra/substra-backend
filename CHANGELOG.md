@@ -15,15 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Kind" filters on task input and ouput assets endpoints.
 - Return train_data_sample_keys and test_data_sample_keys fields in data manager "list" API responses
 
-### Fixed
-
-- Compute task outputs/inputs valid storage address.
-
 ### Changed
 
 - Extract inputs and outputs from db to build the workflow_graph response.
 - Add compute task category unknown value
 - Improved validation at user creation.
+
+### Fixed
+
+- Compute task outputs/inputs valid storage address.
+
 ### Removed
 
 - Algo creation events aren't included in newsfeed anymore.
