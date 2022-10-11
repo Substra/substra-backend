@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: compute task specific endpoints.
 - BREAKING: category related fields to create task.
 - BREAKING: compute task specific data
+- BREAKING: task category
 
 ## [0.32.0] 2022-10-03
 
