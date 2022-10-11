@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Extract inputs and outputs from db to build the workflow_graph response.
 - Add compute task category unknown value
 - Improved validation at user creation.
 
@@ -46,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task input asset
 - Accept `CSRF_TRUSTED_ORIGINS` env var as settings option
 - Generic task endpoint to list/retrieve tasks
+- Add inputs and output kinds in the workflow_graph response
 
 ### Fixed
 
@@ -66,7 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use task output asset in API response
 - Add channel column to input/output tables.
 - The test task uses the same CLI arguments format as the other tasks.
-- Add inputs and output kinds in the workflow_graph response
 
 ### Fixed
 
