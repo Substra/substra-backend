@@ -139,7 +139,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.simple_algo),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
-            category=ComputeTask.Category.TASK_TRAIN,
             status=first_task_status,
         )
         if first_task_status == ComputeTask.Status.STATUS_DONE:
@@ -173,7 +172,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.predict_algo),
             data_manager=self.data_manager,
             data_samples=self.predict_data_sample_keys,
-            category=ComputeTask.Category.TASK_PREDICT,
             status=task_status,
         )
         if task_status == ComputeTask.Status.STATUS_DONE:
@@ -197,7 +195,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.metric_algo),
             data_manager=self.data_manager,
             data_samples=self.test_data_sample_keys,
-            category=ComputeTask.Category.TASK_TEST,
             status=task_status,
         )
         if task_status == ComputeTask.Status.STATUS_DONE:
@@ -229,7 +226,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.simple_algo),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
-            category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_TODO,
         )
         train_task_2 = factory.create_computetask(
@@ -245,7 +241,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.simple_algo),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
-            category=ComputeTask.Category.TASK_TRAIN,
             status=ComputeTask.Status.STATUS_TODO,
         )
         factory.create_computetask(
@@ -258,7 +253,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.aggregate_algo),
-            category=ComputeTask.Category.TASK_AGGREGATE,
             status=ComputeTask.Status.STATUS_TODO,
         )
         return cp
@@ -282,7 +276,6 @@ class Command(BaseCommand):
             outputs=factory.build_computetask_outputs(self.composite_algo),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
-            category=ComputeTask.Category.TASK_COMPOSITE,
             status=ComputeTask.Status.STATUS_DONE,
         )
         local_model = factory.create_model(

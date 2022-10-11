@@ -7,7 +7,6 @@ from .resources import AlgoOutput
 from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputeTask
-from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
 from .resources import ComputeTaskInputAsset
 from .resources import ComputeTaskOutput
@@ -26,7 +25,6 @@ __all__ = (
     "DataSample",
     "DataManager",
     "ComputeTaskStatus",
-    "ComputeTaskCategory",
     "Permission",
     "Permissions",
     "ComputeTaskOutput",

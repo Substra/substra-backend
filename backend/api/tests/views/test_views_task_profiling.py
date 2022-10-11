@@ -4,7 +4,6 @@ from django.test import override_settings
 from django.urls.base import reverse
 from rest_framework.test import APITestCase
 
-from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedBackendClient
 from api.tests.common import AuthenticatedClient
@@ -27,9 +26,7 @@ class TaskProfilingViewTests(APITestCase):
         algo = factory.create_algo()
         compute_plan = factory.create_computeplan()
 
-        self.train_task = factory.create_computetask(
-            compute_plan=compute_plan, algo=algo, category=ComputeTask.Category.TASK_TRAIN
-        )
+        self.train_task = factory.create_computetask(compute_plan=compute_plan, algo=algo)
 
         factory.create_computetask_profiling(compute_task=self.train_task)
 
@@ -63,7 +60,7 @@ class TaskProfilingViewTests(APITestCase):
     def test_task_profiling_create_bad_client(self):
         algo = factory.create_algo()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo, category=ComputeTask.Category.TASK_TRAIN)
+        task = factory.create_computetask(compute_plan=cp, algo=algo)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key), "channel": CHANNEL}, **self.extra)
         self.assertEqual(response.status_code, 403)
@@ -83,7 +80,7 @@ class TaskProfilingViewTestsBackend(APITestCase):
     def test_task_profiling_create_success(self):
         algo = factory.create_algo()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo, category=ComputeTask.Category.TASK_TRAIN)
+        task = factory.create_computetask(compute_plan=cp, algo=algo)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
         self.assertEqual(response.status_code, 201)
@@ -134,7 +131,7 @@ class TaskProfilingViewTestsOtherBackend(APITestCase):
     def test_task_profiling_create_fail_other_backend(self):
         algo = factory.create_algo()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo, category=ComputeTask.Category.TASK_TRAIN)
+        task = factory.create_computetask(compute_plan=cp, algo=algo)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
         self.assertEqual(response.status_code, 403)

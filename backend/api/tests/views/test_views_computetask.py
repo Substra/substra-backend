@@ -43,26 +43,6 @@ class ComputeTaskViewTests(APITestCase):
             outputs=factory.build_algo_outputs(["model"]),
             name="simple algo",
         )
-        self.aggregate_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["models"]),
-            outputs=factory.build_algo_outputs(["model"]),
-            name="aggregate",
-        )
-        self.composite_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
-            outputs=factory.build_algo_outputs(["local", "shared"]),
-            name="composite",
-        )
-        self.predict_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "model", "shared"]),
-            outputs=factory.build_algo_outputs(["predictions"]),
-            name="predict",
-        )
-        self.metric_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
-            outputs=factory.build_algo_outputs(["performance"]),
-            name="metric",
-        )
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plan = factory.create_computeplan()
@@ -72,57 +52,37 @@ class ComputeTaskViewTests(APITestCase):
             "opener": [self.data_manager.key],
             "datasamples": [self.data_sample.key],
         }
-        for algo, category in (
-            (self.simple_algo, ComputeTask.Category.TASK_TRAIN),
-            (self.metric_algo, ComputeTask.Category.TASK_TEST),
-            (self.composite_algo, ComputeTask.Category.TASK_COMPOSITE),
+
+        for _status in (
+            ComputeTask.Status.STATUS_TODO,
+            ComputeTask.Status.STATUS_WAITING,
+            ComputeTask.Status.STATUS_DOING,
+            ComputeTask.Status.STATUS_DONE,
+            ComputeTask.Status.STATUS_FAILED,
+            ComputeTask.Status.STATUS_CANCELED,
         ):
-            self.compute_tasks[category] = {}
-            for _status in (
-                ComputeTask.Status.STATUS_TODO,
-                ComputeTask.Status.STATUS_WAITING,
-                ComputeTask.Status.STATUS_DOING,
-                ComputeTask.Status.STATUS_DONE,
-                ComputeTask.Status.STATUS_FAILED,
-                ComputeTask.Status.STATUS_CANCELED,
-            ):
-                error_type = (
-                    ComputeTask.ErrorType.ERROR_TYPE_EXECUTION if _status == ComputeTask.Status.STATUS_FAILED else None
-                )
-                self.compute_tasks[category][_status] = factory.create_computetask(
-                    self.compute_plan,
-                    algo,
-                    inputs=factory.build_computetask_inputs(algo, input_keys),
-                    outputs=factory.build_computetask_outputs(algo),
-                    data_manager=self.data_manager,
-                    data_samples=[self.data_sample.key],
-                    category=category,
-                    status=_status,
-                    error_type=error_type,
-                )
-
-        self.done_train_task = self.compute_tasks[ComputeTask.Category.TASK_TRAIN][ComputeTask.Status.STATUS_DONE]
-        self.train_model = factory.create_model(self.done_train_task, identifier="model")
-
-        done_composite_task = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE][ComputeTask.Status.STATUS_DONE]
-        self.local_model = factory.create_model(done_composite_task, identifier="local")
-        self.shared_model = factory.create_model(done_composite_task, identifier="shared")
-
-        done_test_task = self.compute_tasks[ComputeTask.Category.TASK_TEST][ComputeTask.Status.STATUS_DONE]
-        self.performance = factory.create_performance(done_test_task, self.metric_algo)
+            error_type = (
+                ComputeTask.ErrorType.ERROR_TYPE_EXECUTION if _status == ComputeTask.Status.STATUS_FAILED else None
+            )
+            self.compute_tasks[_status] = factory.create_computetask(
+                self.compute_plan,
+                self.simple_algo,
+                inputs=factory.build_computetask_inputs(self.simple_algo, input_keys),
+                outputs=factory.build_computetask_outputs(self.simple_algo),
+                data_manager=self.data_manager,
+                data_samples=[self.data_sample.key],
+                status=_status,
+                error_type=error_type,
+            )
+        self.done_task = self.compute_tasks[ComputeTask.Status.STATUS_DONE]
+        self.model = factory.create_model(self.done_task, identifier="model")
 
         # we don't explicitly serialize relationships as this test module is focused on computetask
         self.simple_algo_data = AlgoSerializer(instance=self.simple_algo).data
-        self.aggregate_algo_data = AlgoSerializer(instance=self.aggregate_algo).data
-        self.composite_algo_data = AlgoSerializer(instance=self.composite_algo).data
-        self.predict_algo_data = AlgoSerializer(instance=self.predict_algo).data
-        self.metric_algo_data = AlgoSerializer(instance=self.metric_algo).data
         self.data_manager_data = DataManagerSerializer(instance=self.data_manager).data
         self.data_sample_data = DataSampleSerializer(instance=self.data_sample).data
         self.data_sample_data["data_manager_keys"] = [str(key) for key in self.data_sample_data["data_manager_keys"]]
-        self.train_model_data = ModelSerializer(instance=self.train_model).data
-        self.local_model_data = ModelSerializer(instance=self.local_model).data
-        self.shared_model_data = ModelSerializer(instance=self.shared_model).data
+        self.model_data = ModelSerializer(instance=self.model).data
 
         self.prepare_inputs()
         self.prepare_outputs()
@@ -146,39 +106,39 @@ class ComputeTaskViewTests(APITestCase):
         self.model_input = {
             "identifier": "model",
             "asset_key": None,
-            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
         self.model_input_with_value = {**self.model_input}
-        self.model_input_with_value["addressable"] = self.train_model_data["address"]
-        self.model_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.model_input_with_value["addressable"] = self.model_data["address"]
+        self.model_input_with_value["permissions"] = self.model_data["permissions"]
         self.models_input = {
             "identifier": "models",
             "asset_key": None,
-            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
         self.models_input_with_value = {**self.models_input}
-        self.models_input_with_value["addressable"] = self.train_model_data["address"]
-        self.models_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.models_input_with_value["addressable"] = self.model_data["address"]
+        self.models_input_with_value["permissions"] = self.model_data["permissions"]
         self.shared_input = {
             "identifier": "shared",
             "asset_key": None,
-            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
         self.shared_input_with_value = {**self.shared_input}
-        self.shared_input_with_value["addressable"] = self.train_model_data["address"]
-        self.shared_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.shared_input_with_value["addressable"] = self.model_data["address"]
+        self.shared_input_with_value["permissions"] = self.model_data["permissions"]
         self.predictions_input = {
             "identifier": "predictions",
             "asset_key": None,
-            "parent_task_key": str(self.done_train_task.key),
+            "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
         self.predictions_input_with_value = {**self.predictions_input}
-        self.predictions_input_with_value["addressable"] = self.train_model_data["address"]
-        self.predictions_input_with_value["permissions"] = self.train_model_data["permissions"]
+        self.predictions_input_with_value["addressable"] = self.model_data["address"]
+        self.predictions_input_with_value["permissions"] = self.model_data["permissions"]
 
     def prepare_outputs(self):
         self.model_output = {
@@ -190,7 +150,7 @@ class ComputeTaskViewTests(APITestCase):
             "value": None,
         }
         self.model_output_with_value = {**self.model_output}
-        self.model_output_with_value["value"] = self.train_model_data
+        self.model_output_with_value["value"] = self.model_data
         self.predictions_output = {
             "permissions": {
                 "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
@@ -207,28 +167,6 @@ class ComputeTaskViewTests(APITestCase):
             "transient": False,
             "value": None,
         }
-        self.performance_output_with_value = {**self.performance_output}
-        self.performance_output_with_value["value"] = self.performance.value
-        self.local_output = {
-            "permissions": {
-                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-            },
-            "transient": False,
-            "value": None,
-        }
-        self.local_output_with_value = {**self.local_output}
-        self.local_output_with_value["value"] = self.local_model_data
-        self.shared_output = {
-            "permissions": {
-                "download": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-                "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
-            },
-            "transient": False,
-            "value": None,
-        }
-        self.shared_output_with_value = {**self.shared_output}
-        self.shared_output_with_value["value"] = self.shared_model_data
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -275,14 +213,10 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             return res
 
         train_task_key = str(uuid.uuid4())
-        aggregate_task_key = str(uuid.uuid4())
-        test_task_key = str(uuid.uuid4())
-        predict_task_key = str(uuid.uuid4())
         data = {
             "tasks": [
                 {
                     "compute_plan_key": self.compute_plan.key,
-                    "category": "TASK_TRAIN",
                     "key": train_task_key,
                     "algo_key": self.simple_algo.key,
                     "inputs": [self.datasamples_input, self.opener_input, self.model_input],
@@ -291,38 +225,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                             "permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                             "transient": False,
                         },
-                    },
-                },
-                {
-                    "compute_plan_key": self.compute_plan.key,
-                    "category": "TASK_AGGREGATE",
-                    "key": aggregate_task_key,
-                    "algo_key": self.aggregate_algo.key,
-                    "worker": "MyOrg1MSP",
-                    "inputs": [self.models_input],
-                    "outputs": {
-                        "model": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
-                    },
-                },
-                {
-                    "compute_plan_key": self.compute_plan.key,
-                    "category": "TASK_PREDICT",
-                    "traintuple_key": train_task_key,
-                    "key": predict_task_key,
-                    "algo_key": self.predict_algo.key,
-                    "inputs": [self.datasamples_input, self.opener_input, self.model_input, self.shared_input],
-                    "outputs": {
-                        "predictions": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
-                    },
-                },
-                {
-                    "compute_plan_key": self.compute_plan.key,
-                    "category": "TASK_TEST",
-                    "key": test_task_key,
-                    "algo_key": self.metric_algo.key,
-                    "inputs": [self.datasamples_input, self.opener_input, self.predictions_input],
-                    "outputs": {
-                        "performance": {"permissions": {"public": False, "authorized_ids": ["MyOrg1MSP"]}},
                     },
                 },
             ]
@@ -358,90 +260,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "model": self.model_output,
                 },
             },
-            {
-                "key": aggregate_task_key,
-                "algo": self.aggregate_algo_data,
-                "compute_plan_key": str(self.compute_plan.key),
-                "creation_date": "2021-11-04T13:54:09.882662Z",
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "authorized_ids": ["MyOrg1MSP"],
-                    "public": False,
-                },
-                "metadata": {
-                    TAG_KEY: "",
-                },
-                "owner": "MyOrg1MSP",
-                "rank": 0,
-                "start_date": None,
-                "status": "STATUS_WAITING",
-                "tag": None,
-                "worker": "MyOrg1MSP",
-                "inputs": [self.models_input_with_value],
-                "outputs": {
-                    "model": self.model_output,
-                },
-            },
-            {
-                "key": predict_task_key,
-                "algo": self.predict_algo_data,
-                "compute_plan_key": str(self.compute_plan.key),
-                "creation_date": "2021-11-04T13:54:09.882662Z",
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "authorized_ids": ["MyOrg1MSP"],
-                    "public": False,
-                },
-                "metadata": {
-                    TAG_KEY: "",
-                },
-                "owner": "MyOrg1MSP",
-                "rank": 0,
-                "start_date": None,
-                "status": "STATUS_WAITING",
-                "tag": None,
-                "worker": "MyOrg1MSP",
-                "inputs": [
-                    self.datasamples_input,
-                    self.opener_input_with_value,
-                    self.model_input_with_value,
-                    self.shared_input_with_value,
-                ],
-                "outputs": {
-                    "predictions": self.predictions_output,
-                },
-            },
-            {
-                "key": test_task_key,
-                "algo": self.metric_algo_data,
-                "compute_plan_key": str(self.compute_plan.key),
-                "creation_date": "2021-11-04T13:54:09.882662Z",
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "authorized_ids": ["MyOrg1MSP"],
-                    "public": False,
-                },
-                "metadata": {
-                    TAG_KEY: "",
-                },
-                "owner": "MyOrg1MSP",
-                "rank": 0,
-                "start_date": None,
-                "status": "STATUS_WAITING",
-                "tag": None,
-                "worker": "MyOrg1MSP",
-                "inputs": [
-                    self.datasamples_input,
-                    self.opener_input_with_value,
-                    self.predictions_input_with_value,
-                ],
-                "outputs": {
-                    "performance": self.performance_output,
-                },
-            },
         ]
 
         url = reverse("api:task-bulk_create")
@@ -461,33 +279,16 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         super().setUp()
         self.url = reverse("api:task-list")
 
-        train_tasks = self.compute_tasks[ComputeTask.Category.TASK_TRAIN]
-        todo_train_task = train_tasks[ComputeTask.Status.STATUS_TODO]
-        waiting_train_task = train_tasks[ComputeTask.Status.STATUS_WAITING]
-        doing_train_task = train_tasks[ComputeTask.Status.STATUS_DOING]
-        done_train_task = train_tasks[ComputeTask.Status.STATUS_DONE]
-        failed_train_task = train_tasks[ComputeTask.Status.STATUS_FAILED]
-        canceled_train_task = train_tasks[ComputeTask.Status.STATUS_CANCELED]
-
-        test_tasks = self.compute_tasks[ComputeTask.Category.TASK_TEST]
-        todo_test_task = test_tasks[ComputeTask.Status.STATUS_TODO]
-        waiting_test_task = test_tasks[ComputeTask.Status.STATUS_WAITING]
-        doing_test_task = test_tasks[ComputeTask.Status.STATUS_DOING]
-        done_test_task = test_tasks[ComputeTask.Status.STATUS_DONE]
-        failed_test_task = test_tasks[ComputeTask.Status.STATUS_FAILED]
-
-        canceled_test_task = test_tasks[ComputeTask.Status.STATUS_CANCELED]
-        composite_tasks = self.compute_tasks[ComputeTask.Category.TASK_COMPOSITE]
-        todo_composite_task = composite_tasks[ComputeTask.Status.STATUS_TODO]
-        waiting_composite_task = composite_tasks[ComputeTask.Status.STATUS_WAITING]
-        doing_composite_task = composite_tasks[ComputeTask.Status.STATUS_DOING]
-        done_composite_task = composite_tasks[ComputeTask.Status.STATUS_DONE]
-        failed_composite_task = composite_tasks[ComputeTask.Status.STATUS_FAILED]
-        canceled_composite_task = composite_tasks[ComputeTask.Status.STATUS_CANCELED]
+        todo_task = self.compute_tasks[ComputeTask.Status.STATUS_TODO]
+        waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING]
+        doing_task = self.compute_tasks[ComputeTask.Status.STATUS_DOING]
+        done_task = self.compute_tasks[ComputeTask.Status.STATUS_DONE]
+        failed_task = self.compute_tasks[ComputeTask.Status.STATUS_FAILED]
+        canceled_task = self.compute_tasks[ComputeTask.Status.STATUS_CANCELED]
 
         self.expected_results = [
             {
-                "key": str(todo_train_task.key),
+                "key": str(todo_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -496,7 +297,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": todo_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": todo_task.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
                 "error_type": None,
@@ -509,7 +310,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output},
             },
             {
-                "key": str(waiting_train_task.key),
+                "key": str(waiting_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -518,7 +319,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": waiting_train_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": waiting_task.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
                 "error_type": None,
@@ -531,7 +332,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output},
             },
             {
-                "key": str(doing_train_task.key),
+                "key": str(doing_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -540,8 +341,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": doing_train_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": doing_train_task.start_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": doing_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": doing_task.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": None,
                 "error_type": None,
                 "logs_permission": {
@@ -553,7 +354,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output},
             },
             {
-                "key": str(done_train_task.key),
+                "key": str(done_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -562,9 +363,9 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": done_train_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": done_train_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": done_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": done_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": done_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": done_task.end_date.isoformat().replace("+00:00", "Z"),
                 "error_type": None,
                 "logs_permission": {
                     "public": False,
@@ -575,7 +376,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output_with_value},
             },
             {
-                "key": str(failed_train_task.key),
+                "key": str(failed_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -584,9 +385,9 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": failed_train_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": failed_train_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": failed_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": failed_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": failed_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": failed_task.end_date.isoformat().replace("+00:00", "Z"),
                 "error_type": "EXECUTION_ERROR",
                 "logs_permission": {
                     "public": False,
@@ -597,7 +398,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output},
             },
             {
-                "key": str(canceled_train_task.key),
+                "key": str(canceled_task.key),
                 "algo": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
@@ -606,9 +407,9 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": canceled_train_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": canceled_train_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": canceled_train_task.end_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": canceled_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": canceled_task.start_date.isoformat().replace("+00:00", "Z"),
+                "end_date": canceled_task.end_date.isoformat().replace("+00:00", "Z"),
                 "error_type": None,
                 "logs_permission": {
                     "public": False,
@@ -617,270 +418,6 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "duration": 3600,
                 "inputs": [self.datasamples_input, self.opener_input_with_value],
                 "outputs": {"model": self.model_output},
-            },
-            {
-                "key": str(todo_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_TODO",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": todo_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 0,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output},
-            },
-            {
-                "key": str(waiting_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_WAITING",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": waiting_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 0,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output},
-            },
-            {
-                "key": str(doing_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_DOING",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": doing_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": doing_test_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output},
-            },
-            {
-                "key": str(done_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_DONE",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": done_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": done_test_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": done_test_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output_with_value},
-            },
-            {
-                "key": str(failed_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_FAILED",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": failed_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": failed_test_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": failed_test_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": "EXECUTION_ERROR",
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output},
-            },
-            {
-                "key": str(canceled_test_task.key),
-                "algo": self.metric_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_CANCELED",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": canceled_test_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": canceled_test_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": canceled_test_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"performance": self.performance_output},
-            },
-            {
-                "key": str(todo_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_TODO",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": todo_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 0,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output, "shared": self.shared_output},
-            },
-            {
-                "key": str(waiting_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_WAITING",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": waiting_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 0,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output, "shared": self.shared_output},
-            },
-            {
-                "key": str(doing_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_DOING",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": doing_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": doing_composite_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output, "shared": self.shared_output},
-            },
-            {
-                "key": str(done_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_DONE",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": done_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": done_composite_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": done_composite_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output_with_value, "shared": self.shared_output_with_value},
-            },
-            {
-                "key": str(failed_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_FAILED",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": failed_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": failed_composite_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": failed_composite_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": "EXECUTION_ERROR",
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output, "shared": self.shared_output},
-            },
-            {
-                "key": str(canceled_composite_task.key),
-                "algo": self.composite_algo_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_CANCELED",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": canceled_composite_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": canceled_composite_task.start_date.isoformat().replace("+00:00", "Z"),
-                "end_date": canceled_composite_task.end_date.isoformat().replace("+00:00", "Z"),
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 3600,
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"local": self.local_output, "shared": self.shared_output},
             },
         ]
 
@@ -1176,7 +713,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             {
                 "identifier": "model",
                 "kind": "ASSET_MODEL",
-                "asset": self.train_model_data,
+                "asset": self.model_data,
             },
         ]
         self.assertEqual(

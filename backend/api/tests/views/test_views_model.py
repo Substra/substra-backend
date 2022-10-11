@@ -13,7 +13,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.errors import AssetPermissionError
-from api.models import ComputeTask
 from api.models import Model
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
@@ -56,7 +55,6 @@ class ModelViewTests(APITestCase):
             compute_plan,
             simple_algo,
             outputs=factory.build_computetask_outputs(simple_algo),
-            category=ComputeTask.Category.TASK_TRAIN,
         )
         simple_model_1 = factory.create_model(self.train_task, identifier="model")
         simple_model_2 = factory.create_model(self.train_task, identifier="model")
@@ -68,7 +66,6 @@ class ModelViewTests(APITestCase):
             compute_plan,
             composite_algo,
             outputs=factory.build_computetask_outputs(composite_algo),
-            category=ComputeTask.Category.TASK_COMPOSITE,
         )
         local_model = factory.create_model(composite_task, identifier="local")
 
