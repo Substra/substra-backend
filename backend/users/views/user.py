@@ -141,15 +141,11 @@ class UserViewSet(
     def password(self, request, *args, **kwargs):
         """Allows an authenticated user to modify his own password"""
 
-        username = kwargs.get("username")
-        instance = self.user_model.objects.get(username=username)
+        instance = self.get_object()
         password = request.data.get("password")
 
-        if password:
-            data = _save_password(instance, password)
-            return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
-
-        return ApiResponse(data={"message": "missing password in the request"}, status=status.HTTP_400_BAD_REQUEST)
+        data = _save_password(instance, password)
+        return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
     @action(methods=["post"], detail=True, permission_classes=[permissions.AllowAny], url_name="set-password")
     def set_password(self, request, *args, **kwargs):

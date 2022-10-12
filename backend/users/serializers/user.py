@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError as djangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.state import api_settings
@@ -56,7 +56,7 @@ class UserChannelSerializer(serializers.ModelSerializer):
 
     def validate_ui_preferences(self, value):
         if type(value) is not dict:
-            raise serializers.ValidationError({"UI preferences should be a dict"})
+            raise serializers.ValidationError({"ui_preferences": "UI preferences should be a dict"})
         return value
 
 
@@ -69,11 +69,9 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate_password(self, value):
-        if not value:
-            raise serializers.ValidationError("Missing password")
         try:
             validate_password(value, self)
-        except djangoValidationError as err:
+        except DjangoValidationError as err:
             raise serializers.ValidationError(err.error_list)
         return value
 

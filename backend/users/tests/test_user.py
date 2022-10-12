@@ -4,13 +4,15 @@ import pytest
 from django.urls.base import reverse
 from parameterized import parameterized
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
 from api.tests.common import AuthenticatedClient
 from users.models.user_channel import UserChannel
 
 
-class TestUserEndpoints:
+class TestUserEndpoints(APITestCase):
     url = None
     extra = None
 
@@ -106,8 +108,7 @@ class TestUserEndpoints:
     @parameterized.expand(
         [
             ({"role": UserChannel.Role.USER},),
-            ({"password": "newpas$w0rdtestofdrea6S43"},),
-            ({"ui_preferences": {"columns": ["col1", "col2"]}},),
+            ({"ui_preferences": {"columns": ["col1", "col2"], "favorites": ["cp1", "cp2"]}},),
             ({"role": UserChannel.Role.USER, "ui_preferences": {"columns": ["col1"]}},),
         ]
     )
@@ -118,11 +119,52 @@ class TestUserEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         for key in data:
-            if key != "password":
-                assert response.data[key] == data[key]
+            assert response.data[key] == data[key]
 
     @pytest.mark.django_db
-    def test_update_password_unauthorized(self):
+    def test_update_user_ui_preferences(self):
+        url = reverse("user:users-detail", args=["substra"])
+
+        data = {"ui_preferences": {"columns": ["col1", "col2"], "favorites": ["cp1", "cp2"]}}
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["ui_preferences"] == data["ui_preferences"]
+
+        # Modifying only columns
+        modified_data = {"ui_preferences": {"columns": ["col1"]}}
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=modified_data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["ui_preferences"] != data["ui_preferences"]
+        assert response.data["ui_preferences"]["columns"] == modified_data["ui_preferences"]["columns"]
+        # favorites should have been left untouched
+        assert response.data["ui_preferences"]["favorites"] == data["ui_preferences"]["favorites"]
+
+    @pytest.mark.django_db
+    def test_update_user_password_successful(self):
+        url_password = reverse("user:users-password", args=["Jane Doe"])
+        data = {"password": "newpas$w0rdtestofdrea6S43"}
+
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel, username="Jane Doe").put(
+            url_password, data=data
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+        url = reverse("user:users-detail", args=["Jane Doe"])
+
+        # default authentication should fail
+        with self.assertRaises(AuthenticationFailed):
+            AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel, username="Jane Doe").get(url)
+
+        # successful authentication with new password
+        response = AuthenticatedClient(
+            role=UserChannel.Role.ADMIN, channel=self.channel, username="Jane Doe", password="newpas$w0rdtestofdrea6S43"
+        ).get(url)
+        assert response.status_code == status.HTTP_200_OK
+
+    @pytest.mark.django_db
+    def test_update_user_password_unauthorized(self):
         data = {"username": "toto", "password": "pas$w0rdtestofdrea6S43"}
         response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).post(self.url, data=data)
         assert response.status_code == status.HTTP_201_CREATED
@@ -134,16 +176,26 @@ class TestUserEndpoints:
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.django_db
-    def test_update_password_empty(self):
-        data = {"username": "toto", "password": "pas$w0rdtestofdrea6S43"}
-        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).post(self.url, data=data)
-        assert response.status_code == status.HTTP_201_CREATED
-
-        url = reverse("user:users-password", args=["toto"])
+    def test_update_user_password_empty(self):
+        url = reverse("user:users-password", args=["substra"])
         data = {"password": ""}
-        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
 
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["password"][0] == "This field may not be blank."
+
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data={})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["password"][0] == "This field may not be null."
+
+    @pytest.mark.django_db
+    def test_update_user_password_weak(self):
+        url = reverse("user:users-password", args=["substra"])
+        data = {"password": "weak"}
+
+        response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).put(url, data=data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["password"][0] == "['This password is not complex enough.']"
 
     @pytest.mark.django_db
     def test_request_reset_token(self):
