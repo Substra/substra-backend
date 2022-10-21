@@ -1,6 +1,10 @@
+import secrets
+import string
 from typing import Optional
 
 import structlog
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
@@ -28,8 +32,22 @@ from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
+from users.models import UserChannel
 
 logger = structlog.get_logger(__name__)
+
+
+def _get_or_create_external_user(channel) -> UserChannel:
+    username = settings.EXTERNAL_USERNAME
+    user_external, created = User.objects.get_or_create(username=username)
+    if created:
+        password = "".join(
+            (secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(24))
+        )
+        user_external.set_password(password)
+        user_external.save()
+
+    return user_external
 
 
 def _on_create_organization_event(event: dict) -> None:
@@ -87,6 +105,9 @@ def _on_create_computeplan_event(event: dict) -> None:
 
 def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
+    creator = _get_or_create_external_user(channel)
+    data["creator"] = creator.id
+
     serializer = ComputePlanSerializer(data=data)
     try:
         serializer.save_if_not_exists()

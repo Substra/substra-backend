@@ -106,6 +106,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": None,
                 "status": "PLAN_STATUS_TODO",
+                "creator": None,
                 "creation_date": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
@@ -126,6 +127,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": None,
                 "status": "PLAN_STATUS_DOING",
+                "creator": None,
                 "creation_date": doing_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": doing_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": None,
@@ -146,6 +148,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 1,
                 "failed_task": None,
                 "status": "PLAN_STATUS_DONE",
+                "creator": None,
                 "creation_date": done_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": done_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": done_cp.end_date.isoformat().replace("+00:00", "Z"),
@@ -170,6 +173,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                     "category": "TASK_TRAIN",
                 },
                 "status": "PLAN_STATUS_FAILED",
+                "creator": None,
                 "creation_date": failed_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": failed_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": failed_cp.end_date.isoformat().replace("+00:00", "Z"),
@@ -191,6 +195,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": None,
                 "status": "PLAN_STATUS_CANCELED",
+                "creator": None,
                 "creation_date": canceled_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": canceled_cp.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
@@ -212,6 +217,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": None,
                 "status": "PLAN_STATUS_EMPTY",
+                "creator": None,
                 "creation_date": empty_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
@@ -232,10 +238,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data["key"])
         # asset created in local db
         self.assertEqual(ComputePlan.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(response.data["creator"], "substra")
 
     def test_compute_plan_update(self):
         key = str(uuid.uuid4())
@@ -454,6 +462,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "tag": "",
             "name": "cp",
             "owner": "MyOrg1MSP",
+            "creator": None,
             "metadata": {},
             "task_count": 1,
             "waiting_count": 0,

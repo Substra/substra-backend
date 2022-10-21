@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -24,10 +25,13 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
     duration = serializers.IntegerField(read_only=True)
     status = serializers.ChoiceField(choices=ComputePlan.Status.choices, read_only=True)
-    creator = serializers.SlugRelatedField(slug_field='user__username', read_only=True)
+    creator = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        creator = data["creator"]
+        if creator:
+            data["creator"] = User.objects.get(id=creator).username
 
         if not instance.failed_task_key:
             # None should be returned to the API not the default OrderedDict

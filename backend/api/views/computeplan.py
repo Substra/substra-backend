@@ -67,7 +67,8 @@ def create(request, get_success_headers):
 
     # Step2: save metadata in local database
     api_data["channel"] = get_channel_name(request)
-    api_data["creator"] = request.user
+    api_data["creator"] = request.user.id
+
     api_serializer = ComputePlanSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
@@ -124,7 +125,7 @@ class ComputePlanFilter(FilterSet):
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
     duration = RangeFilter(label="duration")
-    creator = CharFilter(field_name="creator__user__username", label="creator")
+    creator = CharFilter(field_name="creator__username", label="creator")
 
     class Meta:
         model = ComputePlan
@@ -174,7 +175,18 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         DjangoFilterBackend,
         ComputePlanMetadataFilter,
     )
-    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration", "creator"]
+    ordering_fields = [
+        "creation_date",
+        "start_date",
+        "end_date",
+        "key",
+        "owner",
+        "status",
+        "tag",
+        "name",
+        "duration",
+        "creator",
+    ]
     search_fields = ("key", "name")
     filterset_class = ComputePlanFilter
 
