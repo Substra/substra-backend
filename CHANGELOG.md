@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update code owners (#538)
+
 ### Added
 
 - Add `create` api from model view to submit compute task output.
