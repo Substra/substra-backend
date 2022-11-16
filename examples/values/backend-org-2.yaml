@@ -91,7 +91,7 @@ orchestrator:
   host: orchestrator-org-1-server.org-1.svc.cluster.local
   port: 9000
   tls:
-    enabled: true
+    enabled: false
     cacert: orchestrator-tls-cacert
     mtls:
       enabled: true
