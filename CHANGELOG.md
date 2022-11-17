@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Compute task outputs/inputs valid storage address.
+- Signature cookie expiration date (#540)
 
 ### Removed
 

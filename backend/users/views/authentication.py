@@ -33,7 +33,6 @@ class AuthenticationViewSet(GenericViewSet):
     @throttle_classes([AnonRateThrottle, UserLoginThrottle])
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-
         try:
             serializer.is_valid(raise_exception=True)
         except AuthenticationFailed:
@@ -65,7 +64,7 @@ class AuthenticationViewSet(GenericViewSet):
             domain=settings.COMMON_HOST_DOMAIN,
         )
         response.set_cookie(
-            "signature", value=signature, httponly=True, secure=secure, domain=settings.COMMON_HOST_DOMAIN
+            "signature", value=signature, expires=access_expires, httponly=True, secure=secure, domain=settings.COMMON_HOST_DOMAIN
         )
         response.set_cookie(
             "refresh",
@@ -81,7 +80,6 @@ class AuthenticationViewSet(GenericViewSet):
     @action(methods=["post"], detail=False)
     def refresh(self, request, *args, **kwargs):
         serializer = CustomTokenRefreshSerializer(data=request.data, context=self.get_serializer_context())
-
         try:
             serializer.is_valid(raise_exception=True)
         except AuthenticationFailed:
