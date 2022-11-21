@@ -111,7 +111,12 @@ class AuthenticationViewSet(GenericViewSet):
             domain=settings.COMMON_HOST_DOMAIN,
         )
         response.set_cookie(
-            "signature", value=signature, httponly=True, secure=secure, domain=settings.COMMON_HOST_DOMAIN
+            "signature", 
+            value=signature, 
+            expires=access_expires, 
+            httponly=True, 
+            secure=secure, 
+            domain=settings.COMMON_HOST_DOMAIN,
         )
         response.set_cookie(
             "refresh",
