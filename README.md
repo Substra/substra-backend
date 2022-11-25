@@ -1,6 +1,23 @@
-# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml)
+# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml) [![Doc](https://img.shields.io/badge/read-docs-purple?logo=mdbook)]("https://docs.substra.org/") [![Slack](https://img.shields.io/badge/chat-on%20slack-blue?logo=slack)]("https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA")
 
-Backend of the Substra platform
+
+
+<div align="center">
+<picture>
+  <object-position: center>
+  <source media="(prefers-color-scheme: dark)" srcset="Substra-logo-white.svg">
+  <source media="(prefers-color-scheme: light)" srcset="Substra-logo-colour.svg">
+  <img alt="Substra" src="Substra-logo-colour.svg" width="500">
+</picture>
+</div>
+<br>
+<br>
+
+Substra is an open source federated learning (FL) software. This specific reposity is the backend of the Substra software.
+
+
+
+# Setup
 
 ## Running a development instance
 
