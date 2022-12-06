@@ -32,12 +32,12 @@ from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
-from users.models import UserChannel
 
 logger = structlog.get_logger(__name__)
 
 
-def _get_or_create_external_user(channel) -> UserChannel:
+# dummy user to be referenced as creator for asset outside current organization
+def _get_or_create_external_user() -> User:
     username = settings.EXTERNAL_USERNAME
     user_external, created = User.objects.get_or_create(username=username)
     if created:
@@ -105,6 +105,8 @@ def _on_create_computeplan_event(event: dict) -> None:
 
 def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
+
+    # if event received, that means compute plan was created by another organization
     creator = _get_or_create_external_user(channel)
     data["creator"] = creator.id
 

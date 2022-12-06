@@ -425,3 +425,6 @@ RESET_JWT_SIGNATURE_ALGORITHM = "HS256"
 
 # Username of additonnal Django user representing user external to organization
 EXTERNAL_USERNAME = "external"
+
+# Username of additonnal Django user representing deleted user to not break fk references
+DELETED_USERNAME = "deleted"
