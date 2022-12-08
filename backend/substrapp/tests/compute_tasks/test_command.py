@@ -80,7 +80,7 @@ def test_get_args_task_input_one_model_output_one_model():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
-        "--task_properties",
+        "--task-properties",
         json.dumps(task_properties),
         "--inputs",
         json.dumps(expected_inputs),
@@ -171,7 +171,7 @@ def test_get_args_task_input_two_models_output_two_models():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
-        "--task_properties",
+        "--task-properties",
         json.dumps(task_properties),
         "--inputs",
         json.dumps(expected_inputs),
@@ -249,7 +249,7 @@ def test_get_args_predict_after_train():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
-        "--task_properties",
+        "--task-properties",
         json.dumps(task_properties),
         "--inputs",
         json.dumps(expected_inputs),
@@ -333,7 +333,7 @@ def test_get_args_predict_input_two_models_output_one_model():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
-        "--task_properties",
+        "--task-properties",
         json.dumps(task_properties),
         "--inputs",
         json.dumps(expected_inputs),
@@ -418,7 +418,7 @@ def test_get_args_test_input_one_model_output_one_performance():
 
     actual = get_exec_command_args(ctx)
     assert actual == [
-        "--task_properties",
+        "--task-properties",
         json.dumps(task_properties),
         "--inputs",
         json.dumps(expected_inputs),
