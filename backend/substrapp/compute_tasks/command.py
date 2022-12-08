@@ -87,7 +87,7 @@ def get_exec_command_args(ctx: Context) -> list[str]:
     for output in ctx.outputs:
         outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
 
-    task_properties = {"rank": str(task.rank)}
+    task_properties = {"rank": task.rank}
     args = ["--task-properties", json.dumps(task_properties)]
 
     if ctx.has_chainkeys:

@@ -76,7 +76,7 @@ def test_get_args_task_input_one_model_output_one_model():
         {"id": InputIdentifiers.MODEL, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    task_properties = {"rank": "0"}
+    task_properties = {"rank": 0}
 
     actual = get_exec_command_args(ctx)
     assert actual == [
@@ -167,7 +167,7 @@ def test_get_args_task_input_two_models_output_two_models():
         {"id": InputIdentifiers.SHARED, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    task_properties = {"rank": "0"}
+    task_properties = {"rank": 0}
 
     actual = get_exec_command_args(ctx)
     assert actual == [
@@ -245,7 +245,7 @@ def test_get_args_predict_after_train():
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    task_properties = {"rank": "0"}
+    task_properties = {"rank": 0}
 
     actual = get_exec_command_args(ctx)
     assert actual == [
@@ -329,7 +329,7 @@ def test_get_args_predict_input_two_models_output_one_model():
         {"id": InputIdentifiers.PREDICTIONS, "value": "/substra_internal/out_models/out-model", "multiple": False},
     ]
 
-    task_properties = {"rank": "0"}
+    task_properties = {"rank": 0}
 
     actual = get_exec_command_args(ctx)
     assert actual == [
@@ -414,7 +414,7 @@ def test_get_args_test_input_one_model_output_one_performance():
         },
     ]
 
-    task_properties = {"rank": "0"}
+    task_properties = {"rank": 0}
 
     actual = get_exec_command_args(ctx)
     assert actual == [
