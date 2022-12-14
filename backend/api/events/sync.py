@@ -107,7 +107,7 @@ def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
 
     # if event received, that means compute plan was created by another organization
-    creator = _get_or_create_external_user(channel)
+    creator = _get_or_create_external_user()
     data["creator"] = creator.id
 
     serializer = ComputePlanSerializer(data=data)

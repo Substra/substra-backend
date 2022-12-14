@@ -23,27 +23,36 @@ def generate_jwt_auth_header(jwt):
 
 
 class AuthenticatedClient(APIClient):
-    def __init__(self, enforce_csrf_checks=False, role=UserChannel.Role.USER, channel=None, **defaults):
+    def __init__(
+        self,
+        enforce_csrf_checks=False,
+        role=UserChannel.Role.USER,
+        channel=None,
+        username="substra",
+        password="p@sswr0d44",
+        **defaults,
+    ):
         super().__init__(enforce_csrf_checks, **defaults)
         self.role = role
         self.channel = channel
+        self.username = username
+        self.password = password
 
     def request(self, **kwargs):
         # create user
-        username = "substra"
-        password = "p@sswr0d44"
-        user, created = User.objects.get_or_create(username=username)
+        user, created = User.objects.get_or_create(username=self.username)
         if created:
-            user.set_password(password)
+            user.set_password(self.password)
             user.save()
             # for testing purpose most authentication are done without channel allowing to mock passing channel in
             # header, this check is necessary to not break previous tests but irl a user cannot be created
             # without a channel
             if self.channel:
+                print(f"Creating channel {self.channel} for user {user}")
                 UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
 
         # simulate login
-        serializer = CustomTokenObtainPairSerializer(data={"username": username, "password": password})
+        serializer = CustomTokenObtainPairSerializer(data={"username": self.username, "password": self.password})
 
         serializer.is_valid()
         data = serializer.validated_data

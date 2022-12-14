@@ -6,6 +6,7 @@ import tempfile
 import uuid
 from unittest import mock
 
+from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -21,6 +22,7 @@ from api.tests.common import AuthenticatedClient
 from api.tests.common import internal_server_error_on_exception
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
+from users.models.user_channel import UserChannel
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -244,6 +246,35 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         # asset created in local db
         self.assertEqual(ComputePlan.objects.count(), len(self.expected_results) + 1)
         self.assertEqual(response.data["creator"], "substra")
+
+    def test_creator_deleted(self):
+        key = str(uuid.uuid4())
+        data = {
+            "key": key,
+            "tag": "foo",
+            "name": "Bar",
+        }
+
+        admin = AuthenticatedClient(role=UserChannel.Role.ADMIN, username="substra", channel="mychannel")
+        user = AuthenticatedClient(role=UserChannel.Role.USER, username="user", channel="mychannel")
+
+        with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
+            response = user.post(self.url, data=data, format="json", **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data["key"])
+        # asset created in local db by user
+        self.assertEqual(ComputePlan.objects.count(), len(self.expected_results) + 1)
+        self.assertEqual(response.data["creator"], user.username)
+
+        # delete user
+        url = reverse("user:users-detail", args=[user.username])
+        admin.delete(url)
+
+        # asset creator should be deleted user
+        url = reverse("api:compute_plan-detail", args=[key])
+        response = self.client.get(url)
+        self.assertEqual(response.data["creator"], settings.DELETED_USERNAME)
 
     def test_compute_plan_update(self):
         key = str(uuid.uuid4())
