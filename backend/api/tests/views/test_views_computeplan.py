@@ -263,6 +263,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data["key"])
+
         # asset created in local db by user
         self.assertEqual(ComputePlan.objects.count(), len(self.expected_results) + 1)
         self.assertEqual(response.data["creator"], user.username)

@@ -39,7 +39,7 @@ logger = structlog.get_logger(__name__)
 # dummy user to be referenced as creator for asset outside current organization
 def _get_or_create_external_user() -> User:
     username = settings.EXTERNAL_USERNAME
-    user_external, created = User.objects.get_or_create(username=username)
+    user_external, created = User.objects.get_or_create(username=username, is_active=False)
     if created:
         password = "".join(
             (secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(24))
