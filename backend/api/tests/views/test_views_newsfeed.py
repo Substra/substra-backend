@@ -20,7 +20,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 )
 class NewsFeedViewTests(APITestCase):
     client_class = AuthenticatedClient
-    maxDiff = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
