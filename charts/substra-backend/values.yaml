@@ -187,9 +187,11 @@ server:
     ##
     storageClass: ""
     ## @param server.persistence.servermedias.size Servermedias volume size
+    ## @param server.persistence.servermedias.existingClaim use this PVC rather than creating a new one
     ##
     servermedias:
       size: 10Gi
+      existingClaim: null
   ## server containers' liveness probe
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param server.livenessProbe.enabled Enable livenessProbe
@@ -657,6 +659,9 @@ postgresql:
     username: postgres
     password: postgres
     database: substra
+  primary:
+    persistence:
+      existingClaim: ""
 
 ## @skip redis
 ##
@@ -668,6 +673,7 @@ redis:
   master:
     persistence:
       enabled: true
+      existingClaim: ""
     service:
       ports:
         redis: 6379
@@ -686,6 +692,7 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: true
+    existingClaim: null
     size: 10Gi
     deleteEnabled: true
   service:
@@ -702,6 +709,8 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
+  persistence:
+    existingClaim: ""
 
 ## @section Helm hooks
 ##

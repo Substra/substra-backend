@@ -1,3 +1,4 @@
+{{- if not .Values.server.persistence.servermedias.existingClaim }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -18,3 +19,4 @@ spec:
     requests:
       storage: {{ .Values.server.persistence.servermedias.size | quote }}
   {{ include "common.storage.class" .Values.server.persistence.servermedias }}
+{{- end }}
