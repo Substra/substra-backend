@@ -82,8 +82,6 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
-    # patch waiting for a solution to insert parent task in hierarchical order
-    parent_tasks = ArrayField(models.UUIDField(), null=True)
     rank = models.IntegerField()
     status = models.CharField(max_length=64, choices=Status.choices)
     worker = models.CharField(max_length=100)

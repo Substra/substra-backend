@@ -47,7 +47,6 @@ Basic example:
 ...     outputs=factory.build_computetask_outputs(metric),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample],
-...     parent_tasks=[train_task.key],
 ...     category=ComputeTask.Category.TASK_TEST,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
@@ -347,7 +346,6 @@ def create_computetask(
     algo: Algo,
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
-    parent_tasks: list[uuid.UUID] = None,
     data_manager: DataManager = None,
     data_samples: list[uuid.UUID] = None,
     key: uuid.UUID = None,
@@ -369,7 +367,6 @@ def create_computetask(
     compute_task = ComputeTask.objects.create(
         compute_plan=compute_plan,
         algo=algo,
-        parent_tasks=parent_tasks or [],
         data_manager=data_manager,
         key=key,
         category=category,
