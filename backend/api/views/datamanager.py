@@ -16,7 +16,6 @@ from rest_framework.viewsets import GenericViewSet
 from api.errors import AlreadyExistsError
 from api.models import DataManager
 from api.serializers import DataManagerSerializer
-from api.serializers import DataManagerWithRelationsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import LogsPermissionFilter
 from api.views.filters_utils import MatchFilter
@@ -180,8 +179,6 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         return DataManager.objects.filter(channel=get_channel_name(self.request))
 
     def get_serializer_class(self):
-        if self.action in ["list", "retrieve"]:
-            return DataManagerWithRelationsSerializer
         return DataManagerSerializer
 
     def create(self, request, *args, **kwargs):

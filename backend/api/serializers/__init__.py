@@ -4,7 +4,6 @@ from .computetask import ComputeTaskInputAssetSerializer
 from .computetask import ComputeTaskOutputAssetSerializer
 from .computetask import ComputeTaskSerializer
 from .datamanager import DataManagerSerializer
-from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
 from .model import ModelSerializer
 from .organization import ChannelOrganizationSerializer
@@ -20,7 +19,6 @@ __all__ = [
     "ComputeTaskInputAssetSerializer",
     "ComputeTaskOutputAssetSerializer",
     "DataManagerSerializer",
-    "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
     "ModelSerializer",
     "ChannelOrganizationSerializer",

@@ -40,7 +40,6 @@ def mock_register_datasamples(orc_request):
         {
             "key": data["key"],
             "data_manager_keys": data["data_manager_keys"],
-            "test_only": data["test_only"],
             "checksum": data["checksum"],
             "owner": "MyOrg1MSP",
             "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -72,7 +71,7 @@ class DataSampleViewTests(APITestCase):
 
         train_data_sample_1 = factory.create_datasample([data_manager])
         train_data_sample_2 = factory.create_datasample([data_manager])
-        test_data_sample = factory.create_datasample([data_manager], test_only=True)
+        test_data_sample = factory.create_datasample([data_manager])
 
         self.algo = factory.create_algo()
         self.compute_plan = factory.create_computeplan()

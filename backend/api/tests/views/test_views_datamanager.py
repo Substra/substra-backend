@@ -47,7 +47,7 @@ class DataManagerViewTests(APITestCase):
 
         data_manager_1 = factory.create_datamanager(name="datamanager foo")
         train_data_sample = factory.create_datasample([data_manager_1])
-        test_data_sample = factory.create_datasample([data_manager_1], test_only=True)
+        test_data_sample = factory.create_datasample([data_manager_1])
         # only for retrieve view
         self.train_data_sample_keys = [str(train_data_sample.key)]
         self.test_data_sample_keys = [str(test_data_sample.key)]
@@ -502,7 +502,7 @@ class DataManagerViewTests(APITestCase):
         algo = factory.create_algo()
         data_manager = factory.create_datamanager()
         train_data_sample = factory.create_datasample([data_manager])
-        test_data_sample = factory.create_datasample([data_manager], test_only=True)
+        test_data_sample = factory.create_datasample([data_manager])
         # Creating compute tasks will insert ordering objects `TaskDataSamples`
         for _ in range(3):
             factory.create_computetask(

@@ -58,7 +58,6 @@ class Migration(migrations.Migration):
                 ("owner", models.CharField(max_length=100)),
                 ("creation_date", models.DateTimeField()),
                 ("channel", models.CharField(max_length=100)),
-                ("test_only", models.BooleanField()),
                 (
                     "data_managers",
                     models.ManyToManyField(

@@ -43,23 +43,3 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 reverse("api:data_manager-opener", args=[res["key"]])
             )
         return res
-
-
-class DataManagerWithRelationsSerializer(DataManagerSerializer):
-    test_data_sample_keys = serializers.PrimaryKeyRelatedField(
-        source="get_test_data_samples",
-        many=True,
-        read_only=True,
-    )
-    train_data_sample_keys = serializers.PrimaryKeyRelatedField(
-        source="get_train_data_samples",
-        many=True,
-        read_only=True,
-    )
-
-    class Meta:
-        model = DataManager
-        fields = DataManagerSerializer.Meta.fields + [
-            "test_data_sample_keys",
-            "train_data_sample_keys",
-        ]
