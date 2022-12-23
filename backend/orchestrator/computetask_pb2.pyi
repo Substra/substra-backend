@@ -202,6 +202,7 @@ class ComputeTask(google.protobuf.message.Message):
     owner: builtins.str
     compute_plan_key: builtins.str
     rank: builtins.int
+    """Keys of parent ComputeTasks"""
     status: global___ComputeTaskStatus.ValueType
     """mutable"""
     worker: builtins.str
