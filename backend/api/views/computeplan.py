@@ -74,8 +74,12 @@ def create(request, get_success_headers):
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
+        # In that case, set creator as from event it is always assumed to be an external creator
         cp = ComputePlan.objects.get(key=api_data["key"])
-        data = ComputePlanSerializer(cp).data
+        serializer = ComputePlanSerializer(cp, data={"creator": request.user.id}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        data = serializer.data
     else:
         data = api_serializer.data
 
