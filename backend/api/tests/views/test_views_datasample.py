@@ -86,21 +86,18 @@ class DataSampleViewTests(APITestCase):
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": train_data_sample_1.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": False,
             },
             {
                 "key": str(train_data_sample_2.key),
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": train_data_sample_2.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": False,
             },
             {
                 "key": str(test_data_sample.key),
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": test_data_sample.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": True,
             },
         ]
 
@@ -226,7 +223,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -255,7 +251,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -286,7 +281,6 @@ class DataSampleViewTests(APITestCase):
         data = {
             "path": target_path,
             "data_manager_keys": [self.data_manager_key],
-            "test_only": False,
         }
 
         with mock.patch.object(
@@ -314,7 +308,6 @@ class DataSampleViewTests(APITestCase):
         data = {
             "path": parent_path,
             "data_manager_keys": [self.data_manager_key],
-            "test_only": False,
             "multiple": True,
         }
 
@@ -341,7 +334,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -367,7 +359,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }

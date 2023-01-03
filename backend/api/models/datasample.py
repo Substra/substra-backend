@@ -13,7 +13,6 @@ class DataSample(models.Model):
     owner = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     channel = models.CharField(max_length=100)
-    test_only = models.BooleanField()
     data_managers = models.ManyToManyField("DataManager", related_name="data_samples", related_query_name="data_sample")
     objects = DataSampleManager()
 

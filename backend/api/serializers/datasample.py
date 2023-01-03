@@ -22,5 +22,4 @@ class DataSampleSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "data_manager_keys",
             "key",
             "owner",
-            "test_only",
         ]

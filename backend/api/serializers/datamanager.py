@@ -2,6 +2,7 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from api.models import DataManager
+from api.models import DataSample
 from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 from api.serializers.utils import make_addressable_serializer
@@ -43,3 +44,17 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 reverse("api:data_manager-opener", args=[res["key"]])
             )
         return res
+
+
+class DataManagerWithRelationsSerializer(DataManagerSerializer):
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        source="data_samples",
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = DataManager
+        fields = DataManagerSerializer.Meta.fields + [
+            "data_sample_keys",
+        ]
