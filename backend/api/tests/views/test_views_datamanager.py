@@ -46,17 +46,16 @@ class DataManagerViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
         data_manager_1 = factory.create_datamanager(name="datamanager foo")
-        train_data_sample = factory.create_datasample([data_manager_1])
-        test_data_sample = factory.create_datasample([data_manager_1])
+        data_sample_1 = factory.create_datasample([data_manager_1])
+        data_sample_2 = factory.create_datasample([data_manager_1])
         # only for retrieve view
-        self.train_data_sample_keys = [str(train_data_sample.key)]
-        self.test_data_sample_keys = [str(test_data_sample.key)]
+        self.data_sample_keys = [str(data_sample_1.key), str(data_sample_2.key)]
 
         self.algo = factory.create_algo()
         self.compute_plan = factory.create_computeplan()
-        self.train_data_sample_key_uuid = train_data_sample.key
+        self.data_sample_1_key_uuid = data_sample_1.key
         factory.create_computetask(
-            self.compute_plan, self.algo, data_manager=data_manager_1, data_samples=[train_data_sample.key]
+            self.compute_plan, self.algo, data_manager=data_manager_1, data_samples=[data_sample_1.key]
         )
 
         data_manager_2 = factory.create_datamanager()
@@ -91,8 +90,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
-                "train_data_sample_keys": self.train_data_sample_keys,
-                "test_data_sample_keys": self.test_data_sample_keys,
+                "data_sample_keys": self.data_sample_keys,
             },
             {
                 "key": str(data_manager_2.key),
@@ -123,8 +121,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
-                "train_data_sample_keys": [],
-                "test_data_sample_keys": [],
+                "data_sample_keys": [],
             },
             {
                 "key": str(data_manager_3.key),
@@ -155,8 +152,7 @@ class DataManagerViewTests(APITestCase):
                     "public": False,
                     "authorized_ids": ["MyOrg1MSP"],
                 },
-                "train_data_sample_keys": [],
-                "test_data_sample_keys": [],
+                "data_sample_keys": [],
             },
         ]
 
@@ -501,27 +497,19 @@ class DataManagerViewTests(APITestCase):
         compute_plan = factory.create_computeplan()
         algo = factory.create_algo()
         data_manager = factory.create_datamanager()
-        train_data_sample = factory.create_datasample([data_manager])
-        test_data_sample = factory.create_datasample([data_manager])
+        data_sample = factory.create_datasample([data_manager])
         # Creating compute tasks will insert ordering objects `TaskDataSamples`
         for _ in range(3):
             factory.create_computetask(
                 compute_plan,
                 algo,
                 data_manager=data_manager,
-                data_samples=[train_data_sample.key],
-            )
-            factory.create_computetask(
-                compute_plan,
-                algo,
-                data_manager=data_manager,
-                data_samples=[test_data_sample.key],
+                data_samples=[data_sample.key],
             )
         url = reverse("api:data_manager-detail", args=[data_manager.key])
         response = self.client.get(url, **self.extra)
         result = response.json()
-        self.assertEqual(result["train_data_sample_keys"], [str(train_data_sample.key)])
-        self.assertEqual(result["test_data_sample_keys"], [str(test_data_sample.key)])
+        self.assertEqual(result["data_sample_keys"], [str(data_sample.key)])
 
     def test_datamanager_retrieve_wrong_channel(self):
         url = reverse("api:data_manager-detail", args=[self.expected_results[0]["key"]])
