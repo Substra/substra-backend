@@ -40,6 +40,7 @@ class DataManagerViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
         self.url = reverse("api:data_manager-list")
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        self.maxDiff = None
 
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
@@ -490,6 +491,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_retrieve(self):
         url = reverse("api:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
+        print(response.json())
         self.assertEqual(response.json(), self.expected_results[0])
 
     def test_datamanager_retrieve_with_tasks(self):
