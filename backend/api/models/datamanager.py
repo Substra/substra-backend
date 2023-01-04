@@ -26,5 +26,9 @@ class DataManager(models.Model, AssetPermissionMixin):
     metadata = models.JSONField()
     channel = models.CharField(max_length=100)
 
+    def get_data_samples(self):
+        # the join operation generates duplicates
+        return self.data_samples.distinct()
+
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations

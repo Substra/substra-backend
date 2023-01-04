@@ -259,7 +259,7 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
         # filter on data_sample_key
-        params = urlencode({"data_sample_key": self.train_data_sample_key_uuid})
+        params = urlencode({"data_sample_key": self.data_sample_1_key_uuid})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
@@ -510,7 +510,6 @@ class DataManagerViewTests(APITestCase):
         url = reverse("api:data_manager-detail", args=[data_manager.key])
         response = self.client.get(url, **self.extra)
         result = response.json()
-        print(response.content)
         self.assertEqual(result["data_sample_keys"], [str(data_sample.key)])
 
     def test_datamanager_retrieve_wrong_channel(self):
