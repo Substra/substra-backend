@@ -2,7 +2,6 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from api.models import DataManager
-from api.models import DataSample
 from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 from api.serializers.utils import make_addressable_serializer
