@@ -491,7 +491,6 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_retrieve(self):
         url = reverse("api:data_manager-detail", args=[self.expected_results[0]["key"]])
         response = self.client.get(url, **self.extra)
-        print(response.json())
         self.assertEqual(response.json(), self.expected_results[0])
 
     def test_datamanager_retrieve_with_tasks(self):
@@ -511,6 +510,7 @@ class DataManagerViewTests(APITestCase):
         url = reverse("api:data_manager-detail", args=[data_manager.key])
         response = self.client.get(url, **self.extra)
         result = response.json()
+        print(response.content)
         self.assertEqual(result["data_sample_keys"], [str(data_sample.key)])
 
     def test_datamanager_retrieve_wrong_channel(self):
