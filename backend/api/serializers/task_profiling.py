@@ -38,3 +38,7 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
             return duration_string(duration)
         else:
             return None
+
+    def create(self, data):
+        task_profiling, created = TaskProfiling.objects.update_or_create(**data)
+        return task_profiling
