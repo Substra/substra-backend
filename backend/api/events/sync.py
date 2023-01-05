@@ -106,7 +106,7 @@ def _on_create_computeplan_event(event: dict) -> None:
 def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
 
-    # if event received, that means compute plan was created by another organization
+    # if event received, we assume compute plan was created by another organization
     creator = _get_or_create_external_user()
     data["creator"] = creator.id
 

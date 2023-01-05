@@ -48,7 +48,6 @@ class AuthenticatedClient(APIClient):
             # header, this check is necessary to not break previous tests but irl a user cannot be created
             # without a channel
             if self.channel:
-                print(f"Creating channel {self.channel} for user {user}")
                 UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
 
         # simulate login
