@@ -16,6 +16,10 @@ class ProfilingStepSerializer(serializers.ModelSerializer):
             "duration",
         ]
 
+    def create(self, data):
+        profiling_step, created = ProfilingStep.objects.update_or_create(**data)
+        return profiling_step
+
 
 class TaskProfilingSerializer(serializers.ModelSerializer):
     compute_task_key = serializers.PrimaryKeyRelatedField(
