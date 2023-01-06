@@ -114,11 +114,9 @@ class TaskProfilingViewTestsBackend(APITestCase):
         task = factory.create_computetask(compute_plan=cp, algo=algo, category=ComputeTask.Category.TASK_TRAIN)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
-        print("first ", response.data)
         self.assertEqual(response.status_code, 201)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
-        print("second ", response.data)
         self.assertEqual(response.status_code, 201)
 
 
