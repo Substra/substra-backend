@@ -108,6 +108,17 @@ class TaskProfilingViewTestsBackend(APITestCase):
             {"count": len(expected_result), "next": None, "previous": None, "results": expected_result},
         )
 
+    def test_already_exist_task_profiling(self):
+        algo = factory.create_algo()
+        cp = factory.create_computeplan()
+        task = factory.create_computetask(compute_plan=cp, algo=algo, category=ComputeTask.Category.TASK_TRAIN)
+
+        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        self.assertEqual(response.status_code, 201)
+
 
 @override_settings(
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
