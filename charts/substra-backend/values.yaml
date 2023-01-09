@@ -66,7 +66,7 @@ server:
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: &backend-image-tag 0.34.0
+    tag: &backend-image-tag 0.34.1
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be created manually in the namespace.
