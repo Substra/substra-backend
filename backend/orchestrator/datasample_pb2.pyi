@@ -27,6 +27,7 @@ class DataSample(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     DATA_MANAGER_KEYS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
+    TEST_ONLY_FIELD_NUMBER: builtins.int
     CHECKSUM_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     key: builtins.str
@@ -34,6 +35,7 @@ class DataSample(google.protobuf.message.Message):
     def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]:
         """mutable"""
     owner: builtins.str
+    test_only: builtins.bool
     checksum: builtins.str
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
@@ -43,11 +45,12 @@ class DataSample(google.protobuf.message.Message):
         key: builtins.str = ...,
         data_manager_keys: collections.abc.Iterable[builtins.str] | None = ...,
         owner: builtins.str = ...,
+        test_only: builtins.bool = ...,
         checksum: builtins.str = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "creation_date", b"creation_date", "data_manager_keys", b"data_manager_keys", "key", b"key", "owner", b"owner"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "creation_date", b"creation_date", "data_manager_keys", b"data_manager_keys", "key", b"key", "owner", b"owner", "test_only", b"test_only"]) -> None: ...
 
 global___DataSample = DataSample
 
@@ -56,19 +59,22 @@ class NewDataSample(google.protobuf.message.Message):
 
     KEY_FIELD_NUMBER: builtins.int
     DATA_MANAGER_KEYS_FIELD_NUMBER: builtins.int
+    TEST_ONLY_FIELD_NUMBER: builtins.int
     CHECKSUM_FIELD_NUMBER: builtins.int
     key: builtins.str
     @property
     def data_manager_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]: ...
+    test_only: builtins.bool
     checksum: builtins.str
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         data_manager_keys: collections.abc.Iterable[builtins.str] | None = ...,
+        test_only: builtins.bool = ...,
         checksum: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "data_manager_keys", b"data_manager_keys", "key", b"key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["checksum", b"checksum", "data_manager_keys", b"data_manager_keys", "key", b"key", "test_only", b"test_only"]) -> None: ...
 
 global___NewDataSample = NewDataSample
 
