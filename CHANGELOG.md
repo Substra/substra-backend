@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+## [0.34.1](https://github.com/Substra/substra-backend/releases/tag/0.34.1) 2023-01-09
+
 ### Removed
 
 - Update or create the task profiling or step profiling, instead of raising an error if already exists (#559)
