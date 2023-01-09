@@ -213,7 +213,6 @@ class ComputeTask(google.protobuf.message.Message):
     CATEGORY_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
-    PARENT_TASK_KEYS_FIELD_NUMBER: builtins.int
     RANK_FIELD_NUMBER: builtins.int
     STATUS_FIELD_NUMBER: builtins.int
     WORKER_FIELD_NUMBER: builtins.int
@@ -227,9 +226,6 @@ class ComputeTask(google.protobuf.message.Message):
     category: global___ComputeTaskCategory.ValueType
     owner: builtins.str
     compute_plan_key: builtins.str
-    @property
-    def parent_task_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.str]:
-        """Keys of parent ComputeTasks"""
     rank: builtins.int
     status: global___ComputeTaskStatus.ValueType
     """mutable"""
@@ -252,7 +248,6 @@ class ComputeTask(google.protobuf.message.Message):
         category: global___ComputeTaskCategory.ValueType = ...,
         owner: builtins.str = ...,
         compute_plan_key: builtins.str = ...,
-        parent_task_keys: collections.abc.Iterable[builtins.str] | None = ...,
         rank: builtins.int = ...,
         status: global___ComputeTaskStatus.ValueType = ...,
         worker: builtins.str = ...,
@@ -264,7 +259,7 @@ class ComputeTask(google.protobuf.message.Message):
         algo_key: builtins.str = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "logs_permission", b"logs_permission"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algo_key", b"algo_key", "category", b"category", "compute_plan_key", b"compute_plan_key", "creation_date", b"creation_date", "inputs", b"inputs", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "outputs", b"outputs", "owner", b"owner", "parent_task_keys", b"parent_task_keys", "rank", b"rank", "status", b"status", "worker", b"worker"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["algo_key", b"algo_key", "category", b"category", "compute_plan_key", b"compute_plan_key", "creation_date", b"creation_date", "inputs", b"inputs", "key", b"key", "logs_permission", b"logs_permission", "metadata", b"metadata", "outputs", b"outputs", "owner", b"owner", "rank", b"rank", "status", b"status", "worker", b"worker"]) -> None: ...
 
 global___ComputeTask = ComputeTask
 
