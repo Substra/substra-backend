@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Update or create the task profiling or step profiling, instead of raising an error if already exists (#559)
-- `parent_tasks` in `ComputeTask`
+- `parent_tasks` in `ComputeTask` ([#554](https://github.com/Substra/substra-backend/pull/554))
 
 ## [0.34.0](https://github.com/Substra/substra-backend/releases/tag/0.34.0) 2022-12-19
 
