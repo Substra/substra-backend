@@ -12,7 +12,6 @@ organizationName: owkin
 ##
 DataSampleStorageInServerMedia: false
 
-
 privateCa:
   ## @param privateCa.enabled Run the init container injecting the private CA certificate
   ##
@@ -38,7 +37,7 @@ privateCa:
 ## @param psp.create Create a _Pod Security Policy_ in the cluster. WARNING: PodSecurityPolicy is deprecated in Kubernetes 1.21 or later and unavailable in Kubernetes 1.25 or later
 ##
 psp:
-  create: true
+  create: false
 
 ## @section Server settings
 ## @param server.replicaCount Number of server replicas
@@ -424,7 +423,6 @@ schedulerWorker:
     runAsUser: 1001
     runAsGroup: 1001
     fsGroup: 1001
-
 
 ## @section Celery task scheduler settings
 scheduler:
