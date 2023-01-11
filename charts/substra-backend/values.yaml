@@ -37,7 +37,7 @@ privateCa:
 ## @param psp.create Create a _Pod Security Policy_ in the cluster. WARNING: PodSecurityPolicy is deprecated in Kubernetes 1.21 or later and unavailable in Kubernetes 1.25 or later
 ##
 psp:
-  create: false
+  create: true
 
 ## @section Server settings
 ## @param server.replicaCount Number of server replicas
