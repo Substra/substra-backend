@@ -7,7 +7,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0042_remove_computetask_category"),
+        ("api", "0043_remove_computetask_category"),
     ]
 
     operations = [

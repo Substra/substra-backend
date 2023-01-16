@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0041_remove_computetask_parent_tasks"),
+        ("api", "0042_computeplan_creator"),
     ]
 
     operations = [
