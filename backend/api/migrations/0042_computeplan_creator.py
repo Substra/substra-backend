@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("api", "0040_alter_computeplan_failed_task_category_and_more"),
+        ("api", "0041_remove_computetask_parent_tasks"),
     ]
 
     operations = [
