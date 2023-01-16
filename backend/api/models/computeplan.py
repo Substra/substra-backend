@@ -1,4 +1,9 @@
+import secrets
+import string
+
 import structlog
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count
 from django.db.models import Q
@@ -6,6 +11,18 @@ from django.db.models import Q
 from api.models.computetask import ComputeTask
 
 logger = structlog.get_logger(__name__)
+
+
+def _get_or_create_deleted_user() -> User:
+    user_deleted, created = User.objects.get_or_create(username=settings.DELETED_USERNAME, is_active=False)
+    if created:
+        password = "".join(
+            (secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(24))
+        )
+        user_deleted.set_password(password)
+        user_deleted.save()
+
+    return user_deleted
 
 
 class ComputePlan(models.Model):
@@ -25,6 +42,12 @@ class ComputePlan(models.Model):
     status = models.CharField(max_length=64, choices=Status.choices, default=Status.PLAN_STATUS_EMPTY)
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET(_get_or_create_deleted_user),
+        related_name="compute_plans",
+        null=True,
+    )
     creation_date = models.DateTimeField()
     cancelation_date = models.DateTimeField(null=True)
     start_date = models.DateTimeField(null=True)

@@ -55,6 +55,7 @@ def create(request, get_success_headers):
     - Register asset in the orchestrator.
     - Save metadata in local database.
     """
+
     # Step1: register asset in orchestrator
     compute_plan_data = {
         "key": to_string_uuid(request.data.get("key")),
@@ -66,13 +67,19 @@ def create(request, get_success_headers):
 
     # Step2: save metadata in local database
     api_data["channel"] = get_channel_name(request)
+    api_data["creator"] = request.user.id
+
     api_serializer = ComputePlanSerializer(data=api_data)
     try:
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
+        # In that case, set creator as from event it is always assumed to be an external creator
         cp = ComputePlan.objects.get(key=api_data["key"])
-        data = ComputePlanSerializer(cp).data
+        serializer = ComputePlanSerializer(cp, data={"creator": request.user.id}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        data = serializer.data
     else:
         data = api_serializer.data
 
@@ -122,6 +129,7 @@ class ComputePlanFilter(FilterSet):
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
     duration = RangeFilter(label="duration")
+    creator = CharFilter(field_name="creator__username", label="creator")
 
     class Meta:
         model = ComputePlan
@@ -171,7 +179,18 @@ class ComputePlanViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixin
         DjangoFilterBackend,
         ComputePlanMetadataFilter,
     )
-    ordering_fields = ["creation_date", "start_date", "end_date", "key", "owner", "status", "tag", "name", "duration"]
+    ordering_fields = [
+        "creation_date",
+        "start_date",
+        "end_date",
+        "key",
+        "owner",
+        "status",
+        "tag",
+        "name",
+        "duration",
+        "creator",
+    ]
     search_fields = ("key", "name")
     filterset_class = ComputePlanFilter
 

@@ -1,6 +1,10 @@
+import secrets
+import string
 from typing import Optional
 
 import structlog
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from rest_framework.exceptions import ValidationError
@@ -30,6 +34,20 @@ from orchestrator import client as orc_client
 from orchestrator import computetask
 
 logger = structlog.get_logger(__name__)
+
+
+# dummy user to be referenced as creator for asset outside current organization
+def _get_or_create_external_user() -> User:
+    username = settings.EXTERNAL_USERNAME
+    user_external, created = User.objects.get_or_create(username=username, is_active=False)
+    if created:
+        password = "".join(
+            (secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(24))
+        )
+        user_external.set_password(password)
+        user_external.save()
+
+    return user_external
 
 
 def _on_create_organization_event(event: dict) -> None:
@@ -87,6 +105,11 @@ def _on_create_computeplan_event(event: dict) -> None:
 
 def _create_computeplan(channel: str, data: dict) -> None:
     data["channel"] = channel
+
+    # if event received, we assume compute plan was created by another organization
+    creator = _get_or_create_external_user()
+    data["creator"] = creator.id
+
     serializer = ComputePlanSerializer(data=data)
     try:
         serializer.save_if_not_exists()
