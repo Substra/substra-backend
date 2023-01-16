@@ -24,7 +24,6 @@ Basic example:
 ...     outputs=factory.build_computetask_outputs(algo),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample.key],
-...     category=ComputeTask.Category.TASK_TRAIN,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> model = create_model(train_task, identifier="model")
@@ -47,7 +46,6 @@ Basic example:
 ...     outputs=factory.build_computetask_outputs(metric),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample],
-...     category=ComputeTask.Category.TASK_TEST,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> performance = create_performance(test_task, metric, identifier="performance")
@@ -349,7 +347,6 @@ def create_computetask(
     data_manager: DataManager = None,
     data_samples: list[uuid.UUID] = None,
     key: uuid.UUID = None,
-    category: int = ComputeTask.Category.TASK_TRAIN,
     status: int = ComputeTask.Status.STATUS_TODO,
     rank: int = 1,
     worker: str = DEFAULT_WORKER,
@@ -369,7 +366,6 @@ def create_computetask(
         algo=algo,
         data_manager=data_manager,
         key=key,
-        category=category,
         status=status,
         rank=rank,
         worker=worker,

@@ -45,7 +45,6 @@ class CPPerformanceViewTests(APITestCase):
                 outputs=factory.build_computetask_outputs(self.metric),
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
-                category=ComputeTask.Category.TASK_TEST,
                 status=ComputeTask.Status.STATUS_DONE,
                 rank=i + 1,
                 metadata={"round_idx": 1},
@@ -186,7 +185,6 @@ class PerformanceViewTests(APITestCase):
                 outputs=factory.build_computetask_outputs(self.metrics[i]),
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
-                category=ComputeTask.Category.TASK_TEST,
                 status=ComputeTask.Status.STATUS_DONE,
                 error_type=None,
             )

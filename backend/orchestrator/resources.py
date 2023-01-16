@@ -170,21 +170,6 @@ class ComputeTaskStatus(AutoNameEnum):
         return cls(computetask_pb2.ComputeTaskStatus.Name(s))
 
 
-class ComputeTaskCategory(AutoNameEnum):
-    """Task category only exists temporarily for compatibility"""
-
-    TASK_UNKNOWN = enum.auto()
-    TASK_TRAIN = enum.auto()
-    TASK_AGGREGATE = enum.auto()
-    TASK_COMPOSITE = enum.auto()
-    TASK_TEST = enum.auto()
-    TASK_PREDICT = enum.auto()
-
-    @classmethod
-    def from_grpc(cls, c: computetask_pb2.ComputeTaskCategory.ValueType) -> ComputeTaskCategory:
-        return cls(computetask_pb2.ComputeTaskCategory.Name(c))
-
-
 class Permission(pydantic.BaseModel):
     public: bool
     authorized_ids: list[str]
@@ -243,7 +228,6 @@ class ComputeTask(_Base):
 
     key: str
     # This property is only temporary and will disappear soon
-    category: ComputeTaskCategory
     owner: str
     compute_plan_key: str
     algo_key: str
@@ -261,7 +245,6 @@ class ComputeTask(_Base):
 
         return cls(
             key=t.key,
-            category=ComputeTaskCategory.from_grpc(t.category),
             owner=t.owner,
             compute_plan_key=t.compute_plan_key,
             algo_key=t.algo_key,

@@ -2,13 +2,11 @@
 
 from django.db import migrations
 
-import api
-
 
 def migrate_test_tasks(apps, schema_editor):
     # Set algo_key to metrics_keys[0]
     ComputeTask = apps.get_model("api", "ComputeTask")  # noqa: N806
-    for task in ComputeTask.objects.filter(category=api.models.ComputeTask.Category.TASK_TEST):
+    for task in ComputeTask.objects.filter(category="TASK_TEST"):
         task.algo = task.metrics.all()[0]
         task.save()
 

@@ -80,11 +80,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         factory.create_computetask(done_cp, algo, status=ComputeTask.Status.STATUS_DONE)
 
         failed_cp = factory.create_computeplan(name="Failed", status=ComputePlan.Status.PLAN_STATUS_FAILED)
-        failed_task = factory.create_computetask(
-            failed_cp, algo, category=ComputeTask.Category.TASK_TRAIN, status=ComputeTask.Status.STATUS_FAILED
-        )
+        failed_task = factory.create_computetask(failed_cp, algo, status=ComputeTask.Status.STATUS_FAILED)
         failed_cp.failed_task_key = str(failed_task.key)
-        failed_cp.failed_task_category = failed_task.category
+        failed_cp.failed_task_category = "TASK_UNKNOWN"
         failed_cp.save()
 
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlan.Status.PLAN_STATUS_CANCELED)
@@ -172,7 +170,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "done_count": 0,
                 "failed_task": {
                     "key": str(failed_task.key),
-                    "category": "TASK_TRAIN",
+                    "category": "TASK_UNKNOWN",
                 },
                 "status": "PLAN_STATUS_FAILED",
                 "creator": None,

@@ -5,19 +5,13 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from api.models import ComputePlan
-from api.models.computetask import ComputeTask
 from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 
 
 class FailedTaskSerializer(serializers.Serializer):
     key = serializers.CharField(required=False, allow_null=True, max_length=64, source="failed_task_key")
-    category = serializers.ChoiceField(
-        choices=ComputeTask.Category.choices,
-        required=False,
-        allow_null=True,
-        source="failed_task_category",
-    )
+    category = serializers.ReadOnlyField(default="TASK_UNKNOWN")
 
 
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):

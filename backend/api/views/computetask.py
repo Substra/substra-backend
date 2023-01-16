@@ -50,7 +50,6 @@ def _register_in_orchestrator(tasks_data, channel_name):
     for task_data in tasks_data:
         orc_task = {
             "key": task_data["key"],
-            "category": ComputeTask.Category.TASK_UNKNOWN,
             "algo_key": task_data.get("algo_key"),
             "compute_plan_key": task_data["compute_plan_key"],
             "inputs": task_data.get("inputs", []),
@@ -152,10 +151,6 @@ class ComputeTaskFilter(FilterSet):
         field_name="status",
         choices=ComputeTask.Status.choices,
     )
-    category = ChoiceInFilter(
-        field_name="category",
-        choices=ComputeTask.Category.choices,
-    )
     compute_plan_key = CharInFilter(field_name="compute_plan__key")
     algo_key = CharFilter(field_name="algo__key", distinct=True, label="algo_key")
     dataset_key = CharFilter(field_name="data_manager__key", distinct=True, label="dataset_key")
@@ -217,7 +212,6 @@ class ComputeTaskViewSetConfig:
         "end_date",
         "key",
         "owner",
-        "category",
         "rank",
         "status",
         "worker",

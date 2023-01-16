@@ -6,7 +6,6 @@ from .resources import AlgoInput
 from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputeTask
-from .resources import ComputeTaskCategory
 from .resources import ComputeTaskInput
 from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
@@ -32,7 +31,6 @@ class ComputeTaskFactory(factory.Factory):
         model = ComputeTask
 
     key = factory.Faker("uuid4")
-    category = ComputeTaskCategory.TASK_TRAIN
     owner = "OrgA"
     compute_plan_key = factory.Faker("uuid4")
     algo_key = factory.Faker("uuid4")

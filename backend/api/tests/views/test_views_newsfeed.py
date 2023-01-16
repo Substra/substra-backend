@@ -9,7 +9,6 @@ from django.utils.http import urlencode
 from rest_framework.test import APITestCase
 
 from api.models import ComputePlan
-from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
 
@@ -45,7 +44,7 @@ class NewsFeedViewTests(APITestCase):
         canceled_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_CANCELED)
         failed_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_FAILED)
         failed_cp.failed_task_key = str(uuid4())
-        failed_cp.failed_task_category = ComputeTask.Category.TASK_TRAIN
+        failed_cp.failed_task_category = "TASK_UNKNOWN"
         failed_cp.save()
         done_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
         datamanager = factory.create_datamanager()
@@ -70,7 +69,7 @@ class NewsFeedViewTests(APITestCase):
                 "timestamp": failed_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {
                     "first_failed_task_key": failed_cp.failed_task_key,
-                    "task_category": failed_cp.failed_task_category,
+                    "task_category": "TASK_UNKNOWN",
                 },
             },
             # PLAN_STATUS_CANCELED
