@@ -46,13 +46,8 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 
 class DataManagerWithRelationsSerializer(DataManagerSerializer):
-    test_data_sample_keys = serializers.PrimaryKeyRelatedField(
-        source="get_test_data_samples",
-        many=True,
-        read_only=True,
-    )
-    train_data_sample_keys = serializers.PrimaryKeyRelatedField(
-        source="get_train_data_samples",
+    data_sample_keys = serializers.PrimaryKeyRelatedField(
+        source="get_data_samples",
         many=True,
         read_only=True,
     )
@@ -60,6 +55,5 @@ class DataManagerWithRelationsSerializer(DataManagerSerializer):
     class Meta:
         model = DataManager
         fields = DataManagerSerializer.Meta.fields + [
-            "test_data_sample_keys",
-            "train_data_sample_keys",
+            "data_sample_keys",
         ]

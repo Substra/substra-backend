@@ -290,7 +290,6 @@ def create_datamanager(
 def create_datasample(
     data_managers: list[DataManager],
     key: uuid.UUID = None,
-    test_only: bool = False,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
 ) -> DataSample:
@@ -298,7 +297,6 @@ def create_datasample(
         key = uuid.uuid4()
     data_sample = DataSample.objects.create(
         key=key,
-        test_only=test_only,
         creation_date=timezone.now(),
         owner=owner,
         channel=channel,

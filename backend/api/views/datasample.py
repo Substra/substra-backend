@@ -95,7 +95,6 @@ def _register_in_orchestrator(request, instances):
             {
                 "key": str(i.key),
                 "data_manager_keys": [str(key) for key in data_manager_keys],
-                "test_only": request.data.get("test_only", False),
                 "checksum": i.checksum,
             }
             for i in instances

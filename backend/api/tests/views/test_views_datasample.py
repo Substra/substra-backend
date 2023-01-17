@@ -40,7 +40,6 @@ def mock_register_datasamples(orc_request):
         {
             "key": data["key"],
             "data_manager_keys": data["data_manager_keys"],
-            "test_only": data["test_only"],
             "checksum": data["checksum"],
             "owner": "MyOrg1MSP",
             "creation_date": "2021-11-04T13:54:09.882662Z",
@@ -72,7 +71,7 @@ class DataSampleViewTests(APITestCase):
 
         train_data_sample_1 = factory.create_datasample([data_manager])
         train_data_sample_2 = factory.create_datasample([data_manager])
-        test_data_sample = factory.create_datasample([data_manager], test_only=True)
+        test_data_sample = factory.create_datasample([data_manager])
 
         self.algo = factory.create_algo()
         self.compute_plan = factory.create_computeplan()
@@ -87,21 +86,18 @@ class DataSampleViewTests(APITestCase):
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": train_data_sample_1.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": False,
             },
             {
                 "key": str(train_data_sample_2.key),
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": train_data_sample_2.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": False,
             },
             {
                 "key": str(test_data_sample.key),
                 "owner": "MyOrg1MSP",
                 "data_manager_keys": [str(data_manager.key)],
                 "creation_date": test_data_sample.creation_date.isoformat().replace("+00:00", "Z"),
-                "test_only": True,
             },
         ]
 
@@ -227,7 +223,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -256,7 +251,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -287,7 +281,6 @@ class DataSampleViewTests(APITestCase):
         data = {
             "path": target_path,
             "data_manager_keys": [self.data_manager_key],
-            "test_only": False,
         }
 
         with mock.patch.object(
@@ -315,7 +308,6 @@ class DataSampleViewTests(APITestCase):
         data = {
             "path": parent_path,
             "data_manager_keys": [self.data_manager_key],
-            "test_only": False,
             "multiple": True,
         }
 
@@ -342,7 +334,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
@@ -368,7 +359,6 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                    "test_only": False,
                 }
             ),
         }
