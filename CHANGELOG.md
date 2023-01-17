@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Added
+
+- Contributing, contributors & code of conduct files (#563)
+
 ### Removed
 
 - Test only field for data samples (#551)
