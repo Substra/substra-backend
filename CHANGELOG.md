@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Removed
+
+- Test only field for data samples (#551)
+
 ## [0.34.1](https://github.com/Substra/substra-backend/releases/tag/0.34.1) 2023-01-09
 
 ### Removed
