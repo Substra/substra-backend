@@ -10,7 +10,7 @@ djangorestframework==3.13.1
 djangorestframework-simplejwt==5.2.0
 drf-spectacular==0.23.1
 drf-nested-routers==0.93.4
-pyjwt==2.4.0
+pyjwt==2.6.0
 ipython==8.4.0
 ipython-genutils==0.2.0
 kubernetes==24.2.0
