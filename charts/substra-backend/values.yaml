@@ -659,9 +659,6 @@ postgresql:
     username: postgres
     password: postgres
     database: substra
-  primary:
-    persistence:
-      existingClaim: ""
 
 ## @skip redis
 ##
@@ -673,7 +670,6 @@ redis:
   master:
     persistence:
       enabled: true
-      existingClaim: ""
     service:
       ports:
         redis: 6379
@@ -692,7 +688,6 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: true
-    existingClaim: null
     size: 10Gi
     deleteEnabled: true
   service:
@@ -709,8 +704,6 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
-  persistence:
-    existingClaim: ""
 
 ## @section Helm hooks
 ##
