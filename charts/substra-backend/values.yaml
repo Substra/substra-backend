@@ -187,9 +187,11 @@ server:
     ##
     storageClass: ""
     ## @param server.persistence.servermedias.size Servermedias volume size
+    ## @param server.persistence.servermedias.existingClaim use this PVC rather than creating a new one
     ##
     servermedias:
       size: 10Gi
+      existingClaim: null
   ## server containers' liveness probe
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param server.livenessProbe.enabled Enable livenessProbe

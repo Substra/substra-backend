@@ -189,7 +189,7 @@ spec:
       {{- if .Values.DataSampleStorageInServerMedia  }}
       - name: data-servermedias
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-servermedias
+          claimName: {{ .Values.server.persistence.servermedias.existingClaim | default (print (include "substra.fullname" $) "-servermedias") }}
       {{- end }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs

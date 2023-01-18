@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.3.0
+
+### Added
+- New `server.persistence.servermedias.existingClaim` option
+
 ## 22.2.4
 
 ### Changed
