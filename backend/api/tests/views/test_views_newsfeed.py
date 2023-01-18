@@ -44,7 +44,6 @@ class NewsFeedViewTests(APITestCase):
         canceled_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_CANCELED)
         failed_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_FAILED)
         failed_cp.failed_task_key = str(uuid4())
-        failed_cp.failed_task_category = "TASK_UNKNOWN"
         failed_cp.save()
         done_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE)
         datamanager = factory.create_datamanager()
