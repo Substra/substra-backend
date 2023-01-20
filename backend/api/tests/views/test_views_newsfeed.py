@@ -68,7 +68,6 @@ class NewsFeedViewTests(APITestCase):
                 "timestamp": failed_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "detail": {
                     "first_failed_task_key": failed_cp.failed_task_key,
-                    "task_category": "TASK_UNKNOWN",
                 },
             },
             # PLAN_STATUS_CANCELED
