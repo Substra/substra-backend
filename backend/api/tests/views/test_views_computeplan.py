@@ -82,7 +82,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         failed_cp = factory.create_computeplan(name="Failed", status=ComputePlan.Status.PLAN_STATUS_FAILED)
         failed_task = factory.create_computetask(failed_cp, algo, status=ComputeTask.Status.STATUS_FAILED)
         failed_cp.failed_task_key = str(failed_task.key)
-        failed_cp.failed_task_category = "TASK_UNKNOWN"
         failed_cp.save()
 
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlan.Status.PLAN_STATUS_CANCELED)
@@ -104,7 +103,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
-                "failed_task": None,
+                "failed_task_key": None,
                 "status": "PLAN_STATUS_TODO",
                 "creator": None,
                 "creation_date": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -125,7 +124,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
-                "failed_task": None,
+                "failed_task_key": None,
                 "status": "PLAN_STATUS_DOING",
                 "creator": None,
                 "creation_date": doing_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -146,7 +145,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 1,
-                "failed_task": None,
+                "failed_task_key": None,
                 "status": "PLAN_STATUS_DONE",
                 "creator": None,
                 "creation_date": done_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -168,10 +167,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 0,
                 "failed_count": 1,
                 "done_count": 0,
-                "failed_task": {
-                    "key": str(failed_task.key),
-                    "category": "TASK_UNKNOWN",
-                },
+                "failed_task_key": str(failed_task.key),
                 "status": "PLAN_STATUS_FAILED",
                 "creator": None,
                 "creation_date": failed_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -193,7 +189,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 1,
                 "failed_count": 0,
                 "done_count": 0,
-                "failed_task": None,
+                "failed_task_key": None,
                 "status": "PLAN_STATUS_CANCELED",
                 "creator": None,
                 "creation_date": canceled_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -215,7 +211,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
-                "failed_task": None,
+                "failed_task_key": None,
                 "status": "PLAN_STATUS_EMPTY",
                 "creator": None,
                 "creation_date": empty_cp.creation_date.isoformat().replace("+00:00", "Z"),
@@ -501,7 +497,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "canceled_count": 0,
             "failed_count": 0,
             "done_count": 0,
-            "failed_task": None,
+            "failed_task_key": None,
             "status": "PLAN_STATUS_TODO",
             "creation_date": compute_plan.creation_date.isoformat().replace("+00:00", "Z"),
             "start_date": None,

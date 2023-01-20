@@ -54,7 +54,6 @@ class ComputePlan(models.Model):
     end_date = models.DateTimeField(null=True)
     metadata = models.JSONField(null=True)
     failed_task_key = models.CharField(max_length=100, null=True)
-    failed_task_category = models.CharField(max_length=64, default="TASK_UNKNOWN", null=True)
     channel = models.CharField(max_length=100)
 
     class Meta:
@@ -75,7 +74,6 @@ class ComputePlan(models.Model):
             return
 
         self.failed_task_key = first_failed_task.key
-        self.failed_task_category = "TASK_UNKNOWN"
 
     def get_task_stats(self) -> dict:
         return ComputeTask.objects.filter(compute_plan__key=str(self.key)).aggregate(

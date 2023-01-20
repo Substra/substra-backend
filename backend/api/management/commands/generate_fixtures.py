@@ -150,7 +150,6 @@ class Command(BaseCommand):
         elif first_task_status == ComputeTask.Status.STATUS_FAILED:
             factory.create_computetask_logs(compute_task_key=train_task.key)
             cp.failed_task_key = str(train_task.key)
-            cp.failed_task_category = train_task.category
             cp.save()
 
         task_status = (

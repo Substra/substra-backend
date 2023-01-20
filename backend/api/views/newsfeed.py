@@ -51,7 +51,6 @@ class NewsFeedViewSet(GenericViewSet):
             detail = {}
             if compute_plan.failed_task_key:
                 detail["first_failed_task_key"] = compute_plan.failed_task_key
-                detail["task_category"] = compute_plan.failed_task_category
             items.append(
                 cp_item(
                     compute_plan.key,

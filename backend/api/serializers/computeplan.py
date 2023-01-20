@@ -9,14 +9,8 @@ from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 
 
-class FailedTaskSerializer(serializers.Serializer):
-    key = serializers.CharField(required=False, allow_null=True, max_length=64, source="failed_task_key")
-    category = serializers.ReadOnlyField(default="TASK_UNKNOWN")
-
-
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
-    failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
     duration = serializers.IntegerField(read_only=True)
     status = serializers.ChoiceField(choices=ComputePlan.Status.choices, read_only=True)
     creator = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
@@ -26,10 +20,6 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         creator = data["creator"]
         if creator:
             data["creator"] = User.objects.get(id=creator).username
-
-        if not instance.failed_task_key:
-            # None should be returned to the API not the default OrderedDict
-            data["failed_task"] = None
 
         data.update(instance.get_task_stats())
         data = self._add_compute_plan_estimated_end_date(data)
@@ -69,6 +59,6 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "duration",
             "metadata",
             "channel",
-            "failed_task",
+            "failed_task_key",
             "status",
         ]
