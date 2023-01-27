@@ -10,8 +10,8 @@ icon: https://avatars.githubusercontent.com/u/84009910?s=200&v=4
 sources:
   - https://github.com/Substra/substra-backend
 maintainers:
-  - name: Alexandre Picosson
-    email: alexandre.picosson@owkin.com
+  - name: Substra Team
+    email: support@substra.org
 dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
