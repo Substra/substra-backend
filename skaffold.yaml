@@ -1,5 +1,10 @@
 apiVersion: skaffold/v2beta24
 kind: Config
+
+# Remove if you desactivate mTLS
+requires:
+  - path: examples/secrets/skaffold.yaml
+
 build:
   artifacts:
     - image: substra/substra-backend
@@ -54,8 +59,6 @@ deploy:
     manifests:
       - examples/values/serviceAccounts/serviceAccount-org-1.yaml
       - examples/values/serviceAccounts/serviceAccount-org-2.yaml
-      - examples/secrets/secret-orchestrator-tls-org-1-client-pair.yaml
-      - examples/secrets/secret-orchestrator-tls-org-2-client-pair.yaml
 
 profiles:
   - name: prod
