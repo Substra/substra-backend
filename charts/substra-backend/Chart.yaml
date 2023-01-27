@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://github.com/Substra
-version: 22.3.0
+version: 22.3.1
 appVersion: 0.34.1
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
@@ -10,8 +10,8 @@ icon: https://avatars.githubusercontent.com/u/84009910?s=200&v=4
 sources:
   - https://github.com/Substra/substra-backend
 maintainers:
-  - name: Alexandre Picosson
-    email: alexandre.picosson@owkin.com
+  - name: Substra Team
+    email: support@substra.org
 dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
