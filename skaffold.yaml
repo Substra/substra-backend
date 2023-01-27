@@ -1,7 +1,6 @@
 apiVersion: skaffold/v2beta24
 kind: Config
 
-# Remove if you desactivate mTLS
 requires:
   - path: examples/secrets/skaffold.yaml
 
