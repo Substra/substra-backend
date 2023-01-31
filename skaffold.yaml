@@ -56,8 +56,6 @@ deploy:
           _: _
         setValueTemplates: *image-tags
         createNamespace: true
-         valuesFiles: [ examples/values/backend-org-2.yaml ]
-        setValues: { _: _ } # to support profiles
         skipBuildDependencies: true
     statusCheckDeadlineSeconds: 660
   
