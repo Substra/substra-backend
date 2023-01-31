@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing, contributors & code of conduct files (#563)
 
 ### Fixed
+
 - Skaffold default example configuration ([#570](https://github.com/Substra/substra-backend/pull/570))
+- Skaffold spawning instances in `default` namespace ([#574](https://github.com/Substra/substra-backend/pull/574))
 
 ### Removed
 
