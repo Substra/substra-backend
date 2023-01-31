@@ -138,7 +138,7 @@ def get_container_images() -> list[dict]:
     return None
 
 
-def fetch_old_algo_image_names(max_duration: int) -> list[str]:
+def fetch_old_function_image_names(max_duration: int) -> list[str]:
     logger.info("Fetch old image names", max_duration=f"{max_duration}s")
 
     images = get_container_images()

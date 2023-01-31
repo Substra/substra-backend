@@ -15,8 +15,8 @@ class Datastore:
             channel=self.channel, organization_id=organization, url=address.uri, checksum=address.checksum
         )
 
-    def get_algo(self, function: orchestrator.Algo) -> bytes:
-        return self._get_from_address(function.owner, function.algorithm)
+    def get_function(self, function: orchestrator.Function) -> bytes:
+        return self._get_from_address(function.owner, function.functionrithm)
 
     def delete_model(self, model_key: str) -> None:
         from substrapp.models import Model

@@ -13,9 +13,9 @@ from api.tests import asset_factory as factory
 from api.tests.common import generate_basic_auth_header
 from organization.models import IncomingOrganization
 from organization.models import OutgoingOrganization
-from substrapp.models import Algo as AlgoFiles
-from substrapp.tests.common import get_description_algo
-from substrapp.tests.common import get_sample_algo
+from substrapp.models import Function as AlgoFiles
+from substrapp.tests.common import get_description_function
+from substrapp.tests.common import get_sample_function
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -31,13 +31,13 @@ class AuthenticationTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         # create function instance which file download is protected
-        self.algo_file, self.algo_filename = get_sample_algo()
-        self.algo_description_file, self.algo_description_filename = get_description_algo()
-        self.function = AlgoFiles.objects.create(file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.function.key, public=True, owner="foo")
-        metadata.algorithm_address = "http://fake_address.com"
+        self.function_file, self.function_filename = get_sample_function()
+        self.function_description_file, self.function_description_filename = get_description_function()
+        self.function = AlgoFiles.objects.create(file=self.function_file, description=self.function_description_file)
+        metadata = factory.create_function(key=self.function.key, public=True, owner="foo")
+        metadata.functionrithm_address = "http://fake_address.com"
         metadata.save()
-        self.algo_url = reverse("api:function-file", kwargs={"pk": self.function.key})
+        self.function_url = reverse("api:function-file", kwargs={"pk": self.function.key})
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -57,7 +57,7 @@ class AuthenticationTests(APITestCase):
         cls.user = user
 
     def test_authentication_fail(self):
-        response = self.client.get(self.algo_url, **self.extra)
+        response = self.client.get(self.function_url, **self.extra)
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -69,7 +69,7 @@ class AuthenticationTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
         with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -77,7 +77,7 @@ class AuthenticationTests(APITestCase):
         authorization_header = generate_basic_auth_header("unauthorized_username", "unauthorized_password")
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
-        response = self.client.get(self.algo_url, **self.extra)
+        response = self.client.get(self.function_url, **self.extra)
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -87,7 +87,7 @@ class AuthenticationTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
         with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -100,7 +100,7 @@ class AuthenticationTests(APITestCase):
 
         for header in bad_authorization_headers:
             self.client.credentials(HTTP_AUTHORIZATION=header)
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -128,7 +128,7 @@ class AuthenticationTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
 
         with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -136,7 +136,7 @@ class AuthenticationTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
 
         with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 

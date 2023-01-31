@@ -38,9 +38,9 @@ class ComputeTaskViewTests(APITestCase):
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
 
-        self.simple_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
-            outputs=factory.build_algo_outputs(["model"]),
+        self.simple_function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+            outputs=factory.build_function_outputs(["model"]),
             name="simple function",
         )
         self.data_manager = factory.create_datamanager()
@@ -66,9 +66,9 @@ class ComputeTaskViewTests(APITestCase):
             )
             self.compute_tasks[_status] = factory.create_computetask(
                 self.compute_plan,
-                self.simple_algo,
-                inputs=factory.build_computetask_inputs(self.simple_algo, input_keys),
-                outputs=factory.build_computetask_outputs(self.simple_algo),
+                self.simple_function,
+                inputs=factory.build_computetask_inputs(self.simple_function, input_keys),
+                outputs=factory.build_computetask_outputs(self.simple_function),
                 data_manager=self.data_manager,
                 data_samples=[self.data_sample.key],
                 status=_status,
@@ -78,7 +78,7 @@ class ComputeTaskViewTests(APITestCase):
         self.model = factory.create_model(self.done_task, identifier="model")
 
         # we don't explicitly serialize relationships as this test module is focused on computetask
-        self.simple_algo_data = AlgoSerializer(instance=self.simple_algo).data
+        self.simple_function_data = AlgoSerializer(instance=self.simple_function).data
         self.data_manager_data = DataManagerSerializer(instance=self.data_manager).data
         self.data_sample_data = DataSampleSerializer(instance=self.data_sample).data
         self.data_sample_data["data_manager_keys"] = [str(key) for key in self.data_sample_data["data_manager_keys"]]
@@ -185,7 +185,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             for in_data in orc_request["tasks"]:
                 out_data = {
                     "key": in_data["key"],
-                    "algo_key": in_data["algo_key"],
+                    "function_key": in_data["function_key"],
                     "compute_plan_key": in_data["compute_plan_key"],
                     "rank": 0,
                     "status": "STATUS_WAITING",
@@ -218,7 +218,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 {
                     "compute_plan_key": self.compute_plan.key,
                     "key": train_task_key,
-                    "algo_key": self.simple_algo.key,
+                    "function_key": self.simple_function.key,
                     "inputs": [self.datasamples_input, self.opener_input, self.model_input],
                     "outputs": {
                         "model": {
@@ -233,7 +233,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         expected_response = [
             {
                 "key": train_task_key,
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "end_date": None,
@@ -289,7 +289,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         self.expected_results = [
             {
                 "key": str(todo_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -311,7 +311,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(waiting_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -333,7 +333,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(doing_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -355,7 +355,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(done_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -377,7 +377,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(failed_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -399,7 +399,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(canceled_task.key),
-                "function": self.simple_algo_data,
+                "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -597,11 +597,11 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         )
 
     def test_task_list_cross_assets_filters(self):
-        """Filter task on other asset key such as compute_plan_key, algo_key dataset_key and data_sample_key"""
+        """Filter task on other asset key such as compute_plan_key, function_key dataset_key and data_sample_key"""
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
-            urlencode({"algo_key": self.simple_algo.key}),
+            urlencode({"function_key": self.simple_function.key}),
             urlencode({"dataset_key": self.data_manager.key}),
             urlencode({"data_sample_key": self.data_sample.key}),
         ]
@@ -616,7 +616,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(response.json().get("results"), self.expected_results)
 
         # filter on wrong key
-        params = urlencode({"algo_key": self.data_manager.key})
+        params = urlencode({"function_key": self.data_manager.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(len(response.json().get("results")), 0)
 

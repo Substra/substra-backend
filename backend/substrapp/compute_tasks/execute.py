@@ -41,7 +41,7 @@ logger = structlog.get_logger(__name__)
 @timeit
 def execute_compute_task(ctx: Context) -> None:
     channel_name = ctx.channel_name
-    container_image_tag = utils.container_image_tag_from_algo(ctx.function)
+    container_image_tag = utils.container_image_tag_from_function(ctx.function)
 
     compute_pod = ctx.get_compute_pod(container_image_tag)
     pod_name = compute_pod.name

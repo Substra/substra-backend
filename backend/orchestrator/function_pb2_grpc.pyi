@@ -3,52 +3,52 @@
 isort:skip_file
 """
 import abc
-import algo_pb2
+import function_pb2
 import grpc
 
 class AlgoServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterAlgo: grpc.UnaryUnaryMultiCallable[
-        algo_pb2.NewAlgo,
-        algo_pb2.Algo,
+        function_pb2.NewAlgo,
+        function_pb2.Function,
     ]
     GetAlgo: grpc.UnaryUnaryMultiCallable[
-        algo_pb2.GetAlgoParam,
-        algo_pb2.Algo,
+        function_pb2.GetAlgoParam,
+        function_pb2.Function,
     ]
     QueryAlgos: grpc.UnaryUnaryMultiCallable[
-        algo_pb2.QueryAlgosParam,
-        algo_pb2.QueryAlgosResponse,
+        function_pb2.QueryAlgosParam,
+        function_pb2.QueryAlgosResponse,
     ]
     UpdateAlgo: grpc.UnaryUnaryMultiCallable[
-        algo_pb2.UpdateAlgoParam,
-        algo_pb2.UpdateAlgoResponse,
+        function_pb2.UpdateAlgoParam,
+        function_pb2.UpdateAlgoResponse,
     ]
 
 class AlgoServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterAlgo(
         self,
-        request: algo_pb2.NewAlgo,
+        request: function_pb2.NewAlgo,
         context: grpc.ServicerContext,
-    ) -> algo_pb2.Algo: ...
+    ) -> function_pb2.Function: ...
     @abc.abstractmethod
     def GetAlgo(
         self,
-        request: algo_pb2.GetAlgoParam,
+        request: function_pb2.GetAlgoParam,
         context: grpc.ServicerContext,
-    ) -> algo_pb2.Algo: ...
+    ) -> function_pb2.Function: ...
     @abc.abstractmethod
     def QueryAlgos(
         self,
-        request: algo_pb2.QueryAlgosParam,
+        request: function_pb2.QueryAlgosParam,
         context: grpc.ServicerContext,
-    ) -> algo_pb2.QueryAlgosResponse: ...
+    ) -> function_pb2.QueryAlgosResponse: ...
     @abc.abstractmethod
     def UpdateAlgo(
         self,
-        request: algo_pb2.UpdateAlgoParam,
+        request: function_pb2.UpdateAlgoParam,
         context: grpc.ServicerContext,
-    ) -> algo_pb2.UpdateAlgoResponse: ...
+    ) -> function_pb2.UpdateAlgoResponse: ...
 
 def add_AlgoServiceServicer_to_server(servicer: AlgoServiceServicer, server: grpc.Server) -> None: ...

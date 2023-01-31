@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from api.models import Algo
 from api.models import AlgoOutput
 from api.models import ComputeTask
+from api.models import Function
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
 from orchestrator import common_pb2
@@ -20,7 +20,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     )
 
     metric_key = serializers.PrimaryKeyRelatedField(
-        queryset=Algo.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
+        queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
     performance_value = serializers.FloatField(source="value")
 
@@ -39,13 +39,13 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
     output_identifier = serializers.SerializerMethodField()
 
     class Meta:
-        model = Algo
+        model = Function
         fields = ["key", "name", "output_identifier"]
 
     def get_output_identifier(self, obj):
         try:
             performance_output = AlgoOutput.objects.get(
-                algo_id=obj.key, kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
+                function_id=obj.key, kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
             )
         except (AlgoOutput.MultipleObjectsReturned, AlgoOutput.DoesNotExist) as e:
             raise Exception(
@@ -57,7 +57,7 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
 
 class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
     data_manager_key = serializers.UUIDField(format="hex_verbose", source="data_manager_id")
-    algo_key = serializers.UUIDField(format="hex_verbose", source="algo_id")
+    function_key = serializers.UUIDField(format="hex_verbose", source="function_id")
     round_idx = serializers.SerializerMethodField()
 
     class Meta:
@@ -65,7 +65,7 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
         fields = [
             "key",
             "data_manager_key",
-            "algo_key",
+            "function_key",
             "rank",
             "round_idx",
             "data_samples",

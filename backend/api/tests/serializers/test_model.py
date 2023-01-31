@@ -37,7 +37,7 @@ class ModelSerializerTests(TestCase):
     def test_sync_disabled_model(self):
         """Disabled models should be valid without address"""
 
-        function = factory.create_algo()
+        function = factory.create_function()
         compute_plan = factory.create_computeplan()
         compute_task = factory.create_computetask(compute_plan, function)
 

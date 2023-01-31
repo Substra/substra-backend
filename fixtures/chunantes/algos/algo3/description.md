@@ -1,4 +1,4 @@
-# My top unefficient algo 
+# My top unefficient function
 
 Set of one-vs-all logistic regression using sklearn (SGD classfier with loss=log)
 

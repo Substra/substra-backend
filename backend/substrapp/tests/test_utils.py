@@ -11,7 +11,7 @@ from substrapp import utils
 from substrapp.utils import get_hash
 from substrapp.utils import uncompress_content
 
-from .common import get_sample_algo
+from .common import get_sample_function
 
 CHANNEL = "mychannel"
 SUBTUPLE_DIR = tempfile.mkdtemp()
@@ -21,17 +21,17 @@ SUBTUPLE_DIR = tempfile.mkdtemp()
 class UtilsTests(APITestCase):
     def setUp(self):
         self.subtuple_path = SUBTUPLE_DIR
-        self.function, self.algo_filename = get_sample_algo()
+        self.function, self.function_filename = get_sample_function()
 
     def test_uncompress_content_tar(self):
-        algo_content = self.function.read()
+        function_content = self.function.read()
         checksum = get_hash(self.function)
 
-        subtuple = {"key": checksum, "function": "testalgo"}
+        subtuple = {"key": checksum, "function": "testfunction"}
 
         with mock.patch("substrapp.utils.get_hash") as mget_hash:
             mget_hash.return_value = checksum
-            uncompress_content(algo_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
+            uncompress_content(function_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/function.py')))
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/Dockerfile')))
@@ -50,7 +50,7 @@ class UtilsTests(APITestCase):
         self.assertTrue(os.path.exists(zippath))
 
         subtuple_key = "testkey"
-        subtuple = {"key": subtuple_key, "function": "testalgo"}
+        subtuple = {"key": subtuple_key, "function": "testfunction"}
 
         with mock.patch("substrapp.utils.get_hash") as mget_hash:
             with open(zippath, "rb") as content:

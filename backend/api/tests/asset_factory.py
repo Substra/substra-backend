@@ -3,9 +3,9 @@ Utility module to create fixtures.
 
 Basic example:
 
->>> function = create_algo(
-...     inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
-...     outputs=factory.build_algo_outputs(["model"]),
+>>> function = create_function(
+...     inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+...     outputs=factory.build_function_outputs(["model"]),
 ... )
 >>> data_manager = create_datamanager()
 >>> data_sample = create_datasample([data_manager])
@@ -28,9 +28,9 @@ Basic example:
 ... )
 >>> model = create_model(train_task, identifier="model")
 
->>> metric = create_algo(
-...     inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
-...     outputs=factory.build_algo_outputs(["performance"]),
+>>> metric = create_function(
+...     inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+...     outputs=factory.build_function_outputs(["performance"]),
 ... )
 >>> test_task = create_computetask(
 ...     compute_plan,
@@ -52,9 +52,9 @@ Basic example:
 
 Customized example:
 
->>> algo_data = create_algo_files()
->>> function = create_algo(
-...     key=algo_data.key,
+>>> function_data = create_function_files()
+>>> function = create_function(
+...     key=function_data.key,
 ...     name="Random forest",
 ...     category=AlgoCategory.simple,
 ...     metadata={"foo": "bar"},
@@ -70,7 +70,6 @@ import uuid
 from django.core import files
 from django.utils import timezone
 
-from api.models import Algo
 from api.models import AlgoInput
 from api.models import AlgoOutput
 from api.models import ComputePlan
@@ -81,15 +80,16 @@ from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
+from api.models import Function
 from api.models import Model
 from api.models import Performance
 from api.models import ProfilingStep
 from api.models import TaskProfiling
 from api.models.computetask import TaskDataSamples
-from substrapp.models import Algo as AlgoFiles
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
+from substrapp.models import Function as AlgoFiles
 from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_hash
 
@@ -120,45 +120,45 @@ ALGO_OUTPUTS = {
 }
 
 
-def build_algo_inputs(identifiers: list[str]) -> list[AlgoInput]:
+def build_function_inputs(identifiers: list[str]) -> list[AlgoInput]:
     return [AlgoInput(identifier=identifier, **ALGO_INPUTS[identifier]) for identifier in identifiers]
 
 
-def build_algo_outputs(identifiers: list[str]) -> list[AlgoOutput]:
+def build_function_outputs(identifiers: list[str]) -> list[AlgoOutput]:
     return [AlgoOutput(identifier=identifier, **ALGO_OUTPUTS[identifier]) for identifier in identifiers]
 
 
 def build_computetask_inputs(
-    function: Algo,
+    function: Function,
     keys: dict[str : list[uuid.UUID]],
 ) -> list[ComputeTaskInput]:
     task_inputs = []
-    for algo_input in function.inputs.all():
-        for key in keys.get(algo_input.identifier, []):
-            task_input = ComputeTaskInput(identifier=algo_input.identifier)
-            if algo_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
+    for function_input in function.inputs.all():
+        for key in keys.get(function_input.identifier, []):
+            task_input = ComputeTaskInput(identifier=function_input.identifier)
+            if function_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
                 task_input.asset_key = key
             else:  # we assume that all other assets are produced by parent tasks
                 task_input.parent_task_key_id = key
-                task_input.parent_task_output_identifier = algo_input.identifier
+                task_input.parent_task_output_identifier = function_input.identifier
             task_inputs.append(task_input)
     return task_inputs
 
 
 def build_computetask_outputs(
-    function: Algo,
+    function: Function,
     owner: str = DEFAULT_OWNER,
     public: bool = False,
 ) -> list[ComputeTaskOutput]:
     return [
         ComputeTaskOutput(
-            identifier=algo_output.identifier,
+            identifier=function_output.identifier,
             permissions_download_public=public,
             permissions_download_authorized_ids=[owner],
             permissions_process_public=public,
             permissions_process_authorized_ids=[owner],
         )
-        for algo_output in function.outputs.all()
+        for function_output in function.outputs.all()
     ]
 
 
@@ -218,7 +218,7 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
     return start_date, end_date
 
 
-def create_algo(
+def create_function(
     inputs: list[AlgoInput] = None,
     outputs: list[AlgoInput] = None,
     key: uuid.UUID = None,
@@ -227,16 +227,16 @@ def create_algo(
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
     public: bool = False,
-) -> Algo:
+) -> Function:
     if key is None:
         key = uuid.uuid4()
 
-    function = Algo.objects.create(
+    function = Function.objects.create(
         key=key,
         name=name,
         metadata=metadata or {},
-        algorithm_address=get_storage_address("function", key, "file"),
-        algorithm_checksum=DUMMY_CHECKSUM,
+        functionrithm_address=get_storage_address("function", key, "file"),
+        functionrithm_checksum=DUMMY_CHECKSUM,
         description_address=get_storage_address("function", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
         creation_date=timezone.now(),
@@ -246,15 +246,15 @@ def create_algo(
     )
 
     if inputs:
-        for algo_input in inputs:
-            algo_input.function = function
-            algo_input.channel = channel
-            algo_input.save()
+        for function_input in inputs:
+            function_input.function = function
+            function_input.channel = channel
+            function_input.save()
     if outputs:
-        for algo_output in outputs:
-            algo_output.function = function
-            algo_output.channel = channel
-            algo_output.save()
+        for function_output in outputs:
+            function_output.function = function
+            function_output.channel = channel
+            function_output.save()
 
     return function
 
@@ -337,7 +337,7 @@ def create_computeplan(
 
 def create_computetask(
     compute_plan: ComputePlan,
-    function: Algo,
+    function: Function,
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
     data_manager: DataManager = None,
@@ -384,7 +384,9 @@ def create_computetask(
         compute_task.refresh_from_db()
 
     if inputs:
-        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.function.inputs.all()}
+        input_kinds = {
+            function_input.identifier: function_input.kind for function_input in compute_task.function.inputs.all()
+        }
         for position, task_input in enumerate(inputs):
             task_input.task = compute_task
             task_input.channel = channel
@@ -448,7 +450,7 @@ def create_model(
 
 def create_performance(
     compute_task: ComputeTask,
-    metric: Algo,
+    metric: Function,
     identifier: str = "performance",
     value: float = 1.0,
     channel: str = DEFAULT_CHANNEL,
@@ -469,7 +471,7 @@ def create_performance(
     return performance
 
 
-def create_algo_files(
+def create_function_files(
     key: uuid.UUID = None,
     file: files.File = None,
     description: files.File = None,
@@ -481,13 +483,13 @@ def create_algo_files(
     if description is None:
         description = files.base.ContentFile("dummy content")
 
-    algo_files = AlgoFiles.objects.create(
+    function_files = AlgoFiles.objects.create(
         key=key,
         checksum=get_hash(file),
     )
-    algo_files.file.save("function", file)
-    algo_files.description.save("description", description)
-    return algo_files
+    function_files.file.save("function", file)
+    function_files.description.save("description", description)
+    return function_files
 
 
 def create_datamanager_files(

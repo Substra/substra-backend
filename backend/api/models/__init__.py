@@ -7,9 +7,9 @@ from .computetask import ComputeTaskOutputAsset
 from .datamanager import DataManager
 from .datasample import DataSample
 from .events import LastEvent
-from .function import Algo
 from .function import AlgoInput
 from .function import AlgoOutput
+from .function import Function
 from .model import Model
 from .organization import ChannelOrganization
 from .performance import Performance
@@ -17,7 +17,7 @@ from .task_profiling import ProfilingStep
 from .task_profiling import TaskProfiling
 
 __all__ = [
-    "Algo",
+    "Function",
     "AlgoInput",
     "AlgoOutput",
     "ComputePlan",

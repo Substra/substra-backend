@@ -11,42 +11,42 @@ from substrapp.compute_tasks import utils
 _VALID_DOCKERFILE = """
 FROM ubuntu:16.04
 RUN echo "Hello world"
-ENTRYPOINT ["python3", "myalgo.py"]
+ENTRYPOINT ["python3", "myfunction.py"]
 """
 _NO_ENTRYPOINT = """
 FROM ubuntu:16.04
 """
 _ENTRYPOINT_SHELL_FORM = """
 FROM ubuntu:16.04
-ENTRYPOINT python3 myalgo.py
+ENTRYPOINT python3 myfunction.py
 """
 
 
 class TestBuildImageIfMissing:
-    def test_image_already_exists(self, mocker: MockerFixture, function: orchestrator.Algo):
+    def test_image_already_exists(self, mocker: MockerFixture, function: orchestrator.Function):
         ds = mocker.Mock()
         m_container_image_exists = mocker.patch(
             "substrapp.compute_tasks.image_builder.container_image_exists", return_value=True
         )
-        algo_image_tag = utils.container_image_tag_from_algo(function)
+        function_image_tag = utils.container_image_tag_from_function(function)
 
         image_builder.build_image_if_missing(datastore=ds, function=function)
 
-        m_container_image_exists.assert_called_once_with(algo_image_tag)
+        m_container_image_exists.assert_called_once_with(function_image_tag)
 
-    def test_image_build_needed(self, mocker: MockerFixture, function: orchestrator.Algo):
+    def test_image_build_needed(self, mocker: MockerFixture, function: orchestrator.Function):
         ds = mocker.Mock()
         m_container_image_exists = mocker.patch(
             "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
         )
-        m_build_algo_image = mocker.patch("substrapp.compute_tasks.image_builder._build_algo_image")
-        algo_image_tag = utils.container_image_tag_from_algo(function)
+        m_build_function_image = mocker.patch("substrapp.compute_tasks.image_builder._build_function_image")
+        function_image_tag = utils.container_image_tag_from_function(function)
 
         image_builder.build_image_if_missing(datastore=ds, function=function)
 
-        m_container_image_exists.assert_called_once_with(algo_image_tag)
-        m_build_algo_image.assert_called_once()
-        assert m_build_algo_image.call_args.args[1] == function
+        m_container_image_exists.assert_called_once_with(function_image_tag)
+        m_build_function_image.assert_called_once()
+        assert m_build_function_image.call_args.args[1] == function
 
 
 class TestGetEntrypointFromDockerfile:
@@ -55,7 +55,7 @@ class TestGetEntrypointFromDockerfile:
         dockerfile_path.write_text(_VALID_DOCKERFILE)
         entrypoint = image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
 
-        assert entrypoint == ["python3", "myalgo.py"]
+        assert entrypoint == ["python3", "myfunction.py"]
 
     @pytest.mark.parametrize(
         "dockerfile,expected_exc_content",

@@ -78,7 +78,7 @@ def _create_function(channel: str, data: dict) -> None:
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
-        logger.debug("Algo already exists", asset_key=data["key"])
+        logger.debug("Function already exists", asset_key=data["key"])
 
 
 def _on_update_function_event(event: dict) -> None:
@@ -90,9 +90,9 @@ def _on_update_function_event(event: dict) -> None:
 def _update_function(key: str, data: dict) -> None:
     """Process update function event to update local database."""
 
-    from api.models.function import Algo
+    from api.models.function import Function
 
-    function = Algo.objects.get(key=key)
+    function = Function.objects.get(key=key)
     function.name = data["name"]
     function.save()
 

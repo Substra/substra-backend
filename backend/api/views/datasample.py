@@ -284,7 +284,7 @@ class DataSampleFilter(FilterSet):
     compute_plan_key = CharInFilter(
         field_name="data_managers__compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
     )
-    algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
+    function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
 
     class Meta:

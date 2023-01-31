@@ -38,7 +38,7 @@ class ComputePlanGraphViewTests(APITestCase):
 
     def test_too_many_tasks(self):
         compute_plan = factory.create_computeplan()
-        function = factory.create_algo()
+        function = factory.create_function()
         for _ in range(MAX_TASKS_DISPLAYED + 1):
             factory.create_computetask(
                 compute_plan,
@@ -51,77 +51,77 @@ class ComputePlanGraphViewTests(APITestCase):
     def test_cp_graph(self):
         compute_plan = factory.create_computeplan()
 
-        algo_train = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener"]),
-            outputs=factory.build_algo_outputs(["model"]),
+        function_train = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener"]),
+            outputs=factory.build_function_outputs(["model"]),
         )
 
-        algo_predict = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
-            outputs=factory.build_algo_outputs(["predictions"]),
+        function_predict = factory.create_function(
+            inputs=factory.build_function_inputs(["model"]),
+            outputs=factory.build_function_outputs(["predictions"]),
         )
 
-        algo_test = factory.create_algo(
-            inputs=factory.build_algo_inputs(["predictions"]),
-            outputs=factory.build_algo_outputs(["performance"]),
+        function_test = factory.create_function(
+            inputs=factory.build_function_inputs(["predictions"]),
+            outputs=factory.build_function_outputs(["performance"]),
         )
 
-        algo_aggregate = factory.create_algo(
-            inputs=factory.build_algo_inputs(["model"]),
-            outputs=factory.build_algo_outputs(["model"]),
+        function_aggregate = factory.create_function(
+            inputs=factory.build_function_inputs(["model"]),
+            outputs=factory.build_function_outputs(["model"]),
         )
 
         train_task = factory.create_computetask(
             compute_plan,
             rank=1,
-            function=algo_train,
-            outputs=factory.build_computetask_outputs(algo_train),
+            function=function_train,
+            outputs=factory.build_computetask_outputs(function_train),
         )
 
         predict_task = factory.create_computetask(
             compute_plan,
             rank=2,
-            function=algo_predict,
+            function=function_predict,
             inputs=factory.build_computetask_inputs(
-                algo_predict,
+                function_predict,
                 {
                     "model": [train_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_predict),
+            outputs=factory.build_computetask_outputs(function_predict),
         )
 
         test_task = factory.create_computetask(
             compute_plan,
             rank=3,
-            function=algo_test,
+            function=function_test,
             inputs=factory.build_computetask_inputs(
-                algo_test,
+                function_test,
                 {
                     "predictions": [predict_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_test),
+            outputs=factory.build_computetask_outputs(function_test),
         )
 
         composite_task = factory.create_computetask(
             compute_plan,
             rank=10,
-            function=algo_train,
-            outputs=factory.build_computetask_outputs(algo_train),
+            function=function_train,
+            outputs=factory.build_computetask_outputs(function_train),
         )
 
         aggregate_task = factory.create_computetask(
             compute_plan,
             rank=11,
-            function=algo_aggregate,
+            function=function_aggregate,
             inputs=factory.build_computetask_inputs(
-                algo_aggregate,
+                function_aggregate,
                 {
                     "model": [composite_task.key, train_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(algo_aggregate),
+            outputs=factory.build_computetask_outputs(function_aggregate),
         )
 
         expected_results = {

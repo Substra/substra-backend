@@ -14,7 +14,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
-from api.models import Algo
+from api.models import Function
 from api.serializers import AlgoSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import MatchFilter
@@ -26,7 +26,7 @@ from api.views.utils import get_channel_name
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
-from substrapp.models import Algo as AlgoFiles
+from substrapp.models import Function as AlgoFiles
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer as AlgoFilesSerializer
 from substrapp.utils import get_hash
@@ -40,14 +40,14 @@ def _register_in_orchestrator(request, basename, instance):
     current_site = settings.DEFAULT_DOMAIN
     permissions = request.data.get("permissions", {})
 
-    orc_algo = {
+    orc_function = {
         "key": str(instance.key),
         "name": request.data.get("name"),
         "description": {
             "checksum": get_hash(instance.description),
             "storage_address": current_site + reverse("api:function-description", args=[instance.key]),
         },
-        "algorithm": {
+        "functionrithm": {
             "checksum": instance.checksum,
             "storage_address": current_site + reverse("api:function-file", args=[instance.key]),
         },
@@ -61,7 +61,7 @@ def _register_in_orchestrator(request, basename, instance):
     }
 
     with get_orchestrator_client(get_channel_name(request)) as client:
-        return client.register_algo(orc_algo)
+        return client.register_function(orc_function)
 
 
 def create(request, basename, get_success_headers):
@@ -104,7 +104,7 @@ def create(request, basename, get_success_headers):
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
-        function = Algo.objects.get(key=api_data["key"])
+        function = Function.objects.get(key=api_data["key"])
         data = AlgoSerializer(function).data
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
@@ -131,7 +131,7 @@ class AlgoFilter(FilterSet):
     )
 
     class Meta:
-        model = Algo
+        model = Function
         fields = {
             "owner": ["exact"],
             "key": ["exact"],
@@ -162,7 +162,7 @@ class AlgoViewSetConfig:
     filterset_class = AlgoFilter
 
     def get_queryset(self):
-        return Algo.objects.filter(channel=get_channel_name(self.request))
+        return Function.objects.filter(channel=get_channel_name(self.request))
 
 
 class AlgoViewSet(
@@ -175,7 +175,7 @@ class AlgoViewSet(
         function = self.get_object()
         name = request.data.get("name")
 
-        orc_algo = {
+        orc_function = {
             "key": str(function.key),
             "name": name,
         }
@@ -183,7 +183,7 @@ class AlgoViewSet(
         # send update to orchestrator
         # the modification in local db will be done upon corresponding event reception
         with get_orchestrator_client(get_channel_name(request)) as client:
-            client.update_algo(orc_algo)
+            client.update_function(orc_function)
 
         return ApiResponse({}, status=status.HTTP_200_OK)
 
@@ -202,7 +202,7 @@ class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, Algo, "file", "algorithm_address")
+        return self.download_file(request, Function, "file", "functionrithm_address")
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -210,4 +210,4 @@ class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, Algo, "description", "description_address")
+        return self.download_file(request, Function, "description", "description_address")

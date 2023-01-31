@@ -48,24 +48,24 @@ class ModelViewTests(APITestCase):
 
         compute_plan = factory.create_computeplan()
 
-        simple_algo = factory.create_algo(
-            outputs=factory.build_algo_outputs(["model"]),
+        simple_function = factory.create_function(
+            outputs=factory.build_function_outputs(["model"]),
         )
         self.train_task = factory.create_computetask(
             compute_plan,
-            simple_algo,
-            outputs=factory.build_computetask_outputs(simple_algo),
+            simple_function,
+            outputs=factory.build_computetask_outputs(simple_function),
         )
         simple_model_1 = factory.create_model(self.train_task, identifier="model")
         simple_model_2 = factory.create_model(self.train_task, identifier="model")
 
-        composite_algo = factory.create_algo(
-            outputs=factory.build_algo_outputs(["local", "shared"]),
+        composite_function = factory.create_function(
+            outputs=factory.build_function_outputs(["local", "shared"]),
         )
         composite_task = factory.create_computetask(
             compute_plan,
-            composite_algo,
-            outputs=factory.build_computetask_outputs(composite_algo),
+            composite_function,
+            outputs=factory.build_computetask_outputs(composite_function),
         )
         local_model = factory.create_model(composite_task, identifier="local")
 

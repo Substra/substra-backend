@@ -1,9 +1,9 @@
 from django.urls import reverse
 from rest_framework import serializers
 
-from api.models import Algo
 from api.models import AlgoInput
 from api.models import AlgoOutput
+from api.models import Function
 from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 from api.serializers.utils import make_addressable_serializer
@@ -32,7 +32,7 @@ class AlgoOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 
 class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-    algorithm = make_addressable_serializer("algorithm")(source="*")
+    functionrithm = make_addressable_serializer("functionrithm")(source="*")
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     description = make_addressable_serializer("description")(source="*")
     permissions = make_download_process_permission_serializer()(source="*")
@@ -40,9 +40,9 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     outputs = AlgoOutputSerializer(many=True)
 
     class Meta:
-        model = Algo
+        model = Function
         fields = [
-            "algorithm",
+            "functionrithm",
             "channel",
             "creation_date",
             "description",
@@ -62,7 +62,7 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             res["description"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-description", args=[res["key"]])
             )
-            res["algorithm"]["storage_address"] = request.build_absolute_uri(
+            res["functionrithm"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[res["key"]])
             )
         # from list to dict, to align with the orchestrator format
@@ -82,22 +82,22 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         outputs = validated_data.pop("outputs")
         function = super().create(validated_data)
 
-        algo_inputs = AlgoInputSerializer(data=inputs, many=True)
-        algo_inputs.is_valid(raise_exception=True)
-        for algo_input in algo_inputs.validated_data:
+        function_inputs = AlgoInputSerializer(data=inputs, many=True)
+        function_inputs.is_valid(raise_exception=True)
+        for function_input in function_inputs.validated_data:
             AlgoInput.objects.create(
                 channel=function.channel,
                 function=function,
-                **algo_input,
+                **function_input,
             )
 
-        algo_outputs = AlgoOutputSerializer(data=outputs, many=True)
-        algo_outputs.is_valid(raise_exception=True)
-        for algo_output in algo_outputs.validated_data:
+        function_outputs = AlgoOutputSerializer(data=outputs, many=True)
+        function_outputs.is_valid(raise_exception=True)
+        for function_output in function_outputs.validated_data:
             AlgoOutput.objects.create(
                 channel=function.channel,
                 function=function,
-                **algo_output,
+                **function_output,
             )
 
         return function

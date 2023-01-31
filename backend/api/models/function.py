@@ -12,7 +12,7 @@ class AlgoInput(models.Model):
         ASSET_DATA_MANAGER = common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER)
         ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
 
-    function = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="inputs")
+    function = models.ForeignKey("Function", on_delete=models.deletion.CASCADE, related_name="inputs")
     identifier = models.CharField(max_length=100)
     kind = models.CharField(max_length=64, choices=Kind.choices)
     optional = models.BooleanField(default=False)
@@ -29,7 +29,7 @@ class AlgoOutput(models.Model):
         ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
         ASSET_PERFORMANCE = common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
 
-    function = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="outputs")
+    function = models.ForeignKey("Function", on_delete=models.deletion.CASCADE, related_name="outputs")
     identifier = models.CharField(max_length=100)
     kind = models.CharField(max_length=64, choices=Kind.choices)
     multiple = models.BooleanField(default=False)
@@ -40,15 +40,15 @@ class AlgoOutput(models.Model):
         ordering = ["identifier"]  # default order for relations serializations
 
 
-class Algo(models.Model, AssetPermissionMixin):
-    """Algo represent an algorithm and its associated metadata"""
+class Function(models.Model, AssetPermissionMixin):
+    """Function represent an functionrithm and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=100)
     description_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
     description_checksum = models.CharField(max_length=64)
-    algorithm_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
-    algorithm_checksum = models.CharField(max_length=64)
+    functionrithm_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
+    functionrithm_checksum = models.CharField(max_length=64)
     permissions_download_public = models.BooleanField()
     permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     permissions_process_public = models.BooleanField()

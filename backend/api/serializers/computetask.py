@@ -3,7 +3,6 @@ from django.urls import reverse
 from rest_framework import serializers
 
 import orchestrator.failure_report_pb2 as failure_report_pb2
-from api.models import Algo
 from api.models import AlgoInput
 from api.models import AlgoOutput
 from api.models import ComputePlan
@@ -14,6 +13,7 @@ from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
+from api.models import Function
 from api.models import Model
 from api.models import Performance
 from api.models.computetask import TaskDataSamples
@@ -159,7 +159,7 @@ class AlgoField(serializers.Field):
         return AlgoSerializer(instance=data).data
 
     def to_internal_value(self, data):
-        return Algo.objects.get(key=data["key"])
+        return Function.objects.get(key=data["key"])
 
 
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -228,7 +228,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             task["function"]["description"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-description", args=[task["function"]["key"]])
             )
-            task["function"]["algorithm"]["storage_address"] = request.build_absolute_uri(
+            task["function"]["functionrithm"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[task["function"]["key"]])
             )
 
@@ -242,7 +242,9 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         outputs = validated_data.pop("outputs")
 
         compute_task = super().create(validated_data)
-        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.function.inputs.all()}
+        input_kinds = {
+            function_input.identifier: function_input.kind for function_input in compute_task.function.inputs.all()
+        }
 
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)

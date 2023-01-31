@@ -7,13 +7,13 @@ from io import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from google.protobuf.json_format import MessageToDict
 
-from orchestrator.algo_pb2 import AlgoInput
-from orchestrator.algo_pb2 import AlgoOutput
 from orchestrator.client import CONVERT_SETTINGS
 from orchestrator.common_pb2 import ASSET_DATA_MANAGER
 from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
+from orchestrator.function_pb2 import AlgoInput
+from orchestrator.function_pb2 import AlgoOutput
 
 
 @dataclass
@@ -36,7 +36,7 @@ class AlgoCategory(str, Enum):
     predict_composite = "ALGO_PREDICT_COMPOSITE"
 
 
-# Algo inputs, protobuf format
+# Function inputs, protobuf format
 ALGO_INPUTS_PER_CATEGORY = {
     AlgoCategory.simple: {
         InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
@@ -66,7 +66,7 @@ ALGO_INPUTS_PER_CATEGORY = {
 }
 
 
-# Algo outputs, protobuf format
+# Function outputs, protobuf format
 ALGO_OUTPUTS_PER_CATEGORY = {
     AlgoCategory.simple: {
         InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
@@ -86,7 +86,7 @@ ALGO_OUTPUTS_PER_CATEGORY = {
     },
 }
 
-# Algo inputs, dictionary format
+# Function inputs, dictionary format
 ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(input_proto, **CONVERT_SETTINGS)
@@ -95,7 +95,7 @@ ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     for category, inputs_by_identifier in ALGO_INPUTS_PER_CATEGORY.items()
 }
 
-# Algo outputs, dictionary format
+# Function outputs, dictionary format
 ALGO_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(output_proto, **CONVERT_SETTINGS)
@@ -210,11 +210,13 @@ def get_sample_tar_data_sample():
     return file, file_filename
 
 
-def get_sample_algo():
+def get_sample_function():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/function.tar.gz"), "rb") as tar_file:
+    with open(
+        os.path.join(dir_path, "../../../fixtures/chunantes/functions/function3/function.tar.gz"), "rb"
+    ) as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/tar+gzip", flength, None)
@@ -223,11 +225,11 @@ def get_sample_algo():
     return file, file_filename
 
 
-def get_sample_algo_zip():
+def get_sample_function_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo0/function.zip"), "rb") as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/functions/function0/function.zip"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
@@ -236,11 +238,13 @@ def get_sample_algo_zip():
     return file, file_filename
 
 
-def get_description_algo():
+def get_description_function():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.md"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/description.md"), "rb") as desc_file:
+    with open(
+        os.path.join(dir_path, "../../../fixtures/chunantes/functions/function3/description.md"), "rb"
+    ) as desc_file:
         flength = f.write(desc_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/text", flength, None)
@@ -270,12 +274,12 @@ DEFAULT_STORAGE_ADDRESS = {
 }
 
 
-def get_sample_algo_metadata():
+def get_sample_function_metadata():
     return {
         "owner": "foo",
         "permissions": DEFAULT_PERMISSIONS,
         "description": DEFAULT_STORAGE_ADDRESS,
-        "algorithm": DEFAULT_STORAGE_ADDRESS,
+        "functionrithm": DEFAULT_STORAGE_ADDRESS,
     }
 
 

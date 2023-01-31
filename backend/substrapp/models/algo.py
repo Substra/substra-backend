@@ -7,10 +7,10 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename) -> str:
-    return f"algos/{instance.key}/{filename}"
+    return f"functions/{instance.key}/{filename}"
 
 
-class Algo(models.Model):
+class Function(models.Model):
     """Storage Data table"""
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -29,4 +29,4 @@ class Algo(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Algo with key {self.key}"
+        return f"Function with key {self.key}"

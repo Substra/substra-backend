@@ -70,7 +70,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
         ERROR_TYPE_INTERNAL = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_INTERNAL)
 
     key = models.UUIDField(primary_key=True)
-    function = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
+    function = models.ForeignKey("Function", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
     rank = models.IntegerField()

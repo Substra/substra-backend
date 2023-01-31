@@ -17,7 +17,7 @@ from api.tests import asset_factory as factory
     ),
 )
 def test_update_dates_single_task(status, has_start_date, has_end_date):
-    function = factory.create_algo()
+    function = factory.create_function()
     compute_plan = factory.create_computeplan()
     compute_task = factory.create_computetask(compute_plan, function, status=status)
     # validate inputs
@@ -52,7 +52,7 @@ def test_update_dates_single_task(status, has_start_date, has_end_date):
     ),
 )
 def test_update_dates_ended_cp_with_ongoing_task(status, has_start_date, has_end_date):
-    function = factory.create_algo()
+    function = factory.create_function()
     compute_plan = factory.create_computeplan()
     factory.create_computetask(compute_plan, function, status=status)
     factory.create_computetask(compute_plan, function, status=ComputeTask.Status.STATUS_WAITING)

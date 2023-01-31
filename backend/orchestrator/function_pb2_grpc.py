@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import algo_pb2 as algo__pb2
+from . import function_pb2 as function__pb2
 
 
 class AlgoServiceStub(object):
@@ -16,23 +16,23 @@ class AlgoServiceStub(object):
         """
         self.RegisterAlgo = channel.unary_unary(
                 '/orchestrator.AlgoService/RegisterAlgo',
-                request_serializer=algo__pb2.NewAlgo.SerializeToString,
-                response_deserializer=algo__pb2.Algo.FromString,
+                request_serializer=function__pb2.NewAlgo.SerializeToString,
+                response_deserializer=function__pb2.Function.FromString,
                 )
         self.GetAlgo = channel.unary_unary(
                 '/orchestrator.AlgoService/GetAlgo',
-                request_serializer=algo__pb2.GetAlgoParam.SerializeToString,
-                response_deserializer=algo__pb2.Algo.FromString,
+                request_serializer=function__pb2.GetAlgoParam.SerializeToString,
+                response_deserializer=function__pb2.Function.FromString,
                 )
         self.QueryAlgos = channel.unary_unary(
                 '/orchestrator.AlgoService/QueryAlgos',
-                request_serializer=algo__pb2.QueryAlgosParam.SerializeToString,
-                response_deserializer=algo__pb2.QueryAlgosResponse.FromString,
+                request_serializer=function__pb2.QueryAlgosParam.SerializeToString,
+                response_deserializer=function__pb2.QueryAlgosResponse.FromString,
                 )
         self.UpdateAlgo = channel.unary_unary(
                 '/orchestrator.AlgoService/UpdateAlgo',
-                request_serializer=algo__pb2.UpdateAlgoParam.SerializeToString,
-                response_deserializer=algo__pb2.UpdateAlgoResponse.FromString,
+                request_serializer=function__pb2.UpdateAlgoParam.SerializeToString,
+                response_deserializer=function__pb2.UpdateAlgoResponse.FromString,
                 )
 
 
@@ -68,23 +68,23 @@ def add_AlgoServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'RegisterAlgo': grpc.unary_unary_rpc_method_handler(
                     servicer.RegisterAlgo,
-                    request_deserializer=algo__pb2.NewAlgo.FromString,
-                    response_serializer=algo__pb2.Algo.SerializeToString,
+                    request_deserializer=function__pb2.NewAlgo.FromString,
+                    response_serializer=function__pb2.Function.SerializeToString,
             ),
             'GetAlgo': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAlgo,
-                    request_deserializer=algo__pb2.GetAlgoParam.FromString,
-                    response_serializer=algo__pb2.Algo.SerializeToString,
+                    request_deserializer=function__pb2.GetAlgoParam.FromString,
+                    response_serializer=function__pb2.Function.SerializeToString,
             ),
             'QueryAlgos': grpc.unary_unary_rpc_method_handler(
                     servicer.QueryAlgos,
-                    request_deserializer=algo__pb2.QueryAlgosParam.FromString,
-                    response_serializer=algo__pb2.QueryAlgosResponse.SerializeToString,
+                    request_deserializer=function__pb2.QueryAlgosParam.FromString,
+                    response_serializer=function__pb2.QueryAlgosResponse.SerializeToString,
             ),
             'UpdateAlgo': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateAlgo,
-                    request_deserializer=algo__pb2.UpdateAlgoParam.FromString,
-                    response_serializer=algo__pb2.UpdateAlgoResponse.SerializeToString,
+                    request_deserializer=function__pb2.UpdateAlgoParam.FromString,
+                    response_serializer=function__pb2.UpdateAlgoResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -108,8 +108,8 @@ class AlgoService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/RegisterAlgo',
-            algo__pb2.NewAlgo.SerializeToString,
-            algo__pb2.Algo.FromString,
+            function__pb2.NewAlgo.SerializeToString,
+            function__pb2.Function.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -125,8 +125,8 @@ class AlgoService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/GetAlgo',
-            algo__pb2.GetAlgoParam.SerializeToString,
-            algo__pb2.Algo.FromString,
+            function__pb2.GetAlgoParam.SerializeToString,
+            function__pb2.Function.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -142,8 +142,8 @@ class AlgoService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/QueryAlgos',
-            algo__pb2.QueryAlgosParam.SerializeToString,
-            algo__pb2.QueryAlgosResponse.FromString,
+            function__pb2.QueryAlgosParam.SerializeToString,
+            function__pb2.QueryAlgosResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -159,7 +159,7 @@ class AlgoService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/UpdateAlgo',
-            algo__pb2.UpdateAlgoParam.SerializeToString,
-            algo__pb2.UpdateAlgoResponse.FromString,
+            function__pb2.UpdateAlgoParam.SerializeToString,
+            function__pb2.UpdateAlgoResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

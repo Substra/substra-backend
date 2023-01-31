@@ -136,7 +136,7 @@ class DataManagerFilter(FilterSet):
     compute_plan_key = CharInFilter(
         field_name="compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
     )
-    algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
+    function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
     data_sample_key = CharInFilter(
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
     )
@@ -192,7 +192,7 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         datamanager = self.get_object()
         name = request.data.get("name")
 
-        orc_algo = {
+        orc_function = {
             "key": str(datamanager.key),
             "name": name,
         }
@@ -200,7 +200,7 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
         # send update to orchestrator
         # the modification in local db will be done upon corresponding event reception
         with get_orchestrator_client(get_channel_name(request)) as client:
-            client.update_datamanager(orc_algo)
+            client.update_datamanager(orc_function)
 
         return ApiResponse({}, status=status.HTTP_200_OK)
 

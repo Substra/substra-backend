@@ -67,7 +67,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.url = reverse("api:compute_plan-list")
 
-        function = factory.create_algo()
+        function = factory.create_function()
 
         todo_cp = factory.create_computeplan(name="To do", status=ComputePlan.Status.PLAN_STATUS_TODO)
         factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_TODO)
@@ -476,8 +476,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compute_plan_list_cross_assets_filters(self):
-        """Filter computeplan on other asset key such as algo_key, dataset_key and data_sample_key"""
-        function = factory.create_algo()
+        """Filter computeplan on other asset key such as function_key, dataset_key and data_sample_key"""
+        function = factory.create_function()
         data_manager = factory.create_datamanager()
         data_sample = factory.create_datasample([data_manager])
 
@@ -505,8 +505,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "duration": 0,  # because start_date is None
         }
 
-        # filter on algo_key
-        params = urlencode({"algo_key": function.key})
+        # filter on function_key
+        params = urlencode({"function_key": function.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), [expected_cp])
 

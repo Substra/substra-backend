@@ -20,7 +20,7 @@ from substrapp.models import ComputeTaskFailureReport
 def compute_task_failure_report() -> tuple[ComputeTask, ComputeTaskFailureReport]:
     compute_task = factory.create_computetask(
         factory.create_computeplan(),
-        factory.create_algo(),
+        factory.create_function(),
         public=False,
         owner=conf.settings.LEDGER_MSP_ID,
     )

@@ -16,13 +16,13 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nalgo.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"V\n\tAlgoInput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\x12\x10\n\x08optional\x18\x03 \x01(\x08\"E\n\nAlgoOutput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\"\xda\x04\n\x04\x41lgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x08metadata\x18\x10 \x03(\x0b\x32 .orchestrator.Algo.MetadataEntry\x12.\n\x06inputs\x18\x11 \x03(\x0b\x32\x1e.orchestrator.Algo.InputsEntry\x12\x30\n\x07outputs\x18\x12 \x03(\x0b\x32\x1f.orchestrator.Algo.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.AlgoInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.AlgoOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\xab\x04\n\x07NewAlgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\talgorithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x35\n\x08metadata\x18\x11 \x03(\x0b\x32#.orchestrator.NewAlgo.MetadataEntry\x12\x31\n\x06inputs\x18\x12 \x03(\x0b\x32!.orchestrator.NewAlgo.InputsEntry\x12\x33\n\x07outputs\x18\x13 \x03(\x0b\x32\".orchestrator.NewAlgo.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.AlgoInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.AlgoOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\x1b\n\x0cGetAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"P\n\x12QueryAlgosResponse\x12!\n\x05\x41lgos\x18\x01 \x03(\x0b\x32\x12.orchestrator.Algo\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"+\n\x0f\x41lgoQueryFilter\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"g\n\x0fQueryAlgosParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.AlgoQueryFilter\",\n\x0fUpdateAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x14\n\x12UpdateAlgoResponse2\xa1\x02\n\x0b\x41lgoService\x12\x39\n\x0cRegisterAlgo\x12\x15.orchestrator.NewAlgo\x1a\x12.orchestrator.Algo\x12\x39\n\x07GetAlgo\x12\x1a.orchestrator.GetAlgoParam\x1a\x12.orchestrator.Algo\x12M\n\nQueryAlgos\x12\x1d.orchestrator.QueryAlgosParam\x1a .orchestrator.QueryAlgosResponse\x12M\n\nUpdateAlgo\x12\x1d.orchestrator.UpdateAlgoParam\x1a .orchestrator.UpdateAlgoResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfunction.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"V\n\tAlgoInput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\x12\x10\n\x08optional\x18\x03 \x01(\x08\"E\n\nAlgoOutput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\"\xda\x04\n\x04\x41lgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\tfunctionrithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x08metadata\x18\x10 \x03(\x0b\x32 .orchestrator.Function.MetadataEntry\x12.\n\x06inputs\x18\x11 \x03(\x0b\x32\x1e.orchestrator.Function.InputsEntry\x12\x30\n\x07outputs\x18\x12 \x03(\x0b\x32\x1f.orchestrator.Function.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.AlgoInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.AlgoOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\xab\x04\n\x07NewAlgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\tfunctionrithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x35\n\x08metadata\x18\x11 \x03(\x0b\x32#.orchestrator.NewAlgo.MetadataEntry\x12\x31\n\x06inputs\x18\x12 \x03(\x0b\x32!.orchestrator.NewAlgo.InputsEntry\x12\x33\n\x07outputs\x18\x13 \x03(\x0b\x32\".orchestrator.NewAlgo.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.AlgoInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.AlgoOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\x1b\n\x0cGetAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"P\n\x12QueryAlgosResponse\x12!\n\x05\x41lgos\x18\x01 \x03(\x0b\x32\x12.orchestrator.Function\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"+\n\x0f\x41lgoQueryFilter\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"g\n\x0fQueryAlgosParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.AlgoQueryFilter\",\n\x0fUpdateAlgoParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x14\n\x12UpdateAlgoResponse2\xa1\x02\n\x0b\x41lgoService\x12\x39\n\x0cRegisterAlgo\x12\x15.orchestrator.NewAlgo\x1a\x12.orchestrator.Function\x12\x39\n\x07GetAlgo\x12\x1a.orchestrator.GetAlgoParam\x1a\x12.orchestrator.Function\x12M\n\nQueryAlgos\x12\x1d.orchestrator.QueryAlgosParam\x1a .orchestrator.QueryAlgosResponse\x12M\n\nUpdateAlgo\x12\x1d.orchestrator.UpdateAlgoParam\x1a .orchestrator.UpdateAlgoResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 
 
 _ALGOINPUT = DESCRIPTOR.message_types_by_name['AlgoInput']
 _ALGOOUTPUT = DESCRIPTOR.message_types_by_name['AlgoOutput']
-_ALGO = DESCRIPTOR.message_types_by_name['Algo']
+_ALGO = DESCRIPTOR.message_types_by_name['Function']
 _ALGO_METADATAENTRY = _ALGO.nested_types_by_name['MetadataEntry']
 _ALGO_INPUTSENTRY = _ALGO.nested_types_by_name['InputsEntry']
 _ALGO_OUTPUTSENTRY = _ALGO.nested_types_by_name['OutputsEntry']
@@ -38,73 +38,73 @@ _UPDATEALGOPARAM = DESCRIPTOR.message_types_by_name['UpdateAlgoParam']
 _UPDATEALGORESPONSE = DESCRIPTOR.message_types_by_name['UpdateAlgoResponse']
 AlgoInput = _reflection.GeneratedProtocolMessageType('AlgoInput', (_message.Message,), {
   'DESCRIPTOR' : _ALGOINPUT,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.AlgoInput)
   })
 _sym_db.RegisterMessage(AlgoInput)
 
 AlgoOutput = _reflection.GeneratedProtocolMessageType('AlgoOutput', (_message.Message,), {
   'DESCRIPTOR' : _ALGOOUTPUT,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.AlgoOutput)
   })
 _sym_db.RegisterMessage(AlgoOutput)
 
-Algo = _reflection.GeneratedProtocolMessageType('Algo', (_message.Message,), {
+Function = _reflection.GeneratedProtocolMessageType('Function', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
     'DESCRIPTOR' : _ALGO_METADATAENTRY,
-    '__module__' : 'algo_pb2'
-    # @@protoc_insertion_point(class_scope:orchestrator.Algo.MetadataEntry)
+    '__module__' : 'function_pb2'
+    # @@protoc_insertion_point(class_scope:orchestrator.Function.MetadataEntry)
     })
   ,
 
   'InputsEntry' : _reflection.GeneratedProtocolMessageType('InputsEntry', (_message.Message,), {
     'DESCRIPTOR' : _ALGO_INPUTSENTRY,
-    '__module__' : 'algo_pb2'
-    # @@protoc_insertion_point(class_scope:orchestrator.Algo.InputsEntry)
+    '__module__' : 'function_pb2'
+    # @@protoc_insertion_point(class_scope:orchestrator.Function.InputsEntry)
     })
   ,
 
   'OutputsEntry' : _reflection.GeneratedProtocolMessageType('OutputsEntry', (_message.Message,), {
     'DESCRIPTOR' : _ALGO_OUTPUTSENTRY,
-    '__module__' : 'algo_pb2'
-    # @@protoc_insertion_point(class_scope:orchestrator.Algo.OutputsEntry)
+    '__module__' : 'function_pb2'
+    # @@protoc_insertion_point(class_scope:orchestrator.Function.OutputsEntry)
     })
   ,
   'DESCRIPTOR' : _ALGO,
-  '__module__' : 'algo_pb2'
-  # @@protoc_insertion_point(class_scope:orchestrator.Algo)
+  '__module__' : 'function_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.Function)
   })
-_sym_db.RegisterMessage(Algo)
-_sym_db.RegisterMessage(Algo.MetadataEntry)
-_sym_db.RegisterMessage(Algo.InputsEntry)
-_sym_db.RegisterMessage(Algo.OutputsEntry)
+_sym_db.RegisterMessage(Function)
+_sym_db.RegisterMessage(Function.MetadataEntry)
+_sym_db.RegisterMessage(Function.InputsEntry)
+_sym_db.RegisterMessage(Function.OutputsEntry)
 
 NewAlgo = _reflection.GeneratedProtocolMessageType('NewAlgo', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
     'DESCRIPTOR' : _NEWALGO_METADATAENTRY,
-    '__module__' : 'algo_pb2'
+    '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewAlgo.MetadataEntry)
     })
   ,
 
   'InputsEntry' : _reflection.GeneratedProtocolMessageType('InputsEntry', (_message.Message,), {
     'DESCRIPTOR' : _NEWALGO_INPUTSENTRY,
-    '__module__' : 'algo_pb2'
+    '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewAlgo.InputsEntry)
     })
   ,
 
   'OutputsEntry' : _reflection.GeneratedProtocolMessageType('OutputsEntry', (_message.Message,), {
     'DESCRIPTOR' : _NEWALGO_OUTPUTSENTRY,
-    '__module__' : 'algo_pb2'
+    '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewAlgo.OutputsEntry)
     })
   ,
   'DESCRIPTOR' : _NEWALGO,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.NewAlgo)
   })
 _sym_db.RegisterMessage(NewAlgo)
@@ -114,42 +114,42 @@ _sym_db.RegisterMessage(NewAlgo.OutputsEntry)
 
 GetAlgoParam = _reflection.GeneratedProtocolMessageType('GetAlgoParam', (_message.Message,), {
   'DESCRIPTOR' : _GETALGOPARAM,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.GetAlgoParam)
   })
 _sym_db.RegisterMessage(GetAlgoParam)
 
 QueryAlgosResponse = _reflection.GeneratedProtocolMessageType('QueryAlgosResponse', (_message.Message,), {
   'DESCRIPTOR' : _QUERYALGOSRESPONSE,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.QueryAlgosResponse)
   })
 _sym_db.RegisterMessage(QueryAlgosResponse)
 
 AlgoQueryFilter = _reflection.GeneratedProtocolMessageType('AlgoQueryFilter', (_message.Message,), {
   'DESCRIPTOR' : _ALGOQUERYFILTER,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.AlgoQueryFilter)
   })
 _sym_db.RegisterMessage(AlgoQueryFilter)
 
 QueryAlgosParam = _reflection.GeneratedProtocolMessageType('QueryAlgosParam', (_message.Message,), {
   'DESCRIPTOR' : _QUERYALGOSPARAM,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.QueryAlgosParam)
   })
 _sym_db.RegisterMessage(QueryAlgosParam)
 
 UpdateAlgoParam = _reflection.GeneratedProtocolMessageType('UpdateAlgoParam', (_message.Message,), {
   'DESCRIPTOR' : _UPDATEALGOPARAM,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.UpdateAlgoParam)
   })
 _sym_db.RegisterMessage(UpdateAlgoParam)
 
 UpdateAlgoResponse = _reflection.GeneratedProtocolMessageType('UpdateAlgoResponse', (_message.Message,), {
   'DESCRIPTOR' : _UPDATEALGORESPONSE,
-  '__module__' : 'algo_pb2'
+  '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.UpdateAlgoResponse)
   })
 _sym_db.RegisterMessage(UpdateAlgoResponse)

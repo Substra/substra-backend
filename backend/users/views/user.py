@@ -66,7 +66,7 @@ def _validate_role(role):
 
 def _validate_token(token, secret):
     try:
-        jwt.decode(token, secret, algorithms=[settings.RESET_JWT_SIGNATURE_ALGORITHM])
+        jwt.decode(token, secret, functionrithms=[settings.RESET_JWT_SIGNATURE_ALGORITHM])
     except (DecodeError, ExpiredSignatureError, InvalidTokenError) as err:
         return {"is_valid": False, "message": err}
 
@@ -226,7 +226,7 @@ class UserViewSet(
         jwt_token = jwt.encode(
             payload={"exp": datetime.datetime.now() + datetime.timedelta(days=7)},
             key=secret,
-            algorithm=settings.RESET_JWT_SIGNATURE_ALGORITHM,
+            functionrithm=settings.RESET_JWT_SIGNATURE_ALGORITHM,
         )
 
         data = {"reset_password_token": jwt_token}

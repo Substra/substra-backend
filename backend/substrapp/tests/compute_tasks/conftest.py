@@ -11,12 +11,12 @@ from substrapp.compute_tasks.directories import Directories
 DOCKERFILE = """
 FROM ubuntu:16.04
 RUN echo "Hello World"
-ENTRYPOINT ["python3", "myalgo.py"]
+ENTRYPOINT ["python3", "myfunction.py"]
 """
 
 
 @pytest.fixture
-def function() -> orchestrator.Algo:
+def function() -> orchestrator.Function:
     return orc_mock.AlgoFactory()
 
 
@@ -27,7 +27,7 @@ def orc_metric() -> dict[str, Any]:
         "name": "my metric",
         "owner": "Org1MSP",
         "description": {"checksum": "", "storage_address": ""},
-        "algorithm": {"checksum": "", "storage_address": ""},
+        "functionrithm": {"checksum": "", "storage_address": ""},
         "permissions": {
             "process": {"public": True, "authorized_ids": []},
             "download": {"public": True, "authorized_ids": []},
