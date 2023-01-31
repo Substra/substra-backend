@@ -39,11 +39,11 @@ def test_get_args_task_input_one_model_output_one_model():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        function=orc_mock.AlgoFactory(
+        function=orc_mock.FunctionFactory(
             inputs={
-                InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
-                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                InputIdentifiers.MODEL: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.FunctionInputFactory(
                     kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
                 ),
             }
@@ -121,12 +121,12 @@ def test_get_args_task_input_two_models_output_two_models():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        function=orc_mock.AlgoFactory(
+        function=orc_mock.FunctionFactory(
             inputs={
-                InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
-                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                InputIdentifiers.SHARED: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.LOCAL: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.FunctionInputFactory(
                     kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
                 ),
             }
@@ -208,11 +208,11 @@ def test_get_args_predict_after_train():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        function=orc_mock.AlgoFactory(
+        function=orc_mock.FunctionFactory(
             inputs={
-                InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
-                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                InputIdentifiers.MODEL: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.FunctionInputFactory(
                     kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
                 ),
             }
@@ -290,12 +290,12 @@ def test_get_args_predict_input_two_models_output_one_model():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        function=orc_mock.AlgoFactory(
+        function=orc_mock.FunctionFactory(
             inputs={
-                InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-                InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
-                InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+                InputIdentifiers.SHARED: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.LOCAL: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+                InputIdentifiers.OPENER: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+                InputIdentifiers.DATASAMPLES: orc_mock.FunctionInputFactory(
                     kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
                 ),
             }
@@ -350,11 +350,11 @@ def test_get_args_test_input_one_model_output_one_performance():
     task = orc_mock.ComputeTaskFactory(
         rank=0,
     )
-    function = orc_mock.AlgoFactory(
+    function = orc_mock.FunctionFactory(
         inputs={
-            InputIdentifiers.PREDICTIONS: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
-            InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
-            InputIdentifiers.DATASAMPLES: orc_mock.AlgoInputFactory(
+            InputIdentifiers.PREDICTIONS: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
+            InputIdentifiers.OPENER: orc_mock.FunctionInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
+            InputIdentifiers.DATASAMPLES: orc_mock.FunctionInputFactory(
                 kind=orchestrator.AssetKind.ASSET_DATA_SAMPLE, multiple=True
             ),
         }

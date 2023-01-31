@@ -5,7 +5,7 @@ from .computetask import ComputeTaskSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
-from .function import AlgoSerializer
+from .function import FunctionSerializer
 from .model import ModelSerializer
 from .organization import ChannelOrganizationSerializer
 from .performance import CPPerformanceSerializer
@@ -14,7 +14,7 @@ from .performance import PerformanceSerializer
 from .task_profiling import TaskProfilingSerializer
 
 __all__ = [
-    "AlgoSerializer",
+    "FunctionSerializer",
     "ComputePlanSerializer",
     "ComputeTaskSerializer",
     "ComputeTaskInputAssetSerializer",

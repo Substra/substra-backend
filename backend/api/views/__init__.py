@@ -6,9 +6,9 @@ from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
 from .datasample import DataSampleViewSet
-from .function import AlgoPermissionViewSet
-from .function import AlgoViewSet
-from .function import CPAlgoViewSet
+from .function import CPFunctionViewSet
+from .function import FunctionPermissionViewSet
+from .function import FunctionViewSet
 from .metadata import ComputePlanMetadataViewSet
 from .model import ModelPermissionViewSet
 from .model import ModelViewSet
@@ -24,12 +24,12 @@ __all__ = [
     "DataManagerPermissionViewSet",
     "ModelViewSet",
     "ModelPermissionViewSet",
-    "AlgoViewSet",
-    "AlgoPermissionViewSet",
+    "FunctionViewSet",
+    "FunctionPermissionViewSet",
     "ComputeTaskViewSet",
     "ComputePlanViewSet",
     "CPTaskViewSet",
-    "CPAlgoViewSet",
+    "CPFunctionViewSet",
     "NewsFeedViewSet",
     "ComputeTaskLogsViewSet",
     "CPPerformanceViewSet",

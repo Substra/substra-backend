@@ -17,7 +17,7 @@ ENTRYPOINT ["python3", "myfunction.py"]
 
 @pytest.fixture
 def function() -> orchestrator.Function:
-    return orc_mock.AlgoFactory()
+    return orc_mock.FunctionFactory()
 
 
 @pytest.fixture

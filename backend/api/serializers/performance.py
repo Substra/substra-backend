@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from api.models import AlgoOutput
 from api.models import ComputeTask
 from api.models import Function
+from api.models import FunctionOutput
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
 from orchestrator import common_pb2
@@ -44,10 +44,10 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
 
     def get_output_identifier(self, obj):
         try:
-            performance_output = AlgoOutput.objects.get(
+            performance_output = FunctionOutput.objects.get(
                 function_id=obj.key, kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
             )
-        except (AlgoOutput.MultipleObjectsReturned, AlgoOutput.DoesNotExist) as e:
+        except (FunctionOutput.MultipleObjectsReturned, FunctionOutput.DoesNotExist) as e:
             raise Exception(
                 f"Couldn't associate an output identifier to performance for function '{obj.key}', error : {e}"
             )

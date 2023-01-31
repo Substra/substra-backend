@@ -13,9 +13,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.models import ComputeTask
-from api.serializers import AlgoSerializer
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
+from api.serializers import FunctionSerializer
 from api.serializers import ModelSerializer
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedClient
@@ -78,7 +78,7 @@ class ComputeTaskViewTests(APITestCase):
         self.model = factory.create_model(self.done_task, identifier="model")
 
         # we don't explicitly serialize relationships as this test module is focused on computetask
-        self.simple_function_data = AlgoSerializer(instance=self.simple_function).data
+        self.simple_function_data = FunctionSerializer(instance=self.simple_function).data
         self.data_manager_data = DataManagerSerializer(instance=self.data_manager).data
         self.data_sample_data = DataSampleSerializer(instance=self.data_sample).data
         self.data_sample_data["data_manager_keys"] = [str(key) for key in self.data_sample_data["data_manager_keys"]]

@@ -12,8 +12,8 @@ from orchestrator.common_pb2 import ASSET_DATA_MANAGER
 from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
-from orchestrator.function_pb2 import AlgoInput
-from orchestrator.function_pb2 import AlgoOutput
+from orchestrator.function_pb2 import FunctionInput
+from orchestrator.function_pb2 import FunctionOutput
 
 
 @dataclass
@@ -27,7 +27,7 @@ class InputIdentifiers:
     SHARED = "shared"
 
 
-class AlgoCategory(str, Enum):
+class FunctionCategory(str, Enum):
     simple = "ALGO_SIMPLE"
     composite = "ALGO_COMPOSITE"
     aggregate = "ALGO_AGGREGATE"
@@ -38,51 +38,51 @@ class AlgoCategory(str, Enum):
 
 # Function inputs, protobuf format
 ALGO_INPUTS_PER_CATEGORY = {
-    AlgoCategory.simple: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+    FunctionCategory.simple: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
     },
-    AlgoCategory.aggregate: {
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=True, optional=False),
+    FunctionCategory.aggregate: {
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=True, optional=False),
     },
-    AlgoCategory.composite: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.LOCAL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    FunctionCategory.composite: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.LOCAL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.SHARED: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
     },
-    AlgoCategory.metric: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.PREDICTIONS: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
+    FunctionCategory.metric: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.PREDICTIONS: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=False),
     },
-    AlgoCategory.predict: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
-        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    FunctionCategory.predict: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=False),
+        InputIdentifiers.SHARED: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
     },
 }
 
 
 # Function outputs, protobuf format
 ALGO_OUTPUTS_PER_CATEGORY = {
-    AlgoCategory.simple: {
-        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.simple: {
+        InputIdentifiers.MODEL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.aggregate: {
-        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.aggregate: {
+        InputIdentifiers.MODEL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.composite: {
-        InputIdentifiers.LOCAL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
-        InputIdentifiers.SHARED: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.composite: {
+        InputIdentifiers.LOCAL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
+        InputIdentifiers.SHARED: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.metric: {
-        InputIdentifiers.PERFORMANCE: AlgoOutput(kind=ASSET_PERFORMANCE, multiple=False),
+    FunctionCategory.metric: {
+        InputIdentifiers.PERFORMANCE: FunctionOutput(kind=ASSET_PERFORMANCE, multiple=False),
     },
-    AlgoCategory.predict: {
-        InputIdentifiers.PREDICTIONS: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.predict: {
+        InputIdentifiers.PREDICTIONS: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
 }
 

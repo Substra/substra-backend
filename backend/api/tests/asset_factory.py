@@ -56,7 +56,7 @@ Customized example:
 >>> function = create_function(
 ...     key=function_data.key,
 ...     name="Random forest",
-...     category=AlgoCategory.simple,
+...     category=FunctionCategory.simple,
 ...     metadata={"foo": "bar"},
 ...     owner="MyOrg2MSP",
 ...     channel="yourchannel",
@@ -70,8 +70,6 @@ import uuid
 from django.core import files
 from django.utils import timezone
 
-from api.models import AlgoInput
-from api.models import AlgoOutput
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
@@ -81,6 +79,8 @@ from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Function
+from api.models import FunctionInput
+from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
 from api.models import ProfilingStep
@@ -89,7 +89,7 @@ from api.models.computetask import TaskDataSamples
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
-from substrapp.models import Function as AlgoFiles
+from substrapp.models import Function as FunctionFiles
 from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_hash
 
@@ -103,29 +103,29 @@ DUMMY_CHECKSUM = "dummy-checksum"
 # We use them here only to have realistic test data, but the API should remained agnostic from them.
 
 ALGO_INPUTS = {
-    "datasamples": dict(kind=AlgoInput.Kind.ASSET_DATA_SAMPLE, multiple=True, optional=False),
-    "opener": dict(kind=AlgoInput.Kind.ASSET_DATA_MANAGER, multiple=False, optional=False),
-    "model": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
-    "models": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=True, optional=True),
-    "local": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
-    "shared": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=True),
-    "predictions": dict(kind=AlgoInput.Kind.ASSET_MODEL, multiple=False, optional=False),
+    "datasamples": dict(kind=FunctionInput.Kind.ASSET_DATA_SAMPLE, multiple=True, optional=False),
+    "opener": dict(kind=FunctionInput.Kind.ASSET_DATA_MANAGER, multiple=False, optional=False),
+    "model": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "models": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=True, optional=True),
+    "local": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "shared": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=True),
+    "predictions": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=False),
 }
 ALGO_OUTPUTS = {
-    "model": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
-    "local": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
-    "shared": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
-    "predictions": dict(kind=AlgoOutput.Kind.ASSET_MODEL, multiple=False),
-    "performance": dict(kind=AlgoOutput.Kind.ASSET_PERFORMANCE, multiple=False),
+    "model": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
+    "local": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
+    "shared": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
+    "predictions": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
+    "performance": dict(kind=FunctionOutput.Kind.ASSET_PERFORMANCE, multiple=False),
 }
 
 
-def build_function_inputs(identifiers: list[str]) -> list[AlgoInput]:
-    return [AlgoInput(identifier=identifier, **ALGO_INPUTS[identifier]) for identifier in identifiers]
+def build_function_inputs(identifiers: list[str]) -> list[FunctionInput]:
+    return [FunctionInput(identifier=identifier, **ALGO_INPUTS[identifier]) for identifier in identifiers]
 
 
-def build_function_outputs(identifiers: list[str]) -> list[AlgoOutput]:
-    return [AlgoOutput(identifier=identifier, **ALGO_OUTPUTS[identifier]) for identifier in identifiers]
+def build_function_outputs(identifiers: list[str]) -> list[FunctionOutput]:
+    return [FunctionOutput(identifier=identifier, **ALGO_OUTPUTS[identifier]) for identifier in identifiers]
 
 
 def build_computetask_inputs(
@@ -136,7 +136,7 @@ def build_computetask_inputs(
     for function_input in function.inputs.all():
         for key in keys.get(function_input.identifier, []):
             task_input = ComputeTaskInput(identifier=function_input.identifier)
-            if function_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
+            if function_input.kind in (FunctionInput.Kind.ASSET_DATA_MANAGER, FunctionInput.Kind.ASSET_DATA_SAMPLE):
                 task_input.asset_key = key
             else:  # we assume that all other assets are produced by parent tasks
                 task_input.parent_task_key_id = key
@@ -219,8 +219,8 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
 
 
 def create_function(
-    inputs: list[AlgoInput] = None,
-    outputs: list[AlgoInput] = None,
+    inputs: list[FunctionInput] = None,
+    outputs: list[FunctionInput] = None,
     key: uuid.UUID = None,
     name: str = "function",
     metadata: dict = None,
@@ -431,7 +431,7 @@ def create_model(
     )
     ComputeTaskOutputAsset.objects.create(
         task_output=compute_task.outputs.get(identifier=identifier),
-        asset_kind=AlgoOutput.Kind.ASSET_MODEL,
+        asset_kind=FunctionOutput.Kind.ASSET_MODEL,
         asset_key=model.key,
         channel=channel,
     )
@@ -441,7 +441,7 @@ def create_model(
     ):
         ComputeTaskInputAsset.objects.create(
             task_input=task_input,
-            asset_kind=AlgoOutput.Kind.ASSET_MODEL,
+            asset_kind=FunctionOutput.Kind.ASSET_MODEL,
             asset_key=model.key,
             channel=channel,
         )
@@ -464,7 +464,7 @@ def create_performance(
     )
     ComputeTaskOutputAsset.objects.create(
         task_output=compute_task.outputs.get(identifier=identifier),
-        asset_kind=AlgoOutput.Kind.ASSET_PERFORMANCE,
+        asset_kind=FunctionOutput.Kind.ASSET_PERFORMANCE,
         asset_key=f"{compute_task.key}|{metric.key}",
         channel=channel,
     )
@@ -475,7 +475,7 @@ def create_function_files(
     key: uuid.UUID = None,
     file: files.File = None,
     description: files.File = None,
-) -> AlgoFiles:
+) -> FunctionFiles:
     if key is None:
         key = uuid.uuid4()
     if file is None:
@@ -483,7 +483,7 @@ def create_function_files(
     if description is None:
         description = files.base.ContentFile("dummy content")
 
-    function_files = AlgoFiles.objects.create(
+    function_files = FunctionFiles.objects.create(
         key=key,
         checksum=get_hash(file),
     )

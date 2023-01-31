@@ -22,12 +22,12 @@ from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
-from api.serializers import AlgoSerializer
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
 from api.serializers import ComputeTaskSerializer
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
+from api.serializers import FunctionSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
@@ -74,7 +74,7 @@ def _on_create_function_event(event: dict) -> None:
 
 def _create_function(channel: str, data: dict) -> None:
     data["channel"] = channel
-    serializer = AlgoSerializer(data=data)
+    serializer = FunctionSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:

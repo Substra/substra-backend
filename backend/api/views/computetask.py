@@ -23,8 +23,8 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
-from api.models.function import AlgoInput
-from api.models.function import AlgoOutput
+from api.models.function import FunctionInput
+from api.models.function import FunctionOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
@@ -189,7 +189,7 @@ class ComputeTaskFilter(FilterSet):
 
 
 class InputAssetFilter(FilterSet):
-    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoInput.Kind.choices)
+    kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionInput.Kind.choices)
 
     class Meta:
         model = ComputeTaskInputAsset
@@ -197,7 +197,7 @@ class InputAssetFilter(FilterSet):
 
 
 class OutputAssetFilter(FilterSet):
-    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoOutput.Kind.choices)
+    kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionOutput.Kind.choices)
 
     class Meta:
         model = ComputeTaskOutputAsset

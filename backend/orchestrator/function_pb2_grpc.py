@@ -5,7 +5,7 @@ import grpc
 from . import function_pb2 as function__pb2
 
 
-class AlgoServiceStub(object):
+class FunctionServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -14,90 +14,90 @@ class AlgoServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.RegisterAlgo = channel.unary_unary(
-                '/orchestrator.AlgoService/RegisterAlgo',
-                request_serializer=function__pb2.NewAlgo.SerializeToString,
+        self.RegisterFunction = channel.unary_unary(
+                '/orchestrator.FunctionService/RegisterFunction',
+                request_serializer=function__pb2.NewFunction.SerializeToString,
                 response_deserializer=function__pb2.Function.FromString,
                 )
-        self.GetAlgo = channel.unary_unary(
-                '/orchestrator.AlgoService/GetAlgo',
-                request_serializer=function__pb2.GetAlgoParam.SerializeToString,
+        self.GetFunction = channel.unary_unary(
+                '/orchestrator.FunctionService/GetFunction',
+                request_serializer=function__pb2.GetFunctionParam.SerializeToString,
                 response_deserializer=function__pb2.Function.FromString,
                 )
-        self.QueryAlgos = channel.unary_unary(
-                '/orchestrator.AlgoService/QueryAlgos',
-                request_serializer=function__pb2.QueryAlgosParam.SerializeToString,
-                response_deserializer=function__pb2.QueryAlgosResponse.FromString,
+        self.QueryFunctions = channel.unary_unary(
+                '/orchestrator.FunctionService/QueryFunctions',
+                request_serializer=function__pb2.QueryFunctionsParam.SerializeToString,
+                response_deserializer=function__pb2.QueryFunctionsResponse.FromString,
                 )
-        self.UpdateAlgo = channel.unary_unary(
-                '/orchestrator.AlgoService/UpdateAlgo',
-                request_serializer=function__pb2.UpdateAlgoParam.SerializeToString,
-                response_deserializer=function__pb2.UpdateAlgoResponse.FromString,
+        self.UpdateFunction = channel.unary_unary(
+                '/orchestrator.FunctionService/UpdateFunction',
+                request_serializer=function__pb2.UpdateFunctionParam.SerializeToString,
+                response_deserializer=function__pb2.UpdateFunctionResponse.FromString,
                 )
 
 
-class AlgoServiceServicer(object):
+class FunctionServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def RegisterAlgo(self, request, context):
+    def RegisterFunction(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetAlgo(self, request, context):
+    def GetFunction(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def QueryAlgos(self, request, context):
+    def QueryFunctions(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UpdateAlgo(self, request, context):
+    def UpdateFunction(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_AlgoServiceServicer_to_server(servicer, server):
+def add_FunctionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'RegisterAlgo': grpc.unary_unary_rpc_method_handler(
-                    servicer.RegisterAlgo,
-                    request_deserializer=function__pb2.NewAlgo.FromString,
+            'RegisterFunction': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterFunction,
+                    request_deserializer=function__pb2.NewFunction.FromString,
                     response_serializer=function__pb2.Function.SerializeToString,
             ),
-            'GetAlgo': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetAlgo,
-                    request_deserializer=function__pb2.GetAlgoParam.FromString,
+            'GetFunction': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFunction,
+                    request_deserializer=function__pb2.GetFunctionParam.FromString,
                     response_serializer=function__pb2.Function.SerializeToString,
             ),
-            'QueryAlgos': grpc.unary_unary_rpc_method_handler(
-                    servicer.QueryAlgos,
-                    request_deserializer=function__pb2.QueryAlgosParam.FromString,
-                    response_serializer=function__pb2.QueryAlgosResponse.SerializeToString,
+            'QueryFunctions': grpc.unary_unary_rpc_method_handler(
+                    servicer.QueryFunctions,
+                    request_deserializer=function__pb2.QueryFunctionsParam.FromString,
+                    response_serializer=function__pb2.QueryFunctionsResponse.SerializeToString,
             ),
-            'UpdateAlgo': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateAlgo,
-                    request_deserializer=function__pb2.UpdateAlgoParam.FromString,
-                    response_serializer=function__pb2.UpdateAlgoResponse.SerializeToString,
+            'UpdateFunction': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateFunction,
+                    request_deserializer=function__pb2.UpdateFunctionParam.FromString,
+                    response_serializer=function__pb2.UpdateFunctionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'orchestrator.AlgoService', rpc_method_handlers)
+            'orchestrator.FunctionService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class AlgoService(object):
+class FunctionService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def RegisterAlgo(request,
+    def RegisterFunction(request,
             target,
             options=(),
             channel_credentials=None,
@@ -107,14 +107,14 @@ class AlgoService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/RegisterAlgo',
-            function__pb2.NewAlgo.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/RegisterFunction',
+            function__pb2.NewFunction.SerializeToString,
             function__pb2.Function.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetAlgo(request,
+    def GetFunction(request,
             target,
             options=(),
             channel_credentials=None,
@@ -124,14 +124,14 @@ class AlgoService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/GetAlgo',
-            function__pb2.GetAlgoParam.SerializeToString,
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/GetFunction',
+            function__pb2.GetFunctionParam.SerializeToString,
             function__pb2.Function.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def QueryAlgos(request,
+    def QueryFunctions(request,
             target,
             options=(),
             channel_credentials=None,
@@ -141,14 +141,14 @@ class AlgoService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/QueryAlgos',
-            function__pb2.QueryAlgosParam.SerializeToString,
-            function__pb2.QueryAlgosResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/QueryFunctions',
+            function__pb2.QueryFunctionsParam.SerializeToString,
+            function__pb2.QueryFunctionsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateAlgo(request,
+    def UpdateFunction(request,
             target,
             options=(),
             channel_credentials=None,
@@ -158,8 +158,8 @@ class AlgoService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.AlgoService/UpdateAlgo',
-            function__pb2.UpdateAlgoParam.SerializeToString,
-            function__pb2.UpdateAlgoResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/UpdateFunction',
+            function__pb2.UpdateFunctionParam.SerializeToString,
+            function__pb2.UpdateFunctionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

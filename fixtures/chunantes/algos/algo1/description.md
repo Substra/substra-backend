@@ -1,4 +1,4 @@
-# Algo for the balanced ISIC metric 
+# Function for the balanced ISIC metric
 
 Set of one-vs-all logistic regression using sklearn (SGD classfier with loss=log)
 

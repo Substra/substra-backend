@@ -13,7 +13,7 @@ from api.tests import asset_factory as factory
 from api.tests.common import generate_basic_auth_header
 from organization.models import IncomingOrganization
 from organization.models import OutgoingOrganization
-from substrapp.models import Function as AlgoFiles
+from substrapp.models import Function as FunctionFiles
 from substrapp.tests.common import get_description_function
 from substrapp.tests.common import get_sample_function
 
@@ -33,7 +33,9 @@ class AuthenticationTests(APITestCase):
         # create function instance which file download is protected
         self.function_file, self.function_filename = get_sample_function()
         self.function_description_file, self.function_description_filename = get_description_function()
-        self.function = AlgoFiles.objects.create(file=self.function_file, description=self.function_description_file)
+        self.function = FunctionFiles.objects.create(
+            file=self.function_file, description=self.function_description_file
+        )
         metadata = factory.create_function(key=self.function.key, public=True, owner="foo")
         metadata.functionrithm_address = "http://fake_address.com"
         metadata.save()

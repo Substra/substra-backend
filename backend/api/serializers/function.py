@@ -1,18 +1,18 @@
 from django.urls import reverse
 from rest_framework import serializers
 
-from api.models import AlgoInput
-from api.models import AlgoOutput
 from api.models import Function
+from api.models import FunctionInput
+from api.models import FunctionOutput
 from api.serializers.utils import SafeSerializerMixin
 from api.serializers.utils import get_channel_choices
 from api.serializers.utils import make_addressable_serializer
 from api.serializers.utils import make_download_process_permission_serializer
 
 
-class AlgoInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+class FunctionInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
-        model = AlgoInput
+        model = FunctionInput
         fields = [
             "identifier",
             "kind",
@@ -21,9 +21,9 @@ class AlgoInputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         ]
 
 
-class AlgoOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+class FunctionOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
-        model = AlgoOutput
+        model = FunctionOutput
         fields = [
             "identifier",
             "kind",
@@ -31,13 +31,13 @@ class AlgoOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         ]
 
 
-class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
+class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     functionrithm = make_addressable_serializer("functionrithm")(source="*")
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     description = make_addressable_serializer("description")(source="*")
     permissions = make_download_process_permission_serializer()(source="*")
-    inputs = AlgoInputSerializer(many=True)
-    outputs = AlgoOutputSerializer(many=True)
+    inputs = FunctionInputSerializer(many=True)
+    outputs = FunctionOutputSerializer(many=True)
 
     class Meta:
         model = Function
@@ -82,19 +82,19 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         outputs = validated_data.pop("outputs")
         function = super().create(validated_data)
 
-        function_inputs = AlgoInputSerializer(data=inputs, many=True)
+        function_inputs = FunctionInputSerializer(data=inputs, many=True)
         function_inputs.is_valid(raise_exception=True)
         for function_input in function_inputs.validated_data:
-            AlgoInput.objects.create(
+            FunctionInput.objects.create(
                 channel=function.channel,
                 function=function,
                 **function_input,
             )
 
-        function_outputs = AlgoOutputSerializer(data=outputs, many=True)
+        function_outputs = FunctionOutputSerializer(data=outputs, many=True)
         function_outputs.is_valid(raise_exception=True)
         for function_output in function_outputs.validated_data:
-            AlgoOutput.objects.create(
+            FunctionOutput.objects.create(
                 channel=function.channel,
                 function=function,
                 **function_output,

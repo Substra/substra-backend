@@ -3,8 +3,6 @@ from django.urls import reverse
 from rest_framework import serializers
 
 import orchestrator.failure_report_pb2 as failure_report_pb2
-from api.models import AlgoInput
-from api.models import AlgoOutput
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInput
@@ -14,12 +12,14 @@ from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Function
+from api.models import FunctionInput
+from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
 from api.models.computetask import TaskDataSamples
 from api.serializers.datamanager import DataManagerSerializer
 from api.serializers.datasample import DataSampleSerializer
-from api.serializers.function import AlgoSerializer
+from api.serializers.function import FunctionSerializer
 from api.serializers.model import ModelSerializer
 from api.serializers.performance import PerformanceSerializer
 from api.serializers.utils import SafeSerializerMixin
@@ -51,12 +51,12 @@ class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixi
     def get_asset(self, task_input):
         data = {}
         try:
-            if task_input.asset.asset_kind == AlgoInput.Kind.ASSET_DATA_MANAGER:
+            if task_input.asset.asset_kind == FunctionInput.Kind.ASSET_DATA_MANAGER:
                 data_manager = DataManager.objects.get(key=task_input.asset.asset_key)
                 data_manager_data = DataManagerSerializer(context=self.context, instance=data_manager).data
                 data["addressable"] = data_manager_data["opener"]
                 data["permissions"] = data_manager_data["permissions"]
-            elif task_input.asset.asset_kind == AlgoInput.Kind.ASSET_MODEL:
+            elif task_input.asset.asset_kind == FunctionInput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=task_input.asset.asset_key)
                 model_data = ModelSerializer(context=self.context, instance=model).data
                 data["addressable"] = model_data["address"]
@@ -82,10 +82,10 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
     def get_value(self, task_output):
         data = []
         for output_asset in task_output.assets.all():
-            if output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
+            if output_asset.asset_kind == FunctionOutput.Kind.ASSET_MODEL:
                 model = Model.objects.get(key=output_asset.asset_key)
                 data.append(ModelSerializer(context=self.context, instance=model).data)
-            elif output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
+            elif output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
                 task_key, metric_key = output_asset.asset_key.split("|")
                 perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
                 data.append(perf.value)
@@ -117,13 +117,13 @@ class ComputeTaskInputAssetSerializer(serializers.ModelSerializer, SafeSerialize
         return task_input_asset.task_input.identifier
 
     def get_asset(self, task_input_asset):
-        if task_input_asset.asset_kind == AlgoInput.Kind.ASSET_DATA_SAMPLE:
+        if task_input_asset.asset_kind == FunctionInput.Kind.ASSET_DATA_SAMPLE:
             data_sample = DataSample.objects.get(key=task_input_asset.asset_key)
             return DataSampleSerializer(context=self.context, instance=data_sample).data
-        elif task_input_asset.asset_kind == AlgoInput.Kind.ASSET_DATA_MANAGER:
+        elif task_input_asset.asset_kind == FunctionInput.Kind.ASSET_DATA_MANAGER:
             data_manager = DataManager.objects.get(key=task_input_asset.asset_key)
             return DataManagerSerializer(context=self.context, instance=data_manager).data
-        elif task_input_asset.asset_kind == AlgoInput.Kind.ASSET_MODEL:
+        elif task_input_asset.asset_kind == FunctionInput.Kind.ASSET_MODEL:
             model = Model.objects.get(key=task_input_asset.asset_key)
             return ModelSerializer(context=self.context, instance=model).data
 
@@ -145,18 +145,18 @@ class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializ
         return task_output_asset.task_output.identifier
 
     def get_asset(self, task_output_asset):
-        if task_output_asset.asset_kind == AlgoOutput.Kind.ASSET_MODEL:
+        if task_output_asset.asset_kind == FunctionOutput.Kind.ASSET_MODEL:
             model = Model.objects.get(key=task_output_asset.asset_key)
             return ModelSerializer(context=self.context, instance=model).data
-        elif task_output_asset.asset_kind == AlgoOutput.Kind.ASSET_PERFORMANCE:
+        elif task_output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
             task_key, metric_key = task_output_asset.asset_key.split("|")
             performance = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
             return PerformanceSerializer(context=self.context, instance=performance).data
 
 
-class AlgoField(serializers.Field):
+class FunctionField(serializers.Field):
     def to_representation(self, data):
-        return AlgoSerializer(instance=data).data
+        return FunctionSerializer(instance=data).data
 
     def to_internal_value(self, data):
         return Function.objects.get(key=data["key"])
@@ -164,7 +164,7 @@ class AlgoField(serializers.Field):
 
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     logs_permission = make_permission_serializer("logs_permission")(source="*")
-    function = AlgoField()
+    function = FunctionField()
 
     # Need to set `pk_field` for `PrimaryKeyRelatedField` in order to correctly serialize `UUID` to `str`
     # See: https://stackoverflow.com/a/51636009

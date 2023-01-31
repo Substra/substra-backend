@@ -19,7 +19,7 @@ from api.tests.common import internal_server_error_on_exception
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from orchestrator.error import StatusCode
-from substrapp.tests.common import AlgoCategory
+from substrapp.tests.common import FunctionCategory
 from substrapp.utils import compute_hash
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -32,7 +32,7 @@ FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/functions/
     MEDIA_ROOT=MEDIA_ROOT,
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
-class AlgoViewTests(APITestCase):
+class FunctionViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
@@ -267,7 +267,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.function.AlgoViewSet.list", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.FunctionViewSet.list", side_effect=Exception("Unexpected error"))
     def test_function_list_fail(self, _):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -384,7 +384,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(r["results"], self.expected_functions[offset : offset + page_size])
 
     def test_function_cp_list_success(self):
-        """List functions for a specific compute plan (CPAlgoViewSet)."""
+        """List functions for a specific compute plan (CPFunctionViewSet)."""
 
         compute_plan = factory.create_computeplan()
         factory.create_computetask(compute_plan, self.functions[0])
@@ -433,11 +433,11 @@ class AlgoViewTests(APITestCase):
         [
             (category, filename)
             for category in [
-                AlgoCategory.simple,
-                AlgoCategory.aggregate,
-                AlgoCategory.composite,
-                AlgoCategory.metric,
-                AlgoCategory.predict,
+                FunctionCategory.simple,
+                FunctionCategory.aggregate,
+                FunctionCategory.composite,
+                FunctionCategory.metric,
+                FunctionCategory.predict,
             ]
             for filename in [
                 "function.tar.gz",
@@ -576,7 +576,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.function.AlgoViewSet.create", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.FunctionViewSet.create", side_effect=Exception("Unexpected error"))
     def test_function_create_fail(self, _):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -606,7 +606,7 @@ class AlgoViewTests(APITestCase):
             )
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.function.AlgoViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.FunctionViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_function_retrieve_fail(self, _):
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
         response = self.client.get(url, **self.extra)

@@ -6,49 +6,49 @@ import abc
 import function_pb2
 import grpc
 
-class AlgoServiceStub:
+class FunctionServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
-    RegisterAlgo: grpc.UnaryUnaryMultiCallable[
-        function_pb2.NewAlgo,
+    RegisterFunction: grpc.UnaryUnaryMultiCallable[
+        function_pb2.NewFunction,
         function_pb2.Function,
     ]
-    GetAlgo: grpc.UnaryUnaryMultiCallable[
-        function_pb2.GetAlgoParam,
+    GetFunction: grpc.UnaryUnaryMultiCallable[
+        function_pb2.GetFunctionParam,
         function_pb2.Function,
     ]
-    QueryAlgos: grpc.UnaryUnaryMultiCallable[
-        function_pb2.QueryAlgosParam,
-        function_pb2.QueryAlgosResponse,
+    QueryFunctions: grpc.UnaryUnaryMultiCallable[
+        function_pb2.QueryFunctionsParam,
+        function_pb2.QueryFunctionsResponse,
     ]
-    UpdateAlgo: grpc.UnaryUnaryMultiCallable[
-        function_pb2.UpdateAlgoParam,
-        function_pb2.UpdateAlgoResponse,
+    UpdateFunction: grpc.UnaryUnaryMultiCallable[
+        function_pb2.UpdateFunctionParam,
+        function_pb2.UpdateFunctionResponse,
     ]
 
-class AlgoServiceServicer(metaclass=abc.ABCMeta):
+class FunctionServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def RegisterAlgo(
+    def RegisterFunction(
         self,
-        request: function_pb2.NewAlgo,
+        request: function_pb2.NewFunction,
         context: grpc.ServicerContext,
     ) -> function_pb2.Function: ...
     @abc.abstractmethod
-    def GetAlgo(
+    def GetFunction(
         self,
-        request: function_pb2.GetAlgoParam,
+        request: function_pb2.GetFunctionParam,
         context: grpc.ServicerContext,
     ) -> function_pb2.Function: ...
     @abc.abstractmethod
-    def QueryAlgos(
+    def QueryFunctions(
         self,
-        request: function_pb2.QueryAlgosParam,
+        request: function_pb2.QueryFunctionsParam,
         context: grpc.ServicerContext,
-    ) -> function_pb2.QueryAlgosResponse: ...
+    ) -> function_pb2.QueryFunctionsResponse: ...
     @abc.abstractmethod
-    def UpdateAlgo(
+    def UpdateFunction(
         self,
-        request: function_pb2.UpdateAlgoParam,
+        request: function_pb2.UpdateFunctionParam,
         context: grpc.ServicerContext,
-    ) -> function_pb2.UpdateAlgoResponse: ...
+    ) -> function_pb2.UpdateFunctionResponse: ...
 
-def add_AlgoServiceServicer_to_server(servicer: AlgoServiceServicer, server: grpc.Server) -> None: ...
+def add_FunctionServiceServicer_to_server(servicer: FunctionServiceServicer, server: grpc.Server) -> None: ...

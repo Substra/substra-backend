@@ -6,7 +6,7 @@ from substrapp.serializers.utils import FileSizeValidator
 from substrapp.serializers.utils import FileValidator
 
 
-class AlgoSerializer(DynamicFieldsModelSerializer):
+class FunctionSerializer(DynamicFieldsModelSerializer):
     file = serializers.FileField(validators=[FileValidator(), FileSizeValidator()])
 
     class Meta:

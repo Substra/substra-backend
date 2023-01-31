@@ -18,7 +18,7 @@ class Label:
     PodType = "substra.ai/pod-type"
     PodName = "substra.ai/pod-name"
     ComputePlanKey = "substra.ai/compute-plan-key"
-    AlgoKey = "substra.ai/function-key"
+    FunctionKey = "substra.ai/function-key"
     RandomToken = "substra.ai/random-token"
 
     # Values
@@ -50,7 +50,7 @@ class ComputePod:
 
     @property
     def label_selector(self) -> str:
-        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.AlgoKey]})
+        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.FunctionKey]})
 
     @property
     def labels(self) -> dict:
@@ -59,7 +59,7 @@ class ComputePod:
             Label.PodType: Label.PodType_ComputeTask,
             Label.Component: Label.Component_Compute,
             Label.ComputePlanKey: self.compute_plan_key,
-            Label.AlgoKey: self.function_key,
+            Label.FunctionKey: self.function_key,
         }
 
 

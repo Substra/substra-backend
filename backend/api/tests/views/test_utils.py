@@ -18,7 +18,7 @@ from api.tests.common import AuthenticatedClient
 from api.views.utils import validate_metadata
 from organization.authentication import OrganizationUser
 from organization.models import OutgoingOrganization
-from substrapp.models import Function as AlgoFiles
+from substrapp.models import Function as FunctionFiles
 from substrapp.tests.common import get_description_function
 from substrapp.tests.common import get_sample_function
 
@@ -49,7 +49,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
 
     def test_download_file_local_allowed(self):
         """Asset is local (owner is local-organization) and local-organization in authorized ids."""
-        AlgoFiles.objects.create(
+        FunctionFiles.objects.create(
             key=self.function_key, file=self.function_file, description=self.function_description_file
         )
         metadata = factory.create_function(key=self.function_key, public=False, owner="local-organization")
@@ -64,7 +64,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
 
     def test_download_file_local_denied(self):
         """Asset is local (owner is local-organization) and local-organization NOT in authorized ids."""
-        AlgoFiles.objects.create(
+        FunctionFiles.objects.create(
             key=self.function_key, file=self.function_file, description=self.function_description_file
         )
         metadata = factory.create_function(key=self.function_key, public=False, owner="local-organization")

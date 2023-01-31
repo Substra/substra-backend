@@ -6,7 +6,7 @@ from api.models.utils import AssetPermissionMixin
 from api.models.utils import URLValidatorWithOptionalTLD
 
 
-class AlgoInput(models.Model):
+class FunctionInput(models.Model):
     class Kind(models.TextChoices):
         ASSET_DATA_SAMPLE = common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_SAMPLE)
         ASSET_DATA_MANAGER = common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER)
@@ -24,7 +24,7 @@ class AlgoInput(models.Model):
         ordering = ["identifier"]  # default order for relations serializations
 
 
-class AlgoOutput(models.Model):
+class FunctionOutput(models.Model):
     class Kind(models.TextChoices):
         ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
         ASSET_PERFORMANCE = common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
