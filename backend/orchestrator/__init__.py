@@ -1,9 +1,6 @@
 from .client import OrcError
 from .client import OrchestratorClient as Client
 from .resources import Address
-from .resources import Algo
-from .resources import AlgoInput
-from .resources import AlgoOutput
 from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputeTask
@@ -13,6 +10,9 @@ from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
 from .resources import DataManager
 from .resources import DataSample
+from .resources import Function
+from .resources import FunctionInput
+from .resources import FunctionOutput
 from .resources import InvalidInputAsset
 from .resources import Model
 from .resources import Permission
@@ -34,8 +34,8 @@ __all__ = (
     "InvalidInputAsset",
     "Client",
     "ComputePlan",
-    "Algo",
+    "Function",
     "OrcError",
-    "AlgoInput",
-    "AlgoOutput",
+    "FunctionInput",
+    "FunctionOutput",
 )

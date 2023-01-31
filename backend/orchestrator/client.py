@@ -8,18 +8,17 @@ import structlog
 from django.conf import settings
 from google.protobuf.json_format import MessageToDict
 
-import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
 import orchestrator.datasample_pb2 as datasample_pb2
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+import orchestrator.function_pb2 as function_pb2
 import orchestrator.info_pb2 as info_pb2
 import orchestrator.model_pb2 as model_pb2
 import orchestrator.organization_pb2 as organization_pb2
 import orchestrator.performance_pb2 as performance_pb2
-from orchestrator.algo_pb2_grpc import AlgoServiceStub
 from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
 from orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
 from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
@@ -28,15 +27,16 @@ from orchestrator.dataset_pb2_grpc import DatasetServiceStub
 from orchestrator.error import OrcError
 from orchestrator.event_pb2_grpc import EventServiceStub
 from orchestrator.failure_report_pb2_grpc import FailureReportServiceStub
+from orchestrator.function_pb2_grpc import FunctionServiceStub
 from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
 from orchestrator.resources import TAG_KEY
-from orchestrator.resources import Algo
 from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskInputAsset
+from orchestrator.resources import Function
 from orchestrator.resources import OrchestratorVersion
 
 logger = structlog.get_logger(__name__)
@@ -162,7 +162,7 @@ class OrchestratorClient:
             self.grpc_channel = grpc.secure_channel(target, creds, opts)
 
         self._organization_client = OrganizationServiceStub(self.grpc_channel)
-        self._algo_client = AlgoServiceStub(self.grpc_channel)
+        self._function_client = FunctionServiceStub(self.grpc_channel)
         self._datasample_client = DataSampleServiceStub(self.grpc_channel)
         self._datamanager_client = DataManagerServiceStub(self.grpc_channel)
         self._dataset_client = DatasetServiceStub(self.grpc_channel)
@@ -194,38 +194,40 @@ class OrchestratorClient:
         MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def register_algo(self, args):
-        args["inputs"] = {identifier: algo_pb2.AlgoInput(**_input) for identifier, _input in args["inputs"].items()}
-        args["outputs"] = {
-            identifier: algo_pb2.AlgoOutput(**_output) for identifier, _output in args["outputs"].items()
+    def register_function(self, args):
+        args["inputs"] = {
+            identifier: function_pb2.FunctionInput(**_input) for identifier, _input in args["inputs"].items()
         }
-        data = self._algo_client.RegisterAlgo(algo_pb2.NewAlgo(**args), metadata=self._metadata)
+        args["outputs"] = {
+            identifier: function_pb2.FunctionOutput(**_output) for identifier, _output in args["outputs"].items()
+        }
+        data = self._function_client.RegisterFunction(function_pb2.NewFunction(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def update_algo(self, args):
-        data = self._algo_client.UpdateAlgo(algo_pb2.UpdateAlgoParam(**args), metadata=self._metadata)
+    def update_function(self, args):
+        data = self._function_client.UpdateFunction(function_pb2.UpdateFunctionParam(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_algo(self, key) -> Algo:
-        data = self._algo_client.GetAlgo(algo_pb2.GetAlgoParam(key=key), metadata=self._metadata)
-        return Algo.from_grpc(data)
+    def query_function(self, key) -> Function:
+        data = self._function_client.GetFunction(function_pb2.GetFunctionParam(key=key), metadata=self._metadata)
+        return Function.from_grpc(data)
 
     @grpc_retry
-    def query_algos(self, compute_plan_key=None) -> Generator[Algo, None, None]:
-        algo_filter = algo_pb2.AlgoQueryFilter(compute_plan_key=compute_plan_key)
+    def query_functions(self, compute_plan_key=None) -> Generator[Function, None, None]:
+        function_filter = function_pb2.FunctionQueryFilter(compute_plan_key=compute_plan_key)
         page_token = ""  # nosec
         while True:
-            data = self._algo_client.QueryAlgos(
-                algo_pb2.QueryAlgosParam(filter=algo_filter, page_token=page_token),
+            data = self._function_client.QueryFunctions(
+                function_pb2.QueryFunctionsParam(filter=function_filter, page_token=page_token),
                 metadata=self._metadata,
             )
-            for algo in data.Algos:
-                yield Algo.from_grpc(algo)
+            for function in data.Functions:
+                yield Function.from_grpc(function)
 
             page_token = data.next_page_token
-            if page_token == "" or len(data.Algos) == 0:  # nosec
+            if page_token == "" or len(data.Functions) == 0:  # nosec
                 break
 
     @grpc_retry

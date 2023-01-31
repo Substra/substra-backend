@@ -1,8 +1,6 @@
 import factory
 
 from .resources import Address
-from .resources import Algo
-from .resources import AlgoInput
 from .resources import AssetKind
 from .resources import ComputePlan
 from .resources import ComputeTask
@@ -11,6 +9,8 @@ from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
 from .resources import DataManager
 from .resources import DataSample
+from .resources import Function
+from .resources import FunctionInput
 from .resources import Model
 from .resources import Permission
 from .resources import Permissions
@@ -33,7 +33,7 @@ class ComputeTaskFactory(factory.Factory):
     key = factory.Faker("uuid4")
     owner = "OrgA"
     compute_plan_key = factory.Faker("uuid4")
-    algo_key = factory.Faker("uuid4")
+    function_key = factory.Faker("uuid4")
     rank = 0
     status = ComputeTaskStatus.STATUS_TODO
     worker = "OrgA"
@@ -76,22 +76,22 @@ class DataManagerFactory(factory.Factory):
     opener = factory.SubFactory(AddressFactory)
 
 
-class AlgoInputFactory(factory.Factory):
+class FunctionInputFactory(factory.Factory):
     class Meta:
-        model = AlgoInput
+        model = FunctionInput
 
     kind = AssetKind.ASSET_MODEL
     multiple = False
     optional = True
 
 
-class AlgoFactory(factory.Factory):
+class FunctionFactory(factory.Factory):
     class Meta:
-        model = Algo
+        model = Function
 
     key = factory.Faker("uuid4")
     owner = "OrgA"
-    algorithm = factory.SubFactory(AddressFactory)
+    functionrithm = factory.SubFactory(AddressFactory)
     inputs = {}
     outputs = {}
 
