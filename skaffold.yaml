@@ -3,6 +3,7 @@ kind: Config
 
 requires:
   - path: examples/secrets/skaffold.yaml
+  - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
   artifacts:
@@ -53,11 +54,10 @@ deploy:
           schedulerWorker.image: substra/substra-backend
           worker.events.image: substra/substra-backend
           api.events.image: substra/substra-backend
-        skipBuildDependencies: true # deps already built by other org-1 release
-  kubectl:
-    manifests:
-      - examples/values/serviceAccounts/serviceAccount-org-1.yaml
-      - examples/values/serviceAccounts/serviceAccount-org-2.yaml
+        skipBuildDependencies: true
+  
+
+  
 
 profiles:
   - name: prod

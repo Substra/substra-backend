@@ -1,0 +1,9 @@
+apiVersion: skaffold/v2beta11
+kind: Config
+metadata:
+  name: setup-service-accounts
+deploy:
+  kubectl:
+    manifests:
+    - ./serviceAccount-org-1.yaml
+    - ./serviceAccount-org-2.yaml
