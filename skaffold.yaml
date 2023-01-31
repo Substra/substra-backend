@@ -28,24 +28,15 @@ deploy:
         setValues:
           _: _
         setValueTemplates: &image-tags
-          api.events.image.registry: &image-registry '{{.IMAGE_DOMAIN_substra_substra_backend}}'
-          api.events.image.repository: &image-repository '{{.IMAGE_REPO_NO_DOMAIN_substra_substra_backend}}'
-          api.events.image.tag: &image-tag '{{.IMAGE_TAG_substra_substra_backend}}'
-          scheduler.image.registry: *image-registry
-          scheduler.image.repository: *image-repository
-          scheduler.image.tag: *image-tag
-          schedulerWorker.image.registry: *image-registry
-          schedulerWorker.image.repository: *image-repository
-          schedulerWorker.image.tag: *image-tag
-          server.image.registry: *image-registry
-          server.image.repository: *image-repository
-          server.image.tag: *image-tag
-          worker.events.image.registry: *image-registry
-          worker.events.image.repository: *image-repository
-          worker.events.image.tag: *image-tag
-          worker.image.registry: *image-registry
-          worker.image.repository: *image-repository
-          worker.image.tag: *image-tag
+          api.events.image: &image-params
+            registry: '{{.IMAGE_DOMAIN_substra_substra_backend}}'
+            repository: '{{.IMAGE_REPO_NO_DOMAIN_substra_substra_backend}}'
+            tag: '{{.IMAGE_TAG_substra_substra_backend}}'
+          scheduler.image: *image-params
+          schedulerWorker.image: *image-params
+          server.image: *image-params
+          worker.events.image: *image-params
+          worker.image: *image-params
         createNamespace: true
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -57,7 +48,7 @@ deploy:
         setValueTemplates: *image-tags
         createNamespace: true
         skipBuildDependencies: true
-    statusCheckDeadlineSeconds: 660
+  statusCheckDeadlineSeconds: 660
   
 
   
