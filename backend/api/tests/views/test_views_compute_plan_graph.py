@@ -38,11 +38,11 @@ class ComputePlanGraphViewTests(APITestCase):
 
     def test_too_many_tasks(self):
         compute_plan = factory.create_computeplan()
-        algo = factory.create_algo()
+        function = factory.create_algo()
         for _ in range(MAX_TASKS_DISPLAYED + 1):
             factory.create_computetask(
                 compute_plan,
-                algo=algo,
+                function=function,
             )
         url = reverse(self.base_url, args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
@@ -74,14 +74,14 @@ class ComputePlanGraphViewTests(APITestCase):
         train_task = factory.create_computetask(
             compute_plan,
             rank=1,
-            algo=algo_train,
+            function=algo_train,
             outputs=factory.build_computetask_outputs(algo_train),
         )
 
         predict_task = factory.create_computetask(
             compute_plan,
             rank=2,
-            algo=algo_predict,
+            function=algo_predict,
             inputs=factory.build_computetask_inputs(
                 algo_predict,
                 {
@@ -94,7 +94,7 @@ class ComputePlanGraphViewTests(APITestCase):
         test_task = factory.create_computetask(
             compute_plan,
             rank=3,
-            algo=algo_test,
+            function=algo_test,
             inputs=factory.build_computetask_inputs(
                 algo_test,
                 {
@@ -107,14 +107,14 @@ class ComputePlanGraphViewTests(APITestCase):
         composite_task = factory.create_computetask(
             compute_plan,
             rank=10,
-            algo=algo_train,
+            function=algo_train,
             outputs=factory.build_computetask_outputs(algo_train),
         )
 
         aggregate_task = factory.create_computetask(
             compute_plan,
             rank=11,
-            algo=algo_aggregate,
+            function=algo_aggregate,
             inputs=factory.build_computetask_inputs(
                 algo_aggregate,
                 {

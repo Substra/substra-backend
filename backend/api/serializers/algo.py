@@ -60,10 +60,10 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         request = self.context.get("request")
         if request:
             res["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:algo-description", args=[res["key"]])
+                reverse("api:function-description", args=[res["key"]])
             )
             res["algorithm"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:algo-file", args=[res["key"]])
+                reverse("api:function-file", args=[res["key"]])
             )
         # from list to dict, to align with the orchestrator format
         res["inputs"] = {_input.pop("identifier"): _input for _input in res["inputs"]}
@@ -80,14 +80,14 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     def create(self, validated_data):
         inputs = validated_data.pop("inputs")
         outputs = validated_data.pop("outputs")
-        algo = super().create(validated_data)
+        function = super().create(validated_data)
 
         algo_inputs = AlgoInputSerializer(data=inputs, many=True)
         algo_inputs.is_valid(raise_exception=True)
         for algo_input in algo_inputs.validated_data:
             AlgoInput.objects.create(
-                channel=algo.channel,
-                algo=algo,
+                channel=function.channel,
+                function=function,
                 **algo_input,
             )
 
@@ -95,9 +95,9 @@ class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         algo_outputs.is_valid(raise_exception=True)
         for algo_output in algo_outputs.validated_data:
             AlgoOutput.objects.create(
-                channel=algo.channel,
-                algo=algo,
+                channel=function.channel,
+                function=function,
                 **algo_output,
             )
 
-        return algo
+        return function

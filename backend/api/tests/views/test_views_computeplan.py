@@ -67,25 +67,25 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.url = reverse("api:compute_plan-list")
 
-        algo = factory.create_algo()
+        function = factory.create_algo()
 
         todo_cp = factory.create_computeplan(name="To do", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(todo_cp, algo, status=ComputeTask.Status.STATUS_TODO)
+        factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_TODO)
 
         doing_cp = factory.create_computeplan(name="Doing", status=ComputePlan.Status.PLAN_STATUS_DOING)
-        factory.create_computetask(doing_cp, algo, status=ComputeTask.Status.STATUS_DOING)
+        factory.create_computetask(doing_cp, function, status=ComputeTask.Status.STATUS_DOING)
         self.now = doing_cp.start_date + datetime.timedelta(hours=1)
 
         done_cp = factory.create_computeplan(name="Done", status=ComputePlan.Status.PLAN_STATUS_DONE)
-        factory.create_computetask(done_cp, algo, status=ComputeTask.Status.STATUS_DONE)
+        factory.create_computetask(done_cp, function, status=ComputeTask.Status.STATUS_DONE)
 
         failed_cp = factory.create_computeplan(name="Failed", status=ComputePlan.Status.PLAN_STATUS_FAILED)
-        failed_task = factory.create_computetask(failed_cp, algo, status=ComputeTask.Status.STATUS_FAILED)
+        failed_task = factory.create_computetask(failed_cp, function, status=ComputeTask.Status.STATUS_FAILED)
         failed_cp.failed_task_key = str(failed_task.key)
         failed_cp.save()
 
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlan.Status.PLAN_STATUS_CANCELED)
-        factory.create_computetask(canceled_cp, algo, status=ComputeTask.Status.STATUS_CANCELED)
+        factory.create_computetask(canceled_cp, function, status=ComputeTask.Status.STATUS_CANCELED)
 
         empty_cp = factory.create_computeplan(name="Empty", status=ComputePlan.Status.PLAN_STATUS_EMPTY)
 
@@ -477,12 +477,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_compute_plan_list_cross_assets_filters(self):
         """Filter computeplan on other asset key such as algo_key, dataset_key and data_sample_key"""
-        algo = factory.create_algo()
+        function = factory.create_algo()
         data_manager = factory.create_datamanager()
         data_sample = factory.create_datasample([data_manager])
 
         compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(compute_plan, algo, data_manager=data_manager, data_samples=[data_sample.key])
+        factory.create_computetask(compute_plan, function, data_manager=data_manager, data_samples=[data_sample.key])
         expected_cp = {
             "key": str(compute_plan.key),
             "tag": "",
@@ -506,7 +506,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         }
 
         # filter on algo_key
-        params = urlencode({"algo_key": algo.key})
+        params = urlencode({"algo_key": function.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), [expected_cp])
 

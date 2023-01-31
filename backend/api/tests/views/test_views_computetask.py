@@ -41,7 +41,7 @@ class ComputeTaskViewTests(APITestCase):
         self.simple_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            name="simple algo",
+            name="simple function",
         )
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
@@ -233,7 +233,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
         expected_response = [
             {
                 "key": train_task_key,
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "compute_plan_key": str(self.compute_plan.key),
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "end_date": None,
@@ -289,7 +289,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         self.expected_results = [
             {
                 "key": str(todo_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -311,7 +311,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(waiting_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -333,7 +333,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(doing_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -355,7 +355,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(done_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -377,7 +377,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(failed_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
@@ -399,7 +399,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             },
             {
                 "key": str(canceled_task.key),
-                "algo": self.simple_algo_data,
+                "function": self.simple_algo_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},

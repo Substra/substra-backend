@@ -73,11 +73,11 @@ class DataSampleViewTests(APITestCase):
         train_data_sample_2 = factory.create_datasample([data_manager])
         test_data_sample = factory.create_datasample([data_manager])
 
-        self.algo = factory.create_algo()
+        self.function = factory.create_algo()
         self.compute_plan = factory.create_computeplan()
         self.data_manager_key_uuid = data_manager.key
         factory.create_computetask(
-            self.compute_plan, self.algo, data_manager=data_manager, data_samples=[train_data_sample_1.key]
+            self.compute_plan, self.function, data_manager=data_manager, data_samples=[train_data_sample_1.key]
         )
 
         self.expected_results = [
@@ -182,7 +182,7 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.json().get("results"), self.expected_results)
 
         # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
+        params = urlencode({"algo_key": self.function.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 

@@ -39,7 +39,7 @@ def test_get_args_task_input_one_model_output_one_model():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=orc_mock.AlgoFactory(
+        function=orc_mock.AlgoFactory(
             inputs={
                 InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
                 InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
@@ -121,7 +121,7 @@ def test_get_args_task_input_two_models_output_two_models():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=orc_mock.AlgoFactory(
+        function=orc_mock.AlgoFactory(
             inputs={
                 InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
                 InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
@@ -208,7 +208,7 @@ def test_get_args_predict_after_train():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=orc_mock.AlgoFactory(
+        function=orc_mock.AlgoFactory(
             inputs={
                 InputIdentifiers.MODEL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
                 InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
@@ -290,7 +290,7 @@ def test_get_args_predict_input_two_models_output_one_model():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=orc_mock.AlgoFactory(
+        function=orc_mock.AlgoFactory(
             inputs={
                 InputIdentifiers.SHARED: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
                 InputIdentifiers.LOCAL: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
@@ -350,7 +350,7 @@ def test_get_args_test_input_one_model_output_one_performance():
     task = orc_mock.ComputeTaskFactory(
         rank=0,
     )
-    algo = orc_mock.AlgoFactory(
+    function = orc_mock.AlgoFactory(
         inputs={
             InputIdentifiers.PREDICTIONS: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_MODEL),
             InputIdentifiers.OPENER: orc_mock.AlgoInputFactory(kind=orchestrator.AssetKind.ASSET_DATA_MANAGER),
@@ -381,7 +381,7 @@ def test_get_args_test_input_one_model_output_one_performance():
         channel_name=_CHANNEL,
         task=task,
         input_assets=input_assets,
-        algo=algo,
+        function=function,
         has_chainkeys=False,
         compute_plan=None,
         directories=Directories(task.compute_plan_key),

@@ -30,14 +30,14 @@ class AuthenticationTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
-        # create algo instance which file download is protected
+        # create function instance which file download is protected
         self.algo_file, self.algo_filename = get_sample_algo()
         self.algo_description_file, self.algo_description_filename = get_description_algo()
-        self.algo = AlgoFiles.objects.create(file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.algo.key, public=True, owner="foo")
+        self.function = AlgoFiles.objects.create(file=self.algo_file, description=self.algo_description_file)
+        metadata = factory.create_algo(key=self.function.key, public=True, owner="foo")
         metadata.algorithm_address = "http://fake_address.com"
         metadata.save()
-        self.algo_url = reverse("api:algo-file", kwargs={"pk": self.algo.key})
+        self.algo_url = reverse("api:function-file", kwargs={"pk": self.function.key})
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

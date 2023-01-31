@@ -30,7 +30,7 @@ class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._Enum
     It is likely to be caused by the user's code.
     """
     ERROR_TYPE_EXECUTION: _ErrorType.ValueType  # 2
-    """An ERROR_TYPE_EXECUTION is an error occurring during the execution of the algo/metric container.
+    """An ERROR_TYPE_EXECUTION is an error occurring during the execution of the function/metric container.
     It is likely to be caused by the user's code.
     """
     ERROR_TYPE_INTERNAL: _ErrorType.ValueType  # 3
@@ -47,7 +47,7 @@ ERROR_TYPE_BUILD: ErrorType.ValueType  # 1
 It is likely to be caused by the user's code.
 """
 ERROR_TYPE_EXECUTION: ErrorType.ValueType  # 2
-"""An ERROR_TYPE_EXECUTION is an error occurring during the execution of the algo/metric container.
+"""An ERROR_TYPE_EXECUTION is an error occurring during the execution of the function/metric container.
 It is likely to be caused by the user's code.
 """
 ERROR_TYPE_INTERNAL: ErrorType.ValueType  # 3

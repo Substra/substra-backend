@@ -35,7 +35,7 @@ logger = structlog.get_logger(__name__)
 
 
 def _register_in_orchestrator(request, basename, instance):
-    """Register algo in orchestrator."""
+    """Register function in orchestrator."""
 
     current_site = settings.DEFAULT_DOMAIN
     permissions = request.data.get("permissions", {})
@@ -45,11 +45,11 @@ def _register_in_orchestrator(request, basename, instance):
         "name": request.data.get("name"),
         "description": {
             "checksum": get_hash(instance.description),
-            "storage_address": current_site + reverse("api:algo-description", args=[instance.key]),
+            "storage_address": current_site + reverse("api:function-description", args=[instance.key]),
         },
         "algorithm": {
             "checksum": instance.checksum,
-            "storage_address": current_site + reverse("api:algo-file", args=[instance.key]),
+            "storage_address": current_site + reverse("api:function-file", args=[instance.key]),
         },
         "new_permissions": {
             "public": permissions.get("public"),
@@ -65,7 +65,7 @@ def _register_in_orchestrator(request, basename, instance):
 
 
 def create(request, basename, get_success_headers):
-    """Create a new algo.
+    """Create a new function.
 
     The workflow is composed of several steps:
     - Save files in local database to get the addresses.
@@ -104,15 +104,16 @@ def create(request, basename, get_success_headers):
         api_serializer.save_if_not_exists()
     except AlreadyExistsError:
         # May happen if the events app already processed the event pushed by the orchestrator
-        algo = Algo.objects.get(key=api_data["key"])
-        data = AlgoSerializer(algo).data
+        function = Algo.objects.get(key=api_data["key"])
+        data = AlgoSerializer(function).data
     except Exception:
         instance.delete()  # warning: post delete signals are not executed by django rollback
         raise
     else:
         data = api_serializer.data
 
-    # Returns algo metadata from local database (and algo data) to ensure consistency between GET and CREATE views
+    # Returns function metadata from local database (and function data)
+    # to ensure consistency between GET and CREATE views
     data.update(serializer.data)
 
     # Return ApiResponse
@@ -171,11 +172,11 @@ class AlgoViewSet(
         return create(request, self.basename, lambda data: self.get_success_headers(data))
 
     def update(self, request, *args, **kwargs):
-        algo = self.get_object()
+        function = self.get_object()
         name = request.data.get("name")
 
         orc_algo = {
-            "key": str(algo.key),
+            "key": str(function.key),
             "name": name,
         }
 

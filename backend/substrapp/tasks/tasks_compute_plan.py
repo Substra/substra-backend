@@ -67,5 +67,5 @@ def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
 
 
 def _delete_compute_plan_algos_images(algos: typing.Iterable[orchestrator.Algo]) -> None:
-    for algo in algos:
-        delete_container_image_safe(utils.container_image_tag_from_algo(algo))
+    for function in algos:
+        delete_container_image_safe(utils.container_image_tag_from_algo(function))

@@ -25,7 +25,7 @@ class ComputeTaskErrorType(enum.Enum):
     Values:
         * BUILD_ERROR: error occurring during the build of the container image.
             Likely to be caused by the user's code.
-        * EXECUTION_ERROR: error occurring during the execution of the algo/metric container.
+        * EXECUTION_ERROR: error occurring during the execution of the function/metric container.
             Likely to be caused by the user's code.
         * INTERNAL_ERROR: any other error that does not fall into the previous categories.
             Likely to be caused by a fault in the system. It would require the action of a system

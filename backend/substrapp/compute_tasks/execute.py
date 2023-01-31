@@ -1,5 +1,5 @@
 """
-This file contains the algo execution part of a compute task.
+This file contains the function execution part of a compute task.
 
 In these functions, we:
 - Determine the command to execute (train/test/eval)
@@ -41,7 +41,7 @@ logger = structlog.get_logger(__name__)
 @timeit
 def execute_compute_task(ctx: Context) -> None:
     channel_name = ctx.channel_name
-    container_image_tag = utils.container_image_tag_from_algo(ctx.algo)
+    container_image_tag = utils.container_image_tag_from_algo(ctx.function)
 
     compute_pod = ctx.get_compute_pod(container_image_tag)
     pod_name = compute_pod.name

@@ -16,7 +16,7 @@ ENTRYPOINT ["python3", "myalgo.py"]
 
 
 @pytest.fixture
-def algo() -> orchestrator.Algo:
+def function() -> orchestrator.Algo:
     return orc_mock.AlgoFactory()
 
 
@@ -46,7 +46,7 @@ def testtuple_context(orc_metric) -> Context:
         compute_plan_key=cp_key,
         compute_plan_tag="",
         input_assets=[],
-        algo=orc_metric,
+        function=orc_metric,
         directories=Directories(cp_key),
         has_chainkeys=False,
     )

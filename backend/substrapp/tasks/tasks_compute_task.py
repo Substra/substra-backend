@@ -245,7 +245,7 @@ def _run(
         # start build_image timer
         timer.start()
 
-        build_image_if_missing(datastore, ctx.algo)
+        build_image_if_missing(datastore, ctx.function)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())

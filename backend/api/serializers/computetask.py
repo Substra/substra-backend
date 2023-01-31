@@ -17,9 +17,9 @@ from api.models import DataSample
 from api.models import Model
 from api.models import Performance
 from api.models.computetask import TaskDataSamples
-from api.serializers.algo import AlgoSerializer
 from api.serializers.datamanager import DataManagerSerializer
 from api.serializers.datasample import DataSampleSerializer
+from api.serializers.function import AlgoSerializer
 from api.serializers.model import ModelSerializer
 from api.serializers.performance import PerformanceSerializer
 from api.serializers.utils import SafeSerializerMixin
@@ -164,7 +164,7 @@ class AlgoField(serializers.Field):
 
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     logs_permission = make_permission_serializer("logs_permission")(source="*")
-    algo = AlgoField()
+    function = AlgoField()
 
     # Need to set `pk_field` for `PrimaryKeyRelatedField` in order to correctly serialize `UUID` to `str`
     # See: https://stackoverflow.com/a/51636009
@@ -182,7 +182,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
         model = ComputeTask
         fields = [
-            "algo",
+            "function",
             "channel",
             "compute_plan_key",
             "creation_date",
@@ -224,12 +224,12 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             return task
 
         # replace in common relationships
-        if "algo" in task:
-            task["algo"]["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:algo-description", args=[task["algo"]["key"]])
+        if "function" in task:
+            task["function"]["description"]["storage_address"] = request.build_absolute_uri(
+                reverse("api:function-description", args=[task["function"]["key"]])
             )
-            task["algo"]["algorithm"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:algo-file", args=[task["algo"]["key"]])
+            task["function"]["algorithm"]["storage_address"] = request.build_absolute_uri(
+                reverse("api:function-file", args=[task["function"]["key"]])
             )
 
     @transaction.atomic
@@ -242,7 +242,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         outputs = validated_data.pop("outputs")
 
         compute_task = super().create(validated_data)
-        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.algo.inputs.all()}
+        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.function.inputs.all()}
 
         for order, data_sample in enumerate(data_samples):
             TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)

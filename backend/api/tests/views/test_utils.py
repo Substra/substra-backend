@@ -38,7 +38,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.algo_content = self.algo_file.read()
         self.algo_description_file, self.algo_description_filename = get_description_algo()
         self.algo_key = uuid.uuid4()
-        self.algo_url = reverse("api:algo-file", kwargs={"pk": self.algo_key})
+        self.algo_url = reverse("api:function-file", kwargs={"pk": self.algo_key})
         self.extra = {
             "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
             "HTTP_ACCEPT": "application/json;version=0.0",

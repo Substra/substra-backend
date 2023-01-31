@@ -202,7 +202,7 @@ class AssetBufferTests(APITestCase):
                     "address": {"storage_address": "test", "checksum": "check"},
                 }
             }
-            algo = {
+            function = {
                 "key": str(uuid.uuid4()),
                 "owner": "test",
                 "algorithm": {"storage_address": "test", "checksum": "check"},

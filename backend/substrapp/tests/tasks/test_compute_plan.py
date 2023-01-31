@@ -47,6 +47,6 @@ def test_delete_cp_algo_images(mocker: MockerFixture):
 
     tasks_compute_plan._delete_compute_plan_algos_images(algos)
 
-    mocked_delete_image.assert_any_call("algo-azerty")
-    mocked_delete_image.assert_any_call("algo-qwerty")
+    mocked_delete_image.assert_any_call("function-azerty")
+    mocked_delete_image.assert_any_call("function-qwerty")
     assert mocked_delete_image.call_count == 2

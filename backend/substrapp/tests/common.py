@@ -214,7 +214,7 @@ def get_sample_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/algo.tar.gz"), "rb") as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/function.tar.gz"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/tar+gzip", flength, None)
@@ -227,7 +227,7 @@ def get_sample_algo_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo0/algo.zip"), "rb") as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo0/function.zip"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)

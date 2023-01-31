@@ -11,8 +11,8 @@ class SubstrappConfig(AppConfig):
         from substrapp.models import DataManager
         from substrapp.models import Model
 
-        from .signals.algo.post_delete import algo_post_delete
         from .signals.datamanager.post_delete import datamanager_post_delete
+        from .signals.function.post_delete import algo_post_delete
         from .signals.model.post_delete import model_post_delete
 
         post_delete.connect(algo_post_delete, sender=Algo)

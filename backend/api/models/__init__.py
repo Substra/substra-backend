@@ -1,6 +1,3 @@
-from .algo import Algo
-from .algo import AlgoInput
-from .algo import AlgoOutput
 from .computeplan import ComputePlan
 from .computetask import ComputeTask
 from .computetask import ComputeTaskInput
@@ -10,6 +7,9 @@ from .computetask import ComputeTaskOutputAsset
 from .datamanager import DataManager
 from .datasample import DataSample
 from .events import LastEvent
+from .function import Algo
+from .function import AlgoInput
+from .function import AlgoOutput
 from .model import Model
 from .organization import ChannelOrganization
 from .performance import Performance

@@ -24,7 +24,7 @@ class Filenames:
 
 
 def get_exec_command(ctx: Context) -> list[str]:
-    entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.algo.algorithm.checksum)
+    entrypoint = ImageEntrypoint.objects.get(algo_checksum=ctx.function.algorithm.checksum)
 
     command = entrypoint.entrypoint_json
 
@@ -55,7 +55,7 @@ def get_exec_command_args(ctx: Context) -> list[str]:
             TaskResource(
                 id=input.identifier,
                 value=os.path.join(in_models_dir, input.model.key),
-                multiple=ctx.algo.inputs[input.identifier].multiple,
+                multiple=ctx.function.inputs[input.identifier].multiple,
             )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_MODEL
@@ -66,7 +66,7 @@ def get_exec_command_args(ctx: Context) -> list[str]:
             TaskResource(
                 id=input.identifier,
                 value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener),
-                multiple=ctx.algo.inputs[input.identifier].multiple,
+                multiple=ctx.function.inputs[input.identifier].multiple,
             )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER
@@ -77,7 +77,7 @@ def get_exec_command_args(ctx: Context) -> list[str]:
             TaskResource(
                 id=input.identifier,
                 value=os.path.join(datasamples_dir, input.data_sample.key),
-                multiple=ctx.algo.inputs[input.identifier].multiple,
+                multiple=ctx.function.inputs[input.identifier].multiple,
             )
             for input in ctx.input_assets
             if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE

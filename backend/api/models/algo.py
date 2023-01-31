@@ -12,7 +12,7 @@ class AlgoInput(models.Model):
         ASSET_DATA_MANAGER = common_pb2.AssetKind.Name(common_pb2.ASSET_DATA_MANAGER)
         ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
 
-    algo = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="inputs")
+    function = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="inputs")
     identifier = models.CharField(max_length=100)
     kind = models.CharField(max_length=64, choices=Kind.choices)
     optional = models.BooleanField(default=False)
@@ -20,7 +20,7 @@ class AlgoInput(models.Model):
     channel = models.CharField(max_length=100)
 
     class Meta:
-        unique_together = (("algo", "identifier"),)
+        unique_together = (("function", "identifier"),)
         ordering = ["identifier"]  # default order for relations serializations
 
 
@@ -29,14 +29,14 @@ class AlgoOutput(models.Model):
         ASSET_MODEL = common_pb2.AssetKind.Name(common_pb2.ASSET_MODEL)
         ASSET_PERFORMANCE = common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
 
-    algo = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="outputs")
+    function = models.ForeignKey("Algo", on_delete=models.deletion.CASCADE, related_name="outputs")
     identifier = models.CharField(max_length=100)
     kind = models.CharField(max_length=64, choices=Kind.choices)
     multiple = models.BooleanField(default=False)
     channel = models.CharField(max_length=100)
 
     class Meta:
-        unique_together = (("algo", "identifier"),)
+        unique_together = (("function", "identifier"),)
         ordering = ["identifier"]  # default order for relations serializations
 
 

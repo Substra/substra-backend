@@ -48,7 +48,9 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
                 algo_id=obj.key, kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
             )
         except (AlgoOutput.MultipleObjectsReturned, AlgoOutput.DoesNotExist) as e:
-            raise Exception(f"Couldn't associate an output identifier to performance for algo '{obj.key}', error : {e}")
+            raise Exception(
+                f"Couldn't associate an output identifier to performance for function '{obj.key}', error : {e}"
+            )
 
         return performance_output.identifier
 

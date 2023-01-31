@@ -43,7 +43,7 @@ MODEL_STORAGE = MinioStorage(MODEL_BUCKET_NAME)
 
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", f"/substra/medias/{ORG_NAME}")
 SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", f"/substra/servermedias/{ORG_NAME}")
-ALGO_BUCKET_NAME = "substra-algo"
+ALGO_BUCKET_NAME = "substra-function"
 ALGO_STORAGE = MinioStorage(ALGO_BUCKET_NAME)
 
 DATAMANAGER_BUCKET_NAME = "substra-datamanager"

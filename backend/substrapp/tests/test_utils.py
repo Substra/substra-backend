@@ -21,23 +21,23 @@ SUBTUPLE_DIR = tempfile.mkdtemp()
 class UtilsTests(APITestCase):
     def setUp(self):
         self.subtuple_path = SUBTUPLE_DIR
-        self.algo, self.algo_filename = get_sample_algo()
+        self.function, self.algo_filename = get_sample_algo()
 
     def test_uncompress_content_tar(self):
-        algo_content = self.algo.read()
-        checksum = get_hash(self.algo)
+        algo_content = self.function.read()
+        checksum = get_hash(self.function)
 
-        subtuple = {"key": checksum, "algo": "testalgo"}
+        subtuple = {"key": checksum, "function": "testalgo"}
 
         with mock.patch("substrapp.utils.get_hash") as mget_hash:
             mget_hash.return_value = checksum
             uncompress_content(algo_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
-        self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/algo.py')))
+        self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/function.py')))
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/Dockerfile')))
 
     def test_uncompress_content_zip(self):
-        filename = "algo.py"
+        filename = "function.py"
         filepath = os.path.join(self.subtuple_path, filename)
         with open(filepath, "w") as f:
             f.write("Hello World")
@@ -50,7 +50,7 @@ class UtilsTests(APITestCase):
         self.assertTrue(os.path.exists(zippath))
 
         subtuple_key = "testkey"
-        subtuple = {"key": subtuple_key, "algo": "testalgo"}
+        subtuple = {"key": subtuple_key, "function": "testalgo"}
 
         with mock.patch("substrapp.utils.get_hash") as mget_hash:
             with open(zippath, "rb") as content:

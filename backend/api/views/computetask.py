@@ -23,8 +23,8 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
-from api.models.algo import AlgoInput
-from api.models.algo import AlgoOutput
+from api.models.function import AlgoInput
+from api.models.function import AlgoOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
@@ -264,7 +264,7 @@ class ComputeTaskViewSetConfig:
     def get_queryset(self):
         return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
-            .select_related("algo")
+            .select_related("function")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.

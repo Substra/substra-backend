@@ -3,7 +3,7 @@ Utility module to create fixtures.
 
 Basic example:
 
->>> algo = create_algo(
+>>> function = create_algo(
 ...     inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
 ...     outputs=factory.build_algo_outputs(["model"]),
 ... )
@@ -13,15 +13,15 @@ Basic example:
 
 >>> train_task = create_computetask(
 ...     compute_plan,
-...     algo,
+...     function,
 ...     inputs=factory.build_computetask_inputs(
-...         algo,
+...         function,
 ...         {
 ...             "opener": [data_manager.key],
 ...             "datasamples": [data_sample.key],
 ...         },
 ...     ),
-...     outputs=factory.build_computetask_outputs(algo),
+...     outputs=factory.build_computetask_outputs(function),
 ...     data_manager=data_manager,
 ...     data_samples=[data_sample.key],
 ...     status=ComputeTask.Status.STATUS_DONE,
@@ -53,7 +53,7 @@ Basic example:
 Customized example:
 
 >>> algo_data = create_algo_files()
->>> algo = create_algo(
+>>> function = create_algo(
 ...     key=algo_data.key,
 ...     name="Random forest",
 ...     category=AlgoCategory.simple,
@@ -129,11 +129,11 @@ def build_algo_outputs(identifiers: list[str]) -> list[AlgoOutput]:
 
 
 def build_computetask_inputs(
-    algo: Algo,
+    function: Algo,
     keys: dict[str : list[uuid.UUID]],
 ) -> list[ComputeTaskInput]:
     task_inputs = []
-    for algo_input in algo.inputs.all():
+    for algo_input in function.inputs.all():
         for key in keys.get(algo_input.identifier, []):
             task_input = ComputeTaskInput(identifier=algo_input.identifier)
             if algo_input.kind in (AlgoInput.Kind.ASSET_DATA_MANAGER, AlgoInput.Kind.ASSET_DATA_SAMPLE):
@@ -146,7 +146,7 @@ def build_computetask_inputs(
 
 
 def build_computetask_outputs(
-    algo: Algo,
+    function: Algo,
     owner: str = DEFAULT_OWNER,
     public: bool = False,
 ) -> list[ComputeTaskOutput]:
@@ -158,7 +158,7 @@ def build_computetask_outputs(
             permissions_process_public=public,
             permissions_process_authorized_ids=[owner],
         )
-        for algo_output in algo.outputs.all()
+        for algo_output in function.outputs.all()
     ]
 
 
@@ -222,7 +222,7 @@ def create_algo(
     inputs: list[AlgoInput] = None,
     outputs: list[AlgoInput] = None,
     key: uuid.UUID = None,
-    name: str = "algo",
+    name: str = "function",
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -231,13 +231,13 @@ def create_algo(
     if key is None:
         key = uuid.uuid4()
 
-    algo = Algo.objects.create(
+    function = Algo.objects.create(
         key=key,
         name=name,
         metadata=metadata or {},
-        algorithm_address=get_storage_address("algo", key, "file"),
+        algorithm_address=get_storage_address("function", key, "file"),
         algorithm_checksum=DUMMY_CHECKSUM,
-        description_address=get_storage_address("algo", key, "description"),
+        description_address=get_storage_address("function", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
         creation_date=timezone.now(),
         owner=owner,
@@ -247,16 +247,16 @@ def create_algo(
 
     if inputs:
         for algo_input in inputs:
-            algo_input.algo = algo
+            algo_input.function = function
             algo_input.channel = channel
             algo_input.save()
     if outputs:
         for algo_output in outputs:
-            algo_output.algo = algo
+            algo_output.function = function
             algo_output.channel = channel
             algo_output.save()
 
-    return algo
+    return function
 
 
 def create_datamanager(
@@ -337,7 +337,7 @@ def create_computeplan(
 
 def create_computetask(
     compute_plan: ComputePlan,
-    algo: Algo,
+    function: Algo,
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
     data_manager: DataManager = None,
@@ -359,7 +359,7 @@ def create_computetask(
         key = uuid.uuid4()
     compute_task = ComputeTask.objects.create(
         compute_plan=compute_plan,
-        algo=algo,
+        function=function,
         data_manager=data_manager,
         key=key,
         status=status,
@@ -384,7 +384,7 @@ def create_computetask(
         compute_task.refresh_from_db()
 
     if inputs:
-        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.algo.inputs.all()}
+        input_kinds = {algo_input.identifier: algo_input.kind for algo_input in compute_task.function.inputs.all()}
         for position, task_input in enumerate(inputs):
             task_input.task = compute_task
             task_input.channel = channel
@@ -485,7 +485,7 @@ def create_algo_files(
         key=key,
         checksum=get_hash(file),
     )
-    algo_files.file.save("algo", file)
+    algo_files.file.save("function", file)
     algo_files.description.save("description", description)
     return algo_files
 

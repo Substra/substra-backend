@@ -42,12 +42,12 @@ class AlgoViewTests(APITestCase):
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
-        self.url = reverse("api:algo-list")
+        self.url = reverse("api:function-list")
 
         simple_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
             outputs=factory.build_algo_outputs(["model"]),
-            name="simple algo",
+            name="simple function",
         )
         aggregate_algo = factory.create_algo(
             inputs=factory.build_algo_inputs(["models"]),
@@ -74,7 +74,7 @@ class AlgoViewTests(APITestCase):
         self.expected_algos = [
             {
                 "key": str(simple_algo.key),
-                "name": "simple algo",
+                "name": "simple function",
                 "owner": "MyOrg1MSP",
                 "permissions": {
                     "process": {
@@ -90,11 +90,11 @@ class AlgoViewTests(APITestCase):
                 "creation_date": simple_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{simple_algo.key}/description/",
+                    "storage_address": f"http://testserver/function/{simple_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{simple_algo.key}/file/",
+                    "storage_address": f"http://testserver/function/{simple_algo.key}/file/",
                 },
                 "inputs": {
                     "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
@@ -123,11 +123,11 @@ class AlgoViewTests(APITestCase):
                 "creation_date": aggregate_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{aggregate_algo.key}/description/",
+                    "storage_address": f"http://testserver/function/{aggregate_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{aggregate_algo.key}/file/",
+                    "storage_address": f"http://testserver/function/{aggregate_algo.key}/file/",
                 },
                 "inputs": {
                     "models": {"kind": "ASSET_MODEL", "optional": True, "multiple": True},
@@ -154,11 +154,11 @@ class AlgoViewTests(APITestCase):
                 "creation_date": composite_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{composite_algo.key}/description/",
+                    "storage_address": f"http://testserver/function/{composite_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{composite_algo.key}/file/",
+                    "storage_address": f"http://testserver/function/{composite_algo.key}/file/",
                 },
                 "inputs": {
                     "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
@@ -189,11 +189,11 @@ class AlgoViewTests(APITestCase):
                 "creation_date": predict_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{predict_algo.key}/description/",
+                    "storage_address": f"http://testserver/function/{predict_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{predict_algo.key}/file/",
+                    "storage_address": f"http://testserver/function/{predict_algo.key}/file/",
                 },
                 "inputs": {
                     "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
@@ -223,11 +223,11 @@ class AlgoViewTests(APITestCase):
                 "creation_date": metric_algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{metric_algo.key}/description/",
+                    "storage_address": f"http://testserver/function/{metric_algo.key}/description/",
                 },
                 "algorithm": {
                     "checksum": "dummy-checksum",
-                    "storage_address": f"http://testserver/algo/{metric_algo.key}/file/",
+                    "storage_address": f"http://testserver/function/{metric_algo.key}/file/",
                 },
                 "inputs": {
                     "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
@@ -267,25 +267,25 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.algo.AlgoViewSet.list", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.AlgoViewSet.list", side_effect=Exception("Unexpected error"))
     def test_algo_list_fail(self, _):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_list_storage_addresses_update(self):
-        for algo in Algo.objects.all():
-            algo.description_address.replace("http://testserver", "http://remotetestserver")
-            algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
-            algo.save()
+        for function in Algo.objects.all():
+            function.description_address.replace("http://testserver", "http://remotetestserver")
+            function.algorithm_address.replace("http://testserver", "http://remotetestserver")
+            function.save()
 
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.data["count"], len(self.expected_algos))
-        for result, algo in zip(response.data["results"], self.expected_algos):
+        for result, function in zip(response.data["results"], self.expected_algos):
             for field in ("description", "algorithm"):
-                self.assertEqual(result[field]["storage_address"], algo[field]["storage_address"])
+                self.assertEqual(result[field]["storage_address"], function[field]["storage_address"])
 
     def test_algo_list_filter(self):
-        """Filter algo on key."""
+        """Filter function on key."""
         key = self.expected_algos[0]["key"]
         params = urlencode({"key": key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -294,7 +294,7 @@ class AlgoViewTests(APITestCase):
         )
 
     def test_algo_list_filter_and(self):
-        """Filter algo on key and owner."""
+        """Filter function on key and owner."""
         key, owner = self.expected_algos[0]["key"], self.expected_algos[0]["owner"]
         params = urlencode({"key": key, "owner": owner})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
@@ -303,7 +303,7 @@ class AlgoViewTests(APITestCase):
         )
 
     def test_algo_list_filter_in(self):
-        """Filter algo in key_0, key_1."""
+        """Filter function in key_0, key_1."""
         key_0 = self.expected_algos[0]["key"]
         key_1 = self.expected_algos[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
@@ -313,7 +313,7 @@ class AlgoViewTests(APITestCase):
         )
 
     def test_algo_match(self):
-        """Match algo on part of the name."""
+        """Match function on part of the name."""
         params = urlencode({"match": "le al"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
@@ -321,7 +321,7 @@ class AlgoViewTests(APITestCase):
         )
 
     def test_algo_match_and_filter(self):
-        """Match algo with filter."""
+        """Match function with filter."""
         params = urlencode(
             {
                 "key": self.expected_algos[0]["key"],
@@ -440,8 +440,8 @@ class AlgoViewTests(APITestCase):
                 AlgoCategory.predict,
             ]
             for filename in [
-                "algo.tar.gz",
-                "algo.zip",
+                "function.tar.gz",
+                "function.zip",
             ]
         ]
     )
@@ -501,7 +501,7 @@ class AlgoViewTests(APITestCase):
 
     @override_settings(DATA_UPLOAD_MAX_SIZE=150)
     def test_file_size_limit(self):
-        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        algorithm_path = os.path.join(FIXTURE_PATH, "function.tar.gz")
         description_path = os.path.join(FIXTURE_PATH, "description.md")
 
         data = {
@@ -543,7 +543,7 @@ class AlgoViewTests(APITestCase):
             code = StatusCode.ALREADY_EXISTS
             details = "already exists"
 
-        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        algorithm_path = os.path.join(FIXTURE_PATH, "function.tar.gz")
         description_path = os.path.join(FIXTURE_PATH, "description.md")
         data = {
             "json": json.dumps(
@@ -576,45 +576,45 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.algo.AlgoViewSet.create", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.AlgoViewSet.create", side_effect=Exception("Unexpected error"))
     def test_algo_create_fail(self, _):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_retrieve(self):
-        url = reverse("api:algo-detail", args=[self.expected_algos[0]["key"]])
+        url = reverse("api:function-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.expected_algos[0])
 
     def test_algo_retrieve_wrong_channel(self):
-        url = reverse("api:algo-detail", args=[self.expected_algos[0]["key"]])
+        url = reverse("api:function-detail", args=[self.expected_algos[0]["key"]])
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         response = self.client.get(url, **extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_algo_retrieve_storage_addresses_update(self):
-        algo = Algo.objects.get(key=self.expected_algos[0]["key"])
-        algo.description_address.replace("http://testserver", "http://remotetestserver")
-        algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
-        algo.save()
+        function = Algo.objects.get(key=self.expected_algos[0]["key"])
+        function.description_address.replace("http://testserver", "http://remotetestserver")
+        function.algorithm_address.replace("http://testserver", "http://remotetestserver")
+        function.save()
 
-        url = reverse("api:algo-detail", args=[self.expected_algos[0]["key"]])
+        url = reverse("api:function-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         for field in ("description", "algorithm"):
             self.assertEqual(response.data[field]["storage_address"], self.expected_algos[0][field]["storage_address"])
 
     @internal_server_error_on_exception()
-    @mock.patch("api.views.algo.AlgoViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    @mock.patch("api.views.function.AlgoViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_algo_retrieve_fail(self, _):
-        url = reverse("api:algo-detail", args=[self.expected_algos[0]["key"]])
+        url = reverse("api:function-detail", args=[self.expected_algos[0]["key"]])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_algo_download_file(self):
         algo_files = factory.create_algo_files()
-        algo = factory.create_algo(key=algo_files.key)
-        url = reverse("api:algo-file", args=[algo.key])
-        with mock.patch("api.views.utils.get_owner", return_value=algo.owner):
+        function = factory.create_algo(key=algo_files.key)
+        url = reverse("api:function-file", args=[function.key])
+        with mock.patch("api.views.utils.get_owner", return_value=function.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -623,25 +623,25 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_download_description(self):
         algo_files = factory.create_algo_files()
-        algo = factory.create_algo(key=algo_files.key)
-        url = reverse("api:algo-description", args=[algo.key])
-        with mock.patch("api.views.utils.get_owner", return_value=algo.owner):
+        function = factory.create_algo(key=algo_files.key)
+        url = reverse("api:function-description", args=[function.key])
+        with mock.patch("api.views.utils.get_owner", return_value=function.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content, algo_files.description.read())
 
     def test_algo_update(self):
-        algo = self.expected_algos[0]
+        function = self.expected_algos[0]
         data = {
-            "key": algo["key"],
+            "key": function["key"],
             "name": "Bar",
         }
 
-        url = reverse("api:algo-detail", args=[algo["key"]])
-        algo["name"] = data["name"]
+        url = reverse("api:function-detail", args=[function["key"]])
+        function["name"] = data["name"]
 
-        with mock.patch.object(OrchestratorClient, "update_algo", side_effect=algo):
+        with mock.patch.object(OrchestratorClient, "update_algo", side_effect=function):
             response = self.client.put(url, data=data, format="json", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

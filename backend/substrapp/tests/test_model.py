@@ -38,8 +38,8 @@ class ModelTests(TestCase):
 
     def test_create_algo(self):
         script, _ = get_sample_script()
-        algo = Algo.objects.create(file=script)
-        self.assertEqual(algo.checksum, get_hash(script))
+        function = Algo.objects.create(file=script)
+        self.assertEqual(function.checksum, get_hash(script))
 
     def test_create_model(self):
         modelfile, _ = get_sample_model()

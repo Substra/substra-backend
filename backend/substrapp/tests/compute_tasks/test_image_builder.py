@@ -23,30 +23,30 @@ ENTRYPOINT python3 myalgo.py
 
 
 class TestBuildImageIfMissing:
-    def test_image_already_exists(self, mocker: MockerFixture, algo: orchestrator.Algo):
+    def test_image_already_exists(self, mocker: MockerFixture, function: orchestrator.Algo):
         ds = mocker.Mock()
         m_container_image_exists = mocker.patch(
             "substrapp.compute_tasks.image_builder.container_image_exists", return_value=True
         )
-        algo_image_tag = utils.container_image_tag_from_algo(algo)
+        algo_image_tag = utils.container_image_tag_from_algo(function)
 
-        image_builder.build_image_if_missing(datastore=ds, algo=algo)
+        image_builder.build_image_if_missing(datastore=ds, function=function)
 
         m_container_image_exists.assert_called_once_with(algo_image_tag)
 
-    def test_image_build_needed(self, mocker: MockerFixture, algo: orchestrator.Algo):
+    def test_image_build_needed(self, mocker: MockerFixture, function: orchestrator.Algo):
         ds = mocker.Mock()
         m_container_image_exists = mocker.patch(
             "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
         )
         m_build_algo_image = mocker.patch("substrapp.compute_tasks.image_builder._build_algo_image")
-        algo_image_tag = utils.container_image_tag_from_algo(algo)
+        algo_image_tag = utils.container_image_tag_from_algo(function)
 
-        image_builder.build_image_if_missing(datastore=ds, algo=algo)
+        image_builder.build_image_if_missing(datastore=ds, function=function)
 
         m_container_image_exists.assert_called_once_with(algo_image_tag)
         m_build_algo_image.assert_called_once()
-        assert m_build_algo_image.call_args.args[1] == algo
+        assert m_build_algo_image.call_args.args[1] == function
 
 
 class TestGetEntrypointFromDockerfile:

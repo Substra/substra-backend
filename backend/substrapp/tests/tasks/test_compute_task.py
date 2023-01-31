@@ -45,7 +45,7 @@ def test_compute_task_exception(mocker: MockerFixture):
         task=task,
         compute_plan=None,
         input_assets=[],
-        algo=orc_mock.AlgoFactory(),
+        function=orc_mock.AlgoFactory(),
         directories=FakeDirectories(),
         has_chainkeys=False,
     )

@@ -122,7 +122,8 @@ def create(request, get_success_headers):
     else:
         data = api_serializer.data
 
-    # Returns algo metadata from local database (and algo data) to ensure consistency between GET and CREATE views
+    # Returns function metadata from local database (and function data)
+    # to ensure consistency between GET and CREATE views
     data.update(serializer.data)
 
     # Return ApiResponse
