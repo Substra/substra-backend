@@ -10,4 +10,4 @@ def container_image_tag_from_function(function: orchestrator.Function) -> str:
     Returns:
         str: the container image tag
     """
-    return f"function-{function.function.checksum[:16]}"
+    return f"function-{function.checksum[:16]}"

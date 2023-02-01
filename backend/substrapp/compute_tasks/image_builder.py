@@ -79,7 +79,7 @@ def _build_function_image(asset: bytes, function: orchestrator.Function) -> None
         _build_container_image(tmp_dir, utils.container_image_tag_from_function(function))
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(function_checksum=function.function.checksum, entrypoint_json=entrypoint)
+        ImageEntrypoint.objects.get_or_create(function_checksum=function.checksum, entrypoint_json=entrypoint)
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
