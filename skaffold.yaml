@@ -17,7 +17,7 @@ build:
       docker:
         dockerfile: docker/substra-backend/Dockerfile
 
-deploy:
+manifests:
   helm:
     releases:
       - name: backend-org-1
@@ -38,6 +38,8 @@ deploy:
           worker.events.image: *image-params
           worker.image: *image-params
         createNamespace: true
+        skipBuildDependencies: true
+        
       - name: backend-org-2
         chartPath: charts/substra-backend
         valuesFiles:
@@ -48,6 +50,18 @@ deploy:
         setValueTemplates: *image-tags
         createNamespace: true
         skipBuildDependencies: true
+  hooks:
+    before:
+      - host:
+        # `skaffold run` does not update chart dependencies:
+        # https://github.com/GoogleContainerTools/skaffold/issues/5445
+        # So we update the dependencies ourselves.
+        command:
+        - 'helm'
+        - 'dep'
+        - 'build'
+        - 'charts/substra-backend'
+        os: [darwin, linux]
   statusCheckDeadlineSeconds: 660
   
 
@@ -67,11 +81,6 @@ profiles:
       - op: add
         path: /build/artifacts/0/docker/target
         value: dev  # install dev-requirements
-  - name: nodeps
-    patches:
-      - op: add
-        path: /deploy/helm/releases/0/skipBuildDependencies
-        value: true
   - name: arm64
     patches:
       - op: add
