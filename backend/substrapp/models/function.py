@@ -15,10 +15,10 @@ class Function(models.Model):
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(
-        storage=settings.ALGO_STORAGE, max_length=500, upload_to=upload_to
+        storage=settings.FUNCTION_STORAGE, max_length=500, upload_to=upload_to
     )  # path max length to 500 instead of default 100
     description = models.FileField(
-        storage=settings.ALGO_STORAGE, upload_to=upload_to, max_length=500
+        storage=settings.FUNCTION_STORAGE, upload_to=upload_to, max_length=500
     )  # path max length to 500 instead of default 100
     checksum = models.CharField(max_length=64, blank=True)
 

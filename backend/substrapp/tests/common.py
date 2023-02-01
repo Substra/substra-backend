@@ -28,16 +28,16 @@ class InputIdentifiers:
 
 
 class FunctionCategory(str, Enum):
-    simple = "ALGO_SIMPLE"
-    composite = "ALGO_COMPOSITE"
-    aggregate = "ALGO_AGGREGATE"
-    metric = "ALGO_METRIC"
-    predict = "ALGO_PREDICT"
-    predict_composite = "ALGO_PREDICT_COMPOSITE"
+    simple = "FUNCTION_SIMPLE"
+    composite = "FUNCTION_COMPOSITE"
+    aggregate = "FUNCTION_AGGREGATE"
+    metric = "FUNCTION_METRIC"
+    predict = "FUNCTION_PREDICT"
+    predict_composite = "FUNCTION_PREDICT_COMPOSITE"
 
 
 # Function inputs, protobuf format
-ALGO_INPUTS_PER_CATEGORY = {
+FUNCTION_INPUTS_PER_CATEGORY = {
     FunctionCategory.simple: {
         InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
         InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
@@ -67,7 +67,7 @@ ALGO_INPUTS_PER_CATEGORY = {
 
 
 # Function outputs, protobuf format
-ALGO_OUTPUTS_PER_CATEGORY = {
+FUNCTION_OUTPUTS_PER_CATEGORY = {
     FunctionCategory.simple: {
         InputIdentifiers.MODEL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
@@ -87,21 +87,21 @@ ALGO_OUTPUTS_PER_CATEGORY = {
 }
 
 # Function inputs, dictionary format
-ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+FUNCTION_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(input_proto, **CONVERT_SETTINGS)
         for identifier, input_proto in inputs_by_identifier.items()
     }
-    for category, inputs_by_identifier in ALGO_INPUTS_PER_CATEGORY.items()
+    for category, inputs_by_identifier in FUNCTION_INPUTS_PER_CATEGORY.items()
 }
 
 # Function outputs, dictionary format
-ALGO_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+FUNCTION_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(output_proto, **CONVERT_SETTINGS)
         for identifier, output_proto in outputs_by_identifier.items()
     }
-    for category, outputs_by_identifier in ALGO_OUTPUTS_PER_CATEGORY.items()
+    for category, outputs_by_identifier in FUNCTION_OUTPUTS_PER_CATEGORY.items()
 }
 
 

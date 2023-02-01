@@ -102,7 +102,7 @@ DUMMY_CHECKSUM = "dummy-checksum"
 # Inputs and outputs values belongs to the business logic and are handled at the substra SDK level.
 # We use them here only to have realistic test data, but the API should remained agnostic from them.
 
-ALGO_INPUTS = {
+FUNCTION_INPUTS = {
     "datasamples": dict(kind=FunctionInput.Kind.ASSET_DATA_SAMPLE, multiple=True, optional=False),
     "opener": dict(kind=FunctionInput.Kind.ASSET_DATA_MANAGER, multiple=False, optional=False),
     "model": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=True),
@@ -111,7 +111,7 @@ ALGO_INPUTS = {
     "shared": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=True),
     "predictions": dict(kind=FunctionInput.Kind.ASSET_MODEL, multiple=False, optional=False),
 }
-ALGO_OUTPUTS = {
+FUNCTION_OUTPUTS = {
     "model": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
     "local": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
     "shared": dict(kind=FunctionOutput.Kind.ASSET_MODEL, multiple=False),
@@ -121,11 +121,11 @@ ALGO_OUTPUTS = {
 
 
 def build_function_inputs(identifiers: list[str]) -> list[FunctionInput]:
-    return [FunctionInput(identifier=identifier, **ALGO_INPUTS[identifier]) for identifier in identifiers]
+    return [FunctionInput(identifier=identifier, **FUNCTION_INPUTS[identifier]) for identifier in identifiers]
 
 
 def build_function_outputs(identifiers: list[str]) -> list[FunctionOutput]:
-    return [FunctionOutput(identifier=identifier, **ALGO_OUTPUTS[identifier]) for identifier in identifiers]
+    return [FunctionOutput(identifier=identifier, **FUNCTION_OUTPUTS[identifier]) for identifier in identifiers]
 
 
 def build_computetask_inputs(

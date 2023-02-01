@@ -385,7 +385,7 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computeplan_event,
         event_pb2.EVENT_ASSET_UPDATED: _on_update_computeplan_event,
     },
-    common_pb2.ASSET_ALGO: {
+    common_pb2.ASSET_FUNCTION: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_function_event,
         event_pb2.EVENT_ASSET_UPDATED: _on_update_function_event,
     },
