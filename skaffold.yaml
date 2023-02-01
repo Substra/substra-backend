@@ -53,15 +53,15 @@ manifests:
   hooks:
     before:
       - host:
-        # `skaffold run` does not update chart dependencies:
-        # https://github.com/GoogleContainerTools/skaffold/issues/5445
-        # So we update the dependencies ourselves.
-        command:
-        - 'helm'
-        - 'dep'
-        - 'build'
-        - 'charts/substra-backend'
-        os: [darwin, linux]
+          # `skaffold run` does not update chart dependencies:
+          # https://github.com/GoogleContainerTools/skaffold/issues/5445
+          # So we update the dependencies ourselves.
+          command:
+          - 'helm'
+          - 'dep'
+          - 'build'
+          - 'charts/substra-backend'
+          os: [darwin, linux]
   statusCheckDeadlineSeconds: 660
   
 
