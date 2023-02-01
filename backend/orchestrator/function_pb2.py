@@ -16,7 +16,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from . import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfunction.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"V\n\tFunctionInput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\x12\x10\n\x08optional\x18\x03 \x01(\x08\"E\n\nFunctionOutput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\"\xda\x04\n\x04\x41lgo\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\tfunctionrithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x32\n\x08metadata\x18\x10 \x03(\x0b\x32 .orchestrator.Function.MetadataEntry\x12.\n\x06inputs\x18\x11 \x03(\x0b\x32\x1e.orchestrator.Function.InputsEntry\x12\x30\n\x07outputs\x18\x12 \x03(\x0b\x32\x1f.orchestrator.Function.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.FunctionInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.FunctionOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\xab\x04\n\x07NewFunction\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12,\n\tfunctionrithm\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x35\n\x08metadata\x18\x11 \x03(\x0b\x32#.orchestrator.NewFunction.MetadataEntry\x12\x31\n\x06inputs\x18\x12 \x03(\x0b\x32!.orchestrator.NewFunction.InputsEntry\x12\x33\n\x07outputs\x18\x13 \x03(\x0b\x32\".orchestrator.NewFunction.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x46\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.orchestrator.FunctionInput:\x02\x38\x01\x1aH\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.orchestrator.FunctionOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\x1b\n\x0cGetFunctionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"P\n\x12QueryFunctionsResponse\x12!\n\x05\x41lgos\x18\x01 \x03(\x0b\x32\x12.orchestrator.Function\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"+\n\x0f\x41lgoQueryFilter\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"g\n\x0fQueryFunctionsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.FunctionQueryFilter\",\n\x0fUpdateFunctionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x14\n\x12UpdateFunctionResponse2\xa1\x02\n\x0b\x41lgoService\x12\x39\n\x0cRegisterFunction\x12\x15.orchestrator.NewFunction\x1a\x12.orchestrator.Function\x12\x39\n\x07GetFunction\x12\x1a.orchestrator.GetFunctionParam\x1a\x12.orchestrator.Function\x12M\n\nQueryFunctions\x12\x1d.orchestrator.QueryFunctionsParam\x1a .orchestrator.QueryFunctionsResponse\x12M\n\nUpdateFunction\x12\x1d.orchestrator.UpdateFunctionParam\x1a .orchestrator.UpdateFunctionResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x66unction.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"Z\n\rFunctionInput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\x12\x10\n\x08optional\x18\x03 \x01(\x08\"I\n\x0e\x46unctionOutput\x12%\n\x04kind\x18\x01 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12\x10\n\x08multiple\x18\x02 \x01(\x08\"\xf1\x04\n\x08\x46unction\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12+\n\x08\x66unction\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x36\n\x08metadata\x18\x10 \x03(\x0b\x32$.orchestrator.Function.MetadataEntry\x12\x32\n\x06inputs\x18\x11 \x03(\x0b\x32\".orchestrator.Function.InputsEntry\x12\x34\n\x07outputs\x18\x12 \x03(\x0b\x32#.orchestrator.Function.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aJ\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\x05value\x18\x02 \x01(\x0b\x32\x1b.orchestrator.FunctionInput:\x02\x38\x01\x1aL\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12+\n\x05value\x18\x02 \x01(\x0b\x32\x1c.orchestrator.FunctionOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\xc2\x04\n\x0bNewFunction\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12+\n\x08\x66unction\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x39\n\x08metadata\x18\x11 \x03(\x0b\x32\'.orchestrator.NewFunction.MetadataEntry\x12\x35\n\x06inputs\x18\x12 \x03(\x0b\x32%.orchestrator.NewFunction.InputsEntry\x12\x37\n\x07outputs\x18\x13 \x03(\x0b\x32&.orchestrator.NewFunction.OutputsEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aJ\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\x05value\x18\x02 \x01(\x0b\x32\x1b.orchestrator.FunctionInput:\x02\x38\x01\x1aL\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12+\n\x05value\x18\x02 \x01(\x0b\x32\x1c.orchestrator.FunctionOutput:\x02\x38\x01J\x04\x08\x03\x10\x04R\x08\x63\x61tegory\"\x1f\n\x10GetFunctionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"\\\n\x16QueryFunctionsResponse\x12)\n\tFunctions\x18\x01 \x03(\x0b\x32\x16.orchestrator.Function\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"/\n\x13\x46unctionQueryFilter\x12\x18\n\x10\x63ompute_plan_key\x18\x02 \x01(\t\"o\n\x13QueryFunctionsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12\x31\n\x06\x66ilter\x18\x03 \x01(\x0b\x32!.orchestrator.FunctionQueryFilter\"0\n\x13UpdateFunctionParam\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x18\n\x16UpdateFunctionResponse2\xd5\x02\n\x0f\x46unctionService\x12\x45\n\x10RegisterFunction\x12\x19.orchestrator.NewFunction\x1a\x16.orchestrator.Function\x12\x45\n\x0bGetFunction\x12\x1e.orchestrator.GetFunctionParam\x1a\x16.orchestrator.Function\x12Y\n\x0eQueryFunctions\x12!.orchestrator.QueryFunctionsParam\x1a$.orchestrator.QueryFunctionsResponse\x12Y\n\x0eUpdateFunction\x12!.orchestrator.UpdateFunctionParam\x1a$.orchestrator.UpdateFunctionResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -171,38 +171,38 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _NEWFUNCTION_INPUTSENTRY._serialized_options = b'8\001'
   _NEWFUNCTION_OUTPUTSENTRY._options = None
   _NEWFUNCTION_OUTPUTSENTRY._serialized_options = b'8\001'
-  _FUNCTIONINPUT._serialized_start=75
-  _FUNCTIONINPUT._serialized_end=161
-  _FUNCTIONOUTPUT._serialized_start=163
-  _FUNCTIONOUTPUT._serialized_end=232
-  _FUNCTION._serialized_start=235
-  _FUNCTION._serialized_end=837
-  _FUNCTION_METADATAENTRY._serialized_start=628
-  _FUNCTION_METADATAENTRY._serialized_end=675
-  _FUNCTION_INPUTSENTRY._serialized_start=677
-  _FUNCTION_INPUTSENTRY._serialized_end=747
-  _FUNCTION_OUTPUTSENTRY._serialized_start=749
-  _FUNCTION_OUTPUTSENTRY._serialized_end=821
-  _NEWFUNCTION._serialized_start=840
-  _NEWFUNCTION._serialized_end=1395
-  _NEWFUNCTION_METADATAENTRY._serialized_start=628
-  _NEWFUNCTION_METADATAENTRY._serialized_end=675
-  _NEWFUNCTION_INPUTSENTRY._serialized_start=677
-  _NEWFUNCTION_INPUTSENTRY._serialized_end=747
-  _NEWFUNCTION_OUTPUTSENTRY._serialized_start=749
-  _NEWFUNCTION_OUTPUTSENTRY._serialized_end=821
-  _GETFUNCTIONPARAM._serialized_start=1397
-  _GETFUNCTIONPARAM._serialized_end=1424
-  _QUERYFUNCTIONSRESPONSE._serialized_start=1426
-  _QUERYFUNCTIONSRESPONSE._serialized_end=1506
-  _FUNCTIONQUERYFILTER._serialized_start=1508
-  _FUNCTIONQUERYFILTER._serialized_end=1551
-  _QUERYFUNCTIONSPARAM._serialized_start=1553
-  _QUERYFUNCTIONSPARAM._serialized_end=1656
-  _UPDATEFUNCTIONPARAM._serialized_start=1658
-  _UPDATEFUNCTIONPARAM._serialized_end=1702
-  _UPDATEFUNCTIONRESPONSE._serialized_start=1704
-  _UPDATEFUNCTIONRESPONSE._serialized_end=1724
-  _FUNCTIONSERVICE._serialized_start=1727
-  _FUNCTIONSERVICE._serialized_end=2016
+  _FUNCTIONINPUT._serialized_start=79
+  _FUNCTIONINPUT._serialized_end=169
+  _FUNCTIONOUTPUT._serialized_start=171
+  _FUNCTIONOUTPUT._serialized_end=244
+  _FUNCTION._serialized_start=247
+  _FUNCTION._serialized_end=872
+  _FUNCTION_METADATAENTRY._serialized_start=655
+  _FUNCTION_METADATAENTRY._serialized_end=702
+  _FUNCTION_INPUTSENTRY._serialized_start=704
+  _FUNCTION_INPUTSENTRY._serialized_end=778
+  _FUNCTION_OUTPUTSENTRY._serialized_start=780
+  _FUNCTION_OUTPUTSENTRY._serialized_end=856
+  _NEWFUNCTION._serialized_start=875
+  _NEWFUNCTION._serialized_end=1453
+  _NEWFUNCTION_METADATAENTRY._serialized_start=655
+  _NEWFUNCTION_METADATAENTRY._serialized_end=702
+  _NEWFUNCTION_INPUTSENTRY._serialized_start=704
+  _NEWFUNCTION_INPUTSENTRY._serialized_end=778
+  _NEWFUNCTION_OUTPUTSENTRY._serialized_start=780
+  _NEWFUNCTION_OUTPUTSENTRY._serialized_end=856
+  _GETFUNCTIONPARAM._serialized_start=1455
+  _GETFUNCTIONPARAM._serialized_end=1486
+  _QUERYFUNCTIONSRESPONSE._serialized_start=1488
+  _QUERYFUNCTIONSRESPONSE._serialized_end=1580
+  _FUNCTIONQUERYFILTER._serialized_start=1582
+  _FUNCTIONQUERYFILTER._serialized_end=1629
+  _QUERYFUNCTIONSPARAM._serialized_start=1631
+  _QUERYFUNCTIONSPARAM._serialized_end=1742
+  _UPDATEFUNCTIONPARAM._serialized_start=1744
+  _UPDATEFUNCTIONPARAM._serialized_end=1792
+  _UPDATEFUNCTIONRESPONSE._serialized_start=1794
+  _UPDATEFUNCTIONRESPONSE._serialized_end=1818
+  _FUNCTIONSERVICE._serialized_start=1821
+  _FUNCTIONSERVICE._serialized_end=2162
 # @@protoc_insertion_point(module_scope)

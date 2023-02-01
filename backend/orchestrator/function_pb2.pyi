@@ -56,7 +56,7 @@ class FunctionOutput(google.protobuf.message.Message):
 global___FunctionOutput = FunctionOutput
 
 class Function(google.protobuf.message.Message):
-    """Function represents the functionrithm code which will be used
+    """Function represents the code which will be used
     to produce or test a model.
     """
 
@@ -114,7 +114,7 @@ class Function(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    FUNCTIONRITHM_FIELD_NUMBER: builtins.int
+    FUNCTION_FIELD_NUMBER: builtins.int
     PERMISSIONS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
@@ -126,7 +126,7 @@ class Function(google.protobuf.message.Message):
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
-    def functionrithm(self) -> common_pb2.Addressable: ...
+    def function(self) -> common_pb2.Addressable: ...
     @property
     def permissions(self) -> common_pb2.Permissions: ...
     owner: builtins.str
@@ -144,7 +144,7 @@ class Function(google.protobuf.message.Message):
         key: builtins.str = ...,
         name: builtins.str = ...,
         description: common_pb2.Addressable | None = ...,
-        functionrithm: common_pb2.Addressable | None = ...,
+        function: common_pb2.Addressable | None = ...,
         permissions: common_pb2.Permissions | None = ...,
         owner: builtins.str = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
@@ -152,8 +152,8 @@ class Function(google.protobuf.message.Message):
         inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["functionrithm", b"functionrithm", "creation_date", b"creation_date", "description", b"description", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["functionrithm", b"functionrithm", "creation_date", b"creation_date", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "permissions", b"permissions"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
 
 global___Function = Function
 
@@ -216,7 +216,7 @@ class NewFunction(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    FUNCTIONRITHM_FIELD_NUMBER: builtins.int
+    FUNCTION_FIELD_NUMBER: builtins.int
     NEW_PERMISSIONS_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
@@ -226,7 +226,7 @@ class NewFunction(google.protobuf.message.Message):
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
-    def functionrithm(self) -> common_pb2.Addressable: ...
+    def function(self) -> common_pb2.Addressable: ...
     @property
     def new_permissions(self) -> common_pb2.NewPermissions: ...
     @property
@@ -241,14 +241,14 @@ class NewFunction(google.protobuf.message.Message):
         key: builtins.str = ...,
         name: builtins.str = ...,
         description: common_pb2.Addressable | None = ...,
-        functionrithm: common_pb2.Addressable | None = ...,
+        function: common_pb2.Addressable | None = ...,
         new_permissions: common_pb2.NewPermissions | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["functionrithm", b"functionrithm", "description", b"description", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["functionrithm", b"functionrithm", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["description", b"description", "function", b"function", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
 
 global___NewFunction = NewFunction
 
