@@ -40,8 +40,8 @@ def test_delete_cp_function_images(mocker: MockerFixture):
     function_1_address = orc_mock.AddressFactory(checksum="azerty")
     function_2_address = orc_mock.AddressFactory(checksum="qwerty")
     functions = [
-        orc_mock.FunctionFactory(functionrithm=function_1_address),
-        orc_mock.FunctionFactory(functionrithm=function_2_address),
+        orc_mock.FunctionFactory(function=function_1_address),
+        orc_mock.FunctionFactory(function=function_2_address),
     ]
     mocked_delete_image = mocker.patch("substrapp.tasks.tasks_compute_plan.delete_container_image_safe")
 

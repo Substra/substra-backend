@@ -47,7 +47,7 @@ def _register_in_orchestrator(request, basename, instance):
             "checksum": get_hash(instance.description),
             "storage_address": current_site + reverse("api:function-description", args=[instance.key]),
         },
-        "functionrithm": {
+        "function": {
             "checksum": instance.checksum,
             "storage_address": current_site + reverse("api:function-file", args=[instance.key]),
         },
@@ -202,7 +202,7 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, Function, "file", "functionrithm_address")
+        return self.download_file(request, Function, "file", "function_address")
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490

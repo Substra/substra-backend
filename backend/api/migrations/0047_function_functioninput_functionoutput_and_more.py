@@ -23,8 +23,8 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=100)),
                 ("description_address", models.URLField(validators=[api.models.utils.URLValidatorWithOptionalTLD()])),
                 ("description_checksum", models.CharField(max_length=64)),
-                ("functionrithm_address", models.URLField(validators=[api.models.utils.URLValidatorWithOptionalTLD()])),
-                ("functionrithm_checksum", models.CharField(max_length=64)),
+                ("function_address", models.URLField(validators=[api.models.utils.URLValidatorWithOptionalTLD()])),
+                ("function_checksum", models.CharField(max_length=64)),
                 ("permissions_download_public", models.BooleanField()),
                 (
                     "permissions_download_authorized_ids",

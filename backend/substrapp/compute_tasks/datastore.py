@@ -16,7 +16,7 @@ class Datastore:
         )
 
     def get_function(self, function: orchestrator.Function) -> bytes:
-        return self._get_from_address(function.owner, function.functionrithm)
+        return self._get_from_address(function.owner, function.function)
 
     def delete_model(self, model_key: str) -> None:
         from substrapp.models import Model

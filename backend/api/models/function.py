@@ -41,14 +41,14 @@ class FunctionOutput(models.Model):
 
 
 class Function(models.Model, AssetPermissionMixin):
-    """Function represent an functionrithm and its associated metadata"""
+    """Function represent a function and its associated metadata"""
 
     key = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=100)
     description_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
     description_checksum = models.CharField(max_length=64)
-    functionrithm_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
-    functionrithm_checksum = models.CharField(max_length=64)
+    function_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
+    function_checksum = models.CharField(max_length=64)
     permissions_download_public = models.BooleanField()
     permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     permissions_process_public = models.BooleanField()

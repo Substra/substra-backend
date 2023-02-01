@@ -27,7 +27,7 @@ def orc_metric() -> dict[str, Any]:
         "name": "my metric",
         "owner": "Org1MSP",
         "description": {"checksum": "", "storage_address": ""},
-        "functionrithm": {"checksum": "", "storage_address": ""},
+        "function": {"checksum": "", "storage_address": ""},
         "permissions": {
             "process": {"public": True, "authorized_ids": []},
             "download": {"public": True, "authorized_ids": []},

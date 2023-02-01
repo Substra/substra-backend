@@ -279,7 +279,7 @@ def get_sample_function_metadata():
         "owner": "foo",
         "permissions": DEFAULT_PERMISSIONS,
         "description": DEFAULT_STORAGE_ADDRESS,
-        "functionrithm": DEFAULT_STORAGE_ADDRESS,
+        "function": DEFAULT_STORAGE_ADDRESS,
     }
 
 
