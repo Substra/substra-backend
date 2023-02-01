@@ -421,7 +421,7 @@ ISOLATED = to_bool(os.environ.get("ISOLATED"))
 CONTENT_DISPOSITION_HEADER = {}
 
 # To encode unique jwt token generated with reset password request
-RESET_JWT_SIGNATURE_FUNCTIONRITHM = "HS256"
+RESET_JWT_SIGNATURE_ALGORITHM = "HS256"
 
 # Username of additional Django user representing user external to organization
 EXTERNAL_USERNAME = "external"
