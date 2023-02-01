@@ -4,7 +4,7 @@ import django.core.files.storage
 from django.db import migrations
 from django.db import models
 
-import substrapp.models.algo
+import substrapp.models.function
 
 
 class Migration(migrations.Migration):
