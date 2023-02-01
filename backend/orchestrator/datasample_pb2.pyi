@@ -18,8 +18,8 @@ else:
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class DataSample(google.protobuf.message.Message):
-    """DataSample represent a data sample that will be processed by an
-    functionrithm to produce or test a model.
+    """DataSample represent a data sample that will be processed by a
+    function to produce or test a model.
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor

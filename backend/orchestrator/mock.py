@@ -91,7 +91,7 @@ class FunctionFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     owner = "OrgA"
-    functionrithm = factory.SubFactory(AddressFactory)
+    function_adress = factory.SubFactory(AddressFactory)
     inputs = {}
     outputs = {}
 

@@ -197,7 +197,7 @@ class ComputeTask(google.protobuf.message.Message):
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
-    ALGO_KEY_FIELD_NUMBER: builtins.int
+    FUNCTION_KEY_FIELD_NUMBER: builtins.int
     key: builtins.str
     owner: builtins.str
     compute_plan_key: builtins.str
@@ -273,7 +273,7 @@ class NewComputeTask(google.protobuf.message.Message):
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
     KEY_FIELD_NUMBER: builtins.int
-    ALGO_KEY_FIELD_NUMBER: builtins.int
+    FUNCTION_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
     WORKER_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
@@ -340,7 +340,7 @@ class TaskQueryFilter(google.protobuf.message.Message):
     WORKER_FIELD_NUMBER: builtins.int
     STATUS_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
-    ALGO_KEY_FIELD_NUMBER: builtins.int
+    FUNCTION_KEY_FIELD_NUMBER: builtins.int
     worker: builtins.str
     status: global___ComputeTaskStatus.ValueType
     compute_plan_key: builtins.str

@@ -38,7 +38,7 @@ class AssetKind(AutoNameEnum):
     ASSET_ORGANIZATION = enum.auto()
     ASSET_DATA_SAMPLE = enum.auto()
     ASSET_DATA_MANAGER = enum.auto()
-    ASSET_ALGO = enum.auto()
+    ASSET_FUNCTION = enum.auto()
     ASSET_COMPUTE_TASK = enum.auto()
     ASSET_COMPUTEPLAN = enum.auto()
     ASSET_MODEL = enum.auto()
@@ -141,7 +141,7 @@ class FunctionOutput(pydantic.BaseModel):
 class Function(pydantic.BaseModel):
     key: str
     owner: str
-    functionrithm: Address
+    function_adress: Address
     inputs: dict[str, FunctionInput]
     outputs: dict[str, FunctionOutput]
 
@@ -150,7 +150,7 @@ class Function(pydantic.BaseModel):
         return cls(
             key=a.key,
             owner=a.owner,
-            functionrithm=Address.from_grpc(a.functionrithm),
+            functionAdress=Address.from_grpc(a.functionAdress),
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
         )

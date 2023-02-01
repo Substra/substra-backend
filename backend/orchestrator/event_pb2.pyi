@@ -76,7 +76,7 @@ class Event(google.protobuf.message.Message):
     EVENT_KIND_FIELD_NUMBER: builtins.int
     CHANNEL_FIELD_NUMBER: builtins.int
     TIMESTAMP_FIELD_NUMBER: builtins.int
-    ALGO_FIELD_NUMBER: builtins.int
+    FUNCTION_FIELD_NUMBER: builtins.int
     COMPUTE_PLAN_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_FIELD_NUMBER: builtins.int
     DATA_MANAGER_FIELD_NUMBER: builtins.int

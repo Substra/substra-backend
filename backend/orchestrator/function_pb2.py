@@ -20,31 +20,31 @@ DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nfunction.proto\x
 
 
 
-_ALGOINPUT = DESCRIPTOR.message_types_by_name['FunctionInput']
-_ALGOOUTPUT = DESCRIPTOR.message_types_by_name['FunctionOutput']
-_ALGO = DESCRIPTOR.message_types_by_name['Function']
-_ALGO_METADATAENTRY = _ALGO.nested_types_by_name['MetadataEntry']
-_ALGO_INPUTSENTRY = _ALGO.nested_types_by_name['InputsEntry']
-_ALGO_OUTPUTSENTRY = _ALGO.nested_types_by_name['OutputsEntry']
-_NEWALGO = DESCRIPTOR.message_types_by_name['NewFunction']
-_NEWALGO_METADATAENTRY = _NEWALGO.nested_types_by_name['MetadataEntry']
-_NEWALGO_INPUTSENTRY = _NEWALGO.nested_types_by_name['InputsEntry']
-_NEWALGO_OUTPUTSENTRY = _NEWALGO.nested_types_by_name['OutputsEntry']
-_GETALGOPARAM = DESCRIPTOR.message_types_by_name['GetFunctionParam']
-_QUERYALGOSRESPONSE = DESCRIPTOR.message_types_by_name['QueryFunctionsResponse']
-_ALGOQUERYFILTER = DESCRIPTOR.message_types_by_name['FunctionQueryFilter']
-_QUERYALGOSPARAM = DESCRIPTOR.message_types_by_name['QueryFunctionsParam']
-_UPDATEALGOPARAM = DESCRIPTOR.message_types_by_name['UpdateFunctionParam']
-_UPDATEALGORESPONSE = DESCRIPTOR.message_types_by_name['UpdateFunctionResponse']
+_FUNCTIONINPUT = DESCRIPTOR.message_types_by_name['FunctionInput']
+_FUNCTIONOUTPUT = DESCRIPTOR.message_types_by_name['FunctionOutput']
+_FUNCTION = DESCRIPTOR.message_types_by_name['Function']
+_FUNCTION_METADATAENTRY = _FUNCTION.nested_types_by_name['MetadataEntry']
+_FUNCTION_INPUTSENTRY = _FUNCTION.nested_types_by_name['InputsEntry']
+_FUNCTION_OUTPUTSENTRY = _FUNCTION.nested_types_by_name['OutputsEntry']
+_NEWFUNCTION = DESCRIPTOR.message_types_by_name['NewFunction']
+_NEWFUNCTION_METADATAENTRY = _NEWFUNCTION.nested_types_by_name['MetadataEntry']
+_NEWFUNCTION_INPUTSENTRY = _NEWFUNCTION.nested_types_by_name['InputsEntry']
+_NEWFUNCTION_OUTPUTSENTRY = _NEWFUNCTION.nested_types_by_name['OutputsEntry']
+_GETFUNCTIONPARAM = DESCRIPTOR.message_types_by_name['GetFunctionParam']
+_QUERYFUNCTIONSRESPONSE = DESCRIPTOR.message_types_by_name['QueryFunctionsResponse']
+_FUNCTIONQUERYFILTER = DESCRIPTOR.message_types_by_name['FunctionQueryFilter']
+_QUERYFUNCTIONSPARAM = DESCRIPTOR.message_types_by_name['QueryFunctionsParam']
+_UPDATEFUNCTIONPARAM = DESCRIPTOR.message_types_by_name['UpdateFunctionParam']
+_UPDATEFUNCTIONRESPONSE = DESCRIPTOR.message_types_by_name['UpdateFunctionResponse']
 FunctionInput = _reflection.GeneratedProtocolMessageType('FunctionInput', (_message.Message,), {
-  'DESCRIPTOR' : _ALGOINPUT,
+  'DESCRIPTOR' : _FUNCTIONINPUT,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.FunctionInput)
   })
 _sym_db.RegisterMessage(FunctionInput)
 
 FunctionOutput = _reflection.GeneratedProtocolMessageType('FunctionOutput', (_message.Message,), {
-  'DESCRIPTOR' : _ALGOOUTPUT,
+  'DESCRIPTOR' : _FUNCTIONOUTPUT,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.FunctionOutput)
   })
@@ -53,26 +53,26 @@ _sym_db.RegisterMessage(FunctionOutput)
 Function = _reflection.GeneratedProtocolMessageType('Function', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
-    'DESCRIPTOR' : _ALGO_METADATAENTRY,
+    'DESCRIPTOR' : _FUNCTION_METADATAENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.Function.MetadataEntry)
     })
   ,
 
   'InputsEntry' : _reflection.GeneratedProtocolMessageType('InputsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _ALGO_INPUTSENTRY,
+    'DESCRIPTOR' : _FUNCTION_INPUTSENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.Function.InputsEntry)
     })
   ,
 
   'OutputsEntry' : _reflection.GeneratedProtocolMessageType('OutputsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _ALGO_OUTPUTSENTRY,
+    'DESCRIPTOR' : _FUNCTION_OUTPUTSENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.Function.OutputsEntry)
     })
   ,
-  'DESCRIPTOR' : _ALGO,
+  'DESCRIPTOR' : _FUNCTION,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.Function)
   })
@@ -84,26 +84,26 @@ _sym_db.RegisterMessage(Function.OutputsEntry)
 NewFunction = _reflection.GeneratedProtocolMessageType('NewFunction', (_message.Message,), {
 
   'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
-    'DESCRIPTOR' : _NEWALGO_METADATAENTRY,
+    'DESCRIPTOR' : _NEWFUNCTION_METADATAENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewFunction.MetadataEntry)
     })
   ,
 
   'InputsEntry' : _reflection.GeneratedProtocolMessageType('InputsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _NEWALGO_INPUTSENTRY,
+    'DESCRIPTOR' : _NEWFUNCTION_INPUTSENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewFunction.InputsEntry)
     })
   ,
 
   'OutputsEntry' : _reflection.GeneratedProtocolMessageType('OutputsEntry', (_message.Message,), {
-    'DESCRIPTOR' : _NEWALGO_OUTPUTSENTRY,
+    'DESCRIPTOR' : _NEWFUNCTION_OUTPUTSENTRY,
     '__module__' : 'function_pb2'
     # @@protoc_insertion_point(class_scope:orchestrator.NewFunction.OutputsEntry)
     })
   ,
-  'DESCRIPTOR' : _NEWALGO,
+  'DESCRIPTOR' : _NEWFUNCTION,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.NewFunction)
   })
@@ -113,96 +113,96 @@ _sym_db.RegisterMessage(NewFunction.InputsEntry)
 _sym_db.RegisterMessage(NewFunction.OutputsEntry)
 
 GetFunctionParam = _reflection.GeneratedProtocolMessageType('GetFunctionParam', (_message.Message,), {
-  'DESCRIPTOR' : _GETALGOPARAM,
+  'DESCRIPTOR' : _GETFUNCTIONPARAM,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.GetFunctionParam)
   })
 _sym_db.RegisterMessage(GetFunctionParam)
 
 QueryFunctionsResponse = _reflection.GeneratedProtocolMessageType('QueryFunctionsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _QUERYALGOSRESPONSE,
+  'DESCRIPTOR' : _QUERYFUNCTIONSRESPONSE,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.QueryFunctionsResponse)
   })
 _sym_db.RegisterMessage(QueryFunctionsResponse)
 
 FunctionQueryFilter = _reflection.GeneratedProtocolMessageType('FunctionQueryFilter', (_message.Message,), {
-  'DESCRIPTOR' : _ALGOQUERYFILTER,
+  'DESCRIPTOR' : _FUNCTIONQUERYFILTER,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.FunctionQueryFilter)
   })
 _sym_db.RegisterMessage(FunctionQueryFilter)
 
 QueryFunctionsParam = _reflection.GeneratedProtocolMessageType('QueryFunctionsParam', (_message.Message,), {
-  'DESCRIPTOR' : _QUERYALGOSPARAM,
+  'DESCRIPTOR' : _QUERYFUNCTIONSPARAM,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.QueryFunctionsParam)
   })
 _sym_db.RegisterMessage(QueryFunctionsParam)
 
 UpdateFunctionParam = _reflection.GeneratedProtocolMessageType('UpdateFunctionParam', (_message.Message,), {
-  'DESCRIPTOR' : _UPDATEALGOPARAM,
+  'DESCRIPTOR' : _UPDATEFUNCTIONPARAM,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.UpdateFunctionParam)
   })
 _sym_db.RegisterMessage(UpdateFunctionParam)
 
 UpdateFunctionResponse = _reflection.GeneratedProtocolMessageType('UpdateFunctionResponse', (_message.Message,), {
-  'DESCRIPTOR' : _UPDATEALGORESPONSE,
+  'DESCRIPTOR' : _UPDATEFUNCTIONRESPONSE,
   '__module__' : 'function_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.UpdateFunctionResponse)
   })
 _sym_db.RegisterMessage(UpdateFunctionResponse)
 
-_ALGOSERVICE = DESCRIPTOR.services_by_name['FunctionService']
+_FUNCTIONSERVICE = DESCRIPTOR.services_by_name['FunctionService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z)github.com/substra/orchestrator/lib/asset'
-  _ALGO_METADATAENTRY._options = None
-  _ALGO_METADATAENTRY._serialized_options = b'8\001'
-  _ALGO_INPUTSENTRY._options = None
-  _ALGO_INPUTSENTRY._serialized_options = b'8\001'
-  _ALGO_OUTPUTSENTRY._options = None
-  _ALGO_OUTPUTSENTRY._serialized_options = b'8\001'
-  _NEWALGO_METADATAENTRY._options = None
-  _NEWALGO_METADATAENTRY._serialized_options = b'8\001'
-  _NEWALGO_INPUTSENTRY._options = None
-  _NEWALGO_INPUTSENTRY._serialized_options = b'8\001'
-  _NEWALGO_OUTPUTSENTRY._options = None
-  _NEWALGO_OUTPUTSENTRY._serialized_options = b'8\001'
-  _ALGOINPUT._serialized_start=75
-  _ALGOINPUT._serialized_end=161
-  _ALGOOUTPUT._serialized_start=163
-  _ALGOOUTPUT._serialized_end=232
-  _ALGO._serialized_start=235
-  _ALGO._serialized_end=837
-  _ALGO_METADATAENTRY._serialized_start=628
-  _ALGO_METADATAENTRY._serialized_end=675
-  _ALGO_INPUTSENTRY._serialized_start=677
-  _ALGO_INPUTSENTRY._serialized_end=747
-  _ALGO_OUTPUTSENTRY._serialized_start=749
-  _ALGO_OUTPUTSENTRY._serialized_end=821
-  _NEWALGO._serialized_start=840
-  _NEWALGO._serialized_end=1395
-  _NEWALGO_METADATAENTRY._serialized_start=628
-  _NEWALGO_METADATAENTRY._serialized_end=675
-  _NEWALGO_INPUTSENTRY._serialized_start=677
-  _NEWALGO_INPUTSENTRY._serialized_end=747
-  _NEWALGO_OUTPUTSENTRY._serialized_start=749
-  _NEWALGO_OUTPUTSENTRY._serialized_end=821
-  _GETALGOPARAM._serialized_start=1397
-  _GETALGOPARAM._serialized_end=1424
-  _QUERYALGOSRESPONSE._serialized_start=1426
-  _QUERYALGOSRESPONSE._serialized_end=1506
-  _ALGOQUERYFILTER._serialized_start=1508
-  _ALGOQUERYFILTER._serialized_end=1551
-  _QUERYALGOSPARAM._serialized_start=1553
-  _QUERYALGOSPARAM._serialized_end=1656
-  _UPDATEALGOPARAM._serialized_start=1658
-  _UPDATEALGOPARAM._serialized_end=1702
-  _UPDATEALGORESPONSE._serialized_start=1704
-  _UPDATEALGORESPONSE._serialized_end=1724
-  _ALGOSERVICE._serialized_start=1727
-  _ALGOSERVICE._serialized_end=2016
+  _FUNCTION_METADATAENTRY._options = None
+  _FUNCTION_METADATAENTRY._serialized_options = b'8\001'
+  _FUNCTION_INPUTSENTRY._options = None
+  _FUNCTION_INPUTSENTRY._serialized_options = b'8\001'
+  _FUNCTION_OUTPUTSENTRY._options = None
+  _FUNCTION_OUTPUTSENTRY._serialized_options = b'8\001'
+  _NEWFUNCTION_METADATAENTRY._options = None
+  _NEWFUNCTION_METADATAENTRY._serialized_options = b'8\001'
+  _NEWFUNCTION_INPUTSENTRY._options = None
+  _NEWFUNCTION_INPUTSENTRY._serialized_options = b'8\001'
+  _NEWFUNCTION_OUTPUTSENTRY._options = None
+  _NEWFUNCTION_OUTPUTSENTRY._serialized_options = b'8\001'
+  _FUNCTIONINPUT._serialized_start=75
+  _FUNCTIONINPUT._serialized_end=161
+  _FUNCTIONOUTPUT._serialized_start=163
+  _FUNCTIONOUTPUT._serialized_end=232
+  _FUNCTION._serialized_start=235
+  _FUNCTION._serialized_end=837
+  _FUNCTION_METADATAENTRY._serialized_start=628
+  _FUNCTION_METADATAENTRY._serialized_end=675
+  _FUNCTION_INPUTSENTRY._serialized_start=677
+  _FUNCTION_INPUTSENTRY._serialized_end=747
+  _FUNCTION_OUTPUTSENTRY._serialized_start=749
+  _FUNCTION_OUTPUTSENTRY._serialized_end=821
+  _NEWFUNCTION._serialized_start=840
+  _NEWFUNCTION._serialized_end=1395
+  _NEWFUNCTION_METADATAENTRY._serialized_start=628
+  _NEWFUNCTION_METADATAENTRY._serialized_end=675
+  _NEWFUNCTION_INPUTSENTRY._serialized_start=677
+  _NEWFUNCTION_INPUTSENTRY._serialized_end=747
+  _NEWFUNCTION_OUTPUTSENTRY._serialized_start=749
+  _NEWFUNCTION_OUTPUTSENTRY._serialized_end=821
+  _GETFUNCTIONPARAM._serialized_start=1397
+  _GETFUNCTIONPARAM._serialized_end=1424
+  _QUERYFUNCTIONSRESPONSE._serialized_start=1426
+  _QUERYFUNCTIONSRESPONSE._serialized_end=1506
+  _FUNCTIONQUERYFILTER._serialized_start=1508
+  _FUNCTIONQUERYFILTER._serialized_end=1551
+  _QUERYFUNCTIONSPARAM._serialized_start=1553
+  _QUERYFUNCTIONSPARAM._serialized_end=1656
+  _UPDATEFUNCTIONPARAM._serialized_start=1658
+  _UPDATEFUNCTIONPARAM._serialized_end=1702
+  _UPDATEFUNCTIONRESPONSE._serialized_start=1704
+  _UPDATEFUNCTIONRESPONSE._serialized_end=1724
+  _FUNCTIONSERVICE._serialized_start=1727
+  _FUNCTIONSERVICE._serialized_end=2016
 # @@protoc_insertion_point(module_scope)

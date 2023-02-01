@@ -114,7 +114,7 @@ class Function(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    ALGORITHM_FIELD_NUMBER: builtins.int
+    FUNCTIONRITHM_FIELD_NUMBER: builtins.int
     PERMISSIONS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
@@ -216,7 +216,7 @@ class NewFunction(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    ALGORITHM_FIELD_NUMBER: builtins.int
+    FUNCTIONRITHM_FIELD_NUMBER: builtins.int
     NEW_PERMISSIONS_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
@@ -269,7 +269,7 @@ global___GetFunctionParam = GetFunctionParam
 class QueryFunctionsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    ALGOS_FIELD_NUMBER: builtins.int
+    FUNCTIONS_FIELD_NUMBER: builtins.int
     NEXT_PAGE_TOKEN_FIELD_NUMBER: builtins.int
     @property
     def Functions(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Function]: ...
