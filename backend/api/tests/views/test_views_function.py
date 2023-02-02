@@ -314,7 +314,7 @@ class FunctionViewTests(APITestCase):
 
     def test_function_match(self):
         """Match function on part of the name."""
-        params = urlencode({"match": "le al"})
+        params = urlencode({"match": "le fu"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
@@ -325,7 +325,7 @@ class FunctionViewTests(APITestCase):
         params = urlencode(
             {
                 "key": self.expected_functions[0]["key"],
-                "match": "le al",
+                "match": "le fu",
             }
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
