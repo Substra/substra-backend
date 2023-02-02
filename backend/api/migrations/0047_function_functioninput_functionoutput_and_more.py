@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
             model_name="computetask",
             name="function",
             field=models.ForeignKey(
-                default="api.algo.key",
+                null=True,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="compute_tasks",
                 to="api.function",
