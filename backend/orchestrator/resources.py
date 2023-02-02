@@ -141,7 +141,7 @@ class FunctionOutput(pydantic.BaseModel):
 class Function(pydantic.BaseModel):
     key: str
     owner: str
-    function_adress: Address
+    function_address: Address
     inputs: dict[str, FunctionInput]
     outputs: dict[str, FunctionOutput]
 
@@ -150,7 +150,7 @@ class Function(pydantic.BaseModel):
         return cls(
             key=a.key,
             owner=a.owner,
-            functionAdress=Address.from_grpc(a.functionAdress),
+            function_address=Address.from_grpc(a.functionAddress),
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
         )
