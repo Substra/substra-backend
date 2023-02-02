@@ -8,6 +8,14 @@ from django.db import models
 import api.models.utils
 
 
+def migrate_keys(apps, schema_editor):
+    algo_model = apps.get_model("api", "compute_task", "algo")
+    function_model = apps.get_model("api", "compute_task", "function")
+
+    for algo in algo_model.objects.all().values():
+        function_model.objects.create(**algo)
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("api", "0046_remove_computeplan_failed_task_category"),
@@ -108,10 +116,6 @@ class Migration(migrations.Migration):
             model_name="algooutput",
             name="algo",
         ),
-        migrations.RemoveField(
-            model_name="computetask",
-            name="algo",
-        ),
         migrations.DeleteModel(
             name="AlgoInput",
         ),
@@ -128,6 +132,11 @@ class Migration(migrations.Migration):
                 to="api.function",
             ),
             preserve_default=False,
+        ),
+        migrations.RunPython(migrate_keys),
+        migrations.RemoveField(
+            model_name="computetask",
+            name="algo",
         ),
         migrations.AlterField(
             model_name="performance",
