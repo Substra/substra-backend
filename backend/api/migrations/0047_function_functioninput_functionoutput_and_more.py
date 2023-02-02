@@ -122,7 +122,7 @@ class Migration(migrations.Migration):
             model_name="computetask",
             name="function",
             field=models.ForeignKey(
-                null=True,
+                default=None,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="compute_tasks",
                 to="api.function",
@@ -136,7 +136,6 @@ class Migration(migrations.Migration):
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="performances",
                 to="api.function",
-                null=True,
             ),
         ),
         migrations.DeleteModel(
