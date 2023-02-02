@@ -133,7 +133,10 @@ class Migration(migrations.Migration):
             model_name="performance",
             name="metric",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.DO_NOTHING, related_name="performances", to="api.function"
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="performances",
+                to="api.function",
+                null=True,
             ),
         ),
         migrations.DeleteModel(
