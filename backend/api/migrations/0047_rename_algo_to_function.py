@@ -15,8 +15,13 @@ class Migration(migrations.Migration):
         ),
         migrations.RenameField(
             model_name="function",
-            old_name="algorithm",
+            old_name="algorithm_address",
             new_name="function_address",
+        ),
+        migrations.RenameField(
+            model_name="function",
+            old_name="algorithm_checksum",
+            new_name="function_checksum",
         ),
         migrations.RenameModel(
             old_name="AlgoInput",
