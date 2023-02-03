@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
             old_name="Algo",
             new_name="Function",
         ),
+        migrations.RenameField(
+            model_name="function",
+            old_name="algorithm",
+            new_name="function_address",
+        ),
         migrations.RenameModel(
             old_name="AlgoInput",
             new_name="FunctionInput",
