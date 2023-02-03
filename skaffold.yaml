@@ -175,7 +175,7 @@ profiles:
           docker:
             dockerfile: docker/metrics-exporter/Dockerfile
       - op: add
-        path: /deploy/helm/releases/0/artifactOverrides/server.metrics.image
+        path: /deploy/helm/releases/0/setValues/server.metrics.image
         value: substra/metrics-exporter
       - op: add
         path: /deploy/helm/releases/0/setValues/server.metrics.enabled
