@@ -38,7 +38,6 @@ deploy:
           worker.events.image: *image-params
           worker.image: *image-params
         createNamespace: true
-        skipBuildDependencies: true
         
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -64,6 +63,11 @@ profiles:
       - op: add
         path: /deploy/helm/releases/1/setValues/settings
         value: prod
+   - name: nodeps
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/skipBuildDependencies
+        value: true
   - name: dev
     patches:
       - op: add
