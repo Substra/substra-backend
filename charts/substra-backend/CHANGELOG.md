@@ -1,9 +1,14 @@
 # Changelog
 
-## 22.3.1
+## 22.3.2
 
 ### Changed
 - Update substra-backend image tag to `0.35.0`
+
+## 22.3.1
+
+### Changed
+- Update chart maintainers
 
 ## 22.3.0
 
