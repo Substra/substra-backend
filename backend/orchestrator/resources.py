@@ -150,7 +150,7 @@ class Function(pydantic.BaseModel):
         return cls(
             key=a.key,
             owner=a.owner,
-            function_address=Address.from_grpc(a.function_address),
+            function_address=Address.from_grpc(a.function),
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
         )
