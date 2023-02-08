@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Added
+
+- Add filters to performances export (#590)
+
 ### Changed
 
 - BREAKING: rename Algo to Function ([#573](https://github.com/Substra/substra-backend/pull/573))

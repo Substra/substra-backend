@@ -82,6 +82,8 @@ class PerformanceFilter(FilterSet):
     )
     key = UUIDInFilter(field_name="compute_task__compute_plan__key")
     owner = CharInFilter(field_name="compute_task__compute_plan__owner")
+    metric_key = UUIDInFilter(field_name="metric__key")
+    metric_output_identifier = CharInFilter(field_name="metric__outputs__identifier")
 
 
 class PerformanceMatchFilter(MatchFilter):
@@ -131,7 +133,7 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task", "metric", "compute_task__compute_plan")
+            .select_related("compute_task", "metric", "compute_task__compute_plan", "metric__outputs")
             .annotate(
                 compute_plan_key=F("compute_task__compute_plan__key"),
                 compute_plan_name=F("compute_task__compute_plan__name"),
