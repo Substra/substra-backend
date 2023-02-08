@@ -37,7 +37,7 @@ class ComputePod:
 
     @property
     def name(self) -> str:
-        return f"substra-{self.compute_plan_key[:8]}-compute-{self.function_key[:8]}"
+        return f"substra-{self.compute_plan_key[:8]}-compute-{self.function_key[:12]}"
 
     @staticmethod
     def get_compute_plan_label_selector(compute_plan_key: str) -> str:
