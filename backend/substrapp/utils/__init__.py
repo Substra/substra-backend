@@ -118,20 +118,20 @@ def uncompress_content(archive_content, to_directory):
             raise Exception("Archive must be zip or tar.*")
 
 
-def timeit(function):
+def timeit(function_to_time):
     def timed(*args, **kw):
         ts = time.time()
         exception = None
 
         try:
-            result = function(*args, **kw)
+            result = function_to_time(*args, **kw)
         except Exception as ex:
             exception = ex
 
         elaps = (time.time() - ts) * 1000
 
         log_data = {
-            "function": function.__name__,
+            "function": function_to_time.__name__,
             "duration": f"{elaps:.2f}ms",
         }
 
