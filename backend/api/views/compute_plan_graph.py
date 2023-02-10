@@ -39,7 +39,9 @@ def get_cp_graph(request, compute_plan_pk):
         ComputeTask.objects.filter(key=OuterRef("pk"))
         .annotate(
             outputs_specs=JSONBAgg(
-                JsonbBuildObj(Value("identifier"), F("algo__outputs__identifier"), Value("kind"), "algo__outputs__kind")
+                JsonbBuildObj(
+                    Value("identifier"), F("function__outputs__identifier"), Value("kind"), "function__outputs__kind"
+                )
             ),
         )
         .values("outputs_specs")
@@ -49,7 +51,9 @@ def get_cp_graph(request, compute_plan_pk):
         ComputeTask.objects.filter(key=OuterRef("pk"))
         .annotate(
             inputs_specs=JSONBAgg(
-                JsonbBuildObj(Value("identifier"), F("algo__inputs__identifier"), Value("kind"), "algo__inputs__kind")
+                JsonbBuildObj(
+                    Value("identifier"), F("function__inputs__identifier"), Value("kind"), "function__inputs__kind"
+                )
             ),
         )
         .values("inputs_specs")

@@ -51,11 +51,11 @@ class DataManagerViewTests(APITestCase):
         # only for retrieve view
         self.data_sample_keys = [str(data_sample_1.key), str(data_sample_2.key)]
 
-        self.algo = factory.create_algo()
+        self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
         self.data_sample_1_key_uuid = data_sample_1.key
         factory.create_computetask(
-            self.compute_plan, self.algo, data_manager=data_manager_1, data_samples=[data_sample_1.key]
+            self.compute_plan, self.function, data_manager=data_manager_1, data_samples=[data_sample_1.key]
         )
 
         data_manager_2 = factory.create_datamanager()
@@ -246,14 +246,14 @@ class DataManagerViewTests(APITestCase):
         )
 
     def test_datamanager_list_cross_assets_filters(self):
-        """Filter datamanager on other asset key such as compute_plan_key, algo_key and data_sample_key"""
+        """Filter datamanager on other asset key such as compute_plan_key, function_key and data_sample_key"""
         # filter on compute_plan_key
         params = urlencode({"compute_plan_key": self.compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
-        # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
+        # filter on function_key
+        params = urlencode({"function_key": self.function.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
@@ -495,14 +495,14 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_retrieve_with_tasks(self):
         """Ensure the ordering association table does not create duplicate."""
         compute_plan = factory.create_computeplan()
-        algo = factory.create_algo()
+        function = factory.create_function()
         data_manager = factory.create_datamanager()
         data_sample = factory.create_datasample([data_manager])
         # Creating compute tasks will insert ordering objects `TaskDataSamples`
         for _ in range(3):
             factory.create_computetask(
                 compute_plan,
-                algo,
+                function,
                 data_manager=data_manager,
                 data_samples=[data_sample.key],
             )

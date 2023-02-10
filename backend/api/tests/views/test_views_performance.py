@@ -35,8 +35,8 @@ class CPPerformanceViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:compute_plan_perf-list", args=[self.compute_plan.key])
 
-        self.metric = factory.create_algo(
-            outputs=factory.build_algo_outputs(["performance"]),
+        self.metric = factory.create_function(
+            outputs=factory.build_function_outputs(["performance"]),
         )
         self.compute_tasks = [
             factory.create_computetask(
@@ -69,7 +69,7 @@ class CPPerformanceViewTests(APITestCase):
                 "compute_task": {
                     "key": str(self.compute_tasks[0].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
+                    "function_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": 1,
                     "data_samples": [str(self.data_sample.key)],
@@ -86,7 +86,7 @@ class CPPerformanceViewTests(APITestCase):
                 "compute_task": {
                     "key": str(self.compute_tasks[1].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
+                    "function_key": str(self.metric.key),
                     "rank": 2,
                     "round_idx": 1,
                     "data_samples": [str(self.data_sample.key)],
@@ -103,7 +103,7 @@ class CPPerformanceViewTests(APITestCase):
                 "compute_task": {
                     "key": str(self.compute_tasks[2].key),
                     "data_manager_key": str(self.data_manager.key),
-                    "algo_key": str(self.metric.key),
+                    "function_key": str(self.metric.key),
                     "rank": 3,
                     "round_idx": 1,
                     "data_samples": [str(self.data_sample.key)],
@@ -173,8 +173,8 @@ class PerformanceViewTests(APITestCase):
         self.export_url = reverse("api:performance-export")
 
         self.metrics = [
-            factory.create_algo(
-                outputs=factory.build_algo_outputs(["performance"]),
+            factory.create_function(
+                outputs=factory.build_function_outputs(["performance"]),
             )
             for _ in range(3)
         ]

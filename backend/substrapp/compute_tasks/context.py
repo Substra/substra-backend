@@ -47,7 +47,7 @@ class Context:
     _compute_plan: orchestrator.ComputePlan
     _input_assets: list[orchestrator.ComputeTaskInputAsset]
     _directories: Directories
-    _algo: orchestrator.Algo
+    _function: orchestrator.Function
     _has_chainkeys: bool
     _outputs: list[OutputResource]
 
@@ -57,7 +57,7 @@ class Context:
         task: orchestrator.ComputeTask,
         compute_plan: orchestrator.ComputePlan,
         input_assets: list[orchestrator.ComputeTaskInputAsset],
-        algo: orchestrator.Algo,
+        function: orchestrator.Function,
         directories: Directories,
         has_chainkeys: bool,
     ):
@@ -67,8 +67,8 @@ class Context:
         self._input_assets = input_assets
         self._directories = directories
         self._has_chainkeys = has_chainkeys
-        self._algo = algo
-        self._outputs = self._get_output_resources(task, algo)
+        self._function = function
+        self._outputs = self._get_output_resources(task, function)
 
     @classmethod
     def from_task(cls, channel_name: str, task: orchestrator.ComputeTask):
@@ -78,7 +78,7 @@ class Context:
         with get_orchestrator_client(channel_name) as client:
             compute_plan = client.query_compute_plan(compute_plan_key)
             input_assets = client.get_task_input_assets(task.key)
-            algo = client.query_algo(task.algo_key)
+            function = client.query_function(task.function_key)
 
         logger.debug("retrieved input assets from orchestrator", input_assets=input_assets)
 
@@ -86,7 +86,7 @@ class Context:
 
         has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and bool(compute_plan.tag)
 
-        return cls(channel_name, task, compute_plan, input_assets, algo, directories, has_chainkeys)
+        return cls(channel_name, task, compute_plan, input_assets, function, directories, has_chainkeys)
 
     @property
     def channel_name(self) -> str:
@@ -118,8 +118,8 @@ class Context:
         return [input.model for input in self._input_assets if input.kind == orchestrator.AssetKind.ASSET_MODEL]
 
     @property
-    def algo(self) -> orchestrator.Algo:
-        return self._algo
+    def function(self) -> orchestrator.Function:
+        return self._function
 
     @property
     def compute_plan(self) -> orchestrator.ComputePlan:
@@ -148,8 +148,8 @@ class Context:
     def outputs(self) -> list[OutputResource]:
         return self._outputs
 
-    def get_compute_pod(self, algo_key: str) -> ComputePod:
-        return ComputePod(self.compute_plan_key, algo_key)
+    def get_compute_pod(self, function_key: str) -> ComputePod:
+        return ComputePod(self.compute_plan_key, function_key)
 
     def _get_output_path(self, kind: orchestrator.AssetKind, identifier: str) -> str:
         if kind == orchestrator.AssetKind.ASSET_MODEL:
@@ -159,19 +159,21 @@ class Context:
 
         raise UnsupportedOutputAsset(f"{identifier} output has an unsupported kind {kind}")
 
-    def _get_output_resources(self, task: orchestrator.ComputeTask, algo: orchestrator.Algo) -> list[OutputResource]:
-        """return the list of OutputResource built from task outputs and algo output definitions"""
+    def _get_output_resources(
+        self, task: orchestrator.ComputeTask, function: orchestrator.Function
+    ) -> list[OutputResource]:
+        """return the list of OutputResource built from task outputs and function output definitions"""
         outputs = []
 
         for identifier in task.outputs:
-            algo_out = algo.outputs[identifier]
+            function_out = function.outputs[identifier]
 
             outputs.append(
                 OutputResource(
                     identifier=identifier,
-                    kind=algo_out.kind,
-                    multiple=algo_out.multiple,
-                    rel_path=self._get_output_path(algo_out.kind, identifier),
+                    kind=function_out.kind,
+                    multiple=function_out.multiple,
+                    rel_path=self._get_output_path(function_out.kind, identifier),
                 )
             )
 

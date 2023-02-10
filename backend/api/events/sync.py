@@ -22,12 +22,12 @@ from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Model
-from api.serializers import AlgoSerializer
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
 from api.serializers import ComputeTaskSerializer
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
+from api.serializers import FunctionSerializer
 from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
@@ -66,35 +66,35 @@ def _create_organization(channel: str, data: dict) -> None:
         logger.debug("Organization already exists", organization_id=data["id"], channel=data["channel"])
 
 
-def _on_create_algo_event(event: dict) -> None:
-    """Process create algo event to update local database."""
-    logger.debug("Syncing algo create", asset_key=event["asset_key"], event_id=event["id"])
-    _create_algo(channel=event["channel"], data=event["algo"])
+def _on_create_function_event(event: dict) -> None:
+    """Process create function event to update local database."""
+    logger.debug("Syncing function create", asset_key=event["asset_key"], event_id=event["id"])
+    _create_function(channel=event["channel"], data=event["function"])
 
 
-def _create_algo(channel: str, data: dict) -> None:
+def _create_function(channel: str, data: dict) -> None:
     data["channel"] = channel
-    serializer = AlgoSerializer(data=data)
+    serializer = FunctionSerializer(data=data)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
-        logger.debug("Algo already exists", asset_key=data["key"])
+        logger.debug("Function already exists", asset_key=data["key"])
 
 
-def _on_update_algo_event(event: dict) -> None:
-    """Process update algo event to update local database."""
-    logger.debug("Syncing algo update", asset_key=event["asset_key"], event_id=event["id"])
-    _update_algo(key=event["asset_key"], data=event["algo"])
+def _on_update_function_event(event: dict) -> None:
+    """Process update function event to update local database."""
+    logger.debug("Syncing function update", asset_key=event["asset_key"], event_id=event["id"])
+    _update_function(key=event["asset_key"], data=event["function"])
 
 
-def _update_algo(key: str, data: dict) -> None:
-    """Process update algo event to update local database."""
+def _update_function(key: str, data: dict) -> None:
+    """Process update function event to update local database."""
 
-    from api.models.algo import Algo
+    from api.models.function import Function
 
-    algo = Algo.objects.get(key=key)
-    algo.name = data["name"]
-    algo.save()
+    function = Function.objects.get(key=key)
+    function.name = data["name"]
+    function.save()
 
 
 def _on_create_computeplan_event(event: dict) -> None:
@@ -385,9 +385,9 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computeplan_event,
         event_pb2.EVENT_ASSET_UPDATED: _on_update_computeplan_event,
     },
-    common_pb2.ASSET_ALGO: {
-        event_pb2.EVENT_ASSET_CREATED: _on_create_algo_event,
-        event_pb2.EVENT_ASSET_UPDATED: _on_update_algo_event,
+    common_pb2.ASSET_FUNCTION: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_function_event,
+        event_pb2.EVENT_ASSET_UPDATED: _on_update_function_event,
     },
     common_pb2.ASSET_COMPUTE_TASK: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computetask_event,

@@ -175,7 +175,7 @@ DATABASES = {
 
 DATASAMPLE_STORAGE = FileSystemStorage()
 MODEL_STORAGE = FileSystemStorage()
-ALGO_STORAGE = FileSystemStorage()
+FUNCTION_STORAGE = FileSystemStorage()
 DATAMANAGER_STORAGE = FileSystemStorage()
 METRICS_STORAGE = FileSystemStorage()
 COMPUTE_TASK_LOGS_STORAGE = FileSystemStorage()

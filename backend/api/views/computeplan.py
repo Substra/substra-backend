@@ -123,7 +123,7 @@ class ComputePlanFilter(FilterSet):
         field_name="status",
         choices=ComputePlan.Status.choices,
     )
-    algo_key = CharFilter(field_name="compute_tasks__algo__key", distinct=True, label="algo_key")
+    function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
     data_sample_key = CharInFilter(
         field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"

@@ -5,9 +5,9 @@ from django.core.files import File
 from django.test import TestCase
 from django.test import override_settings
 
-from substrapp.models import Algo
 from substrapp.models import DataManager
 from substrapp.models import DataSample
+from substrapp.models import Function
 from substrapp.models import Model
 from substrapp.utils import get_hash
 
@@ -36,10 +36,10 @@ class ModelTests(TestCase):
         data_sample = DataSample.objects.create(file=File(data_file), checksum="checksum")
         self.assertEqual(data_sample.checksum, "checksum")
 
-    def test_create_algo(self):
+    def test_create_function(self):
         script, _ = get_sample_script()
-        algo = Algo.objects.create(file=script)
-        self.assertEqual(algo.checksum, get_hash(script))
+        function = Function.objects.create(file=script)
+        self.assertEqual(function.checksum, get_hash(script))
 
     def test_create_model(self):
         modelfile, _ = get_sample_model()

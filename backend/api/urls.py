@@ -18,8 +18,8 @@ router.register(r"model", views.ModelPermissionViewSet, basename="model")
 router.register(r"data_sample", views.DataSampleViewSet, basename="data_sample")
 router.register(r"data_manager", views.DataManagerViewSet, basename="data_manager")
 router.register(r"data_manager", views.DataManagerPermissionViewSet, basename="data_manager")
-router.register(r"algo", views.AlgoViewSet, basename="algo")
-router.register(r"algo", views.AlgoPermissionViewSet, basename="algo")
+router.register(r"function", views.FunctionViewSet, basename="function")
+router.register(r"function", views.FunctionPermissionViewSet, basename="function")
 router.register(r"task", views.ComputeTaskViewSet, basename="task")
 router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_plan")
 router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, basename="compute_plan_metadata")
@@ -33,7 +33,7 @@ task_profiling_router.register(r"step", views.TaskProfilingStepViewSet, basename
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
 compute_plan_router.register(r"task", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}task")
-compute_plan_router.register(r"algos", views.CPAlgoViewSet, basename=f"{CP_BASENAME_PREFIX}algo")
+compute_plan_router.register(r"functions", views.CPFunctionViewSet, basename=f"{CP_BASENAME_PREFIX}function")
 compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP_BASENAME_PREFIX}perf")
 
 

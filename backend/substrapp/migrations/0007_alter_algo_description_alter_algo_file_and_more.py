@@ -4,8 +4,8 @@ import django.core.files.storage
 from django.db import migrations
 from django.db import models
 
-import substrapp.models.algo
 import substrapp.models.datamanager
+import substrapp.models.function
 
 
 def metric_upload_to(instance, filename) -> str:
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 max_length=500,
                 storage=django.core.files.storage.FileSystemStorage(),
-                upload_to=substrapp.models.algo.upload_to,
+                upload_to=substrapp.models.function.upload_to,
             ),
         ),
         migrations.AlterField(
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 max_length=500,
                 storage=django.core.files.storage.FileSystemStorage(),
-                upload_to=substrapp.models.algo.upload_to,
+                upload_to=substrapp.models.function.upload_to,
             ),
         ),
         migrations.AlterField(

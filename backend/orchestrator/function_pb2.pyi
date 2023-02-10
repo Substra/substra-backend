@@ -18,7 +18,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-class AlgoInput(google.protobuf.message.Message):
+class FunctionInput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KIND_FIELD_NUMBER: builtins.int
@@ -36,9 +36,9 @@ class AlgoInput(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["kind", b"kind", "multiple", b"multiple", "optional", b"optional"]) -> None: ...
 
-global___AlgoInput = AlgoInput
+global___FunctionInput = FunctionInput
 
-class AlgoOutput(google.protobuf.message.Message):
+class FunctionOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KIND_FIELD_NUMBER: builtins.int
@@ -53,10 +53,10 @@ class AlgoOutput(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["kind", b"kind", "multiple", b"multiple"]) -> None: ...
 
-global___AlgoOutput = AlgoOutput
+global___FunctionOutput = FunctionOutput
 
-class Algo(google.protobuf.message.Message):
-    """Algo represents the algorithm code which will be used
+class Function(google.protobuf.message.Message):
+    """Function represents the code which will be used
     to produce or test a model.
     """
 
@@ -84,12 +84,12 @@ class Algo(google.protobuf.message.Message):
         VALUE_FIELD_NUMBER: builtins.int
         key: builtins.str
         @property
-        def value(self) -> global___AlgoInput: ...
+        def value(self) -> global___FunctionInput: ...
         def __init__(
             self,
             *,
             key: builtins.str = ...,
-            value: global___AlgoInput | None = ...,
+            value: global___FunctionInput | None = ...,
         ) -> None: ...
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
@@ -101,12 +101,12 @@ class Algo(google.protobuf.message.Message):
         VALUE_FIELD_NUMBER: builtins.int
         key: builtins.str
         @property
-        def value(self) -> global___AlgoOutput: ...
+        def value(self) -> global___FunctionOutput: ...
         def __init__(
             self,
             *,
             key: builtins.str = ...,
-            value: global___AlgoOutput | None = ...,
+            value: global___FunctionOutput | None = ...,
         ) -> None: ...
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
@@ -114,7 +114,7 @@ class Algo(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    ALGORITHM_FIELD_NUMBER: builtins.int
+    FUNCTION_FIELD_NUMBER: builtins.int
     PERMISSIONS_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
@@ -126,7 +126,7 @@ class Algo(google.protobuf.message.Message):
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
-    def algorithm(self) -> common_pb2.Addressable: ...
+    def function(self) -> common_pb2.Addressable: ...
     @property
     def permissions(self) -> common_pb2.Permissions: ...
     owner: builtins.str
@@ -135,31 +135,31 @@ class Algo(google.protobuf.message.Message):
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     @property
-    def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___AlgoInput]: ...
+    def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionInput]: ...
     @property
-    def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___AlgoOutput]: ...
+    def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionOutput]: ...
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         name: builtins.str = ...,
         description: common_pb2.Addressable | None = ...,
-        algorithm: common_pb2.Addressable | None = ...,
+        function: common_pb2.Addressable | None = ...,
         permissions: common_pb2.Permissions | None = ...,
         owner: builtins.str = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
-        inputs: collections.abc.Mapping[builtins.str, global___AlgoInput] | None = ...,
-        outputs: collections.abc.Mapping[builtins.str, global___AlgoOutput] | None = ...,
+        inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
+        outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "creation_date", b"creation_date", "description", b"description", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "creation_date", b"creation_date", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "permissions", b"permissions"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
 
-global___Algo = Algo
+global___Function = Function
 
-class NewAlgo(google.protobuf.message.Message):
-    """NewAlgo is used to register an Algo.
-    It will be processed into an Algo.
+class NewFunction(google.protobuf.message.Message):
+    """NewFunction is used to register an Function.
+    It will be processed into an Function.
     """
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
@@ -186,12 +186,12 @@ class NewAlgo(google.protobuf.message.Message):
         VALUE_FIELD_NUMBER: builtins.int
         key: builtins.str
         @property
-        def value(self) -> global___AlgoInput: ...
+        def value(self) -> global___FunctionInput: ...
         def __init__(
             self,
             *,
             key: builtins.str = ...,
-            value: global___AlgoInput | None = ...,
+            value: global___FunctionInput | None = ...,
         ) -> None: ...
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
@@ -203,12 +203,12 @@ class NewAlgo(google.protobuf.message.Message):
         VALUE_FIELD_NUMBER: builtins.int
         key: builtins.str
         @property
-        def value(self) -> global___AlgoOutput: ...
+        def value(self) -> global___FunctionOutput: ...
         def __init__(
             self,
             *,
             key: builtins.str = ...,
-            value: global___AlgoOutput | None = ...,
+            value: global___FunctionOutput | None = ...,
         ) -> None: ...
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
@@ -216,7 +216,7 @@ class NewAlgo(google.protobuf.message.Message):
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
-    ALGORITHM_FIELD_NUMBER: builtins.int
+    FUNCTION_FIELD_NUMBER: builtins.int
     NEW_PERMISSIONS_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
@@ -226,33 +226,33 @@ class NewAlgo(google.protobuf.message.Message):
     @property
     def description(self) -> common_pb2.Addressable: ...
     @property
-    def algorithm(self) -> common_pb2.Addressable: ...
+    def function(self) -> common_pb2.Addressable: ...
     @property
     def new_permissions(self) -> common_pb2.NewPermissions: ...
     @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     @property
-    def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___AlgoInput]: ...
+    def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionInput]: ...
     @property
-    def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___AlgoOutput]: ...
+    def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionOutput]: ...
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         name: builtins.str = ...,
         description: common_pb2.Addressable | None = ...,
-        algorithm: common_pb2.Addressable | None = ...,
+        function: common_pb2.Addressable | None = ...,
         new_permissions: common_pb2.NewPermissions | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
-        inputs: collections.abc.Mapping[builtins.str, global___AlgoInput] | None = ...,
-        outputs: collections.abc.Mapping[builtins.str, global___AlgoOutput] | None = ...,
+        inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
+        outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "description", b"description", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["algorithm", b"algorithm", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["description", b"description", "function", b"function", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
 
-global___NewAlgo = NewAlgo
+global___NewFunction = NewFunction
 
-class GetAlgoParam(google.protobuf.message.Message):
+class GetFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KEY_FIELD_NUMBER: builtins.int
@@ -264,27 +264,27 @@ class GetAlgoParam(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["key", b"key"]) -> None: ...
 
-global___GetAlgoParam = GetAlgoParam
+global___GetFunctionParam = GetFunctionParam
 
-class QueryAlgosResponse(google.protobuf.message.Message):
+class QueryFunctionsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    ALGOS_FIELD_NUMBER: builtins.int
+    FUNCTIONS_FIELD_NUMBER: builtins.int
     NEXT_PAGE_TOKEN_FIELD_NUMBER: builtins.int
     @property
-    def Algos(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Algo]: ...
+    def Functions(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Function]: ...
     next_page_token: builtins.str
     def __init__(
         self,
         *,
-        Algos: collections.abc.Iterable[global___Algo] | None = ...,
+        Functions: collections.abc.Iterable[global___Function] | None = ...,
         next_page_token: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["Algos", b"Algos", "next_page_token", b"next_page_token"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["Functions", b"Functions", "next_page_token", b"next_page_token"]) -> None: ...
 
-global___QueryAlgosResponse = QueryAlgosResponse
+global___QueryFunctionsResponse = QueryFunctionsResponse
 
-class AlgoQueryFilter(google.protobuf.message.Message):
+class FunctionQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     COMPUTE_PLAN_KEY_FIELD_NUMBER: builtins.int
@@ -296,9 +296,9 @@ class AlgoQueryFilter(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["compute_plan_key", b"compute_plan_key"]) -> None: ...
 
-global___AlgoQueryFilter = AlgoQueryFilter
+global___FunctionQueryFilter = FunctionQueryFilter
 
-class QueryAlgosParam(google.protobuf.message.Message):
+class QueryFunctionsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     PAGE_TOKEN_FIELD_NUMBER: builtins.int
@@ -307,20 +307,20 @@ class QueryAlgosParam(google.protobuf.message.Message):
     page_token: builtins.str
     page_size: builtins.int
     @property
-    def filter(self) -> global___AlgoQueryFilter: ...
+    def filter(self) -> global___FunctionQueryFilter: ...
     def __init__(
         self,
         *,
         page_token: builtins.str = ...,
         page_size: builtins.int = ...,
-        filter: global___AlgoQueryFilter | None = ...,
+        filter: global___FunctionQueryFilter | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["filter", b"filter"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["filter", b"filter", "page_size", b"page_size", "page_token", b"page_token"]) -> None: ...
 
-global___QueryAlgosParam = QueryAlgosParam
+global___QueryFunctionsParam = QueryFunctionsParam
 
-class UpdateAlgoParam(google.protobuf.message.Message):
+class UpdateFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KEY_FIELD_NUMBER: builtins.int
@@ -335,13 +335,13 @@ class UpdateAlgoParam(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "name", b"name"]) -> None: ...
 
-global___UpdateAlgoParam = UpdateAlgoParam
+global___UpdateFunctionParam = UpdateFunctionParam
 
-class UpdateAlgoResponse(google.protobuf.message.Message):
+class UpdateFunctionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     def __init__(
         self,
     ) -> None: ...
 
-global___UpdateAlgoResponse = UpdateAlgoResponse
+global___UpdateFunctionResponse = UpdateFunctionResponse

@@ -3,9 +3,9 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
-from api.models.algo import AlgoInput
-from api.models.algo import AlgoOutput
 from api.models.datasample import DataSample
+from api.models.function import FunctionInput
+from api.models.function import FunctionOutput
 from api.models.utils import AssetPermissionMixin
 from api.models.utils import URLValidatorWithOptionalTLD
 
@@ -41,14 +41,14 @@ class ComputeTaskOutput(models.Model):
 
 class ComputeTaskInputAsset(models.Model):
     task_input = models.OneToOneField("ComputeTaskInput", on_delete=models.CASCADE, related_name="asset")
-    asset_kind = models.CharField(max_length=64, choices=AlgoInput.Kind.choices)
+    asset_kind = models.CharField(max_length=64, choices=FunctionInput.Kind.choices)
     asset_key = models.UUIDField()
     channel = models.CharField(max_length=100)
 
 
 class ComputeTaskOutputAsset(models.Model):
     task_output = models.ForeignKey("ComputeTaskOutput", on_delete=models.CASCADE, related_name="assets")
-    asset_kind = models.CharField(max_length=64, choices=AlgoOutput.Kind.choices)
+    asset_kind = models.CharField(max_length=64, choices=FunctionOutput.Kind.choices)
     asset_key = models.CharField(max_length=73)  # performance have composite key: key1|key2
     channel = models.CharField(max_length=100)
 
@@ -70,7 +70,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
         ERROR_TYPE_INTERNAL = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_INTERNAL)
 
     key = models.UUIDField(primary_key=True)
-    algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
+    function = models.ForeignKey("Function", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
     rank = models.IntegerField()

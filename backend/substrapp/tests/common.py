@@ -7,13 +7,13 @@ from io import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from google.protobuf.json_format import MessageToDict
 
-from orchestrator.algo_pb2 import AlgoInput
-from orchestrator.algo_pb2 import AlgoOutput
 from orchestrator.client import CONVERT_SETTINGS
 from orchestrator.common_pb2 import ASSET_DATA_MANAGER
 from orchestrator.common_pb2 import ASSET_DATA_SAMPLE
 from orchestrator.common_pb2 import ASSET_MODEL
 from orchestrator.common_pb2 import ASSET_PERFORMANCE
+from orchestrator.function_pb2 import FunctionInput
+from orchestrator.function_pb2 import FunctionOutput
 
 
 @dataclass
@@ -27,81 +27,81 @@ class InputIdentifiers:
     SHARED = "shared"
 
 
-class AlgoCategory(str, Enum):
-    simple = "ALGO_SIMPLE"
-    composite = "ALGO_COMPOSITE"
-    aggregate = "ALGO_AGGREGATE"
-    metric = "ALGO_METRIC"
-    predict = "ALGO_PREDICT"
-    predict_composite = "ALGO_PREDICT_COMPOSITE"
+class FunctionCategory(str, Enum):
+    simple = "FUNCTION_SIMPLE"
+    composite = "FUNCTION_COMPOSITE"
+    aggregate = "FUNCTION_AGGREGATE"
+    metric = "FUNCTION_METRIC"
+    predict = "FUNCTION_PREDICT"
+    predict_composite = "FUNCTION_PREDICT_COMPOSITE"
 
 
-# Algo inputs, protobuf format
-ALGO_INPUTS_PER_CATEGORY = {
-    AlgoCategory.simple: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+# Function inputs, protobuf format
+FUNCTION_INPUTS_PER_CATEGORY = {
+    FunctionCategory.simple: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
     },
-    AlgoCategory.aggregate: {
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=True, optional=False),
+    FunctionCategory.aggregate: {
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=True, optional=False),
     },
-    AlgoCategory.composite: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.LOCAL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    FunctionCategory.composite: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.LOCAL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.SHARED: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
     },
-    AlgoCategory.metric: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.PREDICTIONS: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
+    FunctionCategory.metric: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.PREDICTIONS: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=False),
     },
-    AlgoCategory.predict: {
-        InputIdentifiers.DATASAMPLES: AlgoInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
-        InputIdentifiers.OPENER: AlgoInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
-        InputIdentifiers.MODEL: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=False),
-        InputIdentifiers.SHARED: AlgoInput(kind=ASSET_MODEL, multiple=False, optional=True),
+    FunctionCategory.predict: {
+        InputIdentifiers.DATASAMPLES: FunctionInput(kind=ASSET_DATA_SAMPLE, multiple=True, optional=False),
+        InputIdentifiers.OPENER: FunctionInput(kind=ASSET_DATA_MANAGER, multiple=False, optional=False),
+        InputIdentifiers.MODEL: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=False),
+        InputIdentifiers.SHARED: FunctionInput(kind=ASSET_MODEL, multiple=False, optional=True),
     },
 }
 
 
-# Algo outputs, protobuf format
-ALGO_OUTPUTS_PER_CATEGORY = {
-    AlgoCategory.simple: {
-        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+# Function outputs, protobuf format
+FUNCTION_OUTPUTS_PER_CATEGORY = {
+    FunctionCategory.simple: {
+        InputIdentifiers.MODEL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.aggregate: {
-        InputIdentifiers.MODEL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.aggregate: {
+        InputIdentifiers.MODEL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.composite: {
-        InputIdentifiers.LOCAL: AlgoOutput(kind=ASSET_MODEL, multiple=False),
-        InputIdentifiers.SHARED: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.composite: {
+        InputIdentifiers.LOCAL: FunctionOutput(kind=ASSET_MODEL, multiple=False),
+        InputIdentifiers.SHARED: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
-    AlgoCategory.metric: {
-        InputIdentifiers.PERFORMANCE: AlgoOutput(kind=ASSET_PERFORMANCE, multiple=False),
+    FunctionCategory.metric: {
+        InputIdentifiers.PERFORMANCE: FunctionOutput(kind=ASSET_PERFORMANCE, multiple=False),
     },
-    AlgoCategory.predict: {
-        InputIdentifiers.PREDICTIONS: AlgoOutput(kind=ASSET_MODEL, multiple=False),
+    FunctionCategory.predict: {
+        InputIdentifiers.PREDICTIONS: FunctionOutput(kind=ASSET_MODEL, multiple=False),
     },
 }
 
-# Algo inputs, dictionary format
-ALGO_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+# Function inputs, dictionary format
+FUNCTION_INPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(input_proto, **CONVERT_SETTINGS)
         for identifier, input_proto in inputs_by_identifier.items()
     }
-    for category, inputs_by_identifier in ALGO_INPUTS_PER_CATEGORY.items()
+    for category, inputs_by_identifier in FUNCTION_INPUTS_PER_CATEGORY.items()
 }
 
-# Algo outputs, dictionary format
-ALGO_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
+# Function outputs, dictionary format
+FUNCTION_OUTPUTS_PER_CATEGORY_DICT: dict[str, dict] = {
     category: {
         identifier: MessageToDict(output_proto, **CONVERT_SETTINGS)
         for identifier, output_proto in outputs_by_identifier.items()
     }
-    for category, outputs_by_identifier in ALGO_OUTPUTS_PER_CATEGORY.items()
+    for category, outputs_by_identifier in FUNCTION_OUTPUTS_PER_CATEGORY.items()
 }
 
 
@@ -210,11 +210,13 @@ def get_sample_tar_data_sample():
     return file, file_filename
 
 
-def get_sample_algo():
+def get_sample_function():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/algo.tar.gz"), "rb") as tar_file:
+    with open(
+        os.path.join(dir_path, "../../../fixtures/chunantes/functions/function3/function.tar.gz"), "rb"
+    ) as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/tar+gzip", flength, None)
@@ -223,11 +225,11 @@ def get_sample_algo():
     return file, file_filename
 
 
-def get_sample_algo_zip():
+def get_sample_function_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo0/algo.zip"), "rb") as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/functions/function0/function.zip"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
@@ -236,11 +238,13 @@ def get_sample_algo_zip():
     return file, file_filename
 
 
-def get_description_algo():
+def get_description_function():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.md"
     f = BytesIO()
-    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/description.md"), "rb") as desc_file:
+    with open(
+        os.path.join(dir_path, "../../../fixtures/chunantes/functions/function3/description.md"), "rb"
+    ) as desc_file:
         flength = f.write(desc_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename, "application/text", flength, None)
@@ -270,12 +274,12 @@ DEFAULT_STORAGE_ADDRESS = {
 }
 
 
-def get_sample_algo_metadata():
+def get_sample_function_metadata():
     return {
         "owner": "foo",
         "permissions": DEFAULT_PERMISSIONS,
         "description": DEFAULT_STORAGE_ADDRESS,
-        "algorithm": DEFAULT_STORAGE_ADDRESS,
+        "function": DEFAULT_STORAGE_ADDRESS,
     }
 
 

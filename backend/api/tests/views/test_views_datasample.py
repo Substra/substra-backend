@@ -73,11 +73,11 @@ class DataSampleViewTests(APITestCase):
         train_data_sample_2 = factory.create_datasample([data_manager])
         test_data_sample = factory.create_datasample([data_manager])
 
-        self.algo = factory.create_algo()
+        self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
         self.data_manager_key_uuid = data_manager.key
         factory.create_computetask(
-            self.compute_plan, self.algo, data_manager=data_manager, data_samples=[train_data_sample_1.key]
+            self.compute_plan, self.function, data_manager=data_manager, data_samples=[train_data_sample_1.key]
         )
 
         self.expected_results = [
@@ -175,14 +175,14 @@ class DataSampleViewTests(APITestCase):
         )
 
     def test_datasample_list_cross_assets_filters(self):
-        """Filter datasample on other asset key such as compute_plan_key, algo_key and dataset_key"""
+        """Filter datasample on other asset key such as compute_plan_key, function_key and dataset_key"""
         # filter on compute_plan_key
         params = urlencode({"compute_plan_key": self.compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results)
 
-        # filter on algo_key
-        params = urlencode({"algo_key": self.algo.key})
+        # filter on function_key
+        params = urlencode({"function_key": self.function.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 

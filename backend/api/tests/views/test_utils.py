@@ -18,9 +18,9 @@ from api.tests.common import AuthenticatedClient
 from api.views.utils import validate_metadata
 from organization.authentication import OrganizationUser
 from organization.models import OutgoingOrganization
-from substrapp.models import Algo as AlgoFiles
-from substrapp.tests.common import get_description_algo
-from substrapp.tests.common import get_sample_algo
+from substrapp.models import Function as FunctionFiles
+from substrapp.tests.common import get_description_function
+from substrapp.tests.common import get_sample_function
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -33,12 +33,12 @@ class PermissionMixinDownloadFileTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.algo_file, self.algo_filename = get_sample_algo()
-        self.algo_file.seek(0)
-        self.algo_content = self.algo_file.read()
-        self.algo_description_file, self.algo_description_filename = get_description_algo()
-        self.algo_key = uuid.uuid4()
-        self.algo_url = reverse("api:algo-file", kwargs={"pk": self.algo_key})
+        self.function_file, self.function_filename = get_sample_function()
+        self.function_file.seek(0)
+        self.function_content = self.function_file.read()
+        self.function_description_file, self.function_description_filename = get_description_function()
+        self.function_key = uuid.uuid4()
+        self.function_url = reverse("api:function-file", kwargs={"pk": self.function_key})
         self.extra = {
             "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
             "HTTP_ACCEPT": "application/json;version=0.0",
@@ -49,32 +49,36 @@ class PermissionMixinDownloadFileTests(APITestCase):
 
     def test_download_file_local_allowed(self):
         """Asset is local (owner is local-organization) and local-organization in authorized ids."""
-        AlgoFiles.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
+        FunctionFiles.objects.create(
+            key=self.function_key, file=self.function_file, description=self.function_description_file
+        )
+        metadata = factory.create_function(key=self.function_key, public=False, owner="local-organization")
         self.assertIn("local-organization", metadata.permissions_process_authorized_ids)
 
         with mock.patch("api.views.utils.get_owner", return_value="local-organization"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.headers["Content-Disposition"], f'attachment; filename="{self.algo_filename}"')
-        self.assertEqual(response.getvalue(), self.algo_content)
+        self.assertEqual(response.headers["Content-Disposition"], f'attachment; filename="{self.function_filename}"')
+        self.assertEqual(response.getvalue(), self.function_content)
 
     def test_download_file_local_denied(self):
         """Asset is local (owner is local-organization) and local-organization NOT in authorized ids."""
-        AlgoFiles.objects.create(key=self.algo_key, file=self.algo_file, description=self.algo_description_file)
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="local-organization")
+        FunctionFiles.objects.create(
+            key=self.function_key, file=self.function_file, description=self.function_description_file
+        )
+        metadata = factory.create_function(key=self.function_key, public=False, owner="local-organization")
         metadata.permissions_process_authorized_ids = []
         metadata.save()
 
         with mock.patch("api.views.utils.get_owner", return_value="local-organization"):
-            response = self.client.get(self.algo_url, **self.extra)
+            response = self.client.get(self.function_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_download_file_remote_allowed(self):
         """Asset is remote (owner is remote-organization) and local-organization in authorized ids."""
-        metadata = factory.create_algo(key=self.algo_key, public=True, owner="remote-organization")
+        metadata = factory.create_function(key=self.function_key, public=True, owner="remote-organization")
         metadata.permissions_process_authorized_ids = ["remote-organization", "local-organization"]
         metadata.save()
         OutgoingOrganization.objects.create(organization_id="remote-organization", secret="s3cr37")
@@ -84,24 +88,24 @@ class PermissionMixinDownloadFileTests(APITestCase):
         ), responses.RequestsMock() as mocked_responses:
             mocked_responses.add(
                 responses.GET,
-                metadata.algorithm_address,
-                body=self.algo_content,
+                metadata.function_address,
+                body=self.function_content,
                 content_type="text/plain; charset=utf-8",
             )
-            response = self.client.get(self.algo_url, **self.extra)
-            mocked_responses.assert_call_count(metadata.algorithm_address, 1)
+            response = self.client.get(self.function_url, **self.extra)
+            mocked_responses.assert_call_count(metadata.function_address, 1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.getvalue(), self.algo_content)
+        self.assertEqual(response.getvalue(), self.function_content)
 
     def test_download_file_remote_denied(self):
         """Asset is remote (owner is remote-organization) and local-organization NOT in authorized ids."""
-        metadata = factory.create_algo(key=self.algo_key, public=False, owner="remote-organization")
+        metadata = factory.create_function(key=self.function_key, public=False, owner="remote-organization")
         metadata.permissions_process_authorized_ids = ["remote-organization"]
         metadata.save()
 
         self.client.force_authenticate(user=OrganizationUser(username="local-organization"))
-        response = self.client.get(self.algo_url, **self.extra)
+        response = self.client.get(self.function_url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

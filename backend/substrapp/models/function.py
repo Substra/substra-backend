@@ -7,18 +7,18 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename) -> str:
-    return f"algos/{instance.key}/{filename}"
+    return f"functions/{instance.key}/{filename}"
 
 
-class Algo(models.Model):
+class Function(models.Model):
     """Storage Data table"""
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(
-        storage=settings.ALGO_STORAGE, max_length=500, upload_to=upload_to
+        storage=settings.FUNCTION_STORAGE, max_length=500, upload_to=upload_to
     )  # path max length to 500 instead of default 100
     description = models.FileField(
-        storage=settings.ALGO_STORAGE, upload_to=upload_to, max_length=500
+        storage=settings.FUNCTION_STORAGE, upload_to=upload_to, max_length=500
     )  # path max length to 500 instead of default 100
     checksum = models.CharField(max_length=64, blank=True)
 
@@ -29,4 +29,4 @@ class Algo(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Algo with key {self.key}"
+        return f"Function with key {self.key}"

@@ -11,13 +11,13 @@ from substrapp.compute_tasks.directories import Directories
 DOCKERFILE = """
 FROM ubuntu:16.04
 RUN echo "Hello World"
-ENTRYPOINT ["python3", "myalgo.py"]
+ENTRYPOINT ["python3", "myfunction.py"]
 """
 
 
 @pytest.fixture
-def algo() -> orchestrator.Algo:
-    return orc_mock.AlgoFactory()
+def function() -> orchestrator.Function:
+    return orc_mock.FunctionFactory()
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def orc_metric() -> dict[str, Any]:
         "name": "my metric",
         "owner": "Org1MSP",
         "description": {"checksum": "", "storage_address": ""},
-        "algorithm": {"checksum": "", "storage_address": ""},
+        "function": {"checksum": "", "storage_address": ""},
         "permissions": {
             "process": {"public": True, "authorized_ids": []},
             "download": {"public": True, "authorized_ids": []},
@@ -46,7 +46,7 @@ def testtuple_context(orc_metric) -> Context:
         compute_plan_key=cp_key,
         compute_plan_tag="",
         input_assets=[],
-        algo=orc_metric,
+        function=orc_metric,
         directories=Directories(cp_key),
         has_chainkeys=False,
     )

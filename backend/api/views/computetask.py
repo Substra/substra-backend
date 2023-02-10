@@ -23,8 +23,8 @@ from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
-from api.models.algo import AlgoInput
-from api.models.algo import AlgoOutput
+from api.models.function import FunctionInput
+from api.models.function import FunctionOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
 from api.serializers import ComputeTaskSerializer
@@ -50,7 +50,7 @@ def _register_in_orchestrator(tasks_data, channel_name):
     for task_data in tasks_data:
         orc_task = {
             "key": task_data["key"],
-            "algo_key": task_data.get("algo_key"),
+            "function_key": task_data.get("function_key"),
             "compute_plan_key": task_data["compute_plan_key"],
             "inputs": task_data.get("inputs", []),
             "outputs": task_data.get("outputs", {}),
@@ -152,7 +152,7 @@ class ComputeTaskFilter(FilterSet):
         choices=ComputeTask.Status.choices,
     )
     compute_plan_key = CharInFilter(field_name="compute_plan__key")
-    algo_key = CharFilter(field_name="algo__key", distinct=True, label="algo_key")
+    function_key = CharFilter(field_name="function__key", distinct=True, label="function_key")
     dataset_key = CharFilter(field_name="data_manager__key", distinct=True, label="dataset_key")
     data_sample_key = CharInFilter(field_name="data_samples__key", distinct=True, label="data_sample_key")
     duration = RangeFilter(label="duration")
@@ -189,7 +189,7 @@ class ComputeTaskFilter(FilterSet):
 
 
 class InputAssetFilter(FilterSet):
-    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoInput.Kind.choices)
+    kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionInput.Kind.choices)
 
     class Meta:
         model = ComputeTaskInputAsset
@@ -197,7 +197,7 @@ class InputAssetFilter(FilterSet):
 
 
 class OutputAssetFilter(FilterSet):
-    kind = ChoiceInFilter(field_name="asset_kind", choices=AlgoOutput.Kind.choices)
+    kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionOutput.Kind.choices)
 
     class Meta:
         model = ComputeTaskOutputAsset
@@ -264,7 +264,7 @@ class ComputeTaskViewSetConfig:
     def get_queryset(self):
         return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
-            .select_related("algo")
+            .select_related("function")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.

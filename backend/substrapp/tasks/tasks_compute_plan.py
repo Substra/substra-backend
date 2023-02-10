@@ -57,7 +57,7 @@ def _teardown_compute_plan_resources(orc_client: orchestrator.Client, compute_pl
             return
         _teardown_pods_and_dirs(compute_plan_key)
 
-    _delete_compute_plan_algos_images(orc_client.query_algos(compute_plan_key))
+    _delete_compute_plan_functions_images(orc_client.query_functions(compute_plan_key))
 
 
 def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
@@ -66,6 +66,6 @@ def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
     teardown_compute_plan_dir(Directories(compute_plan_key))
 
 
-def _delete_compute_plan_algos_images(algos: typing.Iterable[orchestrator.Algo]) -> None:
-    for algo in algos:
-        delete_container_image_safe(utils.container_image_tag_from_algo(algo))
+def _delete_compute_plan_functions_images(functions: typing.Iterable[orchestrator.Function]) -> None:
+    for function in functions:
+        delete_container_image_safe(utils.container_image_tag_from_function(function))

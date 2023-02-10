@@ -44,7 +44,7 @@ class OutputSaver:
             perf = _get_perf(perf_path)
             performance_obj = {
                 "compute_task_key": self._ctx.task.key,
-                "metric_key": self._ctx.algo.key,
+                "metric_key": self._ctx.function.key,
                 "performance_value": perf,
                 "compute_task_output_identifier": output.identifier,
             }

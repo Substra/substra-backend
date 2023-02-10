@@ -26,7 +26,7 @@ def test_commit_chainkeys(has_chainkeys: bool, mocker: MockerFixture):
         task=mock.ComputeTaskFactory(),
         compute_plan=None,
         input_assets=[],
-        algo=mock.AlgoFactory(),
+        function=mock.FunctionFactory(),
         directories=Directories("cpkey"),
         has_chainkeys=has_chainkeys,
     )
@@ -54,7 +54,7 @@ def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
         task=mock.ComputeTaskFactory(),
         compute_plan=None,
         input_assets=[],
-        algo=mock.AlgoFactory(),
+        function=mock.FunctionFactory(),
         directories=Directories("cpkey"),
         has_chainkeys=False,
     )

@@ -23,10 +23,10 @@ class TaskProfilingViewTests(APITestCase):
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:task_profiling-list")
 
-        algo = factory.create_algo()
+        function = factory.create_function()
         compute_plan = factory.create_computeplan()
 
-        self.train_task = factory.create_computetask(compute_plan=compute_plan, algo=algo)
+        self.train_task = factory.create_computetask(compute_plan=compute_plan, function=function)
 
         factory.create_computetask_profiling(compute_task=self.train_task)
 
@@ -58,9 +58,9 @@ class TaskProfilingViewTests(APITestCase):
         self.assertEqual(response.json(), self.expected_results[0])
 
     def test_task_profiling_create_bad_client(self):
-        algo = factory.create_algo()
+        function = factory.create_function()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo)
+        task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key), "channel": CHANNEL}, **self.extra)
         self.assertEqual(response.status_code, 403)
@@ -78,9 +78,9 @@ class TaskProfilingViewTestsBackend(APITestCase):
         self.url = reverse("api:task_profiling-list")
 
     def test_task_profiling_create_success(self):
-        algo = factory.create_algo()
+        function = factory.create_function()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo)
+        task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
         self.assertEqual(response.status_code, 201)
@@ -106,9 +106,9 @@ class TaskProfilingViewTestsBackend(APITestCase):
         )
 
     def test_already_exist_task_profiling(self):
-        algo = factory.create_algo()
+        function = factory.create_function()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo)
+        task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
         self.assertEqual(response.status_code, 201)
@@ -129,9 +129,9 @@ class TaskProfilingViewTestsOtherBackend(APITestCase):
         self.url = reverse("api:task_profiling-list")
 
     def test_task_profiling_create_fail_other_backend(self):
-        algo = factory.create_algo()
+        function = factory.create_function()
         cp = factory.create_computeplan()
-        task = factory.create_computetask(compute_plan=cp, algo=algo)
+        task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
         self.assertEqual(response.status_code, 403)

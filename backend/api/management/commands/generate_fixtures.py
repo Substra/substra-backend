@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         logger.debug("Generate test data")
-        self.create_algos()
+        self.create_functions()
         self.create_data_manager()
         self.create_data_samples()
         self.create_empty_cp()
@@ -29,56 +29,56 @@ class Command(BaseCommand):
         self.create_aggregate_cp()
         self.create_composite_cp()
 
-    def create_algos(self):
-        logger.debug("  Create algos")
-        self.simple_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "model"]),
-            outputs=factory.build_algo_outputs(["model"]),
+    def create_functions(self):
+        logger.debug("  Create functions")
+        self.simple_function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+            outputs=factory.build_function_outputs(["model"]),
             name="simple",
         )
-        factory.create_algo_files(
-            key=self.simple_algo.key,
-            description=ContentFile("Simple algo"),
+        factory.create_function_files(
+            key=self.simple_function.key,
+            description=ContentFile("Simple function"),
         )
 
-        self.aggregate_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["models"]),
-            outputs=factory.build_algo_outputs(["model"]),
+        self.aggregate_function = factory.create_function(
+            inputs=factory.build_function_inputs(["models"]),
+            outputs=factory.build_function_outputs(["model"]),
             name="aggregate",
         )
-        factory.create_algo_files(
-            key=self.aggregate_algo.key,
-            description=ContentFile("Aggregate algo"),
+        factory.create_function_files(
+            key=self.aggregate_function.key,
+            description=ContentFile("Aggregate function"),
         )
 
-        self.composite_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "local", "shared"]),
-            outputs=factory.build_algo_outputs(["local", "shared"]),
+        self.composite_function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "local", "shared"]),
+            outputs=factory.build_function_outputs(["local", "shared"]),
             name="composite",
         )
-        factory.create_algo_files(
-            key=self.composite_algo.key,
-            description=ContentFile("Composite algo"),
+        factory.create_function_files(
+            key=self.composite_function.key,
+            description=ContentFile("Composite function"),
         )
 
-        self.predict_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "model", "shared"]),
-            outputs=factory.build_algo_outputs(["predictions"]),
+        self.predict_function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "model", "shared"]),
+            outputs=factory.build_function_outputs(["predictions"]),
             name="predict",
         )
-        factory.create_algo_files(
-            key=self.predict_algo.key,
-            description=ContentFile("Predict algo"),
+        factory.create_function_files(
+            key=self.predict_function.key,
+            description=ContentFile("Predict function"),
         )
 
-        self.metric_algo = factory.create_algo(
-            inputs=factory.build_algo_inputs(["datasamples", "opener", "predictions"]),
-            outputs=factory.build_algo_outputs(["performance"]),
+        self.metric_function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "predictions"]),
+            outputs=factory.build_function_outputs(["performance"]),
             name="metric",
         )
-        factory.create_algo_files(
-            key=self.metric_algo.key,
-            description=ContentFile("Metric algo"),
+        factory.create_function_files(
+            key=self.metric_function.key,
+            description=ContentFile("Metric function"),
         )
 
     def create_data_manager(self):
@@ -128,15 +128,15 @@ class Command(BaseCommand):
         first_task_status = cp_status
         train_task = factory.create_computetask(
             cp,
-            self.simple_algo,
+            self.simple_function,
             inputs=factory.build_computetask_inputs(
-                self.simple_algo,
+                self.simple_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.train_data_sample_keys,
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.simple_algo),
+            outputs=factory.build_computetask_outputs(self.simple_function),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
             status=first_task_status,
@@ -159,16 +159,16 @@ class Command(BaseCommand):
         )
         predict_task = factory.create_computetask(
             cp,
-            self.predict_algo,
+            self.predict_function,
             inputs=factory.build_computetask_inputs(
-                self.predict_algo,
+                self.predict_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.predict_data_sample_keys,
                     "model": [train_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.predict_algo),
+            outputs=factory.build_computetask_outputs(self.predict_function),
             data_manager=self.data_manager,
             data_samples=self.predict_data_sample_keys,
             status=task_status,
@@ -182,16 +182,16 @@ class Command(BaseCommand):
 
         test_task = factory.create_computetask(
             cp,
-            self.metric_algo,
+            self.metric_function,
             inputs=factory.build_computetask_inputs(
-                self.metric_algo,
+                self.metric_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.test_data_sample_keys,
                     "predictions": [predict_task.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.metric_algo),
+            outputs=factory.build_computetask_outputs(self.metric_function),
             data_manager=self.data_manager,
             data_samples=self.test_data_sample_keys,
             status=task_status,
@@ -199,7 +199,7 @@ class Command(BaseCommand):
         if task_status == ComputeTask.Status.STATUS_DONE:
             factory.create_performance(
                 test_task,
-                self.metric_algo,
+                self.metric_function,
                 identifier="performance",
             )
 
@@ -214,44 +214,44 @@ class Command(BaseCommand):
         )
         train_task_1 = factory.create_computetask(
             cp,
-            self.simple_algo,
+            self.simple_function,
             inputs=factory.build_computetask_inputs(
-                self.simple_algo,
+                self.simple_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.train_data_sample_keys,
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.simple_algo),
+            outputs=factory.build_computetask_outputs(self.simple_function),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
             status=ComputeTask.Status.STATUS_TODO,
         )
         train_task_2 = factory.create_computetask(
             cp,
-            self.simple_algo,
+            self.simple_function,
             inputs=factory.build_computetask_inputs(
-                self.simple_algo,
+                self.simple_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.train_data_sample_keys,
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.simple_algo),
+            outputs=factory.build_computetask_outputs(self.simple_function),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
             status=ComputeTask.Status.STATUS_TODO,
         )
         factory.create_computetask(
             cp,
-            self.aggregate_algo,
+            self.aggregate_function,
             inputs=factory.build_computetask_inputs(
-                self.aggregate_algo,
+                self.aggregate_function,
                 {
                     "model": [train_task_1.key, train_task_2.key],
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.aggregate_algo),
+            outputs=factory.build_computetask_outputs(self.aggregate_function),
             status=ComputeTask.Status.STATUS_TODO,
         )
         return cp
@@ -264,15 +264,15 @@ class Command(BaseCommand):
         )
         composite_task = factory.create_computetask(
             cp,
-            self.composite_algo,
+            self.composite_function,
             inputs=factory.build_computetask_inputs(
-                self.composite_algo,
+                self.composite_function,
                 {
                     "opener": [self.data_manager.key],
                     "datasamples": self.train_data_sample_keys,
                 },
             ),
-            outputs=factory.build_computetask_outputs(self.composite_algo),
+            outputs=factory.build_computetask_outputs(self.composite_function),
             data_manager=self.data_manager,
             data_samples=self.train_data_sample_keys,
             status=ComputeTask.Status.STATUS_DONE,

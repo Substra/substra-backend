@@ -7,12 +7,12 @@ from typing import Union
 
 import pydantic
 
-from orchestrator import algo_pb2
 from orchestrator import common_pb2
 from orchestrator import computeplan_pb2
 from orchestrator import computetask_pb2
 from orchestrator import datamanager_pb2
 from orchestrator import datasample_pb2
+from orchestrator import function_pb2
 from orchestrator import info_pb2
 from orchestrator import model_pb2
 
@@ -38,7 +38,7 @@ class AssetKind(AutoNameEnum):
     ASSET_ORGANIZATION = enum.auto()
     ASSET_DATA_SAMPLE = enum.auto()
     ASSET_DATA_MANAGER = enum.auto()
-    ASSET_ALGO = enum.auto()
+    ASSET_FUNCTION = enum.auto()
     ASSET_COMPUTE_TASK = enum.auto()
     ASSET_COMPUTEPLAN = enum.auto()
     ASSET_MODEL = enum.auto()
@@ -119,40 +119,40 @@ class DataManager(pydantic.BaseModel):
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
 
 
-class AlgoInput(pydantic.BaseModel):
+class FunctionInput(pydantic.BaseModel):
     kind: AssetKind
     multiple: bool
     optional: bool
 
     @classmethod
-    def from_grpc(cls, i: algo_pb2.AlgoInput) -> AlgoInput:
+    def from_grpc(cls, i: function_pb2.FunctionInput) -> FunctionInput:
         return cls(kind=AssetKind.from_grpc(i.kind), multiple=i.multiple, optional=i.optional)
 
 
-class AlgoOutput(pydantic.BaseModel):
+class FunctionOutput(pydantic.BaseModel):
     kind: AssetKind
     multiple: bool
 
     @classmethod
-    def from_grpc(cls, o: algo_pb2.AlgoOutput) -> AlgoOutput:
+    def from_grpc(cls, o: function_pb2.FunctionOutput) -> FunctionOutput:
         return cls(kind=AssetKind.from_grpc(o.kind), multiple=o.multiple)
 
 
-class Algo(pydantic.BaseModel):
+class Function(pydantic.BaseModel):
     key: str
     owner: str
-    algorithm: Address
-    inputs: dict[str, AlgoInput]
-    outputs: dict[str, AlgoOutput]
+    function_address: Address
+    inputs: dict[str, FunctionInput]
+    outputs: dict[str, FunctionOutput]
 
     @classmethod
-    def from_grpc(cls, a: algo_pb2.Algo) -> Algo:
+    def from_grpc(cls, a: function_pb2.Function) -> Function:
         return cls(
             key=a.key,
             owner=a.owner,
-            algorithm=Address.from_grpc(a.algorithm),
-            inputs={k: AlgoInput.from_grpc(i) for k, i in a.inputs.items()},
-            outputs={k: AlgoOutput.from_grpc(o) for k, o in a.outputs.items()},
+            function_address=Address.from_grpc(a.function),
+            inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
+            outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
         )
 
 
@@ -230,7 +230,7 @@ class ComputeTask(_Base):
     # This property is only temporary and will disappear soon
     owner: str
     compute_plan_key: str
-    algo_key: str
+    function_key: str
     rank: int
     status: ComputeTaskStatus
     worker: str
@@ -247,7 +247,7 @@ class ComputeTask(_Base):
             key=t.key,
             owner=t.owner,
             compute_plan_key=t.compute_plan_key,
-            algo_key=t.algo_key,
+            function_key=t.function_key,
             rank=t.rank,
             status=ComputeTaskStatus.from_grpc(t.status),
             worker=t.worker,

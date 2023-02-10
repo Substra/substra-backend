@@ -5,8 +5,8 @@ import uuid
 from django.db import migrations
 from django.db import models
 
-import substrapp.models.algo
 import substrapp.models.datamanager
+import substrapp.models.function
 import substrapp.models.model
 
 
@@ -25,8 +25,8 @@ class Migration(migrations.Migration):
             name="Algo",
             fields=[
                 ("key", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ("file", models.FileField(max_length=500, upload_to=substrapp.models.algo.upload_to)),
-                ("description", models.FileField(max_length=500, upload_to=substrapp.models.algo.upload_to)),
+                ("file", models.FileField(max_length=500, upload_to=substrapp.models.function.upload_to)),
+                ("description", models.FileField(max_length=500, upload_to=substrapp.models.function.upload_to)),
                 ("validated", models.BooleanField(default=False)),
                 ("checksum", models.CharField(blank=True, max_length=64)),
             ],

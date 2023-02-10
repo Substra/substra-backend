@@ -41,25 +41,25 @@ KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
 
-def build_image_if_missing(datastore: Datastore, algo: orchestrator.Algo) -> None:
+def build_image_if_missing(datastore: Datastore, function: orchestrator.Function) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
-    container_image_tag = utils.container_image_tag_from_algo(algo)
+    container_image_tag = utils.container_image_tag_from_function(function)
     with lock_resource("image-build", container_image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
         if container_image_exists(container_image_tag):
             logger.info("Reusing existing image", image=container_image_tag)
         else:
-            asset_content = datastore.get_algo(algo)
-            _build_algo_image(asset_content, algo)
+            asset_content = datastore.get_function(function)
+            _build_function_image(asset_content, function)
 
 
-def _build_algo_image(asset: bytes, algo: orchestrator.Algo) -> None:
+def _build_function_image(asset: bytes, function: orchestrator.Function) -> None:
     """
-    Build an algo's container image.
+    Build an function's container image.
 
     Perform multiple steps:
-    1. Download the algo using the provided asset storage_address/owner. Verify its checksum and uncompress the data
+    1. Download the function using the provided asset storage_address/owner. Verify its checksum and uncompress the data
        to a temporary folder.
     2. Extract the ENTRYPOINT from the Dockerfile.
     3. Build the container image using Kaniko.
@@ -76,20 +76,22 @@ def _build_algo_image(asset: bytes, algo: orchestrator.Algo) -> None:
         entrypoint = _get_entrypoint_from_dockerfile(tmp_dir)
 
         # Build image
-        _build_container_image(tmp_dir, utils.container_image_tag_from_algo(algo))
+        _build_container_image(tmp_dir, utils.container_image_tag_from_function(function))
 
         # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(algo_checksum=algo.algorithm.checksum, entrypoint_json=entrypoint)
+        ImageEntrypoint.objects.get_or_create(
+            function_checksum=function.function_address.checksum, entrypoint_json=entrypoint
+        )
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     """
     Get entrypoint from ENTRYPOINT in the Dockerfile.
 
-    This is necessary because the user algo can have arbitrary names, ie; "myalgo.py".
+    This is necessary because the user function can have arbitrary names, ie; "myfunction.py".
 
     Example:
-        ENTRYPOINT ["python3", "myalgo.py"]
+        ENTRYPOINT ["python3", "myfunction.py"]
     """
     dockerfile_path = f"{dockerfile_dir}/Dockerfile"
 
@@ -103,7 +105,8 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
 
                 if not isinstance(res, list):
                     raise compute_task_errors.BuildError(
-                        "Invalid ENTRYPOINT in algo/metric Dockerfile. You must use the exec form in your Dockerfile. "
+                        "Invalid ENTRYPOINT in function/metric Dockerfile. "
+                        "You must use the exec form in your Dockerfile. "
                         "See https://docs.docker.com/engine/reference/builder/#entrypoint"
                     )
                 return res
