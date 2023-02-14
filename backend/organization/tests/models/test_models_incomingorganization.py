@@ -60,4 +60,4 @@ class IncomingOrganizationTests(TestCase):
         self.assert_previous_hasher_upgrade(PBKDF2PasswordDefault40Hasher)
 
     def test_password_upgrade_from_4_1_to_4_2(self):
-        self.assert_previous_hasher_upgrade(PBKDF2PasswordDefault40Hasher)
+        self.assert_previous_hasher_upgrade(PBKDF2PasswordDefault41Hasher)
