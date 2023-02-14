@@ -48,7 +48,7 @@ class AuthenticationTests(APITestCase):
             organization_id="external_organization_id", password="s3cr37"
         )
         cls.outgoing_organization = OutgoingOrganization.objects.create(
-            organization_id="external_organization_id", password="s3cr37"
+            organization_id="external_organization_id", secret="s3cr37"
         )
         user, created = User.objects.get_or_create(username="foo")
         if created:
