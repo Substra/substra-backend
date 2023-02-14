@@ -25,6 +25,9 @@ django-prometheus==2.2.0
 django-filter==22.1
 pydantic==1.10.1
 redis==4.3.4
+# Requires specific version of setuptools as the version [67.3.0](https://setuptools.pypa.io/en/latest/history.html#v67-3-0)
+# deprecates `declare_namespace` still in use in `djangorestframework-simplejwt` version 5.2.2
+setuptools<67.3.0
 # Dependencies used in local dev mode
 argh==0.26.2
 watchdog==2.1.9
