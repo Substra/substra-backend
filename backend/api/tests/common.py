@@ -73,7 +73,7 @@ class AuthenticatedBackendClient(APIClient):
         try:
             IncomingOrganization.objects.get(organization_id=username)
         except IncomingOrganization.DoesNotExist:
-            IncomingOrganization.objects.create(organization_id=username, secret=password)
+            IncomingOrganization.objects.create(organization_id=username, password=password)
 
         self.credentials(HTTP_AUTHORIZATION=auth._basic_auth_str(username, password))
 

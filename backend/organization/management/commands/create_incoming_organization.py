@@ -17,7 +17,7 @@ class Command(BaseCommand):
         else:
             incoming_organization = IncomingOrganization.objects.create(
                 organization_id=options["organization_id"],
-                secret=options["secret"],
+                password=options["secret"],
             )
 
             self.stdout.write(self.style.SUCCESS("organization successfully created"))
