@@ -47,7 +47,7 @@ class IncomingOrganizationManager(models.Manager):
         if password and secret:
             raise ValueError(
                 "password and secret cannot be set at the same time. "
-                "Set argument 'password' to pass an unhashed password and 'secret' for a hashed one"
+                "Set argument 'password' to provide an unhashed password and 'secret' for a hashed one"
             )
 
         if secret:
@@ -56,7 +56,7 @@ class IncomingOrganizationManager(models.Manager):
             except ValueError:
                 raise ValueError(
                     "Cannot identify the hasher required for the argument 'secret'. "
-                    "If you try to pass an unhashed password, use the argument 'password' instead"
+                    "If you try to provide an unhashed password, use the argument 'password' instead"
                 )
 
         if password:
