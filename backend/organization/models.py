@@ -15,7 +15,6 @@ class Organization(models.Model):
 
     def set_password(self, raw_secret):
         self.secret = make_password(raw_secret)
-        self._secret = raw_secret
 
     def check_password(self, raw_secret):
         """
@@ -25,8 +24,6 @@ class Organization(models.Model):
 
         def setter(raw_secret):
             self.set_password(raw_secret)
-            # Password hash upgrades shouldn't be considered password changes.
-            self._secret = None
             self.save(update_fields=["secret"])
 
         return check_password(raw_secret, self.secret, setter)
