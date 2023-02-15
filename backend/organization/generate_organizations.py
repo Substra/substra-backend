@@ -3,7 +3,7 @@ import os
 import secrets
 
 
-def generate_secret():
+def generate_password():
     return secrets.token_hex(64)
 
 
@@ -21,14 +21,14 @@ def generate(orgs):
 
     for org in orgs:
         # create intern organization (request from worker A to backend A)
-        secret = generate_secret()
+        secret = generate_password()
         files[org]["outgoing_organizations"].append({"organization_id": org, "secret": secret})
         files[org]["incoming_organizations"].append({"organization_id": org, "secret": secret})
 
         other_orgs = [x for x in orgs if x != org]
         for other_org in other_orgs:
             # outgoing from server B to server A share same secret as incoming from server B in server A
-            secret = generate_secret()
+            secret = generate_password()
             files[other_org]["outgoing_organizations"].append(
                 {"organization_id": org, "secret": secret}
             )  # in server B  # to server A

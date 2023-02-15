@@ -11,7 +11,7 @@ class Organization(models.Model):
     secret = models.CharField(max_length=128, blank=False)
 
     @staticmethod
-    def generate_secret():
+    def generate_password():
         return secrets.token_hex(64)
 
     def set_password(self, raw_secret):
