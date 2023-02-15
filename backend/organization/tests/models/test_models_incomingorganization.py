@@ -39,7 +39,7 @@ class IncomingOrganizationTests(TestCase):
             )
             secret = incoming_organization.secret
             assert secret.startswith(f"{previous_algorithm}${previous_iterations}")
-            assert hashers.check_password(password, incoming_organization.secret)
+            assert hashers.check_password(password, secret)
 
         # Set our hasher as last so we can still valdiate our password
         # but incoming_organization.check_password will upgrade to default
@@ -54,7 +54,9 @@ class IncomingOrganizationTests(TestCase):
             assert incoming_organization.check_password(password)
             new_secret = incoming_organization.secret
             assert new_secret.startswith(f"{current_hasher.algorithm}${current_hasher.iterations}")
-            assert hashers.check_password(password, incoming_organization.secret)
+
+            # Check that the secret has not been overriden
+            assert hashers.check_password(password, new_secret)
 
     def test_password_upgrade_from_4_0_to_4_1(self):
         self.assert_previous_hasher_upgrade(PBKDF2PasswordDefault40Hasher)
