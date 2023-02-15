@@ -1,6 +1,6 @@
-from django.contrib.auth.hashers import check_password, identify_hasher, make_password
+from django.contrib.auth.hashers import identify_hasher
+from django.contrib.auth.hashers import make_password
 from django.db import models
-
 
 
 # Manager allowing an extra parameter, 'password', to hash passwords
