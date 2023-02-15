@@ -21,7 +21,7 @@ class Command(BaseCommand):
 
             for organization in data["incoming_organizations"]:
                 IncomingOrganization.objects.create(
-                    organization_id=organization["organization_id"], password=organization["secret"]
+                    organization_id=organization["organization_id"], password=organization["password"]
                 )
                 self.stdout.write(self.style.SUCCESS("created incoming organization"))
             for organization in data["outgoing_organizations"]:
