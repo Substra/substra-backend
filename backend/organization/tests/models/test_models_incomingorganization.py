@@ -49,10 +49,10 @@ class IncomingOrganizationTests(TestCase):
             }
         ):
             current_hasher = hashers.get_hasher()
-            incoming_organization.check_password(password)
-            new_secret = incoming_organization.secret
             assert current_hasher.algorithm != previous_algorithm
             assert current_hasher.iterations != previous_iterations
+            assert incoming_organization.check_password(password)
+            new_secret = incoming_organization.secret
             assert new_secret.startswith(f"{current_hasher.algorithm}${current_hasher.iterations}")
             assert hashers.check_password(password, incoming_organization.secret)
 
