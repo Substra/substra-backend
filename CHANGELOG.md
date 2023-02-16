@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
+
 ## Fixed
 
 - `IncomingOrganization` password hashed twice when hasher algorithm was updated ([#592](https://github.com/Substra/substra-backend/pull/592))
