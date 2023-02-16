@@ -105,7 +105,7 @@ def test_download_remote_logs_success(
     compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_organization]  # allowed
     compute_task.save()
     organization_models.OutgoingOrganization.objects.create(
-        organization_id=outgoing_organization, secret=organization_models.Organization.generate_secret()
+        organization_id=outgoing_organization, secret=organization_models.Organization.generate_password()
     )
 
     logs_content = failure_report.logs.read()

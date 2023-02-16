@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("organization_id")
-        parser.add_argument("secret", nargs="?", default=Organization.generate_secret())
+        parser.add_argument("secret", nargs="?", default=Organization.generate_password())
 
     def handle(self, *args, **options):
         if OutgoingOrganization.objects.filter(organization_id=options["organization_id"]).exists():
