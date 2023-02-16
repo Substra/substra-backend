@@ -22,6 +22,7 @@ addopts = "-n auto --cov=. --cov-config=../pyproject.toml -p no:unraisableexcept
 filterwarnings = [
     "error",
     "ignore:'rest_framework_simplejwt.token_blacklist' defines default_app_config:DeprecationWarning",
+    "ignore:(?s).*Implementing implicit namespace package:DeprecationWarning:pkg_resources",
 ]
 
 [tool.coverage.run]

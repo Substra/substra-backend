@@ -55,117 +55,117 @@ deploy:
   
 
 profiles:
-  - name: prod
-    patches:
-      - op: add
-        path: /deploy/helm/releases/0/setValues/settings
-        value: prod
-      - op: add
-        path: /deploy/helm/releases/1/setValues/settings
-        value: prod
-   - name: nodeps
-    patches:
-      - op: add
-        path: /deploy/helm/releases/0/skipBuildDependencies
-        value: true
-  - name: dev
-    patches:
-      - op: add
-        path: /build/artifacts/0/docker/target
-        value: dev  # install dev-requirements
-  - name: arm64
-    patches:
-      - op: add
-        path: /build/artifacts/0/docker/target
-        value: arm64  # install psycopg2 dependency to build from wheel for this plateform
-  - name: single-org
-    patches:
-      - op: remove
-        path: /deploy/helm/releases/1
-      - op: remove
-        path: /deploy/kubectl/manifests/3
-      - op: remove
-        path: /deploy/kubectl/manifests/1
-  - name: distributed
-    patches:
-      - op: add
-        path: /deploy/helm/releases/1/setValues/orchestrator.host
-        value: orchestrator-org-2-server.org-2.svc.cluster.local
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.livenessProbe.timeoutSeconds
-        value: 30
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.readinessProbe.timeoutSeconds
-        value: 30
-      - op: add
-        path: /deploy/helm/releases/1/setValues/server.livenessProbe.timeoutSeconds
-        value: 30
-      - op: add
-        path: /deploy/helm/releases/1/setValues/server.readinessProbe.timeoutSeconds
-        value: 30
-  - name: persist-db
-    patches:
-      - op: add
-        path: /deploy/helm/releases/0/setValues/postgresql.persistence.enabled
-        value: true
-      - op: add
-        path: /deploy/helm/releases/1/setValues/postgresql.persistence.enabled
-        value: true
-  - name: servermedias
-    patches:
-      - op: add
-        path: /deploy/helm/releases/0/setValues/DataSampleStorageInServerMedia
-        value: true
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.persistence.servermedias.storageClass
-        value: "manual"
-      - op: add
-        path: /deploy/helm/releases/1/setValues/DataSampleStorageInServerMedia
-        value: true
-      - op: add
-        path: /deploy/helm/releases/1/setValues/server.persistence.servermedias.storageClass
-        value: "manual"
-  - name: spread-workers
-    patches:
-      - op: replace
-        path: /deploy/helm/releases/0/valuesFiles
-        value: [ examples/values/backend-org-1.yaml, examples/values/spread-workers.yaml ]
-      - op: replace
-        path: /deploy/helm/releases/1/valuesFiles
-        value: [ examples/values/backend-org-2.yaml, examples/values/spread-workers.yaml ]
-  - name: add-worker-server-node-selectors
-    patches:
-      - op: replace
-        path: /deploy/helm/releases/0/valuesFiles
-        value: [ examples/values/backend-org-1.yaml, examples/values/add-worker-server-node-selectors.yaml ]
-      - op: replace
-        path: /deploy/helm/releases/1/valuesFiles
-        value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-organization-selectors.yaml ]
-  - name: isolated
-    patches:
-      - op: remove
-        path: /deploy/kubectl/manifests/3
-      - op: remove
-        path: /deploy/kubectl/manifests/2
-      - op: remove
-        path: /deploy/kubectl/manifests/1
-      - op: replace
-        path: /deploy/helm/releases/0/valuesFiles
-        value: [ examples/values/backend-org-1.yaml, examples/values/isolated.yaml ]
-      - op: remove
-        path: /deploy/helm/releases/1
-  - name: monitoring
-    patches:
-      - op: add
-        path: /build/artifacts/-
-        value:
-          image: substra/metrics-exporter
-          context: .
-          docker:
-            dockerfile: docker/metrics-exporter/Dockerfile
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.metrics.image
-        value: substra/metrics-exporter
-      - op: add
-        path: /deploy/helm/releases/0/setValues/server.metrics.enabled
-        value: True
+- name: prod
+  patches:
+    - op: add
+      path: /deploy/helm/releases/0/setValues/settings
+      value: prod
+    - op: add
+      path: /deploy/helm/releases/1/setValues/settings
+      value: prod
+- name: nodeps
+  patches:
+    - op: add
+      path: /deploy/helm/releases/0/skipBuildDependencies
+      value: true
+- name: dev
+  patches:
+    - op: add
+      path: /build/artifacts/0/docker/target
+      value: dev  # install dev-requirements
+- name: arm64
+  patches:
+    - op: add
+      path: /build/artifacts/0/docker/target
+      value: arm64  # install psycopg2 dependency to build from wheel for this plateform
+- name: single-org
+  patches:
+    - op: remove
+      path: /deploy/helm/releases/1
+    - op: remove
+      path: /deploy/kubectl/manifests/3
+    - op: remove
+      path: /deploy/kubectl/manifests/1
+- name: distributed
+  patches:
+    - op: add
+      path: /deploy/helm/releases/1/setValues/orchestrator.host
+      value: orchestrator-org-2-server.org-2.svc.cluster.local
+    - op: add
+      path: /deploy/helm/releases/0/setValues/server.livenessProbe.timeoutSeconds
+      value: 30
+    - op: add
+      path: /deploy/helm/releases/0/setValues/server.readinessProbe.timeoutSeconds
+      value: 30
+    - op: add
+      path: /deploy/helm/releases/1/setValues/server.livenessProbe.timeoutSeconds
+      value: 30
+    - op: add
+      path: /deploy/helm/releases/1/setValues/server.readinessProbe.timeoutSeconds
+      value: 30
+- name: persist-db
+  patches:
+    - op: add
+      path: /deploy/helm/releases/0/setValues/postgresql.persistence.enabled
+      value: true
+    - op: add
+      path: /deploy/helm/releases/1/setValues/postgresql.persistence.enabled
+      value: true
+- name: servermedias
+  patches:
+    - op: add
+      path: /deploy/helm/releases/0/setValues/DataSampleStorageInServerMedia
+      value: true
+    - op: add
+      path: /deploy/helm/releases/0/setValues/server.persistence.servermedias.storageClass
+      value: "manual"
+    - op: add
+      path: /deploy/helm/releases/1/setValues/DataSampleStorageInServerMedia
+      value: true
+    - op: add
+      path: /deploy/helm/releases/1/setValues/server.persistence.servermedias.storageClass
+      value: "manual"
+- name: spread-workers
+  patches:
+    - op: replace
+      path: /deploy/helm/releases/0/valuesFiles
+      value: [ examples/values/backend-org-1.yaml, examples/values/spread-workers.yaml ]
+    - op: replace
+      path: /deploy/helm/releases/1/valuesFiles
+      value: [ examples/values/backend-org-2.yaml, examples/values/spread-workers.yaml ]
+- name: add-worker-server-node-selectors
+  patches:
+    - op: replace
+      path: /deploy/helm/releases/0/valuesFiles
+      value: [ examples/values/backend-org-1.yaml, examples/values/add-worker-server-node-selectors.yaml ]
+    - op: replace
+      path: /deploy/helm/releases/1/valuesFiles
+      value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-organization-selectors.yaml ]
+- name: isolated
+  patches:
+    - op: remove
+      path: /deploy/kubectl/manifests/3
+    - op: remove
+      path: /deploy/kubectl/manifests/2
+    - op: remove
+      path: /deploy/kubectl/manifests/1
+    - op: replace
+      path: /deploy/helm/releases/0/valuesFiles
+      value: [ examples/values/backend-org-1.yaml, examples/values/isolated.yaml ]
+    - op: remove
+      path: /deploy/helm/releases/1
+- name: monitoring
+  patches:
+    - op: add
+      path: /build/artifacts/-
+      value:
+        image: substra/metrics-exporter
+        context: .
+        docker:
+          dockerfile: docker/metrics-exporter/Dockerfile
+    - op: add
+      path: /deploy/helm/releases/0/setValues/server.metrics.image
+      value: substra/metrics-exporter
+    - op: add
+      path: /deploy/helm/releases/0/setValues/server.metrics.enabled
+      value: True
