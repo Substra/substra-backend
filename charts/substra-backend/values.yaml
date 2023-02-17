@@ -59,14 +59,14 @@ server:
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry
   ## @param server.image.repository Substra backend server image repository
-  ## @param server.image.tag Substra backend server image tag
+  ## @param server.image.tag Substra backend server image tag (defaults to AppVersion)
   ## @param server.image.pullPolicy Substra backend server image pull policy
   ## @param server.image.pullSecrets Specify image pull secrets
   ##
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: &backend-image-tag 0.35.1
+    tag: null
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be created manually in the namespace.
@@ -236,13 +236,13 @@ server:
     ## Metrics exporter image version
     ## @param server.metrics.image.registry Substra backend server Prometheus Exporter image registry
     ## @param server.metrics.image.repository Substra backend server Prometheus Exporter image repository
-    ## @param server.metrics.image.tag Substra backend server Prometheus Exporter image tag
+    ## @param server.metrics.image.tag Substra backend server Prometheus Exporter image tag (defaults to AppVersion)
     ## @param server.metrics.image.pullPolicy Substra backend server Prometheus Exporter image pull policy
     ##
     image:
       registry: ghcr.io
       repository: substra/substra-backend-metrics-exporter
-      tag: *backend-image-tag
+      tag: null
       pullPolicy: IfNotPresent
 
     serviceMonitor:
@@ -282,14 +282,14 @@ worker:
   concurrency: 1
   ## @param worker.image.registry Substra backend worker image registry
   ## @param worker.image.repository Substra backend worker image repository
-  ## @param worker.image.tag Substra backend worker image tag
+  ## @param worker.image.tag Substra backend worker image tag (defaults to AppVersion)
   ## @param worker.image.pullPolicy Substra backend worker image pull policy
   ## @param worker.image.pullSecrets Specify image pull secrets
   ##
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: *backend-image-tag
+    tag: null
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param worker.podSecurityContext.enabled Enable security context
@@ -341,14 +341,14 @@ worker:
     enabled: true
     ## @param worker.events.image.registry Substra event app image registry
     ## @param worker.events.image.repository Substra event app image repository
-    ## @param worker.events.image.tag Substra event app image tag
+    ## @param worker.events.image.tag Substra event app image tag (defaults to AppVersion)
     ## @param worker.events.image.pullPolicy Substra event app image pull policy
     ## @param worker.events.image.pullSecrets Specify image pull secrets
     ##
     image:
       registry: ghcr.io
       repository: substra/substra-backend
-      tag: *backend-image-tag
+      tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
     ## @param worker.events.podSecurityContext.enabled Enable security context
@@ -394,14 +394,14 @@ schedulerWorker:
   replicaCount: 1
   ## @param schedulerWorker.image.registry Substra backend tasks scheduler image registry
   ## @param schedulerWorker.image.repository Substra backend tasks scheduler image repository
-  ## @param schedulerWorker.image.tag Substra backend tasks scheduler image tag
+  ## @param schedulerWorker.image.tag Substra backend tasks scheduler image tag (defaults to AppVersion)
   ## @param schedulerWorker.image.pullPolicy Substra backend task scheduler image pull policy
   ## @param schedulerWorker.image.pullSecrets Specify image pull secrets
   ##
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: *backend-image-tag
+    tag: null
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param schedulerWorker.nodeSelector Node labels for pod assignment
@@ -438,14 +438,14 @@ scheduler:
   replicaCount: 1
   ## @param scheduler.image.registry Subsra backend tasks scheduler image registry
   ## @param scheduler.image.repository Substra backend tasks scheduler image repository
-  ## @param scheduler.image.tag Substra backend tasks scheduler image tag
+  ## @param scheduler.image.tag Substra backend tasks scheduler image tag (defaults to AppVersion)
   ## @param scheduler.image.pullPolicy Substra backend task scheduler image pull policy
   ## @param scheduler.image.pullSecrets Specify image pull secrets
   ##
   image:
     registry: ghcr.io
     repository: substra/substra-backend
-    tag: *backend-image-tag
+    tag: null
     pullPolicy: IfNotPresent
     pullSecrets: []
   ## @param scheduler.resources Scheduler container resources requests and limits
@@ -507,14 +507,14 @@ api:
     enabled: true
     ## @param api.events.image.registry Substra event app image registry
     ## @param api.events.image.repository Substra event app image repository
-    ## @param api.events.image.tag Substra event app image tag
+    ## @param api.events.image.tag Substra event app image tag (defaults to AppVersion)
     ## @param api.events.image.pullPolicy Substra event app image pull policy
     ## @param api.events.image.pullSecrets Specify image pull secrets
     ##
     image:
       registry: ghcr.io
       repository: substra/substra-backend
-      tag: *backend-image-tag
+      tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
     ## @param api.events.podSecurityContext.enabled Enable security context

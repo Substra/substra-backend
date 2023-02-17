@@ -42,7 +42,7 @@ spec:
       {{- end }}
       containers:
         - name: scheduler-worker
-          image: {{ include "common.images.name" .Values.schedulerWorker.image }}
+          image: {{ include "substra-backend.images.name" (dict "img" .Values.schedulerWorker.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.schedulerWorker.image.pullPolicy }}
           command: ["/bin/bash"]
           args: ["-c", "celery -A backend worker -l info -n {{ .Values.organizationName }} -Q {{ .Values.organizationName }},scheduler,celery --hostname {{ .Values.organizationName }}.scheduler"]

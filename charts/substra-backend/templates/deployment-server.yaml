@@ -37,7 +37,7 @@ spec:
       {{- end }}
       containers:
       - name: server
-        image: {{ include "common.images.name" .Values.server.image }}
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
         command: ["/bin/bash"]
         {{- if eq .Values.settings "prod" }}
@@ -132,7 +132,7 @@ spec:
           {{- toYaml .Values.server.resources | nindent 12 }}
       {{- if .Values.server.metrics.enabled }}
       - name: metrics-sidecar
-        image: {{ include "common.images.name" .Values.server.metrics.image }}
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.metrics.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: {{ .Values.server.metrics.image.pullPolicy }}
         command: ["/bin/bash"]
         args:
@@ -185,7 +185,7 @@ spec:
         image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       - name: init-migrate
-        image: {{ include "common.images.name" .Values.server.image }}
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'migrate']
         envFrom:
           - configMapRef:
@@ -202,7 +202,7 @@ spec:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.settings }}
       - name: init-collectstatic
-        image: {{ include "common.images.name" .Values.server.image }}
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
         envFrom:
           - configMapRef:

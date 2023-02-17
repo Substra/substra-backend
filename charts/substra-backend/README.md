@@ -48,7 +48,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `server.uwsgiThreads`                             | The number of uwsgi threads                                                                                                                        | `10`                                       |
 | `server.image.registry`                           | Substra backend server image registry                                                                                                              | `ghcr.io`                                  |
 | `server.image.repository`                         | Substra backend server image repository                                                                                                            | `substra/substra-backend`                  |
-| `server.image.tag`                                | Substra backend server image tag                                                                                                                   | `0.35.1`                                   |
+| `server.image.tag`                                | Substra backend server image tag (defaults to AppVersion)                                                                                          | `nil`                                      |
 | `server.image.pullPolicy`                         | Substra backend server image pull policy                                                                                                           | `IfNotPresent`                             |
 | `server.image.pullSecrets`                        | Specify image pull secrets                                                                                                                         | `[]`                                       |
 | `server.podSecurityContext.enabled`               | Enable security context                                                                                                                            | `true`                                     |
@@ -93,7 +93,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `server.metrics.enabled`                          | Start a prometheus exporter                                                                                                                        | `false`                                    |
 | `server.metrics.image.registry`                   | Substra backend server Prometheus Exporter image registry                                                                                          | `ghcr.io`                                  |
 | `server.metrics.image.repository`                 | Substra backend server Prometheus Exporter image repository                                                                                        | `substra/substra-backend-metrics-exporter` |
-| `server.metrics.image.tag`                        | Substra backend server Prometheus Exporter image tag                                                                                               | `0.35.1`                                   |
+| `server.metrics.image.tag`                        | Substra backend server Prometheus Exporter image tag (defaults to AppVersion)                                                                      | `nil`                                      |
 | `server.metrics.image.pullPolicy`                 | Substra backend server Prometheus Exporter image pull policy                                                                                       | `IfNotPresent`                             |
 | `server.metrics.serviceMonitor.enabled`           | Create ServiceMonitor resource for scraping metrics using Prometheus Operator                                                                      | `false`                                    |
 | `server.metrics.serviceMonitor.namespace`         | Namespace for the ServiceMonitor resource (defaults to the Release Namespace)                                                                      | `""`                                       |
@@ -113,7 +113,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.concurrency`                           | Maximum amount of tasks to process in parallel                                                                                                     | `1`                       |
 | `worker.image.registry`                        | Substra backend worker image registry                                                                                                              | `ghcr.io`                 |
 | `worker.image.repository`                      | Substra backend worker image repository                                                                                                            | `substra/substra-backend` |
-| `worker.image.tag`                             | Substra backend worker image tag                                                                                                                   | `0.35.1`                  |
+| `worker.image.tag`                             | Substra backend worker image tag (defaults to AppVersion)                                                                                          | `nil`                     |
 | `worker.image.pullPolicy`                      | Substra backend worker image pull policy                                                                                                           | `IfNotPresent`            |
 | `worker.image.pullSecrets`                     | Specify image pull secrets                                                                                                                         | `[]`                      |
 | `worker.podSecurityContext.enabled`            | Enable security context                                                                                                                            | `true`                    |
@@ -134,7 +134,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.events.enabled`                        | Enable event service                                                                                                                               | `true`                    |
 | `worker.events.image.registry`                 | Substra event app image registry                                                                                                                   | `ghcr.io`                 |
 | `worker.events.image.repository`               | Substra event app image repository                                                                                                                 | `substra/substra-backend` |
-| `worker.events.image.tag`                      | Substra event app image tag                                                                                                                        | `0.35.1`                  |
+| `worker.events.image.tag`                      | Substra event app image tag (defaults to AppVersion)                                                                                               | `nil`                     |
 | `worker.events.image.pullPolicy`               | Substra event app image pull policy                                                                                                                | `IfNotPresent`            |
 | `worker.events.image.pullSecrets`              | Specify image pull secrets                                                                                                                         | `[]`                      |
 | `worker.events.podSecurityContext.enabled`     | Enable security context                                                                                                                            | `true`                    |
@@ -151,44 +151,44 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 ### Substra periodic tasks worker settings
 
-| Name                                            | Description                                       | Value                     |
-| ----------------------------------------------- | ------------------------------------------------- | ------------------------- |
-| `schedulerWorker.enabled`                       | Enable scheduler worker service                   | `true`                    |
-| `schedulerWorker.replicaCount`                  | Replica count for the periodic tasks worker       | `1`                       |
-| `schedulerWorker.image.registry`                | Substra backend tasks scheduler image registry    | `ghcr.io`                 |
-| `schedulerWorker.image.repository`              | Substra backend tasks scheduler image repository  | `substra/substra-backend` |
-| `schedulerWorker.image.tag`                     | Substra backend tasks scheduler image tag         | `0.35.1`                  |
-| `schedulerWorker.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`            |
-| `schedulerWorker.image.pullSecrets`             | Specify image pull secrets                        | `[]`                      |
-| `schedulerWorker.nodeSelector`                  | Node labels for pod assignment                    | `{}`                      |
-| `schedulerWorker.tolerations`                   | Toleration labels for pod assignment              | `[]`                      |
-| `schedulerWorker.affinity`                      | Affinity settings for pod assignment              | `{}`                      |
-| `schedulerWorker.resources`                     | Scheduler container resources requests and limits | `{}`                      |
-| `schedulerWorker.podSecurityContext.enabled`    | Enable security context                           | `true`                    |
-| `schedulerWorker.podSecurityContext.runAsUser`  | User ID for the pod                               | `1001`                    |
-| `schedulerWorker.podSecurityContext.runAsGroup` | Group ID for the pod                              | `1001`                    |
-| `schedulerWorker.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                   | `1001`                    |
+| Name                                            | Description                                                        | Value                     |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ------------------------- |
+| `schedulerWorker.enabled`                       | Enable scheduler worker service                                    | `true`                    |
+| `schedulerWorker.replicaCount`                  | Replica count for the periodic tasks worker                        | `1`                       |
+| `schedulerWorker.image.registry`                | Substra backend tasks scheduler image registry                     | `ghcr.io`                 |
+| `schedulerWorker.image.repository`              | Substra backend tasks scheduler image repository                   | `substra/substra-backend` |
+| `schedulerWorker.image.tag`                     | Substra backend tasks scheduler image tag (defaults to AppVersion) | `nil`                     |
+| `schedulerWorker.image.pullPolicy`              | Substra backend task scheduler image pull policy                   | `IfNotPresent`            |
+| `schedulerWorker.image.pullSecrets`             | Specify image pull secrets                                         | `[]`                      |
+| `schedulerWorker.nodeSelector`                  | Node labels for pod assignment                                     | `{}`                      |
+| `schedulerWorker.tolerations`                   | Toleration labels for pod assignment                               | `[]`                      |
+| `schedulerWorker.affinity`                      | Affinity settings for pod assignment                               | `{}`                      |
+| `schedulerWorker.resources`                     | Scheduler container resources requests and limits                  | `{}`                      |
+| `schedulerWorker.podSecurityContext.enabled`    | Enable security context                                            | `true`                    |
+| `schedulerWorker.podSecurityContext.runAsUser`  | User ID for the pod                                                | `1001`                    |
+| `schedulerWorker.podSecurityContext.runAsGroup` | Group ID for the pod                                               | `1001`                    |
+| `schedulerWorker.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                    | `1001`                    |
 
 
 ### Celery task scheduler settings
 
-| Name                                      | Description                                       | Value                     |
-| ----------------------------------------- | ------------------------------------------------- | ------------------------- |
-| `scheduler.enabled`                       | Enable scheduler service                          | `true`                    |
-| `scheduler.replicaCount`                  | Replica count for the scheduler server            | `1`                       |
-| `scheduler.image.registry`                | Subsra backend tasks scheduler image registry     | `ghcr.io`                 |
-| `scheduler.image.repository`              | Substra backend tasks scheduler image repository  | `substra/substra-backend` |
-| `scheduler.image.tag`                     | Substra backend tasks scheduler image tag         | `0.35.1`                  |
-| `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`            |
-| `scheduler.image.pullSecrets`             | Specify image pull secrets                        | `[]`                      |
-| `scheduler.resources`                     | Scheduler container resources requests and limits | `{}`                      |
-| `scheduler.nodeSelector`                  | Node labels for pod assignment                    | `{}`                      |
-| `scheduler.tolerations`                   | Toleration labels for pod assignment              | `[]`                      |
-| `scheduler.affinity`                      | Affinity settings for pod assignment              | `{}`                      |
-| `scheduler.podSecurityContext.enabled`    | Enable security context                           | `true`                    |
-| `scheduler.podSecurityContext.runAsUser`  | User ID for the pod                               | `1001`                    |
-| `scheduler.podSecurityContext.runAsGroup` | Group ID for the pod                              | `1001`                    |
-| `scheduler.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                   | `1001`                    |
+| Name                                      | Description                                                        | Value                     |
+| ----------------------------------------- | ------------------------------------------------------------------ | ------------------------- |
+| `scheduler.enabled`                       | Enable scheduler service                                           | `true`                    |
+| `scheduler.replicaCount`                  | Replica count for the scheduler server                             | `1`                       |
+| `scheduler.image.registry`                | Subsra backend tasks scheduler image registry                      | `ghcr.io`                 |
+| `scheduler.image.repository`              | Substra backend tasks scheduler image repository                   | `substra/substra-backend` |
+| `scheduler.image.tag`                     | Substra backend tasks scheduler image tag (defaults to AppVersion) | `nil`                     |
+| `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy                   | `IfNotPresent`            |
+| `scheduler.image.pullSecrets`             | Specify image pull secrets                                         | `[]`                      |
+| `scheduler.resources`                     | Scheduler container resources requests and limits                  | `{}`                      |
+| `scheduler.nodeSelector`                  | Node labels for pod assignment                                     | `{}`                      |
+| `scheduler.tolerations`                   | Toleration labels for pod assignment                               | `[]`                      |
+| `scheduler.affinity`                      | Affinity settings for pod assignment                               | `{}`                      |
+| `scheduler.podSecurityContext.enabled`    | Enable security context                                            | `true`                    |
+| `scheduler.podSecurityContext.runAsUser`  | User ID for the pod                                                | `1001`                    |
+| `scheduler.podSecurityContext.runAsGroup` | Group ID for the pod                                               | `1001`                    |
+| `scheduler.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                    | `1001`                    |
 
 
 ### Substra container registry settings
@@ -205,24 +205,24 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 ### Api event app settings
 
-| Name                                       | Description                                         | Value                     |
-| ------------------------------------------ | --------------------------------------------------- | ------------------------- |
-| `api.events.enabled`                       | Enable event service                                | `true`                    |
-| `api.events.image.registry`                | Substra event app image registry                    | `ghcr.io`                 |
-| `api.events.image.repository`              | Substra event app image repository                  | `substra/substra-backend` |
-| `api.events.image.tag`                     | Substra event app image tag                         | `0.35.1`                  |
-| `api.events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`            |
-| `api.events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                      |
-| `api.events.podSecurityContext.enabled`    | Enable security context                             | `true`                    |
-| `api.events.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                    |
-| `api.events.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                    |
-| `api.events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                    |
-| `api.events.nodeSelector`                  | Node labels for pod assignment                      | `{}`                      |
-| `api.events.tolerations`                   | Toleration labels for pod assignment                | `[]`                      |
-| `api.events.affinity`                      | Affinity settings for pod assignment                | `{}`                      |
-| `api.events.rbac.create`                   | Create a role and service account for the event app | `true`                    |
-| `api.events.serviceAccount.create`         | Create a service account for the event app          | `true`                    |
-| `api.events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                      |
+| Name                                       | Description                                          | Value                     |
+| ------------------------------------------ | ---------------------------------------------------- | ------------------------- |
+| `api.events.enabled`                       | Enable event service                                 | `true`                    |
+| `api.events.image.registry`                | Substra event app image registry                     | `ghcr.io`                 |
+| `api.events.image.repository`              | Substra event app image repository                   | `substra/substra-backend` |
+| `api.events.image.tag`                     | Substra event app image tag (defaults to AppVersion) | `nil`                     |
+| `api.events.image.pullPolicy`              | Substra event app image pull policy                  | `IfNotPresent`            |
+| `api.events.image.pullSecrets`             | Specify image pull secrets                           | `[]`                      |
+| `api.events.podSecurityContext.enabled`    | Enable security context                              | `true`                    |
+| `api.events.podSecurityContext.runAsUser`  | User ID for the pod                                  | `1001`                    |
+| `api.events.podSecurityContext.runAsGroup` | Group ID for the pod                                 | `1001`                    |
+| `api.events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                      | `1001`                    |
+| `api.events.nodeSelector`                  | Node labels for pod assignment                       | `{}`                      |
+| `api.events.tolerations`                   | Toleration labels for pod assignment                 | `[]`                      |
+| `api.events.affinity`                      | Affinity settings for pod assignment                 | `{}`                      |
+| `api.events.rbac.create`                   | Create a role and service account for the event app  | `true`                    |
+| `api.events.serviceAccount.create`         | Create a service account for the event app           | `true`                    |
+| `api.events.serviceAccount.name`           | The name of the ServiceAccount to use                | `""`                      |
 
 
 ### Orchestrator settings

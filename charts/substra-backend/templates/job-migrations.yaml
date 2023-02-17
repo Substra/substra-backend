@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
       - name: db-migrations
-        image: {{ include "common.images.name" .Values.server.image }}
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: {{ .Values.server.image.pullPolicy }}
         command: ["/bin/bash", "-c"]
         args:

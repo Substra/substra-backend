@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.3.4
+
+### Changed
+- Make backend image tags default to the chart `appVersion`, and set it to `null` in the default values
+
 ## 22.3.3
 
 ### Changed

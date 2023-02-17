@@ -105,7 +105,7 @@ spec:
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       containers:
         - name: worker
-          image: {{ include "common.images.name" .Values.worker.image }}
+          image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: "{{ .Values.worker.image.pullPolicy }}"
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
