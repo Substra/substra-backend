@@ -19,5 +19,5 @@ pdbpp==0.10.3
 factory-boy==3.2.1
 mypy==0.981
 djangorestframework-stubs==1.7.0
-django-stubs==1.12.0
+django-stubs==1.14.0
 celery-types==0.14.0
