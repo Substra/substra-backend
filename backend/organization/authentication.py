@@ -1,3 +1,4 @@
+from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -9,7 +10,7 @@ class OrganizationUser(User):
 
 
 # TODO: should be removed when organization to organization authent will be done via certificates
-class OrganizationBackend:
+class OrganizationBackend(BaseBackend):
     """Authenticate organization"""
 
     def authenticate(self, request, username=None, password=None):
