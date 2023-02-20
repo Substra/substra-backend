@@ -1,6 +1,6 @@
 from typing import Union
 
-from django.utils.duration import duration_string
+from django.utils.duration import duration_microseconds
 from rest_framework import serializers
 
 from api.models import ComputeTask
@@ -9,6 +9,8 @@ from api.models.task_profiling import ProfilingStep
 
 
 class ProfilingStepSerializer(serializers.ModelSerializer):
+    duration = serializers.SerializerMethodField()
+
     class Meta:
         model = ProfilingStep
         fields = [
@@ -19,6 +21,9 @@ class ProfilingStepSerializer(serializers.ModelSerializer):
     def create(self, data):
         profiling_step, created = ProfilingStep.objects.update_or_create(**data)
         return profiling_step
+
+    def get_duration(self, obj):
+        return duration_microseconds(obj.duration)
 
 
 class TaskProfilingSerializer(serializers.ModelSerializer):
@@ -39,7 +44,7 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
     def get_task_duration(self, obj: TaskProfiling) -> Union[str, None]:
         if obj.compute_task.start_date is not None and obj.compute_task.end_date is not None:
             duration = obj.compute_task.end_date - obj.compute_task.start_date
-            return duration_string(duration)
+            return duration_microseconds(duration)
         else:
             return None
 

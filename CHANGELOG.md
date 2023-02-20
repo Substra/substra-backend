@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: rename Algo to Function ([#573](https://github.com/Substra/substra-backend/pull/573))
 - Rename fields in export perf csv ([#593](https://github.com/Substra/substra-backend/pull/593))
+- Durations in task profiling formatted in microseconds instead of 'DD hh:mm:ss.uuuuuu' ([#598](https://github.com/Substra/substra-backend/pull/598))
 
 ## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
 
