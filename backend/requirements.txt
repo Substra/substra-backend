@@ -3,7 +3,7 @@ structlog==22.1.0
 django-structlog==3.0.1
 celery==5.2.7
 checksumdir==1.2.0
-cryptography==38.0.4
+cryptography==39.0.1
 django-cors-headers==3.13.0
 django-celery-results==2.4.0
 djangorestframework==3.14.0
