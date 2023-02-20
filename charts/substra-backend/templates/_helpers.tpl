@@ -175,3 +175,17 @@ Return the user list
     {{ default "default" .Values.api.events.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Return the proper image name, with option for a default tag
+example:
+    {{ include "substra-backend.images.name" (dict "img" .Values.path.to.the.image "defaultTag" $.Chart.AppVersion) }}
+*/}}
+{{- define "substra-backend.images.name" -}}
+    {{- $tag := (.img.tag | default .defaultTag) }}
+    {{- if .img.registry -}}
+    {{- printf "%s/%s:%s" .img.registry .img.repository $tag -}}
+    {{- else -}}
+    {{- printf "%s:%s" .img.repository $tag -}}
+    {{- end -}}
+{{- end -}}

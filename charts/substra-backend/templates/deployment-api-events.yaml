@@ -39,7 +39,7 @@ spec:
       serviceAccountName: {{ include "substra.api.events.serviceAccountName" . }}
       containers:
         - name: api-event-app
-          image: {{ include "common.images.name" .Values.api.events.image }}
+          image: {{ include "substra-backend.images.name" (dict "img" .Values.api.events.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.api.events.image.pullPolicy }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
@@ -113,7 +113,7 @@ spec:
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
         - name: wait-init-migrations
-          image: {{ include "common.images.name" .Values.api.events.image }}
+          image: {{ include "substra-backend.images.name" (dict "img" .Values.api.events.image "defaultTag" $.Chart.AppVersion) }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
           volumeMounts:
             - name: volume-wait-init-migrations

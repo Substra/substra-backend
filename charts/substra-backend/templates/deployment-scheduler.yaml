@@ -39,7 +39,7 @@ spec:
       {{- end }}
       containers:
         - name: scheduler
-          image: {{ include "common.images.name" .Values.scheduler.image }}
+          image: {{ include "substra-backend.images.name" (dict "img" .Values.scheduler.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.scheduler.image.pullPolicy }}
           command: ["/bin/bash"]
           args: ["-c", "celery -A backend beat -l debug"]
