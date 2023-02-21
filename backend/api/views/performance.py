@@ -100,7 +100,7 @@ def _build_csv_headers(request) -> list:
     if request.query_params.get("metadata"):
         for md in request.query_params.get("metadata").split(","):
             headers.append(md)
-    headers.extend(["metric_name", "worker", "test_task_rank", "test_task_round", "performance"])
+    headers.extend(["function_name", "worker", "task_rank", "task_round", "performance"])
     return headers
 
 
@@ -118,8 +118,8 @@ def map_compute_plan_status(value) -> str:
 class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = ExportPerformanceSerializer
     filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend]
-    ordering_fields = ["test_task_rank", "test_task_round", "worker"]
-    ordering = ["test_task_rank", "test_task_round", "worker"]
+    ordering_fields = ["task_rank", "task_round", "worker"]
+    ordering = ["task_rank", "task_round", "worker"]
     pagination_class = LargePageNumberPagination
     filterset_class = PerformanceFilter
 
@@ -141,9 +141,9 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                 compute_plan_end_date=F("compute_task__compute_plan__end_date"),
                 compute_plan_metadata=F("compute_task__compute_plan__metadata"),
                 worker=F("compute_task__worker"),
-                test_task_rank=F("compute_task__rank"),
-                test_task_round=F("compute_task__metadata__round_idx"),
-                metric_name=F("metric__name"),
+                task_rank=F("compute_task__rank"),
+                task_round=F("compute_task__metadata__round_idx"),
+                function_name=F("metric__name"),
                 performance=F("value"),
                 **metadata,
             )

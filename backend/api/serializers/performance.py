@@ -98,10 +98,10 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
     compute_plan_start_date = serializers.DateTimeField()
     compute_plan_end_date = serializers.DateTimeField()
     compute_plan_metadata = serializers.JSONField()
-    metric_name = serializers.CharField()
+    function_name = serializers.CharField()
     worker = serializers.CharField()
-    test_task_rank = serializers.IntegerField()
-    test_task_round = serializers.IntegerField()
+    task_rank = serializers.IntegerField()
+    task_round = serializers.IntegerField()
     performance = serializers.FloatField()
 
     class Meta:
@@ -114,9 +114,9 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
             "compute_plan_start_date",
             "compute_plan_end_date",
             "compute_plan_metadata",
-            "metric_name",
+            "function_name",
             "worker",
-            "test_task_rank",
-            "test_task_round",
+            "task_rank",
+            "task_round",
             "performance",
         ]
