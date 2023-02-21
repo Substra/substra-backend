@@ -315,7 +315,7 @@ class PerformanceViewTests(APITestCase):
 
     def test_performance_export_with_metadata(self):
         metadata = "epochs,hidden_sizes,last_hidden_sizes"
-        params = urlencode({"metadata": metadata})
+        params = urlencode({"metadata_columns": metadata})
         response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
         content_list = list(response.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
