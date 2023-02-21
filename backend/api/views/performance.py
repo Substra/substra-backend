@@ -18,6 +18,7 @@ from api.models import ComputePlan as ComputePlan
 from api.models import Performance as Performance
 from api.serializers import CPPerformanceSerializer as CPPerformanceSerializer
 from api.serializers import ExportPerformanceSerializer as ExportPerformanceSerializer
+from api.views.computeplan import ComputePlanMetadataFilter
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -82,6 +83,8 @@ class PerformanceFilter(FilterSet):
     )
     key = UUIDInFilter(field_name="compute_task__compute_plan__key")
     owner = CharInFilter(field_name="compute_task__compute_plan__owner")
+    metric_key = UUIDInFilter(field_name="metric__key")
+    metric_output_identifier = CharInFilter(field_name="metric__outputs__identifier")
 
 
 class PerformanceMatchFilter(MatchFilter):
@@ -97,8 +100,8 @@ def _build_csv_headers(request) -> list:
         "compute_plan_start_date",
         "compute_plan_end_date",
     ]
-    if request.query_params.get("metadata"):
-        for md in request.query_params.get("metadata").split(","):
+    if request.query_params.get("metadata_columns"):
+        for md in request.query_params.get("metadata_columns").split(","):
             headers.append(md)
     headers.extend(["function_name", "worker", "task_rank", "task_round", "performance"])
     return headers
@@ -117,7 +120,7 @@ def map_compute_plan_status(value) -> str:
 
 class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = ExportPerformanceSerializer
-    filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend]
+    filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend, ComputePlanMetadataFilter]
     ordering_fields = ["task_rank", "task_round", "worker"]
     ordering = ["task_rank", "task_round", "worker"]
     pagination_class = LargePageNumberPagination
@@ -125,13 +128,13 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         metadata = {}
-        if self.request.query_params.get("metadata"):
-            for md in self.request.query_params.get("metadata").split(","):
+        if self.request.query_params.get("metadata_columns"):
+            for md in self.request.query_params.get("metadata_columns").split(","):
                 metadata[md] = F("compute_task__compute_plan__metadata__" + md)
 
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task", "metric", "compute_task__compute_plan")
+            .select_related("compute_task", "metric", "compute_task__compute_plan", "metric__outputs")
             .annotate(
                 compute_plan_key=F("compute_task__compute_plan__key"),
                 compute_plan_name=F("compute_task__compute_plan__name"),
