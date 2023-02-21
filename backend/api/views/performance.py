@@ -18,6 +18,7 @@ from api.models import ComputePlan as ComputePlan
 from api.models import Performance as Performance
 from api.serializers import CPPerformanceSerializer as CPPerformanceSerializer
 from api.serializers import ExportPerformanceSerializer as ExportPerformanceSerializer
+from api.views.computeplan import ComputePlanMetadataFilter
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -119,7 +120,7 @@ def map_compute_plan_status(value) -> str:
 
 class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = ExportPerformanceSerializer
-    filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend]
+    filter_backends = [PerformanceMatchFilter, OrderingFilter, DjangoFilterBackend, ComputePlanMetadataFilter]
     ordering_fields = ["task_rank", "task_round", "worker"]
     ordering = ["task_rank", "task_round", "worker"]
     pagination_class = LargePageNumberPagination
