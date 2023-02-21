@@ -33,7 +33,7 @@ class TaskProfilingViewTests(APITestCase):
         self.expected_results = [
             {
                 "compute_task_key": str(self.train_task.key),
-                "execution_rundown": [{"duration": "00:00:10", "step": "step 1"}],
+                "execution_rundown": [{"duration": 10000000, "step": "step 1"}],
                 "task_duration": None,
             }
         ]
@@ -94,7 +94,7 @@ class TaskProfilingViewTestsBackend(APITestCase):
         expected_result = [
             {
                 "compute_task_key": str(task.key),
-                "execution_rundown": [{"duration": "00:00:20", "step": "custom_step"}],
+                "execution_rundown": [{"duration": 20000000, "step": "custom_step"}],
                 "task_duration": None,
             }
         ]
