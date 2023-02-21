@@ -99,8 +99,8 @@ def _build_csv_headers(request) -> list:
         "compute_plan_start_date",
         "compute_plan_end_date",
     ]
-    if request.query_params.get("metadata"):
-        for md in request.query_params.get("metadata").split(","):
+    if request.query_params.get("metadata_columns"):
+        for md in request.query_params.get("metadata_columns").split(","):
             headers.append(md)
     headers.extend(["function_name", "worker", "task_rank", "task_round", "performance"])
     return headers
@@ -127,8 +127,8 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         metadata = {}
-        if self.request.query_params.get("metadata"):
-            for md in self.request.query_params.get("metadata").split(","):
+        if self.request.query_params.get("metadata_columns"):
+            for md in self.request.query_params.get("metadata_columns").split(","):
                 metadata[md] = F("compute_task__compute_plan__metadata__" + md)
 
         return (
