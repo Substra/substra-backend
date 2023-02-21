@@ -9,8 +9,6 @@ from api.models.task_profiling import ProfilingStep
 
 
 class ProfilingStepSerializer(serializers.ModelSerializer):
-    duration = serializers.SerializerMethodField()
-
     class Meta:
         model = ProfilingStep
         fields = [
@@ -22,8 +20,10 @@ class ProfilingStepSerializer(serializers.ModelSerializer):
         profiling_step, created = ProfilingStep.objects.update_or_create(**data)
         return profiling_step
 
-    def get_duration(self, obj):
-        return duration_microseconds(obj.duration)
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["duration"] = duration_microseconds(instance.duration)
+        return representation
 
 
 class TaskProfilingSerializer(serializers.ModelSerializer):
