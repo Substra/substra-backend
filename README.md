@@ -236,19 +236,13 @@ The Substra platform is built from several components (see the [architecture](ht
 - [substra-frontend](https://github.com/Substra/substra-frontend) is the frontend consuming the API exposed by the backend
 - [substra-tests](https://github.com/Substra/substra-tests) is the Substra end to end test suite
 
-## License
-
-This project is developed under the Apache License, Version 2.0 (Apache-2.0), located in the [LICENSE](./LICENSE) file.
-
-
-### Running the backend on arm64 architecture (apple chip)
-
+## Running the backend on arm64 architecture (apple chip)
 
 Tested with:
     * python 3.9.4
     * pip 22.0.4
 
-Currently only the dev mode is supported with this architecture.
+Currently, only the dev mode is supported with this architecture.
 
 1. uwsgi
 
@@ -258,3 +252,7 @@ sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framew
 ```
 
 2. Deploy with `skaffold run -p dev,arm64`
+
+## License
+
+This project is developed under the Apache License, Version 2.0 (Apache-2.0), located in the [LICENSE](./LICENSE) file.
