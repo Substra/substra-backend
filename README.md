@@ -239,8 +239,9 @@ The Substra platform is built from several components (see the [architecture](ht
 ## Running the backend on arm64 architecture (apple chip)
 
 Tested with:
-    * python 3.9.4
-    * pip 22.0.4
+
+* python 3.9.4
+* pip 22.0.4
 
 Currently, only the dev mode is supported with this architecture.
 
