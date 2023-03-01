@@ -265,6 +265,7 @@ class ComputeTaskViewSetConfig:
         return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .select_related("function")
+            .prefetch_related("inputs", "outputs", "inputs__asset", "outputs__assets", "algo__inputs", "algo__outputs")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
