@@ -36,6 +36,7 @@ class DataManagerViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
+        self.maxDiff = None
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
         self.url = reverse("api:data_manager-list")
@@ -49,7 +50,8 @@ class DataManagerViewTests(APITestCase):
         data_sample_1 = factory.create_datasample([data_manager_1])
         data_sample_2 = factory.create_datasample([data_manager_1])
         # only for retrieve view
-        self.data_sample_keys = [str(data_sample_1.key), str(data_sample_2.key)]
+        # sorted by key as it will be returned
+        self.data_sample_keys = sorted([str(data_sample_1.key), str(data_sample_2.key)])
 
         self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
