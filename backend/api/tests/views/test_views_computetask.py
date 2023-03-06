@@ -5,13 +5,13 @@ import tempfile
 import uuid
 from unittest import mock
 
-from django.test import override_settings
+from django.test import override_settings, utils
 from django.urls import reverse
 from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
-
+from django.db import connection
 from api.models import ComputeTask
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
@@ -748,3 +748,49 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,foo"}, **self.extra)
         data = response.json()
         assert data["count"] == 1
+
+
+@override_settings(
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+)
+class ComputeTaskViewPerfTests(ComputeTaskViewTests):
+    def setUp(self):
+        super().setUp()
+
+        input_keys = {
+            "opener": [self.data_manager.key],
+            "datasamples": [self.data_sample.key],
+        }
+
+        self.compute_tasks = []
+
+        for algo, category in (
+            (self.simple_algo, ComputeTask.Category.TASK_TRAIN),
+            (self.metric_algo, ComputeTask.Category.TASK_TEST),
+            (self.aggregate_algo, ComputeTask.Category.TASK_AGGREGATE)
+        ):
+            for i in range(20):
+                self.compute_tasks.append(factory.create_computetask(
+                            self.compute_plan,
+                            algo,
+                            inputs=factory.build_computetask_inputs(algo, input_keys),
+                            outputs=factory.build_computetask_outputs(algo),
+                            data_manager=self.data_manager,
+                            data_samples=[self.data_sample.key],
+                            category=category,
+                            status=ComputeTask.Status.STATUS_DONE,
+                        ))
+
+
+
+    def test_n_plus_one_queries_compute_task(self):
+        url = reverse("api:compute_plan_task-list", args=[self.compute_plan.key])
+
+        with utils.CaptureQueriesContext(connection) as queries:
+            response = self.client.get(url, **self.extra)
+        # the aim is to have a number of queries in O(1)
+        # at the time of writing this test, we have 27 queries
+        # I added a bit of buffer, but it should remain independent of the number of tasks
+        assert len(queries.captured_queries) < 35
+        raise RuntimeError(len(queries.captured_queries), len(self.compute_tasks))
