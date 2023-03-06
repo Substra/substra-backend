@@ -14,6 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
 from api.models import DataManager
+from api.models import DataSample
 from api.serializers import DataManagerSerializer
 from api.serializers import DataManagerWithRelationsSerializer
 from api.views.filters_utils import CharInFilter
@@ -171,7 +172,15 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
     filterset_class = DataManagerFilter
 
     def get_queryset(self):
-        return DataManager.objects.filter(channel=get_channel_name(self.request))
+        if self.action in ["list", "retrieve"]:
+            # Data_samples is ordered by  with the custom ObjectManager
+            # (https://github.com/Substra/substra-backend/blob/32240fcb4e06b3183b59e48bfc59a215794fdab5/backend/api/models/datasample.py#L6)
+            # It is  adding a costly join on TaskDataSample to get the order field
+            return DataManager.objects.filter(channel=get_channel_name(self.request)).prefetch_related(
+                models.Prefetch("data_samples", queryset=DataSample.objects_ordered_by_key.distinct())
+            )
+        else:
+            return DataManager.objects.filter(channel=get_channel_name(self.request))
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:

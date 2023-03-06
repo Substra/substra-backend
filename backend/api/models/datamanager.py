@@ -24,7 +24,7 @@ class DataManager(models.Model, AssetPermissionMixin):
     owner = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     metadata = models.JSONField()
-    channel = models.CharField(max_length=100)
+    channel = models.CharField(max_length=100, db_index=True)
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations
