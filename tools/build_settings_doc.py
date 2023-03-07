@@ -193,6 +193,7 @@ if __name__ == "__main__":
     settings["Global"] = load_settings_from_file(SETTINGS_FOLDER / "common.py")
     settings["Orchestrator"] = load_settings_from_file(SETTINGS_FOLDER / "deps/orchestrator.py")
     settings["Org"] = load_settings_from_file(SETTINGS_FOLDER / "deps/org.py")
+    settings["OpenID Connect"] = load_settings_from_file(SETTINGS_FOLDER / "deps/oidc.py")
     settings["CORS"] = load_settings_from_file(SETTINGS_FOLDER / "deps/cors.py")
     settings["Ledger"] = load_settings_from_file(SETTINGS_FOLDER / "deps/ledger.py")
     settings["Worker event app"] = load_settings_from_file(SETTINGS_FOLDER / "worker/events/common.py")

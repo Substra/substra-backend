@@ -267,6 +267,22 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
 
 
+### Single Sign-On through OpenID Connect
+
+| Name                                    | Description                                                                                                                                                   | Value   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `oidc.enabled`                          | Whether to enable OIDC authentication                                                                                                                         | `false` |
+| `oidc.clientSecretName`                 | The name of a secret containing the keys `OIDC_RP_CLIENT_ID` and `OIDC_RP_CLIENT_SECRET` (client ID and secret, typically issued by the provider)             | `nil`   |
+| `oidc.provider.url`                     | The identity provider URL (with scheme).                                                                                                                      | `nil`   |
+| `oidc.provider.endpoints.authorization` | Typically https://provider/auth                                                                                                                               | `nil`   |
+| `oidc.provider.endpoints.token`         | Typically https://provider/token                                                                                                                              | `nil`   |
+| `oidc.provider.endpoints.user`          | Typically https://provider/me                                                                                                                                 | `nil`   |
+| `oidc.provider.jwksUri`                 | Typically https://provider/jwks.                                                                                                                              | `nil`   |
+| `oidc.signAlgo`                         | Either RS256 or HS256                                                                                                                                         | `RS256` |
+| `oidc.userCreation.defaultChannel`      | An optional channel to assign OIDC users to by default                                                                                                        | `nil`   |
+| `oidc.userCreation.appendDomain`        | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`) | `false` |
+
+
 ### Helm hooks
 
 | Name                                       | Description                                                                 | Value             |

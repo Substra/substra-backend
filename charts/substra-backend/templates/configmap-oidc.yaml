@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-oidc
+  labels:
+  {{- include "substra.labels" . | nindent 4 }}
+data:
+  OIDC_ENABLED: {{ .Values.oidc.enabled | quote }}
+  OIDC_USERS_APPEND_DOMAIN: {{ .Values.oidc.userCreation.appendDomain | quote }}
+  OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | quote }}
+  OIDC_OP_URL: {{ .Values.oidc.provider.url | quote }}
+  OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.provider.endpoints.authorization | quote }}
+  OIDC_OP_TOKEN_ENDPOINT: {{ .Values.oidc.provider.endpoints.token | quote }}
+  OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.provider.endpoints.user | quote }}
+  OIDC_OP_JWKS_URI: {{ .Values.oidc.provider.jwksUri | quote }}

@@ -92,6 +92,21 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `BACKEND_DEFAULT_PORT` | `8000` |  |
 | string | `ORG_NAME` | nil |  |
 
+## OpenID Connect settings
+
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| bool | `OIDC_ENABLED` | `false` |  |
+| string | `OIDC_OP_AUTHORIZATION_ENDPOINT` | nil |  |
+| string | `OIDC_OP_JWKS_URI` | nil |  |
+| string | `OIDC_OP_TOKEN_ENDPOINT` | nil |  |
+| string | `OIDC_OP_URL` | nil |  |
+| string | `OIDC_OP_USER_ENDPOINT` | nil |  |
+| string | `OIDC_RP_CLIENT_ID` | nil |  |
+| string | `OIDC_RP_CLIENT_SECRET` | nil |  |
+| string | `OIDC_RP_SIGN_ALGO` | nil |  |
+| bool | `OIDC_USERS_SUFFIX_DOMAIN` | `false` |  |
+
 ## CORS settings
 
 | Type | Setting | Default value | Comment |

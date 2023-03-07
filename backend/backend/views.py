@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
@@ -46,6 +47,7 @@ class Info(APIView):
             "organization_id": get_owner(),
             "organization_name": settings.ORG_NAME,
             "config": {},
+            "auth": {}
         }
 
         if request.user.is_authenticated:
@@ -69,6 +71,12 @@ class Info(APIView):
 
             if orchestrator_versions and orchestrator_versions.chaincode:
                 res["chaincode_version"] = orchestrator_versions.chaincode
+
+        if settings.OIDC_ENABLED:
+            res["auth"]["oidc"] = {
+                "login_url": reverse("oidc_authentication_init"),
+                "logout_url": reverse("oidc_logout"),
+            }
 
         return ApiResponse(res)
 

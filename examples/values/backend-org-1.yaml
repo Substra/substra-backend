@@ -74,6 +74,15 @@ addAccountOperator:
       secret: "p@sswr0d44"
       channel: "yourchannel"
 
+oidc:
+  enabled: true
+  clientSecretName: oidc-secret
+  provider:
+    url: "http://oidc-provider:4000"
+  userCreation:
+    appendDomain: true
+    defaultChannel: mychannel
+
 hooks:
   serviceAccount: substra-backend-delete-hook
   deleteComputePods:

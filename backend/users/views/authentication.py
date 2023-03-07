@@ -1,5 +1,7 @@
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
+from django.contrib import auth
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.decorators import throttle_classes
@@ -12,6 +14,7 @@ from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
+from mozilla_django_oidc.views import OIDCAuthenticationCallbackView
 
 from libs.user_login_throttle import UserLoginThrottle
 from users.serializers import CustomTokenObtainPairSerializer
@@ -153,5 +156,77 @@ class AuthenticationViewSet(GenericViewSet):
         response.delete_cookie("header.payload", domain=settings.COMMON_HOST_DOMAIN)
         response.delete_cookie("signature", domain=settings.COMMON_HOST_DOMAIN)
         response.delete_cookie("refresh", domain=settings.COMMON_HOST_DOMAIN)
+
+        return response
+
+class OIDCAuthenticationCallbackJwtView(OIDCAuthenticationCallbackView):
+    """
+    The default OIDCAuthenticationCallbackView logs a user in via session, but this instead sets cookies as higher up
+    
+    based on source: https://github.com/mozilla/mozilla-django-oidc/blob/71e4af8283a10aa51234de705d34cd298e927f97/mozilla_django_oidc/views.py#L45
+    """
+    
+    def login_failure(self):
+        import logging
+        logging.getLogger(__name__).critical("LOLOLOL222")
+        return super().login_failure()
+        
+        
+    
+    def login_success(self):
+        import logging
+        logging.getLogger(__name__).critical("LOLOLOL")
+        user = getattr(self.request, "user", None)
+        
+        # if DEBUG, also log in via the session so we can use DRF's API browser
+        if settings.DEBUG:
+            # If the user hasn't changed (because this is a session refresh instead of a
+            # normal login), don't call login. This prevents invaliding the user's current CSRF token
+            if (
+                not user
+                or not user.is_authenticated
+                or user != self.user
+            ):
+                auth.login(self.request, self.user)
+        
+        refresh_token = RefreshToken.for_user(self.user)
+        access_token = refresh_token.access_token
+
+        # FIXME: OIDC token might expire first
+        access_expires = access_token.current_time + access_token.lifetime
+        # FIXME: refresh disabled for now as the refresh endpoints checks user creds
+        refresh_expires = access_expires # refresh_token.current_time + refresh_token.lifetime
+
+        access_token_string = str(access_token)
+        header_payload = ".".join(access_token_string.split(".")[0:2])
+        signature = access_token_string.split(".")[2]
+
+        response = HttpResponseRedirect(self.success_url, access_token.payload)
+
+        secure = not settings.DEBUG
+
+        response.set_cookie(
+            "header.payload",
+            value=header_payload,
+            expires=access_expires,
+            secure=secure,
+            domain=settings.COMMON_HOST_DOMAIN,
+        )
+        response.set_cookie(
+            "signature",
+            value=signature,
+            expires=access_expires,
+            httponly=True,
+            secure=secure,
+            domain=settings.COMMON_HOST_DOMAIN,
+        )
+        response.set_cookie(
+            "refresh",
+            value=str(refresh_token),
+            expires=refresh_expires,
+            httponly=True,
+            secure=secure,
+            domain=settings.COMMON_HOST_DOMAIN,
+        )
 
         return response
