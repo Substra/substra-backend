@@ -3,13 +3,12 @@ import os
 
 import requests
 
-_LOGGER = logging.getLogger(__name__)
-
-
 from .. import common
 
+_LOGGER = logging.getLogger(__name__)
+
 OIDC_ENABLED = common.to_bool(os.environ.get("OIDC_ENABLED", "false"))
-if OIDC_ENABLED:
+if OIDC_ENABLED:  # noqa: C901
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
     common.AUTHENTICATION_BACKENDS += ["mozilla_django_oidc.auth.OIDCAuthenticationBackend"]
     common.LOGGING["loggers"]["mozilla_django_oidc"] = {

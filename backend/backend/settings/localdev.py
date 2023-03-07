@@ -1,5 +1,5 @@
-from .test import *
 from .deps.oidc import *
+from .test import *
 
 # Enable Browsable API
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ("rest_framework.renderers.BrowsableAPIRenderer",)

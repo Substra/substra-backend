@@ -47,7 +47,7 @@ class Info(APIView):
             "organization_id": get_owner(),
             "organization_name": settings.ORG_NAME,
             "config": {},
-            "auth": {}
+            "auth": {},
         }
 
         if request.user.is_authenticated:

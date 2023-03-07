@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.4.0
+
+### Added
+- Add a new `oidc` field, allowing SSO through OpenID Connect.
+
 ## 22.3.4
 
 ### Changed

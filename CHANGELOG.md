@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefetch `outputs` in `_PerformanceMetricSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
 - Index on `DataManager.channel` ([#607](https://github.com/Substra/substra-backend/pull/607))
 - Prefetch on `DataManager.data_samples` ([#607](https://github.com/Substra/substra-backend/pull/607))
-
+- OpenID Connect integration (#609)
 
 ### Fixed
 

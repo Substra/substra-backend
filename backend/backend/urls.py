@@ -66,7 +66,7 @@ if BrowsableAPIRenderer in api_settings.DEFAULT_RENDERER_CLASSES:
 urlpatterns += [path("info/", info_view)]
 
 if settings.OIDC_ENABLED:
-    urlpatterns += [path("oidc/", include('mozilla_django_oidc.urls'))]
+    urlpatterns += [path("oidc/", include("mozilla_django_oidc.urls"))]
 
 if settings.SUBPATH:
     urlpatterns = [path(f"{settings.SUBPATH}", include(urlpatterns))]
