@@ -680,12 +680,9 @@ oidc:
   ## @param oidc.signAlgo Either RS256 or HS256
   signAlgo: RS256
   userCreation:
-    ## @param oidc.userCreation.defaultChannel An optional channel to assign OIDC users to by default
-    ## TODO to be implemented
-    ##
+    ## @param oidc.userCreation.defaultChannel The channel to assign OIDC users to (mandatory)
     defaultChannel: null
     ## @param oidc.userCreation.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)
-    ##
     appendDomain: false
 
 ## @skip postgresql

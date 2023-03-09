@@ -21,6 +21,44 @@ from users.serializers import CustomTokenObtainPairSerializer
 from users.serializers import CustomTokenRefreshSerializer
 
 
+def set_token_cookies(response: Response, refresh_token) -> None:
+
+    access_token = refresh_token.access_token
+
+    access_expires = access_token.current_time + access_token.lifetime
+    refresh_expires = refresh_token.current_time + refresh_token.lifetime
+
+    access_token_string = str(access_token)
+    header_payload = ".".join(access_token_string.split(".")[0:2])
+    signature = access_token_string.split(".")[2]
+
+    secure = not settings.DEBUG
+
+    response.set_cookie(
+        "header.payload",
+        value=header_payload,
+        expires=access_expires,
+        secure=secure,
+        domain=settings.COMMON_HOST_DOMAIN,
+    )
+    response.set_cookie(
+        "signature",
+        value=signature,
+        expires=access_expires,
+        httponly=True,
+        secure=secure,
+        domain=settings.COMMON_HOST_DOMAIN,
+    )
+    response.set_cookie(
+        "refresh",
+        value=str(refresh_token),
+        expires=refresh_expires,
+        httponly=True,
+        secure=secure,
+        domain=settings.COMMON_HOST_DOMAIN,
+    )
+
+
 class AuthenticationViewSet(GenericViewSet):
     queryset = User.objects.all()
     serializer_class = CustomTokenObtainPairSerializer
@@ -48,40 +86,9 @@ class AuthenticationViewSet(GenericViewSet):
         refresh_token = data
         access_token = data.access_token
 
-        access_expires = access_token.current_time + access_token.lifetime
-        refresh_expires = refresh_token.current_time + refresh_token.lifetime
-
-        access_token_string = str(access_token)
-        header_payload = ".".join(access_token_string.split(".")[0:2])
-        signature = access_token_string.split(".")[2]
-
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
-        secure = not settings.DEBUG
-
-        response.set_cookie(
-            "header.payload",
-            value=header_payload,
-            expires=access_expires,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "signature",
-            value=signature,
-            expires=access_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "refresh",
-            value=str(refresh_token),
-            expires=refresh_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
+        set_token_cookies(response, refresh_token)
 
         return response
 
@@ -100,40 +107,9 @@ class AuthenticationViewSet(GenericViewSet):
         refresh_token = data
         access_token = data.access_token
 
-        access_expires = access_token.current_time + access_token.lifetime
-        refresh_expires = refresh_token.current_time + refresh_token.lifetime
-
-        access_token_string = str(access_token)
-        header_payload = ".".join(access_token_string.split(".")[0:2])
-        signature = access_token_string.split(".")[2]
-
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
-        secure = not settings.DEBUG
-
-        response.set_cookie(
-            "header.payload",
-            value=header_payload,
-            expires=access_expires,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "signature",
-            value=signature,
-            expires=access_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "refresh",
-            value=str(refresh_token),
-            expires=refresh_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
+        set_token_cookies(response, refresh_token)
 
         return response
 
@@ -180,41 +156,8 @@ class OIDCAuthenticationCallbackJwtView(OIDCAuthenticationCallbackView):
         refresh_token = RefreshToken.for_user(self.user)
         access_token = refresh_token.access_token
 
-        # FIXME: OIDC token might expire first
-        access_expires = access_token.current_time + access_token.lifetime
-        # FIXME: refresh disabled for now as the refresh endpoints checks user creds
-        refresh_expires = access_expires  # refresh_token.current_time + refresh_token.lifetime
-
-        access_token_string = str(access_token)
-        header_payload = ".".join(access_token_string.split(".")[0:2])
-        signature = access_token_string.split(".")[2]
-
         response = HttpResponseRedirect(self.success_url, access_token.payload)
-
-        secure = not settings.DEBUG
-
-        response.set_cookie(
-            "header.payload",
-            value=header_payload,
-            expires=access_expires,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "signature",
-            value=signature,
-            expires=access_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
-        response.set_cookie(
-            "refresh",
-            value=str(refresh_token),
-            expires=refresh_expires,
-            httponly=True,
-            secure=secure,
-            domain=settings.COMMON_HOST_DOMAIN,
-        )
+        # FIXME we should change how we hand out tokens based on the OpenID token?
+        set_token_cookies(response, refresh_token)
 
         return response

@@ -279,7 +279,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `oidc.provider.endpoints.user`          | Typically https://provider/me                                                                                                                                 | `nil`   |
 | `oidc.provider.jwksUri`                 | Typically https://provider/jwks.                                                                                                                              | `nil`   |
 | `oidc.signAlgo`                         | Either RS256 or HS256                                                                                                                                         | `RS256` |
-| `oidc.userCreation.defaultChannel`      | An optional channel to assign OIDC users to by default                                                                                                        | `nil`   |
+| `oidc.userCreation.defaultChannel`      | The channel to assign OIDC users to (mandatory)                                                                                                               | `nil`   |
 | `oidc.userCreation.appendDomain`        | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`) | `false` |
 
 

@@ -11,6 +11,10 @@ from django.utils.encoding import smart_str
 LOGGER = logging.getLogger(__name__)
 ALLOWED_CHARS_RE = re.compile(r"[^a-z0-9-]")
 
+"""
+Creating a username from an email is used for OIDC accounts
+"""
+
 
 def _sanitize(string: str) -> str:
     """
@@ -32,7 +36,7 @@ def _split_email_addr(addr: str) -> tuple[str, str]:
 
 
 def _default_username_from_email(email: str) -> str:
-    username = smart_str(base64.urlsafe_b64encode(hashlib.sha1(force_bytes(email)).digest()).rstrip(b"="))
+    username = smart_str(base64.urlsafe_b64encode(hashlib.sha256(force_bytes(email)).digest()).rstrip(b"="))
     existing_users = User.objects.filter(username=username)
     if len(existing_users) > 0:
         raise Exception(f"Default username {username} for email {email} is already taken!")

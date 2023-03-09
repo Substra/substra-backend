@@ -4,23 +4,30 @@ import os
 import requests
 
 from .. import common
+from . import ledger
 
 _LOGGER = logging.getLogger(__name__)
 
 OIDC_ENABLED = common.to_bool(os.environ.get("OIDC_ENABLED", "false"))
 if OIDC_ENABLED:  # noqa: C901
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
-    common.AUTHENTICATION_BACKENDS += ["mozilla_django_oidc.auth.OIDCAuthenticationBackend"]
+    common.AUTHENTICATION_BACKENDS += ["users.authentication.SubstraOIDCAuthenticationBackend"]
     common.LOGGING["loggers"]["mozilla_django_oidc"] = {
         "level": common.LOG_LEVEL,
         "handlers": ["console"],
         "propagate": False,
     }
 
-    if common.to_bool(os.environ.get("OIDC_USERS_SUFFIX_DOMAIN", "false")):
+    if common.to_bool(os.environ.get("OIDC_USERS_APPEND_DOMAIN", "false")):
         OIDC_USERNAME_ALGO = "users.utils.username_with_domain_from_email"
     else:
         OIDC_USERNAME_ALGO = "users.utils.username_from_email"
+
+    OIDC_USERS_DEFAULT_CHANNEL = os.environ.get("OIDC_USERS_DEFAULT_CHANNEL")
+    if not OIDC_USERS_DEFAULT_CHANNEL:
+        raise Exception("No default channel provided for OIDC users")
+    if OIDC_USERS_DEFAULT_CHANNEL not in ledger.LEDGER_CHANNELS:
+        raise Exception(f"Channel {OIDC_USERS_DEFAULT_CHANNEL} does not exist")
 
     OIDC_CALLBACK_CLASS = "users.views.authentication.OIDCAuthenticationCallbackJwtView"
 

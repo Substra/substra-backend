@@ -7,6 +7,7 @@ metadata:
 data:
   OIDC_ENABLED: {{ .Values.oidc.enabled | quote }}
   OIDC_USERS_APPEND_DOMAIN: {{ .Values.oidc.userCreation.appendDomain | quote }}
+  OIDC_USERS_DEFAULT_CHANNEL: {{ .Values.oidc.userCreation.defaultChannel | quote }}
   OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | quote }}
   OIDC_OP_URL: {{ .Values.oidc.provider.url | quote }}
   OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.provider.endpoints.authorization | quote }}
