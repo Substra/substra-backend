@@ -27,7 +27,7 @@ from api.models.function import FunctionInput
 from api.models.function import FunctionOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
-from api.serializers import ComputeTaskSerializer
+from api.serializers import ComputeTaskSerializer, ComputeTaskWithDetailsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -92,13 +92,13 @@ def task_bulk_create(request):
     for task in orc_data:
         api_data = computetask.orc_to_api(task)
         api_data["channel"] = get_channel_name(request)
-        api_serializer = ComputeTaskSerializer(data=api_data)
+        api_serializer = ComputeTaskWithDetailsSerializer(data=api_data)
         try:
             api_serializer.save_if_not_exists()
         except AlreadyExistsError:
             # May happen if the events app already processed the event pushed by the orchestrator
             compute_task = ComputeTask.objects.get(key=api_data["key"])
-            api_task_data = ComputeTaskSerializer(compute_task).data
+            api_task_data = ComputeTaskWithDetailsSerializer(compute_task).data
         else:
             api_task_data = api_serializer.data
         data.append(api_task_data)
@@ -223,11 +223,18 @@ class ComputeTaskViewSetConfig:
     pagination_class = DefaultPageNumberPagination
     search_fields = ("key",)
     filterset_class = ComputeTaskFilter
-    serializer_class = ComputeTaskSerializer
 
     @action(methods=["post"], detail=False, url_name="bulk_create")
     def bulk_create(self, request, *args, **kwargs):
         return task_bulk_create(request)
+
+
+class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+    def get_serializer_class(self) -> type[ComputeTaskSerializer]:
+        if self.detail:
+            return ComputeTaskWithDetailsSerializer
+        else:
+            return ComputeTaskSerializer
 
     @action(detail=True, url_name="input_assets")
     def input_assets(self, request, pk):
@@ -265,7 +272,9 @@ class ComputeTaskViewSetConfig:
         return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .select_related("function")
-            .prefetch_related("inputs", "outputs", "inputs__asset", "outputs__assets", "algo__inputs", "algo__outputs")
+            .prefetch_related(
+                "inputs", "outputs", "inputs__asset", "outputs__assets", "function__inputs", "function__outputs"
+            )
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
@@ -276,22 +285,44 @@ class ComputeTaskViewSetConfig:
             )
         )
 
-
-class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
-    pass
+    def get_queryset(self):
+        return (
+            ComputeTask.objects.filter(channel=get_channel_name(self.request))
+            .select_related("algo")
+            .prefetch_related("inputs", "outputs", "inputs__asset", "outputs__assets", "algo__inputs", "algo__outputs")
+            .annotate(
+                # Using 0 as default value instead of None for ordering purpose, as default
+                # Postgres behavior considers null as greater than any other value.
+                duration=models.Case(
+                models.When(start_date__isnull=True, then=0),
+                default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+                )
+            )
+        )
 
 
 class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericViewSet):
+
+    serializer_class = ComputeTaskSerializer
+<<<<<<< HEAD
+=======
+
+>>>>>>> cbab18e9 (fixup! fix: duplicate compute task serializer)
     def get_queryset(self):
         compute_plan_key = self.kwargs.get("compute_plan_pk")
         validate_key(compute_plan_key)
 
-        queryset = super().get_queryset()
-        return queryset.filter(compute_plan__key=compute_plan_key).annotate(
-            # Using 0 as default value instead of None for ordering purpose, as default
-            # Postgres behavior considers null as greater than any other value.
-            duration=models.Case(
-                models.When(start_date__isnull=True, then=0),
-                default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+        return (
+            ComputeTask.objects.filter(channel=get_channel_name(self.request))
+            .filter(compute_plan__key=compute_plan_key)
+            .select_related("algo")
+            .prefetch_related("algo__inputs", "algo__outputs")
+            .annotate(
+                # Using 0 as default value instead of None for ordering purpose, as default
+                # Postgres behavior considers null as greater than any other value.
+                duration=models.Case(
+                    models.When(start_date__isnull=True, then=0),
+                    default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
+                )
             )
         )
