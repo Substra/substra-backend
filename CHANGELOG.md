@@ -10,12 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add filters to performances export (#590)
+- filter warnings in `pyproject.toml` to follow deprecation messages in `pkg_resources`([#612](https://github.com/Substra/substra-backend/pull/612))
+
 
 ### Changed
 
 - BREAKING: rename Algo to Function ([#573](https://github.com/Substra/substra-backend/pull/573))
 - Rename fields in export perf csv ([#593](https://github.com/Substra/substra-backend/pull/593))
 - Durations in task profiling formatted in microseconds instead of 'DD hh:mm:ss.uuuuuu' ([#598](https://github.com/Substra/substra-backend/pull/598))
+
+### Removed
+
+- filter warnings in `pyproject.toml` for previous deprecation warning in `rest_framework_simplejwt` ([#612](https://github.com/Substra/substra-backend/pull/612))
 
 ## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
 
