@@ -180,7 +180,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
         model = ComputeTask
         fields = [
-            "algo",
+            "function",
             "channel",
             "compute_plan_key",
             "creation_date",

@@ -285,29 +285,18 @@ class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mi
             )
         )
 
-    def get_queryset(self):
-        return (
-            ComputeTask.objects.filter(channel=get_channel_name(self.request))
-            .select_related("algo")
-            .prefetch_related("inputs", "outputs", "inputs__asset", "outputs__assets", "algo__inputs", "algo__outputs")
-            .annotate(
-                # Using 0 as default value instead of None for ordering purpose, as default
-                # Postgres behavior considers null as greater than any other value.
-                duration=models.Case(
-                models.When(start_date__isnull=True, then=0),
-                default=Extract(Coalesce("end_date", Now()) - models.F("start_date"), "epoch"),
-                )
-            )
-        )
-
 
 class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericViewSet):
 
     serializer_class = ComputeTaskSerializer
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> cbab18e9 (fixup! fix: duplicate compute task serializer)
+=======
+
+>>>>>>> 2de20d7e (fix: post-rebase fixes)
     def get_queryset(self):
         compute_plan_key = self.kwargs.get("compute_plan_pk")
         validate_key(compute_plan_key)
@@ -315,8 +304,8 @@ class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericView
         return (
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .filter(compute_plan__key=compute_plan_key)
-            .select_related("algo")
-            .prefetch_related("algo__inputs", "algo__outputs")
+            .select_related("function")
+            .prefetch_related("function__inputs", "function__outputs")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
