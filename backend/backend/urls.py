@@ -26,6 +26,7 @@ from rest_framework.settings import api_settings
 from api.urls import urlpatterns
 from backend.views import info_view
 from backend.views import obtain_auth_token
+from backend.views import obtain_auth_token_already_authenticated
 from organization.urls import router as organization_router
 from users.urls import router as user_router
 
@@ -39,6 +40,7 @@ urlpatterns = (
                     path("", include((organization_router.urls, "organization"))),
                     path("", include((user_router.urls, "user"))),  # for secure jwt authent
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
+                    path("api-token-tap/", obtain_auth_token_already_authenticated),
                 ]
             ),
         ),

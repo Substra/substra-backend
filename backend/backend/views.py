@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
@@ -15,7 +16,24 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 
 
+def _get_bearer_token(user):
+    if settings.TOKEN_STRATEGY == "reuse":  # nosec
+        token, created = Token.objects.get_or_create(user=user)
+        # token_expire_handler will check whether the token is expired
+        # and will generate a new one if necessary
+        is_expired, token = token_expire_handler(token)
+    else:
+        # token should be new each time, remove the old one
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+    return token
+
+
 class ExpiryObtainAuthToken(ObtainAuthToken):
+    """
+    get a Bearer token from {username, password}
+    """
+
     authentication_classes = []
     throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
@@ -23,19 +41,23 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-
-        if settings.TOKEN_STRATEGY == "reuse":  # nosec
-            token, created = Token.objects.get_or_create(user=user)
-
-            # token_expire_handler will check, if the token is expired it will generate new one
-            is_expired, token = token_expire_handler(token)
-
-        else:
-            # token should be new each time, remove the old one
-            Token.objects.filter(user=user).delete()
-            token = Token.objects.create(user=user)
-
+        token = _get_bearer_token(user)
         return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
+
+
+class AuthenticatedAuthToken(ObtainAuthToken):
+    """
+    get a Bearer token if you're already authenticated somehow
+    """
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            token = _get_bearer_token(request.user)
+            return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
+        return ApiResponse(
+            data={"message": "must provide a valid token to set a new password"},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
 
 class Info(APIView):
@@ -74,12 +96,13 @@ class Info(APIView):
 
         if settings.OIDC_ENABLED:
             res["auth"]["oidc"] = {
+                "name": settings.OIDC_OP_DISPLAY_NAME,
                 "login_url": reverse("oidc_authentication_init"),
-                "logout_url": reverse("oidc_logout"),
             }
 
         return ApiResponse(res)
 
 
 obtain_auth_token = ExpiryObtainAuthToken.as_view()
+obtain_auth_token_already_authenticated = AuthenticatedAuthToken.as_view()
 info_view = Info.as_view()

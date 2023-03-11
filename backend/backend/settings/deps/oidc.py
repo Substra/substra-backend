@@ -29,7 +29,8 @@ if OIDC_ENABLED:  # noqa: C901
     if OIDC_USERS_DEFAULT_CHANNEL not in ledger.LEDGER_CHANNELS:
         raise Exception(f"Channel {OIDC_USERS_DEFAULT_CHANNEL} does not exist")
 
-    OIDC_CALLBACK_CLASS = "users.views.authentication.OIDCAuthenticationCallbackJwtView"
+    OIDC_AUTHENTICATE_CLASS = "users.views.authentication.SubstraOIDCAuthenticationRequestView"
+    OIDC_CALLBACK_CLASS = "users.views.authentication.SubstraOIDCAuthenticationCallbackView"
 
     OIDC_RP_CLIENT_ID = os.environ.get("OIDC_RP_CLIENT_ID")
     OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET")
@@ -41,6 +42,9 @@ if OIDC_ENABLED:  # noqa: C901
     OIDC_OP_JWKS_ENDPOINT = os.environ.get("OIDC_OP_JWKS_URI")
 
     _OIDC_OP_URL = os.environ.get("OIDC_OP_URL").removesuffix("/")
+    OIDC_OP_DISPLAY_NAME = os.environ.get("OIDC_OP_DISPLAY_NAME")
+    if not OIDC_OP_DISPLAY_NAME:
+        OIDC_OP_DISPLAY_NAME = _OIDC_OP_URL
 
     # put the OP URL before the endpoints, but not JWKS
     # (it is specified as URI, not endpoint, despite the mozilla_django_oidc name)

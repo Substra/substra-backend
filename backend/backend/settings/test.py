@@ -9,6 +9,7 @@ logging.disable(logging.CRITICAL)
 
 ORG_NAME = "OrgTestSuite"
 DEFAULT_DOMAIN = "http://testserver"
+ALLOWED_HOSTS = ["testserver"]
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()  # overridden in individual tests
 SUBTUPLE_DIR = os.path.join(MEDIA_ROOT, "subtuple")

@@ -79,6 +79,7 @@ oidc:
   clientSecretName: oidc-secret
   provider:
     url: "http://oidc-provider:4000"
+    displayName: Dev Provider
   userCreation:
     appendDomain: true
     defaultChannel: mychannel

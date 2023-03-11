@@ -10,6 +10,7 @@ data:
   OIDC_USERS_DEFAULT_CHANNEL: {{ .Values.oidc.userCreation.defaultChannel | quote }}
   OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | quote }}
   OIDC_OP_URL: {{ .Values.oidc.provider.url | quote }}
+  OIDC_OP_DISPLAY_NAME: {{ .Values.oidc.provider.displayName | quote }}
   OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.provider.endpoints.authorization | quote }}
   OIDC_OP_TOKEN_ENDPOINT: {{ .Values.oidc.provider.endpoints.token | quote }}
   OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.provider.endpoints.user | quote }}

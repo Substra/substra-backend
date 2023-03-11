@@ -5,6 +5,8 @@ The API provide 3 authentication modes.
 - Bearer token: used by the SDK (substra client).
 - JWT cookie: used by the substra frontend.
 
+OpenID Connect (OIDC) plays into JWT and session ID.
+
 ## Session ID
 
 - URL: `/api-auth/login/`
@@ -143,3 +145,7 @@ curl \
   http://substra-backend.org-1.com/me/refresh/
 {"token_type":"access","exp":1665069744,"iat":1664983339,"jti":"a1c7535880a64f6b864673bd6ee8fec0","user_id":1}
 ```
+
+## OpenID Connect
+
+Reach `/oidc/authenticate` with a browser. A string of redirects will end on `/oidc/callback`, which will set JWT tokens on the client and, if debug mode is on, also log in the user in the session for DRF's API browser.

@@ -663,6 +663,8 @@ oidc:
   provider:
     ## @param oidc.provider.url The identity provider URL (with scheme).
     url: null
+    ## @param The name of the provider as displayed in the interface ("Sign in with X")
+    displayName: null
     # @param oidc.provider.endpoints The endpoints are appended to the given provider domain. If not given, they are read from /.well-known/openid-configuration at startup.
     endpoints:
       ## @param oidc.provider.endpoints.authorization Typically https://provider/auth
