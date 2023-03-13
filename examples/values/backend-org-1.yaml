@@ -80,9 +80,9 @@ oidc:
   provider:
     url: "http://oidc-provider:4000"
     displayName: Dev Provider
-  userCreation:
+  users:
     appendDomain: true
-    defaultChannel: mychannel
+    channel: mychannel
 
 hooks:
   serviceAccount: substra-backend-delete-hook

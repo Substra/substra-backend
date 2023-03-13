@@ -1,9 +1,9 @@
 from django.conf import settings
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
@@ -50,14 +50,11 @@ class AuthenticatedAuthToken(ObtainAuthToken):
     get a Bearer token if you're already authenticated somehow
     """
 
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            token = _get_bearer_token(request.user)
-            return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
-        return ApiResponse(
-            data={"message": "must provide a valid token to set a new password"},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
+        token = _get_bearer_token(request.user)
+        return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
 
 
 class Info(APIView):

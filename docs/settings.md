@@ -98,6 +98,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 |------|---------|---------------|---------|
 | bool | `OIDC_ENABLED` | `false` |  |
 | string | `OIDC_OP_AUTHORIZATION_ENDPOINT` | nil |  |
+| string | `OIDC_OP_DISPLAY_NAME` | nil |  |
 | string | `OIDC_OP_JWKS_URI` | nil |  |
 | string | `OIDC_OP_TOKEN_ENDPOINT` | nil |  |
 | string | `OIDC_OP_URL` | nil |  |
@@ -105,7 +106,9 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OIDC_RP_CLIENT_ID` | nil |  |
 | string | `OIDC_RP_CLIENT_SECRET` | nil |  |
 | string | `OIDC_RP_SIGN_ALGO` | nil |  |
-| bool | `OIDC_USERS_SUFFIX_DOMAIN` | `false` |  |
+| bool | `OIDC_USERS_APPEND_DOMAIN` | `false` |  |
+| string | `OIDC_USERS_DEFAULT_CHANNEL` | nil |  |
+| int | `OIDC_USERS_VALID_FOR_TIME` | `3600` (`60 * 60`) | seconds |
 
 ## CORS settings
 

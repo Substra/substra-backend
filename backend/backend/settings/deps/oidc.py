@@ -28,6 +28,7 @@ if OIDC_ENABLED:  # noqa: C901
         raise Exception("No default channel provided for OIDC users")
     if OIDC_USERS_DEFAULT_CHANNEL not in ledger.LEDGER_CHANNELS:
         raise Exception(f"Channel {OIDC_USERS_DEFAULT_CHANNEL} does not exist")
+    OIDC_USERS_LOGIN_VALIDITY_DURATION = int(os.environ.get("OIDC_USERS_VALID_FOR_TIME", 60 * 60))  # seconds
 
     OIDC_AUTHENTICATE_CLASS = "users.views.authentication.SubstraOIDCAuthenticationRequestView"
     OIDC_CALLBACK_CLASS = "users.views.authentication.SubstraOIDCAuthenticationCallbackView"

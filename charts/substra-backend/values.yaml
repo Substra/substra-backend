@@ -663,7 +663,7 @@ oidc:
   provider:
     ## @param oidc.provider.url The identity provider URL (with scheme).
     url: null
-    ## @param The name of the provider as displayed in the interface ("Sign in with X")
+    ## @param oidc.provider.displayName The name of the provider as displayed in the interface ("Sign in with X")
     displayName: null
     # @param oidc.provider.endpoints The endpoints are appended to the given provider domain. If not given, they are read from /.well-known/openid-configuration at startup.
     endpoints:
@@ -681,10 +681,13 @@ oidc:
   
   ## @param oidc.signAlgo Either RS256 or HS256
   signAlgo: RS256
-  userCreation:
-    ## @param oidc.userCreation.defaultChannel The channel to assign OIDC users to (mandatory)
-    defaultChannel: null
-    ## @param oidc.userCreation.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)
+  users:
+    ## @param oidc.users.loginValidityDuration How long a user account is valid after an OIDC login, in seconds (a new login will reset the timer)
+    ## This is of concern for API tokens: longer durations are more convenient, but risk users having continued access even though their account has been disabled.
+    loginValidityDuration: 604800 # a week
+    ## @param oidc.users.channel The channel to assign OIDC users to (mandatory)
+    channel: null
+    ## @param oidc.users.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)
     appendDomain: false
 
 ## @skip postgresql

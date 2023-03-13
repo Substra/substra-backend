@@ -8,8 +8,8 @@ REST_FRAMEWORK = {
         #  'rest_framework.renderers.AdminRenderer',
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "users.authentication.SecureJWTAuthentication",  # for front/sdk/cli
-        "libs.expiry_token_authentication.ExpiryTokenAuthentication",  # for front/sdk/cli
+        "users.authentication.SecureJWTAuthentication",  # JWT for front
+        "users.authentication.ExpiryTokenAuthentication",  # Bearer token for SDK
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
