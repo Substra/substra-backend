@@ -5,6 +5,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
 from django.db.models import Prefetch
 from django.db.models import Q
+from django.db.models import Value
 from django.http import StreamingHttpResponse
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -45,13 +46,17 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
             .annotate(
                 # List all existing tasks ranks for a given compute plan
                 compute_tasks_distinct_ranks=ArrayAgg(
-                    "compute_tasks__rank", distinct=True, filter=Q(compute_tasks__rank__isnull=False)
+                    "compute_tasks__rank",
+                    distinct=True,
+                    filter=Q(compute_tasks__rank__isnull=False),
+                    default=Value([]),
                 ),
                 # List all existing tasks round indexes for a given compute plan
                 compute_tasks_distinct_rounds=ArrayAgg(
                     "compute_tasks__metadata__round_idx",
                     distinct=True,
                     filter=Q(compute_tasks__metadata__round_idx__isnull=False),
+                    default=Value([]),
                 ),
             )
             .values("compute_tasks_distinct_ranks", "compute_tasks_distinct_rounds")
