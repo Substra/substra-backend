@@ -2,7 +2,10 @@ import os
 import shutil
 import tempfile
 
+import pytest
+from django.db import connection
 from django.test import override_settings
+from django.test import utils
 from django.urls import reverse
 from django.utils.http import urlencode
 from rest_framework import status
@@ -346,3 +349,64 @@ class PerformanceViewTests(APITestCase):
         content_list = list(response.streaming_content)
         self.assertEqual(len(content_list), 4)
         self.assertTrue(status in str(content_list[1]))
+
+
+@pytest.fixture
+def create_compute_task():
+    def _create_compute_task(compute_plan, n_data_sample=4):
+        data_manager = factory.create_datamanager()
+        data_samples = [factory.create_datasample([data_manager]) for _ in range(n_data_sample)]
+        input_keys = {
+            "opener": [data_manager.key],
+            "datasamples": [data_sample.key for data_sample in data_samples],
+        }
+        function = factory.create_function(
+            inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+            outputs=factory.build_function_outputs(["performance"]),
+            name="simple function",
+        )
+        return factory.create_computetask(
+            compute_plan,
+            function,
+            inputs=factory.build_computetask_inputs(function, input_keys),
+            outputs=factory.build_computetask_outputs(function),
+            data_manager=data_manager,
+            data_samples=[data_sample.key for data_sample in data_samples],
+            status=ComputeTask.Status.STATUS_DONE,
+        )
+
+    return _create_compute_task
+
+
+@pytest.fixture
+def create_compute_plan(create_compute_task):
+    def _create_compute_plan(n_task=20, n_data_sample=4):
+        compute_plan = factory.create_computeplan()
+        [create_compute_task(compute_plan, n_data_sample=n_data_sample) for _ in range(n_task)]
+        return compute_plan
+
+    return _create_compute_plan
+
+
+@pytest.mark.django_db
+def test_n_plus_one_queries_performance_list_empty(authenticated_client, create_compute_plan):
+    # This expects 12 requests even without any performance and 14 if performances are made
+    compute_plan = create_compute_plan(n_task=4)
+    url = reverse("api:compute_plan_perf-list", args=[compute_plan.key])
+    with utils.CaptureQueriesContext(connection) as query:
+        print(authenticated_client.get(url))
+    query_tasks = len(query.captured_queries)
+    assert query_tasks == 12
+
+
+@pytest.mark.django_db
+def test_n_plus_one_queries_performance_list(authenticated_client, create_compute_plan):
+    # This expects 12 requests even without any performance and 14 if performances are made
+    compute_plan = create_compute_plan(n_task=4)
+    url = reverse("api:compute_plan_perf-list", args=[compute_plan.key])
+    for t in compute_plan.compute_tasks.all():
+        factory.create_performance(t, t.function)
+    with utils.CaptureQueriesContext(connection) as query:
+        print(authenticated_client.get(url))
+    query_tasks = len(query.captured_queries)
+    assert query_tasks == 14
