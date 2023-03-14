@@ -27,7 +27,8 @@ from api.models.function import FunctionInput
 from api.models.function import FunctionOutput
 from api.serializers import ComputeTaskInputAssetSerializer
 from api.serializers import ComputeTaskOutputAssetSerializer
-from api.serializers import ComputeTaskSerializer, ComputeTaskWithDetailsSerializer
+from api.serializers import ComputeTaskSerializer
+from api.serializers import ComputeTaskWithDetailsSerializer
 from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
@@ -289,14 +290,7 @@ class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mi
 class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericViewSet):
 
     serializer_class = ComputeTaskSerializer
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> cbab18e9 (fixup! fix: duplicate compute task serializer)
-=======
-
->>>>>>> 2de20d7e (fix: post-rebase fixes)
     def get_queryset(self):
         compute_plan_key = self.kwargs.get("compute_plan_pk")
         validate_key(compute_plan_key)

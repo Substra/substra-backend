@@ -6,13 +6,15 @@ import uuid
 from unittest import mock
 
 import pytest
-from django.test import override_settings, utils
+from django.db import connection
+from django.test import override_settings
+from django.test import utils
 from django.urls import reverse
 from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.db import connection
+
 from api.models import ComputeTask
 from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
@@ -294,27 +296,27 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         canceled_task = self.compute_tasks[ComputeTask.Status.STATUS_CANCELED]
 
         self.detail_expected_results = {
-                "key": str(todo_task.key),
-                "function": self.simple_function_data,
-                "owner": "MyOrg1MSP",
-                "compute_plan_key": str(self.compute_plan.key),
-                "metadata": {},
-                "status": "STATUS_TODO",
-                "worker": "MyOrg1MSP",
-                "rank": 1,
-                "tag": "",
-                "creation_date": todo_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "error_type": None,
-                "logs_permission": {
-                    "public": False,
-                    "authorized_ids": ["MyOrg1MSP"],
-                },
-                "duration": 0,  # because start_date is None
-                "inputs": [self.datasamples_input, self.opener_input_with_value],
-                "outputs": {"model": self.model_output},
-            }
+            "key": str(todo_task.key),
+            "function": self.simple_function_data,
+            "owner": "MyOrg1MSP",
+            "compute_plan_key": str(self.compute_plan.key),
+            "metadata": {},
+            "status": "STATUS_TODO",
+            "worker": "MyOrg1MSP",
+            "rank": 1,
+            "tag": "",
+            "creation_date": todo_task.creation_date.isoformat().replace("+00:00", "Z"),
+            "start_date": None,
+            "end_date": None,
+            "error_type": None,
+            "logs_permission": {
+                "public": False,
+                "authorized_ids": ["MyOrg1MSP"],
+            },
+            "duration": 0,  # because start_date is None
+            "inputs": [self.datasamples_input, self.opener_input_with_value],
+            "outputs": {"model": self.model_output},
+        }
 
         self.list_expected_results = [
             {
@@ -809,7 +811,7 @@ def create_compute_task():
 def create_compute_plan(create_compute_task):
     def _create_compute_plan(n_task=20, n_data_sample=4):
         compute_plan = factory.create_computeplan()
-        compute_tasks = [create_compute_task(compute_plan, n_data_sample=n_data_sample) for _ in range(n_task)]
+        [create_compute_task(compute_plan, n_data_sample=n_data_sample) for _ in range(n_task)]
         return compute_plan
 
     return _create_compute_plan
@@ -827,7 +829,7 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
     url_60 = reverse("api:compute_plan_task-list", args=[compute_plan_60.key])
 
     with utils.CaptureQueriesContext(connection) as queries_60:
-        response = authenticated_client.get(url_60)
+        authenticated_client.get(url_60)
     queries_for_60_tasks = len(queries_60.captured_queries)
 
     compute_plan_10 = create_compute_plan(n_task=10)
@@ -835,7 +837,7 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
     url_10 = reverse("api:compute_plan_task-list", args=[compute_plan_10.key])
 
     with utils.CaptureQueriesContext(connection) as queries_10:
-        response = authenticated_client.get(url_10)
+        authenticated_client.get(url_10)
 
     queries_for_10_tasks = len(queries_10.captured_queries)
 
@@ -856,7 +858,7 @@ def test_n_plus_one_queries_compute_task_detail(authenticated_client, create_com
     url_4 = reverse("api:task-detail", args=[compute_task_4.key])
 
     with utils.CaptureQueriesContext(connection) as queries_4:
-        response = authenticated_client.get(url_4)
+        authenticated_client.get(url_4)
     queries_for_4_samples = len(queries_4.captured_queries)
 
     compute_task_10 = create_compute_task(compute_plan, n_data_sample=10)
@@ -864,7 +866,7 @@ def test_n_plus_one_queries_compute_task_detail(authenticated_client, create_com
     url_10 = reverse("api:task-detail", args=[compute_task_10.key])
 
     with utils.CaptureQueriesContext(connection) as queries_10:
-        response = authenticated_client.get(url_10)
+        authenticated_client.get(url_10)
     queries_for_10_samples = len(queries_10.captured_queries)
 
     assert abs(queries_for_4_samples - queries_for_10_samples) < 5
@@ -885,14 +887,14 @@ def test_n_plus_one_queries_compute_task_list(authenticated_client, create_compu
         create_compute_task(compute_plan)
 
     with utils.CaptureQueriesContext(connection) as queries_10:
-        response = authenticated_client.get(url)
+        authenticated_client.get(url)
     queries_for_10_tasks = len(queries_10.captured_queries)
 
     for _ in range(50):
         create_compute_task(compute_plan)
 
     with utils.CaptureQueriesContext(connection) as queries_60:
-        response = authenticated_client.get(url)
+        authenticated_client.get(url)
     queries_for_60_tasks = len(queries_60.captured_queries)
 
     assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
