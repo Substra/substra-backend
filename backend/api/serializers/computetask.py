@@ -233,23 +233,7 @@ class ComputeTaskWithDetailsSerializer(ComputeTaskSerializer):
 
     class Meta:
         model = ComputeTask
-        fields = [
-            "function",
-            "channel",
-            "compute_plan_key",
-            "creation_date",
-            "end_date",
-            "error_type",
-            "key",
-            "logs_permission",
-            "metadata",
-            "owner",
-            "rank",
-            "start_date",
-            "status",
-            "tag",
-            "worker",
-            "duration",
+        fields = ComputeTaskSerializer.Meta.fields + [
             "inputs",
             "outputs",
         ]

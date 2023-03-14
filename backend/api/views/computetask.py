@@ -225,10 +225,6 @@ class ComputeTaskViewSetConfig:
     search_fields = ("key",)
     filterset_class = ComputeTaskFilter
 
-    @action(methods=["post"], detail=False, url_name="bulk_create")
-    def bulk_create(self, request, *args, **kwargs):
-        return task_bulk_create(request)
-
 
 class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
     def get_serializer_class(self) -> type[ComputeTaskSerializer]:
@@ -236,6 +232,10 @@ class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mi
             return ComputeTaskWithDetailsSerializer
         else:
             return ComputeTaskSerializer
+
+    @action(methods=["post"], detail=False, url_name="bulk_create")
+    def bulk_create(self, request, *args, **kwargs):
+        return task_bulk_create(request)
 
     @action(detail=True, url_name="input_assets")
     def input_assets(self, request, pk):
@@ -288,7 +288,6 @@ class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mi
 
 
 class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericViewSet):
-
     serializer_class = ComputeTaskSerializer
 
     def get_queryset(self):

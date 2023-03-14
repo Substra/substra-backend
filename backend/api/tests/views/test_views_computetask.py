@@ -270,11 +270,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
             response = self.client.post(url, data=data, format="json", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        print("response\n", response.json()[0])
-        print("expected\n", expected_response[0])
-        print("----\n")
-        print(response.json()[0]["key"])
-        print("----\n")
         assert response.json()[0] == expected_response[0]
         self.assertEqual(response.json(), expected_response)
 
