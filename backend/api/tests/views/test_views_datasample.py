@@ -177,9 +177,7 @@ class DataSampleViewTests(APITestCase):
 
         # filter on dataset_key
         params = urlencode({"dataset_key": str(self.data_manager_key)})
-        print(f"{self.url}?{params}")
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        print(response.json())
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
     def test_datasample_list_ordering(self):

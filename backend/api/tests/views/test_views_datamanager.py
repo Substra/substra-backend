@@ -59,9 +59,6 @@ class DataManagerViewTests(APITestCase):
 
         data_manager_2 = factory.create_datamanager()
         data_manager_3 = factory.create_datamanager()
-        print(data_manager_1)
-        print(data_manager_2)
-        print(data_manager_3)
 
         self.expected_results = [
             {
