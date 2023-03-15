@@ -137,7 +137,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.simple_function),
-            data_manager=self.data_manager,
             status=first_task_status,
         )
         if first_task_status == ComputeTask.Status.STATUS_DONE:
@@ -168,7 +167,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.predict_function),
-            data_manager=self.data_manager,
             status=task_status,
         )
         if task_status == ComputeTask.Status.STATUS_DONE:
@@ -190,7 +188,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.metric_function),
-            data_manager=self.data_manager,
             status=task_status,
         )
         if task_status == ComputeTask.Status.STATUS_DONE:
@@ -220,7 +217,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.simple_function),
-            data_manager=self.data_manager,
             status=ComputeTask.Status.STATUS_TODO,
         )
         train_task_2 = factory.create_computetask(
@@ -234,7 +230,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.simple_function),
-            data_manager=self.data_manager,
             status=ComputeTask.Status.STATUS_TODO,
         )
         factory.create_computetask(
@@ -268,7 +263,6 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.composite_function),
-            data_manager=self.data_manager,
             status=ComputeTask.Status.STATUS_DONE,
         )
         local_model = factory.create_model(

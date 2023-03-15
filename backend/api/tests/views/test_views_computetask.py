@@ -69,7 +69,6 @@ class ComputeTaskViewTests(APITestCase):
                 self.simple_function,
                 inputs=factory.build_computetask_inputs(self.simple_function, input_keys),
                 outputs=factory.build_computetask_outputs(self.simple_function),
-                data_manager=self.data_manager,
                 status=_status,
                 error_type=error_type,
             )

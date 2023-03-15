@@ -50,7 +50,6 @@ class CPPerformanceViewTests(APITestCase):
                 self.metric,
                 inputs=self.inputs,
                 outputs=factory.build_computetask_outputs(self.metric),
-                data_manager=self.data_manager,
                 status=ComputeTask.Status.STATUS_DONE,
                 rank=i + 1,
                 metadata={"round_idx": 1},
@@ -74,7 +73,6 @@ class CPPerformanceViewTests(APITestCase):
             {
                 "compute_task": {
                     "key": str(self.compute_tasks[0].key),
-                    "data_manager_key": str(self.data_manager.key),
                     "function_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": 1,
@@ -90,7 +88,6 @@ class CPPerformanceViewTests(APITestCase):
             {
                 "compute_task": {
                     "key": str(self.compute_tasks[1].key),
-                    "data_manager_key": str(self.data_manager.key),
                     "function_key": str(self.metric.key),
                     "rank": 2,
                     "round_idx": 1,
@@ -106,7 +103,6 @@ class CPPerformanceViewTests(APITestCase):
             {
                 "compute_task": {
                     "key": str(self.compute_tasks[2].key),
-                    "data_manager_key": str(self.data_manager.key),
                     "function_key": str(self.metric.key),
                     "rank": 3,
                     "round_idx": 1,
@@ -186,7 +182,6 @@ class PerformanceViewTests(APITestCase):
                 self.compute_plans[i],
                 self.metrics[i],
                 outputs=factory.build_computetask_outputs(self.metrics[i]),
-                data_manager=self.data_manager,
                 status=ComputeTask.Status.STATUS_DONE,
                 error_type=None,
             )

@@ -153,7 +153,6 @@ class ComputeTaskFilter(FilterSet):
     )
     compute_plan_key = CharInFilter(field_name="compute_plan__key")
     function_key = CharFilter(field_name="function__key", distinct=True, label="function_key")
-    dataset_key = CharFilter(field_name="data_manager__key", distinct=True, label="dataset_key")
     duration = RangeFilter(label="duration")
 
     class Meta:

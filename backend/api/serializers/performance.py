@@ -56,7 +56,6 @@ class _PerformanceMetricSerializer(serializers.ModelSerializer):
 
 
 class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
-    data_manager_key = serializers.UUIDField(format="hex_verbose", source="data_manager_id")
     function_key = serializers.UUIDField(format="hex_verbose", source="function_id")
     round_idx = serializers.SerializerMethodField()
 
@@ -64,7 +63,6 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
         model = ComputeTask
         fields = [
             "key",
-            "data_manager_key",
             "function_key",
             "rank",
             "round_idx",

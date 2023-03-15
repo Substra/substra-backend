@@ -337,7 +337,6 @@ def create_computetask(
     function: Function,
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
-    data_manager: DataManager = None,
     key: uuid.UUID = None,
     status: int = ComputeTask.Status.STATUS_TODO,
     rank: int = 1,
@@ -356,7 +355,6 @@ def create_computetask(
     compute_task = ComputeTask.objects.create(
         compute_plan=compute_plan,
         function=function,
-        data_manager=data_manager,
         key=key,
         status=status,
         rank=rank,

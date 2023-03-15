@@ -3,7 +3,6 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django_filters.rest_framework import BaseInFilter
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -125,7 +124,6 @@ class FunctionFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
 
     compute_plan_key = CharInFilter(field_name="compute_tasks__compute_plan__key", label="compute_plan_key")
-    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
 
     class Meta:
         model = Function

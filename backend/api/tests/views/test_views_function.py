@@ -336,25 +336,14 @@ class FunctionViewTests(APITestCase):
     def test_function_list_cross_assets_filters(self):
         """Filter functions on other asset key such as compute_plan_key, dataset_key and data_sample_key"""
         compute_plan = factory.create_computeplan()
-        data_manager = factory.create_datamanager()
 
-        factory.create_computetask(compute_plan, self.functions[0], data_manager=data_manager)
+        factory.create_computetask(compute_plan, self.functions[0])
         factory.create_computetask(compute_plan, self.functions[1])
 
         # filter on compute_plan_key
         params = urlencode({"compute_plan_key": compute_plan.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), self.expected_functions[:2])
-
-        # filter on dataset_key
-        params = urlencode({"dataset_key": data_manager.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_functions[:1])
-
-        # # filter on data_sample_key
-        # params = urlencode({"data_sample_key": data_sample.key})
-        # response = self.client.get(f"{self.url}?{params}", **self.extra)
-        # self.assertEqual(response.json().get("results"), self.expected_functions[:1])
 
     def test_function_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})

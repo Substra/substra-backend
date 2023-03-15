@@ -478,10 +478,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_compute_plan_list_cross_assets_filters(self):
         """Filter computeplan on other asset key such as function_key, dataset_key and data_sample_key"""
         function = factory.create_function()
-        data_manager = factory.create_datamanager()
 
         compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(compute_plan, function, data_manager=data_manager)
+        factory.create_computetask(compute_plan, function)
         expected_cp = {
             "key": str(compute_plan.key),
             "tag": "",
@@ -506,11 +505,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         # filter on function_key
         params = urlencode({"function_key": function.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), [expected_cp])
-
-        # filter on dataset_key
-        params = urlencode({"dataset_key": data_manager.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), [expected_cp])
 

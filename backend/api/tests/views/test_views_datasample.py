@@ -77,7 +77,7 @@ class DataSampleViewTests(APITestCase):
 
         self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
-        factory.create_computetask(self.compute_plan, self.function, data_manager=data_manager)
+        factory.create_computetask(self.compute_plan, self.function)
         self.expected_results = [
             {
                 "key": str(train_data_sample_1.key),

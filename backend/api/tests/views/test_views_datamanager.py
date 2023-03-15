@@ -55,7 +55,7 @@ class DataManagerViewTests(APITestCase):
         self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
         self.data_sample_1_key_uuid = data_sample_1.key
-        factory.create_computetask(self.compute_plan, self.function, data_manager=data_manager_1)
+        factory.create_computetask(self.compute_plan, self.function)
 
         data_manager_2 = factory.create_datamanager()
         data_manager_3 = factory.create_datamanager()
@@ -497,7 +497,6 @@ class DataManagerViewTests(APITestCase):
             factory.create_computetask(
                 compute_plan,
                 function,
-                data_manager=data_manager,
             )
         url = reverse("api:data_manager-detail", args=[data_manager.key])
         response = self.client.get(url, **self.extra)
