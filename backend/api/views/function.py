@@ -126,9 +126,6 @@ class FunctionFilter(FilterSet):
 
     compute_plan_key = CharInFilter(field_name="compute_tasks__compute_plan__key", label="compute_plan_key")
     dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
-    data_sample_key = CharInFilter(
-        field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
-    )
 
     class Meta:
         model = Function

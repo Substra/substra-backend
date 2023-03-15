@@ -68,7 +68,6 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
             "function_key",
             "rank",
             "round_idx",
-            "data_samples",
             "worker",
         ]
 

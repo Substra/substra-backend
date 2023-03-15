@@ -28,7 +28,6 @@ from api.errors import BadRequestError
 from api.models import DataManager
 from api.models import DataSample
 from api.serializers import DataSampleSerializer
-from api.views.filters_utils import CharInFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
@@ -281,11 +280,7 @@ def _get_archive_and_files(f: BinaryIO) -> tuple[Union[ZipFile, TarFile], list[s
 
 class DataSampleFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    compute_plan_key = CharInFilter(
-        field_name="data_managers__compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
-    )
-    function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
-    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
+    dataset_key = CharFilter(field_name="data_managers__key", distinct=True, label="dataset_key")
 
     class Meta:
         model = DataSample

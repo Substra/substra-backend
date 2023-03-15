@@ -3,7 +3,6 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django_filters.rest_framework import BaseInFilter
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -133,13 +132,7 @@ def create(request, get_success_headers):
 
 class DataManagerFilter(FilterSet):
     creation_date = DateTimeFromToRangeFilter()
-    compute_plan_key = CharInFilter(
-        field_name="compute_tasks__compute_plan__key", distinct=True, label="compute_plan_key"
-    )
-    function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
-    data_sample_key = CharInFilter(
-        field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
-    )
+    data_sample_key = CharInFilter(field_name="data_sample__key")
 
     class Meta:
         model = DataManager

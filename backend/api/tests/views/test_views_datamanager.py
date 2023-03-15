@@ -36,6 +36,7 @@ class DataManagerViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
+        self.maxDiff = None
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
         self.url = reverse("api:data_manager-list")
@@ -54,12 +55,14 @@ class DataManagerViewTests(APITestCase):
         self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
         self.data_sample_1_key_uuid = data_sample_1.key
-        factory.create_computetask(
-            self.compute_plan, self.function, data_manager=data_manager_1, data_samples=[data_sample_1.key]
-        )
+        factory.create_computetask(self.compute_plan, self.function, data_manager=data_manager_1)
 
         data_manager_2 = factory.create_datamanager()
         data_manager_3 = factory.create_datamanager()
+        print(data_manager_1)
+        print(data_manager_2)
+        print(data_manager_3)
+
         self.expected_results = [
             {
                 "key": str(data_manager_1.key),
@@ -247,15 +250,6 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_cross_assets_filters(self):
         """Filter datamanager on other asset key such as compute_plan_key, function_key and data_sample_key"""
-        # filter on compute_plan_key
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:1])
-
-        # filter on function_key
-        params = urlencode({"function_key": self.function.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
         # filter on data_sample_key
         params = urlencode({"data_sample_key": self.data_sample_1_key_uuid})
@@ -504,7 +498,6 @@ class DataManagerViewTests(APITestCase):
                 compute_plan,
                 function,
                 data_manager=data_manager,
-                data_samples=[data_sample.key],
             )
         url = reverse("api:data_manager-detail", args=[data_manager.key])
         response = self.client.get(url, **self.extra)

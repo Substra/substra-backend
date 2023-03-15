@@ -7,6 +7,7 @@ import tempfile
 from unittest import mock
 
 import django.urls
+from django.core.serializers.json import DjangoJSONEncoder
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -67,19 +68,16 @@ class DataSampleViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
         data_manager = factory.create_datamanager()
-        self.data_manager_key = str(data_manager.key)
+        data_manager_2 = factory.create_datamanager()
+        self.data_manager_key = data_manager.key
 
         train_data_sample_1 = factory.create_datasample([data_manager])
-        train_data_sample_2 = factory.create_datasample([data_manager])
-        test_data_sample = factory.create_datasample([data_manager])
+        train_data_sample_2 = factory.create_datasample([data_manager_2])
+        test_data_sample = factory.create_datasample([data_manager_2])
 
         self.function = factory.create_function()
         self.compute_plan = factory.create_computeplan()
-        self.data_manager_key_uuid = data_manager.key
-        factory.create_computetask(
-            self.compute_plan, self.function, data_manager=data_manager, data_samples=[train_data_sample_1.key]
-        )
-
+        factory.create_computetask(self.compute_plan, self.function, data_manager=data_manager)
         self.expected_results = [
             {
                 "key": str(train_data_sample_1.key),
@@ -90,13 +88,13 @@ class DataSampleViewTests(APITestCase):
             {
                 "key": str(train_data_sample_2.key),
                 "owner": "MyOrg1MSP",
-                "data_manager_keys": [str(data_manager.key)],
+                "data_manager_keys": [str(data_manager_2.key)],
                 "creation_date": train_data_sample_2.creation_date.isoformat().replace("+00:00", "Z"),
             },
             {
                 "key": str(test_data_sample.key),
                 "owner": "MyOrg1MSP",
-                "data_manager_keys": [str(data_manager.key)],
+                "data_manager_keys": [str(data_manager_2.key)],
                 "creation_date": test_data_sample.creation_date.isoformat().replace("+00:00", "Z"),
             },
         ]
@@ -176,19 +174,12 @@ class DataSampleViewTests(APITestCase):
 
     def test_datasample_list_cross_assets_filters(self):
         """Filter datasample on other asset key such as compute_plan_key, function_key and dataset_key"""
-        # filter on compute_plan_key
-        params = urlencode({"compute_plan_key": self.compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results)
-
-        # filter on function_key
-        params = urlencode({"function_key": self.function.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
         # filter on dataset_key
-        params = urlencode({"dataset_key": self.data_manager_key_uuid})
+        params = urlencode({"dataset_key": str(self.data_manager_key)})
+        print(f"{self.url}?{params}")
         response = self.client.get(f"{self.url}?{params}", **self.extra)
+        print(response.json())
         self.assertEqual(response.json().get("results"), self.expected_results[:1])
 
     def test_datasample_list_ordering(self):
@@ -223,7 +214,8 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                }
+                },
+                cls=DjangoJSONEncoder,
             ),
         }
 
@@ -251,7 +243,8 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                }
+                },
+                cls=DjangoJSONEncoder,
             ),
         }
 
@@ -334,7 +327,8 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                }
+                },
+                cls=DjangoJSONEncoder,
             ),
         }
 
@@ -359,7 +353,8 @@ class DataSampleViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "data_manager_keys": [self.data_manager_key],
-                }
+                },
+                cls=DjangoJSONEncoder,
             ),
         }
 

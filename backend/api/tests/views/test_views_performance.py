@@ -38,13 +38,19 @@ class CPPerformanceViewTests(APITestCase):
         self.metric = factory.create_function(
             outputs=factory.build_function_outputs(["performance"]),
         )
+
+        input_keys = {
+            "opener": [self.data_manager.key],
+            "datasamples": [self.data_sample.key],
+        }
+        self.inputs = factory.build_computetask_inputs(self.metric, input_keys)
         self.compute_tasks = [
             factory.create_computetask(
                 self.compute_plan,
                 self.metric,
+                inputs=self.inputs,
                 outputs=factory.build_computetask_outputs(self.metric),
                 data_manager=self.data_manager,
-                data_samples=[self.data_sample.key],
                 status=ComputeTask.Status.STATUS_DONE,
                 rank=i + 1,
                 metadata={"round_idx": 1},
@@ -72,7 +78,6 @@ class CPPerformanceViewTests(APITestCase):
                     "function_key": str(self.metric.key),
                     "rank": 1,
                     "round_idx": 1,
-                    "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
@@ -89,7 +94,6 @@ class CPPerformanceViewTests(APITestCase):
                     "function_key": str(self.metric.key),
                     "rank": 2,
                     "round_idx": 1,
-                    "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
@@ -106,7 +110,6 @@ class CPPerformanceViewTests(APITestCase):
                     "function_key": str(self.metric.key),
                     "rank": 3,
                     "round_idx": 1,
-                    "data_samples": [str(self.data_sample.key)],
                     "worker": "MyOrg1MSP",
                 },
                 "metric": {
@@ -184,7 +187,6 @@ class PerformanceViewTests(APITestCase):
                 self.metrics[i],
                 outputs=factory.build_computetask_outputs(self.metrics[i]),
                 data_manager=self.data_manager,
-                data_samples=[self.data_sample.key],
                 status=ComputeTask.Status.STATUS_DONE,
                 error_type=None,
             )
