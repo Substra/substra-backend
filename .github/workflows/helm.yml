@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'bitnami-labs/readme-generator-for-helm'
-          ref: '3300343a6cd1c9cd86d13b04d8c85a7415cb849e' # There is no release on the repo so we target an arbitrary commit
+          ref: '2.5.0'
           path: readme-generator-for-helm
 
       - name: Install readme-generator-for-helm dependencies

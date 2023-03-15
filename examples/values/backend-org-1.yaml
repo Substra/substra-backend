@@ -81,6 +81,7 @@ oidc:
     url: "http://oidc-provider:4000"
     displayName: Dev Provider
   users:
+    loginValidityDuration: 30 # very short value to test background refresh
     appendDomain: true
     channel: mychannel
 

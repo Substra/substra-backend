@@ -91,9 +91,9 @@ class Info(APIView):
             if orchestrator_versions and orchestrator_versions.chaincode:
                 res["chaincode_version"] = orchestrator_versions.chaincode
 
-        if settings.OIDC_ENABLED:
+        if settings.OIDC["ENABLED"]:
             res["auth"]["oidc"] = {
-                "name": settings.OIDC_OP_DISPLAY_NAME,
+                "name": settings.OIDC["OP_DISPLAY_NAME"],
                 "login_url": reverse("oidc_authentication_init"),
             }
 

@@ -142,7 +142,7 @@ class AuthenticationViewSet(GenericViewSet):
         return response
 
 
-class SubstraOIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
+class OIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
     """
     Overrides the default get to add a "next" param so we know where to redirect after the callback
     """
@@ -150,9 +150,6 @@ class SubstraOIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
     def get(self, request):
         if proposed_next_url := request.GET.get("next", None):
             hostname = urlparse(proposed_next_url).hostname
-            _LOGGER.critical(proposed_next_url)
-            _LOGGER.critical(urlparse(proposed_next_url))
-            _LOGGER.critical(urlparse(proposed_next_url).hostname)
             if hostname and hostname.endswith(settings.COMMON_HOST_DOMAIN):
                 request.session["url_to_redirect_to_after_login"] = proposed_next_url
             else:
@@ -163,7 +160,7 @@ class SubstraOIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
         return super().get(request)
 
 
-class SubstraOIDCAuthenticationCallbackView(OIDCAuthenticationCallbackView):
+class OIDCAuthenticationCallbackView(OIDCAuthenticationCallbackView):
     """
     The default OIDCAuthenticationCallbackView logs a user in via session, but this instead sets a JWT via cookies.
 
@@ -183,7 +180,6 @@ class SubstraOIDCAuthenticationCallbackView(OIDCAuthenticationCallbackView):
         if "url_to_redirect_to_after_login" in self.request.session:
             next_url = self.request.session["url_to_redirect_to_after_login"]
         response = HttpResponseRedirect(next_url, access_token.payload)
-        # FIXME we should change how we hand out tokens based on the OpenID token?
         _set_token_cookies(response, refresh_token)
 
         return response

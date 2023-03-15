@@ -3,6 +3,7 @@ import tempfile
 
 from .common import *
 from .deps.cors import *
+from .deps.oidc import *
 from .deps.restframework import *
 
 logging.disable(logging.CRITICAL)

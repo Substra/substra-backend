@@ -650,8 +650,18 @@ addAccountOperator:
   users: []
 
 ## @section Single Sign-On through OpenID Connect
-## Uses the authorization code flow
+
+## @descriptionStart Uses the authorization code flow.
 ##
+## By default, `oidc.users.useRefreshToken` is enabled. This makes sure the user still has an account at the identity provider, without damaging user experience.
+## 
+## The way it works is that a OIDC user that spent more than `oidc.users.loginValidityDuration` since their last login must undergo a refresh to keep using their access tokens -- but these refreshes are done in the background if `oidc.users.useRefreshToken` is enabled (otherwise a new manual authorization is necessary). The identity provider must support `offline_access` and configuration discovery.
+##
+## With this option active, you can set `oidc.users.loginValidityDuration` to low values (minutes).
+##
+## Else, you must strike a balance: longer durations are more convenient, but risk users having continued access even though their account has been disabled.
+##
+## @descriptionEnd
 oidc:
   ## @param oidc.enabled Whether to enable OIDC authentication
   ##
@@ -665,7 +675,7 @@ oidc:
     url: null
     ## @param oidc.provider.displayName The name of the provider as displayed in the interface ("Sign in with X")
     displayName: null
-    # @param oidc.provider.endpoints The endpoints are appended to the given provider domain. If not given, they are read from /.well-known/openid-configuration at startup.
+    # @param oidc.provider.endpoints The endpoints are appended to the given provider domain. If not given, they are read from `/.well-known/openid-configuration` at startup.
     endpoints:
       ## @param oidc.provider.endpoints.authorization Typically https://provider/auth
       authorization: null
@@ -674,17 +684,16 @@ oidc:
       ## @param oidc.provider.endpoints.user Typically https://provider/me
       user: null
     
-    ## @param oidc.provider.jwksUri Typically https://provider/jwks.
-    ## Only required for public-key-based signing algorithms.
-    ## If not given, read from /.well-known/openid-configuration at startup.
+    ## @param oidc.provider.jwksUri Typically https://provider/jwks. Only required for public-key-based signing algorithms. If not given, read from `/.well-known/openid-configuration` at startup.
     jwksUri: null
   
   ## @param oidc.signAlgo Either RS256 or HS256
   signAlgo: RS256
   users:
-    ## @param oidc.users.loginValidityDuration How long a user account is valid after an OIDC login, in seconds (a new login will reset the timer)
-    ## This is of concern for API tokens: longer durations are more convenient, but risk users having continued access even though their account has been disabled.
-    loginValidityDuration: 604800 # a week
+    ## @param oidc.users.useRefreshToken Attempt to refresh user info in the background.
+    useRefreshToken: true
+    ## @param oidc.users.loginValidityDuration How long a user account is valid after an OIDC login, in seconds
+    loginValidityDuration: 3600
     ## @param oidc.users.channel The channel to assign OIDC users to (mandatory)
     channel: null
     ## @param oidc.users.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)

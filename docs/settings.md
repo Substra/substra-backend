@@ -108,7 +108,8 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OIDC_RP_SIGN_ALGO` | nil |  |
 | bool | `OIDC_USERS_APPEND_DOMAIN` | `false` |  |
 | string | `OIDC_USERS_DEFAULT_CHANNEL` | nil |  |
-| int | `OIDC_USERS_VALID_FOR_TIME` | `3600` (`60 * 60`) | seconds |
+| int | `OIDC_USERS_LOGIN_VALIDITY_DURATION` | `3600` (`60 * 60`) | seconds |
+| bool | `OIDC_USERS_USE_REFRESH_TOKEN` | `false` |  |
 
 ## CORS settings
 
@@ -121,7 +122,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
-| json | `LEDGER_CHANNELS` | nil |  |
+| json | `LEDGER_CHANNELS` | `[]` |  |
 | string | `LEDGER_MSP_ID` | nil |  |
 
 ## Worker event app settings
