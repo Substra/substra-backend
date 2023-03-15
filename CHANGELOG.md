@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - filter warnings in `pyproject.toml` for previous deprecation warning in `rest_framework_simplejwt` ([#612](https://github.com/Substra/substra-backend/pull/612))
+- model `TaskDataSample` and fields `ComputeTask.data_samples` / `DataManager.compute_tasks` ([#614](https://github.com/Substra/substra-backend/pull/614))
 
 ## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
 
