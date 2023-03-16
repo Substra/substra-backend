@@ -5,7 +5,6 @@ The API provide 3 authentication modes.
 - Bearer token: used by the SDK (substra client).
 - JWT cookie: used by the substra frontend.
 
-OpenID Connect (OIDC) plays into JWT and session ID.
 
 ## Session ID
 
@@ -89,6 +88,15 @@ curl \
 {"count":0,"next":null,"previous":null,"results":[]}
 ```
 
+### Bearer tokens when already authenticated
+
+- URL: `/api-token-tap/`
+- Implemented in `backend.views` [module](../backend/backend/views.py)
+
+Generates bearer tokens for already authenticated users.
+
+This is useful for a frontend client to generate bearer tokens for use in the Python SDK.
+
 ## JWT cookie
 
 - URLs: `/me/login/`, `/me/refresh/`
@@ -147,5 +155,10 @@ curl \
 ```
 
 ## OpenID Connect
+
+- URL: `/oidc/authenticate`
+- Implemented in:
+  - `users.authentication` [module](../backend/users/authentication.py)
+  - `users.views.authentication` [module](../backend/users/views/authentication.py)
 
 Reach `/oidc/authenticate` with a browser. A string of redirects will end on `/oidc/callback`, which will set JWT tokens on the client and, if debug mode is on, also log in the user in the session for DRF's API browser.
