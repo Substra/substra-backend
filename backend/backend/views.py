@@ -93,7 +93,7 @@ class Info(APIView):
 
         if settings.OIDC["ENABLED"]:
             res["auth"]["oidc"] = {
-                "name": settings.OIDC["OP_DISPLAY_NAME"],
+                "name": settings.OIDC["OP"]["DISPLAY_NAME"],
                 "login_url": reverse("oidc_authentication_init"),
             }
 

@@ -14,6 +14,7 @@ from libs.expiry_token_authentication import ExpiryTokenAuthentication
 from users.models.user_channel import UserChannel
 from users.models.user_oidc_info import UserOidcInfo
 
+from . import utils
 
 class SecureJWTAuthentication(JWTAuthentication):
     def authenticate(self, request):
@@ -76,12 +77,6 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
             self.refresh_token_store_hack[d["access_token"]] = d["refresh_token"]
         return d
 
-    # def update_user(self, user, claims):
-    #    user = super().update_user(user, claims)
-    #    user.oidc_info.valid_until = _get_user_valid_until()
-    #    user.save()
-    #    return user
-
     def get_or_create_user(self, access_token, id_token, payload):
         user = super().get_or_create_user(access_token, id_token, payload)
         # this really should be in update_user, but we don't have access to this info there
@@ -94,16 +89,20 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
     def create_user(self, claims):
         email = claims.get("email")
-        username = self.get_username(claims)
+        if settings.OIDC["USERS"]["APPEND_DOMAIN"]:
+            username = utils.username_with_domain_from_email(email)
+        else:
+            username = utils.username_from_email(email)
+        
         user = self.UserModel.objects.create_user(username, email=email)
 
-        UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS_DEFAULT_CHANNEL"])
+        UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS"]["DEFAULT_CHANNEL"])
         UserOidcInfo.objects.create(user=user, openid_subject=claims.get("sub"), valid_until=_get_user_valid_until())
         return user
 
 
 def _get_user_valid_until() -> datetime:
-    return datetime.now(timezone.utc) + timedelta(seconds=settings.OIDC["USERS_LOGIN_VALIDITY_DURATION"])
+    return datetime.now(timezone.utc) + timedelta(seconds=settings.OIDC["USERS"]["LOGIN_VALIDITY_DURATION"])
 
 
 def _use_refresh_token(user) -> None:
