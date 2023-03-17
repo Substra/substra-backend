@@ -16,7 +16,7 @@ OIDC = {
     "ENABLED": common.to_bool(os.environ.get("OIDC_ENABLED", "false")),
     "USERS": {},
     "OP": {},
-    }
+}
 if OIDC["ENABLED"]:  # noqa: C901
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
     common.AUTHENTICATION_BACKENDS += ["users.authentication.OIDCAuthenticationBackend"]

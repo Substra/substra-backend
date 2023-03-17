@@ -16,6 +16,7 @@ from users.models.user_oidc_info import UserOidcInfo
 
 from . import utils
 
+
 class SecureJWTAuthentication(JWTAuthentication):
     def authenticate(self, request):
         if request.resolver_match.url_name in ("user-login", "api-root"):
@@ -60,10 +61,11 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def filter_users_by_claims(self, claims):
         """Match users based on OpenID sub"""
         openid_subject = claims.get("sub")
-        users = UserOidcInfo.objects.filter(openid_subject=openid_subject)
+        issuer = claims.get("_openid_issuer")
+        users = UserOidcInfo.objects.filter(openid_issuer=issuer, openid_subject=openid_subject)
         if len(users) > 1:
             raise MultipleObjectsReturned(
-                f"There are {len(users)} with {openid_subject=} when there should be at most one."
+                f"There are {len(users)} with {issuer=} and {openid_subject=} when there should be at most one."
                 f" Offending users: {users}"
             )
         if len(users) == 0:
@@ -77,6 +79,12 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
             self.refresh_token_store_hack[d["access_token"]] = d["refresh_token"]
         return d
 
+    def get_userinfo(self, access_token, id_token, payload):
+        user_info = super().get_userinfo(access_token, id_token, payload)
+        # insert issuer in user_info so it's available for filtering users
+        user_info["_openid_issuer"] = payload["iss"]
+        return user_info
+
     def get_or_create_user(self, access_token, id_token, payload):
         user = super().get_or_create_user(access_token, id_token, payload)
         # this really should be in update_user, but we don't have access to this info there
@@ -89,15 +97,18 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
     def create_user(self, claims):
         email = claims.get("email")
+        issuer = claims.get("_openid_issuer")
         if settings.OIDC["USERS"]["APPEND_DOMAIN"]:
             username = utils.username_with_domain_from_email(email)
         else:
             username = utils.username_from_email(email)
-        
+
         user = self.UserModel.objects.create_user(username, email=email)
 
         UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS"]["DEFAULT_CHANNEL"])
-        UserOidcInfo.objects.create(user=user, openid_subject=claims.get("sub"), valid_until=_get_user_valid_until())
+        UserOidcInfo.objects.create(
+            user=user, openid_issuer=issuer, openid_subject=claims.get("sub"), valid_until=_get_user_valid_until()
+        )
         return user
 
 
