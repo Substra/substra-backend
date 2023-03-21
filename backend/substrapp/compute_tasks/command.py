@@ -1,5 +1,6 @@
 import json
 import os
+from typing import cast
 
 import structlog
 
@@ -49,40 +50,30 @@ def get_exec_command_args(ctx: Context) -> list[str]:
     inputs = []
     outputs = []
 
-    # TODO: refactor path handling in context to iterate over all inputs at once
-    inputs.extend(
-        [
-            TaskResource(
-                id=input.identifier,
-                value=os.path.join(in_models_dir, input.model.key),
-                multiple=ctx.function.inputs[input.identifier].multiple,
+    for input_asset in ctx.input_assets:
+        identifier = input_asset.identifier
+        multiple = ctx.function.inputs[input_asset.identifier].multiple
+
+        value = None
+        # `cast()` are needed as we use `Optional`
+        if input_asset.kind == orchestrator.AssetKind.ASSET_MODEL:
+            model = cast(orchestrator.resources.Model, input_asset.model)
+            value = os.path.join(in_models_dir, model.key)
+        elif input_asset.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER:
+            data_manager = cast(orchestrator.resources.DataManager, input_asset.data_manager)
+            value = os.path.join(openers_dir, data_manager.key, Filenames.Opener)
+        elif input_asset.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE:
+            data_sample = cast(orchestrator.resources.DataSample, input_asset.data_sample)
+            value = os.path.join(datasamples_dir, data_sample.key)
+
+        if value is not None:
+            inputs.append(
+                TaskResource(
+                    id=identifier,
+                    value=value,
+                    multiple=multiple,
+                )
             )
-            for input in ctx.input_assets
-            if input.kind == orchestrator.AssetKind.ASSET_MODEL
-        ]
-    )
-    inputs.extend(
-        [
-            TaskResource(
-                id=input.identifier,
-                value=os.path.join(openers_dir, input.data_manager.key, Filenames.Opener),
-                multiple=ctx.function.inputs[input.identifier].multiple,
-            )
-            for input in ctx.input_assets
-            if input.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER
-        ]
-    )
-    inputs.extend(
-        [
-            TaskResource(
-                id=input.identifier,
-                value=os.path.join(datasamples_dir, input.data_sample.key),
-                multiple=ctx.function.inputs[input.identifier].multiple,
-            )
-            for input in ctx.input_assets
-            if input.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE
-        ]
-    )
 
     for output in ctx.outputs:
         outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
