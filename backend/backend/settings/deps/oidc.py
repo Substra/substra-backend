@@ -50,56 +50,43 @@ if OIDC["ENABLED"]:  # noqa: C901
     OIDC_OP_JWKS_ENDPOINT = os.environ.get("OIDC_OP_JWKS_URI")
 
     OIDC["OP"]["URL"] = os.environ.get("OIDC_OP_URL").removesuffix("/")
-    OIDC["OP"]["DISPLAY_NAME"] = os.environ.get("OIDC_OP_DISPLAY_NAME")
-    if not OIDC["OP"]["DISPLAY_NAME"]:
-        OIDC["OP"]["DISPLAY_NAME"] = OIDC["OP"]["URL"]
-
-    # put the OP URL before the endpoints, but not JWKS
-    # (it is specified as URI, not endpoint, despite the mozilla_django_oidc name)
-    for endpoint in ["OIDC_OP_AUTHORIZATION_ENDPOINT", "OIDC_OP_TOKEN_ENDPOINT", "OIDC_OP_USER_ENDPOINT"]:
-        if globals()[endpoint]:
-            globals()[endpoint] = OIDC["OP"]["URL"] + globals()[endpoint]
+    OIDC["OP"]["DISPLAY_NAME"] = os.environ.get("OIDC_OP_DISPLAY_NAME", OIDC["OP"]["URL"])
 
     OIDC["OP"]["SUPPORTS_REFRESH"] = False
     OIDC["USERS"]["USE_REFRESH_TOKEN"] = common.to_bool(os.environ.get("OIDC_USERS_USE_REFRESH_TOKEN", "false"))
 
-    if (
-        not all([OIDC_OP_AUTHORIZATION_ENDPOINT, OIDC_OP_TOKEN_ENDPOINT, OIDC_OP_USER_ENDPOINT, OIDC_OP_JWKS_ENDPOINT])
-        or OIDC["USERS"]["USE_REFRESH_TOKEN"]
-    ):
-        try:
-            op_settings = requests.get(OIDC["OP"]["URL"] + "/.well-known/openid-configuration").json()
-            if not OIDC_OP_AUTHORIZATION_ENDPOINT:
-                OIDC_OP_AUTHORIZATION_ENDPOINT = op_settings.get("authorization_endpoint")
-            if not OIDC_OP_TOKEN_ENDPOINT:
-                OIDC_OP_TOKEN_ENDPOINT = op_settings.get("token_endpoint")
-            if not OIDC_OP_USER_ENDPOINT:
-                OIDC_OP_USER_ENDPOINT = op_settings.get("userinfo_endpoint")
-            if not OIDC_OP_JWKS_ENDPOINT:
-                OIDC_OP_JWKS_ENDPOINT = op_settings.get("jwks_uri")
+    op_settings = None
+    try:
+        op_settings = requests.get(OIDC["OP"]["URL"] + "/.well-known/openid-configuration").json()
+    except Exception as e:
+        _LOGGER.error(f"Could not fetch OIDC info from provider: {e}")
 
-            if OIDC["USERS"]["USE_REFRESH_TOKEN"] and "offline_access" in op_settings.get("scopes_supported", []):
-                OIDC["OP"]["SUPPORTS_REFRESH"] = True
-                OIDC_RP_SCOPES = "openid email offline_access"
-                OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"prompt": "consent"}
-            elif (
-                OIDC["USERS"]["USE_REFRESH_TOKEN"]
-                and "google.com" in OIDC["OP"]["URL"]
-                and "refresh_token" in op_settings.get("grant_types_supported", [])
-            ):
-                # that's right, Google uses some nonstandard mechanism
-                OIDC["OP"]["SUPPORTS_REFRESH"] = True
-                OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"access_type": "offline", "prompt": "consent"}
+    if op_settings:
+        if not OIDC_OP_AUTHORIZATION_ENDPOINT:
+            OIDC_OP_AUTHORIZATION_ENDPOINT = op_settings.get("authorization_endpoint")
+        if not OIDC_OP_TOKEN_ENDPOINT:
+            OIDC_OP_TOKEN_ENDPOINT = op_settings.get("token_endpoint")
+        if not OIDC_OP_USER_ENDPOINT:
+            OIDC_OP_USER_ENDPOINT = op_settings.get("userinfo_endpoint")
+        if not OIDC_OP_JWKS_ENDPOINT:
+            OIDC_OP_JWKS_ENDPOINT = op_settings.get("jwks_uri")
 
-            if OIDC["USERS"]["USE_REFRESH_TOKEN"] and not OIDC["OP"]["SUPPORTS_REFRESH"]:
-                _LOGGER.error(
-                    "Could not enable background OIDC refresh,"
-                    " falling back to periodic foreground refreshes"
-                    f" every {OIDC['USERS_LOGIN_VALIDITY_DURATION']} seconds"
-                )
+    if not all([OIDC_OP_AUTHORIZATION_ENDPOINT, OIDC_OP_TOKEN_ENDPOINT, OIDC_OP_USER_ENDPOINT]):
+        raise Exception("Invalid configuration")
 
-        except Exception as e:
-            _LOGGER.error(f"Could not fetch OIDC info from provider: {e}")
+    if OIDC["USERS"]["USE_REFRESH_TOKEN"]:
+        if "offline_access" in op_settings.get("scopes_supported", []):
+            OIDC["OP"]["SUPPORTS_REFRESH"] = True
+            OIDC_RP_SCOPES = "openid email offline_access"
+            OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"prompt": "consent"}
+        elif "google.com" in OIDC["OP"]["URL"] and "refresh_token" in op_settings.get("grant_types_supported", []):
+            # that's right, Google uses some nonstandard mechanism
+            OIDC["OP"]["SUPPORTS_REFRESH"] = True
+            OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"access_type": "offline", "prompt": "consent"}
 
-        if not all([OIDC_OP_AUTHORIZATION_ENDPOINT, OIDC_OP_TOKEN_ENDPOINT, OIDC_OP_USER_ENDPOINT]):
-            raise Exception("Invalid configuration")
+        if not OIDC["OP"]["SUPPORTS_REFRESH"]:
+            _LOGGER.error(
+                "Could not enable background OIDC refresh,"
+                " falling back to periodic foreground refreshes"
+                f" every {OIDC['USERS_LOGIN_VALIDITY_DURATION']} seconds"
+            )

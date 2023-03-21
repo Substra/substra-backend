@@ -4,8 +4,8 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
-from mozilla_django_oidc.views import OIDCAuthenticationCallbackView
-from mozilla_django_oidc.views import OIDCAuthenticationRequestView
+from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as MozillaOIDCAuthenticationCallbackView
+from mozilla_django_oidc.views import OIDCAuthenticationRequestView as MozillaOIDCAuthenticationRequestView
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.decorators import throttle_classes
@@ -142,7 +142,7 @@ class AuthenticationViewSet(GenericViewSet):
         return response
 
 
-class OIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
+class OIDCAuthenticationRequestView(MozillaOIDCAuthenticationRequestView):
     """
     Overrides the default get to add a "next" param so we know where to redirect after the callback
     """
@@ -160,7 +160,7 @@ class OIDCAuthenticationRequestView(OIDCAuthenticationRequestView):
         return super().get(request)
 
 
-class OIDCAuthenticationCallbackView(OIDCAuthenticationCallbackView):
+class OIDCAuthenticationCallbackView(MozillaOIDCAuthenticationCallbackView):
     """
     The default OIDCAuthenticationCallbackView logs a user in via session, but this instead sets a JWT via cookies.
 

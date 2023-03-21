@@ -5,7 +5,6 @@ from urllib.error import HTTPError
 
 import requests
 from django.conf import settings
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import PermissionDenied
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -62,15 +61,14 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
         """Match users based on OpenID sub"""
         openid_subject = claims.get("sub")
         issuer = claims.get("_openid_issuer")
-        users = UserOidcInfo.objects.filter(openid_issuer=issuer, openid_subject=openid_subject)
-        if len(users) > 1:
-            raise MultipleObjectsReturned(
-                f"There are {len(users)} with {issuer=} and {openid_subject=} when there should be at most one."
-                f" Offending users: {users}"
+        try:
+            return (
+                UserOidcInfo.objects.get(openid_issuer=issuer, openid_subject=openid_subject)
+                .select_related("user")
+                .user
             )
-        if len(users) == 0:
+        except UserOidcInfo.DoesNotExist:
             return self.UserModel.objects.none()
-        return self.UserModel.objects.filter(username=users[0].user.username)
 
     def get_token(self, payload):
         d = super().get_token(payload)

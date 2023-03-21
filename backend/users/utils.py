@@ -37,8 +37,7 @@ def _split_email_addr(addr: str) -> tuple[str, str]:
 
 def _default_username_from_email(email: str) -> str:
     username = smart_str(base64.urlsafe_b64encode(hashlib.sha256(force_bytes(email)).digest()).rstrip(b"="))
-    existing_users = User.objects.filter(username=username)
-    if len(existing_users) > 0:
+    if User.objects.filter(username=username).exists():
         raise Exception(f"Default username {username} for email {email} is already taken!")
     LOGGER.warn(f"Falling back to username {username} for email {email}")
     return username
@@ -52,8 +51,7 @@ def username_with_domain_from_email(email: str) -> str:
     if not local_part or not domain:
         return _default_username_from_email(email)
     username = local_part + "-" + domain
-    existing_users = User.objects.filter(username=username)
-    if len(existing_users) == 0:
+    if not User.objects.filter(username=username).exists():
         return username
 
     return _default_username_from_email(email)
@@ -65,7 +63,6 @@ def username_from_email(email: str) -> str:
 
     if not username:
         return _default_username_from_email(email)
-    existing_users = User.objects.filter(username=username)
-    if len(existing_users) == 0:
+    if not User.objects.filter(username=username).exists():
         return username
     return _default_username_from_email(email)
