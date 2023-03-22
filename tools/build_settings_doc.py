@@ -9,8 +9,8 @@ from typing import Optional
 from typing import Union
 
 FILE_PATH = pathlib.Path(__file__).parent.resolve()
-SETTINGS_FOLDER = FILE_PATH / "../backend/backend/settings/"
-DOC_PATH = FILE_PATH / "../docs/settings.md"
+SETTINGS_FOLDER = (FILE_PATH / "../backend/backend/settings/").resolve()
+DOC_PATH = (FILE_PATH / "../docs/settings.md").resolve()
 FILE_HEADER = """
 <!-- This file is an auto-generated file, please do not edit manually. Instead you can run `make docs` to update it -->
 # Substra setting
@@ -81,8 +81,10 @@ def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:  # noqa C9
 
             # try to guess the variable type by looking at the outer function call
             setting_type = "string"
+            node_to_consider_for_comments = node
             if isinstance(node._parent, ast.Call):
                 parent_name = resolve_attribute_chain(node._parent.func)
+                node_to_consider_for_comments = node._parent
                 if parent_name == "int":
                     setting_type = "int"
                 elif "bool" in parent_name:
@@ -97,12 +99,20 @@ def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:  # noqa C9
                     setting.default_value = ast.literal_eval(node.args[1])
                 except ValueError:
                     # default value is an expression, evaluate it to get a valid input
-                    setting.default_value = eval(ast.unparse(node.args[1]))  # nosec
+                    try:
+                        setting.default_value = eval(ast.unparse(node.args[1]))  # nosec
+                    except Exception as e:
+                        setting.default_value = "?"
+                        print(
+                            f"Warning: Couldn't eval {filename} line {node.lineno}: {ast.unparse(node.args[1])} ({e})"
+                        )
+
                     setting.default_value_comment = ast.unparse(node.args[1])
 
             # get same-line comment
-            if node.lineno and "#" in settings_file_lines[node.lineno - 1]:
-                setting.comment = settings_file_lines[node.lineno - 1].split("#", 1)[1].strip()
+            for line in range(node_to_consider_for_comments.lineno, node_to_consider_for_comments.end_lineno + 1):
+                if "#" in settings_file_lines[line - 1]:
+                    setting.comment = settings_file_lines[line - 1].split("#", 1)[1].strip()
 
             # get previous-line comment
             previous_line = settings_file_lines[node.lineno - 2].strip()

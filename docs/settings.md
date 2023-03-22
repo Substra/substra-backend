@@ -98,7 +98,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 |------|---------|---------------|---------|
 | bool | `OIDC_ENABLED` | `false` |  |
 | string | `OIDC_OP_AUTHORIZATION_ENDPOINT` | nil |  |
-| string | `OIDC_OP_DISPLAY_NAME` | nil |  |
+| string | `OIDC_OP_DISPLAY_NAME` | `?` (`OIDC['OP']['URL']`) |  |
 | string | `OIDC_OP_JWKS_URI` | nil |  |
 | string | `OIDC_OP_TOKEN_ENDPOINT` | nil |  |
 | string | `OIDC_OP_URL` | nil |  |
