@@ -10,12 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add filters to performances export (#590)
-- filter warnings in `pyproject.toml` to follow deprecation messages in `pkg_resources`([#612](https://github.com/Substra/substra-backend/pull/612))
+- Filter warnings in `pyproject.toml` to follow deprecation messages in `pkg_resources`([#612](https://github.com/Substra/substra-backend/pull/612))
+- Prefetch `function__inputs`, `function__outputs` in `ComputeTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
+- Prefetch `inputs`, `outputs`, `inputs__asset`, `outputs__assets`, `function__inputs` and  `function__outputs` in `CPTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
+- Add `ComputeTaskWithDetailsSerializer` as a full-view serializer (including inputs and outputs) ([#613](https://github.com/Substra/substra-backend/pull/613))
 
 
 ### Changed
 
 - BREAKING: rename Algo to Function ([#573](https://github.com/Substra/substra-backend/pull/573))
+- BREAKING: List views of `ComputeTask` objects no longer include the `ComputeTaskInput` not the `ComputeTaskOutput` objects ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Rename fields in export perf csv ([#593](https://github.com/Substra/substra-backend/pull/593))
 - Durations in task profiling formatted in microseconds instead of 'DD hh:mm:ss.uuuuuu' ([#598](https://github.com/Substra/substra-backend/pull/598))
 
