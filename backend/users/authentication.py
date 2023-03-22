@@ -63,8 +63,8 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
         issuer = claims.get("_openid_issuer")
         try:
             return (
-                UserOidcInfo.objects.get(openid_issuer=issuer, openid_subject=openid_subject)
-                .select_related("user")
+                UserOidcInfo.objects.select_related("user")
+                .get(openid_issuer=issuer, openid_subject=openid_subject)
                 .user
             )
         except UserOidcInfo.DoesNotExist:
@@ -95,17 +95,18 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
     def create_user(self, claims):
         email = claims.get("email")
+        subject = claims.get("sub")
         issuer = claims.get("_openid_issuer")
         if settings.OIDC["USERS"]["APPEND_DOMAIN"]:
-            username = utils.username_with_domain_from_email(email)
+            username = utils.OIDC.generate_username_with_domain(email, issuer, subject)
         else:
-            username = utils.username_from_email(email)
+            username = utils.OIDC.generate_username(email, issuer, subject)
 
         user = self.UserModel.objects.create_user(username, email=email)
 
         UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS"]["DEFAULT_CHANNEL"])
         UserOidcInfo.objects.create(
-            user=user, openid_issuer=issuer, openid_subject=claims.get("sub"), valid_until=_get_user_valid_until()
+            user=user, openid_issuer=issuer, openid_subject=subject, valid_until=_get_user_valid_until()
         )
         return user
 
