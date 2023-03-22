@@ -158,7 +158,6 @@ class PerformanceViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.maxDiff = None
         self.data_manager = factory.create_datamanager()
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plans = [

@@ -62,7 +62,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        self.maxDiff = None
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.url = reverse("api:compute_plan-list")

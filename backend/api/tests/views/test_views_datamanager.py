@@ -36,7 +36,6 @@ class DataManagerViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
-        self.maxDiff = None
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
         self.url = reverse("api:data_manager-list")
