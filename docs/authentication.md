@@ -64,7 +64,7 @@ curl \
   * The token is stored on server side (in `authtoken_token` table), alongside a creation date and and the user ID.
   * The token is a random string encoded in hexadecimal format. [Source](https://github.com/encode/django-rest-framework/blob/master/rest_framework/authtoken/models.py)
   * The token should be included in the `Authorization` HTTP header
-- The API has a custom layer to handle the token expiration based on its creation date. [Source](../libs/expiry_token_authentication.py)
+- The API has a custom layer to handle the token expiration based on its creation date. [Source](../backend/users/utils/bearer_token.py)
 
 1. Post the credentials using JSON data to download the authentication token.
 
@@ -75,7 +75,7 @@ curl \
   --header 'Content-Type: application/json' \
   --data '{"username":"org-1","password":"p@sswr0d44"}' \
   http://substra-backend.org-1.com/api-token-auth/
-{"token":"<auth_token_value>","expires_at":"59841.718064"}
+{"token":"<auth_token_value>","expires_at":"<ISO timestamp>"}
 ```
 
 2. Fetch any asset with the authentication token in the header.

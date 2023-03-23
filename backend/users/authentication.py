@@ -1,19 +1,39 @@
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 from urllib.error import HTTPError
 
 import requests
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from rest_framework.authentication import TokenAuthentication as DRFTokenAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from libs.expiry_token_authentication import ExpiryTokenAuthentication
 from users.models.user_channel import UserChannel
 from users.models.user_oidc_info import UserOidcInfo
 
 from . import utils
+
+
+class BearerTokenAuthentication(DRFTokenAuthentication):
+    """
+    If token is expired then it will be removed
+    and new one with different key will be created
+    """
+
+    def authenticate_credentials(self, key):
+
+        _, token = super().authenticate_credentials(key)
+
+        is_expired = utils.bearer_token.is_token_expired(token)
+        if is_expired:
+            token.delete()
+            raise AuthenticationFailed("The Token is expired")
+
+        check_oidc_user_is_valid(token.user)
+        return token.user, token
 
 
 class SecureJWTAuthentication(JWTAuthentication):
@@ -40,13 +60,6 @@ class SecureJWTAuthentication(JWTAuthentication):
             user = self.get_user(validated_token)
             check_oidc_user_is_valid(user)
             return user, None
-
-
-class ExpiryTokenAuthentication(ExpiryTokenAuthentication):
-    def authenticate_credentials(self, key):
-        user, token = super().authenticate_credentials(key)
-        check_oidc_user_is_valid(user)
-        return user, token
 
 
 class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
@@ -98,9 +111,9 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
         subject = claims.get("sub")
         issuer = claims.get("_openid_issuer")
         if settings.OIDC["USERS"]["APPEND_DOMAIN"]:
-            username = utils.OIDC.generate_username_with_domain(email, issuer, subject)
+            username = utils.oidc.generate_username_with_domain(email, issuer, subject)
         else:
-            username = utils.OIDC.generate_username(email, issuer, subject)
+            username = utils.oidc.generate_username(email, issuer, subject)
 
         user = self.UserModel.objects.create_user(username, email=email)
 

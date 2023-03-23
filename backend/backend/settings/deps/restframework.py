@@ -9,7 +9,7 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "users.authentication.SecureJWTAuthentication",  # JWT for front
-        "users.authentication.ExpiryTokenAuthentication",  # Bearer token for SDK
+        "users.authentication.BearerTokenAuthentication",  # Bearer token for SDK
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",

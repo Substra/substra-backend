@@ -19,11 +19,11 @@ class TestUserUtil:
             "---hello-guys---how--are-you--": "hello-guys-how-are-you",
             # accents stripped out but stuff that are their own letters are kept as-is (unicode NFKD policy)
             "Bôñjöūr! ¿Çå va̋ møn čœűr?": "bonjour-ca-va-m-n-c-ur",
-            # _sanitize can return empty strings
+            # sanitize can return empty strings
             """廣東，喺南嶺南邊，面臨南中國海。بَندَرعَبّاس مرکز استان هرمزگان و شهرستان بندرعباس در جنوب ایران است.""": "",
         }
         for k, v in data.items():
-            assert utils._sanitize(k) == v
+            assert utils.utils.sanitize(k) == v
 
     def test_email_address_splitting(self):
         valid_addresses = {
@@ -57,22 +57,22 @@ class TestUserUtil:
             ),
         }
         for address, decomposition in valid_addresses.items():
-            assert utils._split_email_addr(address) == decomposition
+            assert utils.utils.split_email_addr(address) == decomposition
 
     @pytest.mark.django_db
     def test_username_iteration(self):
         user_model = get_user_model()
         user_model.objects.create_user("toto", email="toto@example.com")
-        assert utils._iterate_username("toto") == "toto-2"
+        assert utils.utils.iterate_username("toto") == "toto-2"
 
         user_model.objects.create_user("toto-2", email="toto@example.com")
         user_model.objects.create_user("toto-3", email="toto@example.com")
         user_model.objects.create_user("toto-4", email="toto@example.com")
-        assert utils._iterate_username("toto") == "toto-5"
+        assert utils.utils.iterate_username("toto") == "toto-5"
 
         for i in range(5, 10):
             user_model.objects.create_user(f"toto-{i}", email="toto@example.com")
-        assert utils._iterate_username("toto") == "toto-10"
+        assert utils.utils.iterate_username("toto") == "toto-10"
 
     @pytest.mark.django_db
     def test_oidc_username_generation(self):
@@ -82,24 +82,24 @@ class TestUserUtil:
             "issuer": "example.com",
             "subject": "12345",
         }
-        assert utils.OIDC.generate_username(**args) == "toto"
-        assert utils.OIDC.generate_username_with_domain(**args) == "toto-example"
+        assert utils.oidc.generate_username(**args) == "toto"
+        assert utils.oidc.generate_username_with_domain(**args) == "toto-example"
 
         user_model.objects.create_user("toto", email="toto@example.com")
 
-        assert utils.OIDC.generate_username(**args) != "toto"
-        assert utils.OIDC.generate_username_with_domain(**args) == "toto-example"
+        assert utils.oidc.generate_username(**args) != "toto"
+        assert utils.oidc.generate_username_with_domain(**args) == "toto-example"
 
         weird_email_args = {
             "email": "👾🥱@😈.com",
             "issuer": "example.com",
             "subject": "12345",
         }
-        assert utils.OIDC.generate_username(**weird_email_args) != ""
-        assert not user_model.objects.filter(username=utils.OIDC.generate_username(**weird_email_args)).exists()
-        assert utils.OIDC.generate_username_with_domain(**weird_email_args) != ""
+        assert utils.oidc.generate_username(**weird_email_args) != ""
+        assert not user_model.objects.filter(username=utils.oidc.generate_username(**weird_email_args)).exists()
+        assert utils.oidc.generate_username_with_domain(**weird_email_args) != ""
         assert not user_model.objects.filter(
-            username=utils.OIDC.generate_username_with_domain(**weird_email_args)
+            username=utils.oidc.generate_username_with_domain(**weird_email_args)
         ).exists()
 
 
