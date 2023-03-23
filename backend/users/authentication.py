@@ -75,11 +75,12 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
         openid_subject = claims.get("sub")
         issuer = claims.get("_openid_issuer")
         try:
-            return (
+            # return a list because mozilla_django_oidc expects some kind of range
+            return [
                 UserOidcInfo.objects.select_related("user")
                 .get(openid_issuer=issuer, openid_subject=openid_subject)
                 .user
-            )
+            ]
         except UserOidcInfo.DoesNotExist:
             return self.UserModel.objects.none()
 
