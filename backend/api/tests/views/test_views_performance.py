@@ -362,7 +362,7 @@ def create_compute_task():
         }
         function = factory.create_function(
             inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
-            outputs=factory.build_function_outputs(["performance"]),
+            outputs=factory.build_function_outputs(["model", "performance"]),
             name="simple function",
         )
         return factory.create_computetask(
