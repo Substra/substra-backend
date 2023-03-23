@@ -24,6 +24,7 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.settings import api_settings
 
 from api.urls import urlpatterns
+from backend.views import active_bearer_tokens
 from backend.views import info_view
 from backend.views import obtain_auth_token
 from backend.views import obtain_auth_token_already_authenticated
@@ -40,7 +41,8 @@ urlpatterns = (
                     path("", include((organization_router.urls, "organization"))),
                     path("", include((user_router.urls, "user"))),  # for secure jwt authent
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
-                    path("api-token-tap/", obtain_auth_token_already_authenticated),
+                    path("api-token/", obtain_auth_token_already_authenticated),
+                    path("active-api-tokens/", active_bearer_tokens),
                 ]
             ),
         ),

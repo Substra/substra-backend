@@ -1,3 +1,4 @@
+from datetime import datetime
 from datetime import timedelta
 
 from django.conf import settings
@@ -7,19 +8,24 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 
 
-def expires_at(token):
-    """Return time left."""
+def expires_at(token) -> datetime:
+    """Return date at which the token expires"""
+    return timezone.now() + time_left(token)
+
+
+def time_left(token) -> timedelta:
+    """Return seconds left."""
     time_elapsed = timezone.now() - token.created
     left_time = settings.EXPIRY_TOKEN_LIFETIME - time_elapsed
     return left_time
 
 
-def is_token_expired(token):
+def is_token_expired(token) -> bool:
     """Check whether token has expired or not"""
-    return expires_at(token) < timedelta(seconds=0)
+    return time_left(token) < timedelta(seconds=0)
 
 
-def token_expire_handler(token):
+def token_expire_handler(token) -> tuple[bool, Token]:
     """
     If token is expired new token will be established.
     If token is expired then it will be removed

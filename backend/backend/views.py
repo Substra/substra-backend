@@ -10,23 +10,11 @@ from rest_framework.views import APIView
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.expiry_token_authentication import expires_at
+from libs.expiry_token_authentication import time_left
 from libs.expiry_token_authentication import token_expire_handler
 from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-
-
-def _get_bearer_token(user):
-    if settings.TOKEN_STRATEGY == "reuse":  # nosec
-        token, created = Token.objects.get_or_create(user=user)
-        # token_expire_handler will check whether the token is expired
-        # and will generate a new one if necessary
-        is_expired, token = token_expire_handler(token)
-    else:
-        # token should be new each time, remove the old one
-        Token.objects.filter(user=user).delete()
-        token = Token.objects.create(user=user)
-    return token
 
 
 class ExpiryObtainAuthToken(ObtainAuthToken):
@@ -41,8 +29,17 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        token = _get_bearer_token(user)
-        return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
+        if settings.TOKEN_STRATEGY == "reuse":  # nosec
+            token, created = Token.objects.get_or_create(user=user)
+            # token_expire_handler will check whether the token is expired
+            # and will generate a new one if necessary
+            is_expired, token = token_expire_handler(token)
+        else:
+            # token should be new each time, remove the old one
+            Token.objects.filter(user=user).delete()
+            token = Token.objects.create(user=user)
+        # expires_at field is misnamed
+        return ApiResponse({"token": token.key, "expires_at": time_left(token)})
 
 
 class AuthenticatedAuthToken(ObtainAuthToken):
@@ -53,8 +50,26 @@ class AuthenticatedAuthToken(ObtainAuthToken):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        token = _get_bearer_token(request.user)
-        return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
+        # create a new token each time (you don't want a token that is about to expire)
+        Token.objects.filter(user=request.user).delete()
+        token = Token.objects.create(user=request.user)
+
+        return ApiResponse({"token": token.key, "created": token.created, "expires_at": expires_at(token)})
+
+
+class ActiveBearerTokens(APIView):
+    """
+    list Bearer tokens for a user
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        tokens = Token.objects.filter(user=request.user)
+
+        return ApiResponse(
+            {"tokens": [{"created": token.created, "expires_at": expires_at(token)} for token in tokens]}
+        )
 
 
 class Info(APIView):
@@ -102,4 +117,5 @@ class Info(APIView):
 
 obtain_auth_token = ExpiryObtainAuthToken.as_view()
 obtain_auth_token_already_authenticated = AuthenticatedAuthToken.as_view()
+active_bearer_tokens = ActiveBearerTokens.as_view()
 info_view = Info.as_view()
