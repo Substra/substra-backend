@@ -1,11 +1,11 @@
 import json
 import os
-from typing import cast
 
 import structlog
 
 import orchestrator
 from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.context import OutputResource
 from substrapp.compute_tasks.context import TaskResource
 from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import Directories
@@ -38,32 +38,34 @@ def get_exec_command(ctx: Context) -> list[str]:
     return command
 
 
-def get_exec_command_args(ctx: Context) -> list[str]:
-    """Return the substra-tools command line arguments"""
-    task = ctx.task
-
+def _get_input_tasks(
+    input_assets: list[orchestrator.ComputeTaskInputAsset], function: orchestrator.Function
+) -> list[TaskResource]:
+    """Return a list of `TaskResource` for all inputs"""
     in_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.InModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
-    chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
 
     inputs = []
-    outputs = []
-
-    for input_asset in ctx.input_assets:
+    for input_asset in input_assets:
         identifier = input_asset.identifier
-        multiple = ctx.function.inputs[input_asset.identifier].multiple
+        multiple = function.inputs[input_asset.identifier].multiple
 
         value = None
-        # `cast()` are needed as we use `Optional`
         if input_asset.kind == orchestrator.AssetKind.ASSET_MODEL:
-            model = cast(orchestrator.resources.Model, input_asset.model)
+            model = input_asset.model
+            if model is None:
+                raise ValueError(f"model cannot be None when {input_asset.kind=}")
             value = os.path.join(in_models_dir, model.key)
         elif input_asset.kind == orchestrator.AssetKind.ASSET_DATA_MANAGER:
-            data_manager = cast(orchestrator.resources.DataManager, input_asset.data_manager)
+            data_manager = input_asset.data_manager
+            if data_manager is None:
+                raise ValueError(f"data_manager cannot be None when {input_asset.kind=}")
             value = os.path.join(openers_dir, data_manager.key, Filenames.Opener)
         elif input_asset.kind == orchestrator.AssetKind.ASSET_DATA_SAMPLE:
-            data_sample = cast(orchestrator.resources.DataSample, input_asset.data_sample)
+            data_sample = input_asset.data_sample
+            if data_sample is None:
+                raise ValueError(f"data_sample cannot be None when {input_asset.kind=}")
             value = os.path.join(datasamples_dir, data_sample.key)
 
         if value is not None:
@@ -75,8 +77,22 @@ def get_exec_command_args(ctx: Context) -> list[str]:
                 )
             )
 
-    for output in ctx.outputs:
-        outputs.append(TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)))
+    return inputs
+
+
+def _get_output_tasks(outputs: list[OutputResource]) -> list[TaskResource]:
+    """Return a list of `TaskResource` for all outputs"""
+    return [TaskResource(id=output.identifier, value=os.path.join(SANDBOX_DIR, output.rel_path)) for output in outputs]
+
+
+def get_exec_command_args(ctx: Context) -> list[str]:
+    """Return the substra-tools command line arguments"""
+    task = ctx.task
+
+    chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
+
+    inputs = _get_input_tasks(ctx.input_assets, ctx.function)
+    outputs = _get_output_tasks(ctx.outputs)
 
     task_properties = {"rank": task.rank}
     args = ["--task-properties", json.dumps(task_properties)]
