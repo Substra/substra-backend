@@ -389,24 +389,21 @@ def create_compute_plan(create_compute_task):
 
 
 @pytest.mark.django_db
-def test_n_plus_one_queries_performance_list_empty(authenticated_client, create_compute_plan):
-    # This expects 12 requests even without any performance and 14 if performances are made
+def test_n_plus_one_queries_performance_list(authenticated_client, create_compute_plan):
+    # Dummy request, the fist request seems to trigger a caching system caching 4 requests
+    url = reverse("api:compute_plan-list")
+    authenticated_client.get(url)
+
     compute_plan = create_compute_plan(n_task=4)
     url = reverse("api:compute_plan_perf-list", args=[compute_plan.key])
     with utils.CaptureQueriesContext(connection) as query:
-        print(authenticated_client.get(url))
-    query_tasks = len(query.captured_queries)
-    assert query_tasks == 12
+        authenticated_client.get(url)
+    query_tasks_empty = len(query.captured_queries)
 
-
-@pytest.mark.django_db
-def test_n_plus_one_queries_performance_list(authenticated_client, create_compute_plan):
-    # This expects 12 requests even without any performance and 14 if performances are made
-    compute_plan = create_compute_plan(n_task=4)
-    url = reverse("api:compute_plan_perf-list", args=[compute_plan.key])
     for t in compute_plan.compute_tasks.all():
         factory.create_performance(t, t.function)
     with utils.CaptureQueriesContext(connection) as query:
         print(authenticated_client.get(url))
-    query_tasks = len(query.captured_queries)
-    assert query_tasks == 14
+    query_task_with_perf = len(query.captured_queries)
+    assert query_task_with_perf < 11
+    assert query_task_with_perf - query_tasks_empty < 3
