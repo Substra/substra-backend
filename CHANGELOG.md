@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: List views of `ComputeTask` objects no longer include the `ComputeTaskInput` not the `ComputeTaskOutput` objects ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Rename fields in export perf csv ([#593](https://github.com/Substra/substra-backend/pull/593))
 - Durations in task profiling formatted in microseconds instead of 'DD hh:mm:ss.uuuuuu' ([#598](https://github.com/Substra/substra-backend/pull/598))
+- Loop through assets only once in `get_exec_command_args` (in `substrapp`)([#615](https://github.com/Substra/substra-backend/pull/615))
 
 ### Removed
 
