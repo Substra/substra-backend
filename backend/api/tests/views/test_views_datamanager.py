@@ -244,8 +244,8 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_results[:2]}
         )
 
-    def test_datamanager_list_cross_assets_filters(self):
-        """Filter datamanager on other asset key such as compute_plan_key, function_key and data_sample_key"""
+    def test_datamanager_list_data_sample_key_filter(self):
+        """Filter datamanager on data_sample_key"""
 
         # filter on data_sample_key
         params = urlencode({"data_sample_key": self.data_sample_1_key_uuid})

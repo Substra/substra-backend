@@ -123,7 +123,6 @@ class ComputePlanFilter(FilterSet):
         choices=ComputePlan.Status.choices,
     )
     function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
-    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
     duration = RangeFilter(label="duration")
     creator = CharFilter(field_name="creator__username", label="creator")
 

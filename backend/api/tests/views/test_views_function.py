@@ -333,8 +333,8 @@ class FunctionViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
         )
 
-    def test_function_list_cross_assets_filters(self):
-        """Filter functions on other asset key such as compute_plan_key, dataset_key and data_sample_key"""
+    def test_function_list_compute_plan_key_filter(self):
+        """Filter functions on compute_plan_key"""
         compute_plan = factory.create_computeplan()
 
         factory.create_computetask(compute_plan, self.functions[0])

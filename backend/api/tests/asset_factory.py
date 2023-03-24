@@ -22,7 +22,6 @@ Basic example:
 ...         },
 ...     ),
 ...     outputs=factory.build_computetask_outputs(function),
-...     data_manager=data_manager,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> model = create_model(train_task, identifier="model")
@@ -43,7 +42,6 @@ Basic example:
 ...         },
 ...     ),
 ...     outputs=factory.build_computetask_outputs(metric),
-...     data_manager=data_manager,
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> performance = create_performance(test_task, metric, identifier="performance")
