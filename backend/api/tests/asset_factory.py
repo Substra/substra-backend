@@ -220,7 +220,7 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
 
 def create_function(
     inputs: list[FunctionInput] = None,
-    outputs: list[FunctionInput] = None,
+    outputs: list[FunctionOutput] = None,
     key: uuid.UUID = None,
     name: str = "function",
     metadata: dict = None,

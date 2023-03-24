@@ -176,8 +176,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
 
     duration = serializers.IntegerField(read_only=True)
-    inputs = ComputeTaskInputSerializer(many=True)
-    outputs = ComputeTaskOutputSerializer(many=True)
 
     class Meta:
         model = ComputeTask
@@ -198,8 +196,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "tag",
             "worker",
             "duration",
-            "inputs",
-            "outputs",
         ]
 
     def to_representation(self, instance):
@@ -213,8 +209,6 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
         # replace storage addresses
         self._replace_storage_addresses(data)
-
-        data["outputs"] = {_output.pop("identifier"): _output for _output in data["outputs"]}
 
         return data
 
@@ -231,6 +225,25 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             task["function"]["function"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[task["function"]["key"]])
             )
+
+
+class ComputeTaskWithDetailsSerializer(ComputeTaskSerializer):
+    inputs = ComputeTaskInputSerializer(many=True)
+    outputs = ComputeTaskOutputSerializer(many=True)
+
+    class Meta:
+        model = ComputeTask
+        fields = ComputeTaskSerializer.Meta.fields + [
+            "inputs",
+            "outputs",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        data["outputs"] = {_output.pop("identifier"): _output for _output in data["outputs"]}
+
+        return data
 
     @transaction.atomic
     def create(self, validated_data):
