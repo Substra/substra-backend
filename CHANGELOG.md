@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefetch on `DataManager.data_samples` ([#607](https://github.com/Substra/substra-backend/pull/607))
 
 
+### Fixed
+
+- order of `data_sample_key` in tests ([#607](https://github.com/Substra/substra-backend/pull/607))
+
+
 ### Changed
 
 - BREAKING: rename Algo to Function ([#573](https://github.com/Substra/substra-backend/pull/573))
