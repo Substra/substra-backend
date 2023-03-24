@@ -72,8 +72,6 @@ class ComputeTaskViewTests(APITestCase):
                 self.simple_function,
                 inputs=factory.build_computetask_inputs(self.simple_function, input_keys),
                 outputs=factory.build_computetask_outputs(self.simple_function),
-                data_manager=self.data_manager,
-                data_samples=[self.data_sample.key],
                 status=_status,
                 error_type=error_type,
             )
@@ -622,13 +620,11 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         }
 
     def test_task_list_cross_assets_filters(self):
-        """Filter task on other asset key such as compute_plan_key, function_key dataset_key and data_sample_key"""
+        """Filter task on other asset key such as compute_plan_key and function_key"""
         # filter on asset keys
         params_list = [
             urlencode({"compute_plan_key": self.compute_plan.key}),
             urlencode({"function_key": self.simple_function.key}),
-            urlencode({"dataset_key": self.data_manager.key}),
-            urlencode({"data_sample_key": self.data_sample.key}),
         ]
 
         for params in params_list:

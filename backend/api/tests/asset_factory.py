@@ -22,8 +22,6 @@ Basic example:
 ...         },
 ...     ),
 ...     outputs=factory.build_computetask_outputs(function),
-...     data_manager=data_manager,
-...     data_samples=[data_sample.key],
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> model = create_model(train_task, identifier="model")
@@ -44,8 +42,6 @@ Basic example:
 ...         },
 ...     ),
 ...     outputs=factory.build_computetask_outputs(metric),
-...     data_manager=data_manager,
-...     data_samples=[data_sample],
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
 >>> performance = create_performance(test_task, metric, identifier="performance")
@@ -85,7 +81,6 @@ from api.models import Model
 from api.models import Performance
 from api.models import ProfilingStep
 from api.models import TaskProfiling
-from api.models.computetask import TaskDataSamples
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
@@ -340,8 +335,6 @@ def create_computetask(
     function: Function,
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
-    data_manager: DataManager = None,
-    data_samples: list[uuid.UUID] = None,
     key: uuid.UUID = None,
     status: int = ComputeTask.Status.STATUS_TODO,
     rank: int = 1,
@@ -360,7 +353,6 @@ def create_computetask(
     compute_task = ComputeTask.objects.create(
         compute_plan=compute_plan,
         function=function,
-        data_manager=data_manager,
         key=key,
         status=status,
         rank=rank,
@@ -378,10 +370,6 @@ def create_computetask(
         channel=channel,
         **get_log_permissions(owner, public),
     )
-    if data_samples:
-        for order, data_sample in enumerate(data_samples):
-            TaskDataSamples.objects.create(compute_task_id=key, data_sample_id=data_sample, order=order)
-        compute_task.refresh_from_db()
 
     if inputs:
         input_kinds = {

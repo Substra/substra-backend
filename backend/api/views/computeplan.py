@@ -21,7 +21,6 @@ from api.errors import AlreadyExistsError
 from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.serializers import ComputePlanSerializer
-from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import MetadataFilterBackend
@@ -124,10 +123,6 @@ class ComputePlanFilter(FilterSet):
         choices=ComputePlan.Status.choices,
     )
     function_key = CharFilter(field_name="compute_tasks__function__key", distinct=True, label="function_key")
-    dataset_key = CharFilter(field_name="compute_tasks__data_manager__key", distinct=True, label="dataset_key")
-    data_sample_key = CharInFilter(
-        field_name="compute_tasks__data_samples__key", distinct=True, label="data_sample_key"
-    )
     duration = RangeFilter(label="duration")
     creator = CharFilter(field_name="creator__username", label="creator")
 

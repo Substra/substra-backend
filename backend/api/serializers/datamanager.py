@@ -47,7 +47,7 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
 class DataManagerWithRelationsSerializer(DataManagerSerializer):
     data_sample_keys = serializers.PrimaryKeyRelatedField(
-        source="get_data_samples",
+        source="data_samples",
         many=True,
         read_only=True,
     )

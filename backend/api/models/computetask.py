@@ -3,7 +3,6 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
-from api.models.datasample import DataSample
 from api.models.function import FunctionInput
 from api.models.function import FunctionOutput
 from api.models.utils import AssetPermissionMixin
@@ -89,13 +88,6 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     channel = models.CharField(max_length=100)
     metadata = models.JSONField()
 
-    # specific fields for train, composite and test tasks
-    # patch waiting for a solution to preserve related datasample order without sync time overhead
-    data_manager = models.ForeignKey(
-        "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
-    )
-    data_samples = models.ManyToManyField(DataSample, through="TaskDataSamples", related_name="compute_tasks")
-
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations
 
@@ -108,11 +100,3 @@ class ComputeTask(models.Model, AssetPermissionMixin):
 
     def get_owner(self):
         return self.logs_owner
-
-
-class TaskDataSamples(models.Model):
-    """preserve datasamples order in this relation"""
-
-    compute_task = models.ForeignKey(ComputeTask, on_delete=models.CASCADE, related_name="compute_task_data_sample")
-    data_sample = models.ForeignKey(DataSample, on_delete=models.CASCADE, related_name="data_sample_task")
-    order = models.IntegerField(default=0)

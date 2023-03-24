@@ -16,7 +16,6 @@ from api.models import FunctionInput
 from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
-from api.models.computetask import TaskDataSamples
 from api.serializers.datamanager import DataManagerSerializer
 from api.serializers.datasample import DataSampleSerializer
 from api.serializers.function import FunctionSerializer
@@ -247,10 +246,6 @@ class ComputeTaskWithDetailsSerializer(ComputeTaskSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        data_samples = []
-        if "data_samples" in validated_data:
-            data_samples = validated_data.pop("data_samples")
-
         inputs = validated_data.pop("inputs")
         outputs = validated_data.pop("outputs")
 
@@ -258,9 +253,6 @@ class ComputeTaskWithDetailsSerializer(ComputeTaskSerializer):
         input_kinds = {
             function_input.identifier: function_input.kind for function_input in compute_task.function.inputs.all()
         }
-
-        for order, data_sample in enumerate(data_samples):
-            TaskDataSamples.objects.create(compute_task=compute_task, data_sample=data_sample, order=order)
 
         for position, input in enumerate(inputs):
             task_input = ComputeTaskInput.objects.create(

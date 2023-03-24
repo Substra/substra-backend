@@ -62,7 +62,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        self.maxDiff = None
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.url = reverse("api:compute_plan-list")
@@ -478,11 +477,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_compute_plan_list_cross_assets_filters(self):
         """Filter computeplan on other asset key such as function_key, dataset_key and data_sample_key"""
         function = factory.create_function()
-        data_manager = factory.create_datamanager()
-        data_sample = factory.create_datasample([data_manager])
 
         compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(compute_plan, function, data_manager=data_manager, data_samples=[data_sample.key])
+        factory.create_computetask(compute_plan, function)
         expected_cp = {
             "key": str(compute_plan.key),
             "tag": "",
@@ -507,16 +504,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         # filter on function_key
         params = urlencode({"function_key": function.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), [expected_cp])
-
-        # filter on dataset_key
-        params = urlencode({"dataset_key": data_manager.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), [expected_cp])
-
-        # filter on data_sample_key
-        params = urlencode({"data_sample_key": data_sample.key})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json().get("results"), [expected_cp])
 
