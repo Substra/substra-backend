@@ -171,7 +171,10 @@ class DataManagerViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixin
     filterset_class = DataManagerFilter
 
     def get_queryset(self):
-        return DataManager.objects.filter(channel=get_channel_name(self.request))
+        if self.action in ["list", "retrieve"]:
+            return DataManager.objects.filter(channel=get_channel_name(self.request)).prefetch_related("data_samples")
+        else:
+            return DataManager.objects.filter(channel=get_channel_name(self.request))
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:

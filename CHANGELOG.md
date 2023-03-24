@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefetch `inputs`, `outputs`, `inputs__asset`, `outputs__assets`, `function__inputs` and  `function__outputs` in `CPTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Add `ComputeTaskWithDetailsSerializer` as a full-view serializer (including inputs and outputs) ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Prefetch `outputs` in `_PerformanceMetricSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
+- Index on `DataManager.channel` ([#607](https://github.com/Substra/substra-backend/pull/607))
+- Prefetch on `DataManager.data_samples` ([#607](https://github.com/Substra/substra-backend/pull/607))
+
+
+### Fixed
+
+- order of `data_sample_key` in tests ([#607](https://github.com/Substra/substra-backend/pull/607))
 
 
 ### Changed
