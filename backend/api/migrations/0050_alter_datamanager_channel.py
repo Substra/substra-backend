@@ -7,7 +7,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0047_rename_algo_to_function"),
+        ("api", "0049_remove_computetask_data_manager"),
     ]
 
     operations = [
