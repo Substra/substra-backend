@@ -2,7 +2,10 @@ import os
 import shutil
 import tempfile
 
+import pytest
+from django.db import connection
 from django.test import override_settings
+from django.test import utils
 from django.urls import reverse
 from django.utils.http import urlencode
 from rest_framework import status
@@ -346,3 +349,24 @@ class PerformanceViewTests(APITestCase):
         content_list = list(response.streaming_content)
         self.assertEqual(len(content_list), 4)
         self.assertTrue(status in str(content_list[1]))
+
+
+@pytest.mark.django_db
+def test_n_plus_one_queries_performance_list(authenticated_client, create_compute_plan):
+    # Dummy request, the fist request seems to trigger a caching system caching 4 requests
+    url = reverse("api:compute_plan-list")
+    authenticated_client.get(url)
+
+    compute_plan = create_compute_plan(n_task=4)
+    url = reverse("api:compute_plan_perf-list", args=[compute_plan.key])
+    with utils.CaptureQueriesContext(connection) as query:
+        authenticated_client.get(url)
+    query_tasks_empty = len(query.captured_queries)
+
+    for t in compute_plan.compute_tasks.all():
+        factory.create_performance(t, t.function)
+    with utils.CaptureQueriesContext(connection) as query:
+        print(authenticated_client.get(url))
+    query_task_with_perf = len(query.captured_queries)
+    assert query_task_with_perf < 11
+    assert query_task_with_perf - query_tasks_empty < 3

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+
 ### Added
 
 - Add filters to performances export (#590)
@@ -14,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefetch `function__inputs`, `function__outputs` in `ComputeTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Prefetch `inputs`, `outputs`, `inputs__asset`, `outputs__assets`, `function__inputs` and  `function__outputs` in `CPTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Add `ComputeTaskWithDetailsSerializer` as a full-view serializer (including inputs and outputs) ([#613](https://github.com/Substra/substra-backend/pull/613))
+- Prefetch `outputs` in `_PerformanceMetricSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
 
 
 ### Changed
@@ -27,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - filter warnings in `pyproject.toml` for previous deprecation warning in `rest_framework_simplejwt` ([#612](https://github.com/Substra/substra-backend/pull/612))
 - model `TaskDataSample` and fields `ComputeTask.data_samples` / `DataManager.compute_tasks` ([#614](https://github.com/Substra/substra-backend/pull/614))
+- `data_samples_keys` in `_PerformanceComputeTaskSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
 
 ## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
 

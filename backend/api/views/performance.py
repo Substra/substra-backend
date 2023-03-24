@@ -3,7 +3,9 @@ import csv
 import structlog
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
+from django.db.models import Prefetch
 from django.db.models import Q
+from django.db.models import Value
 from django.http import StreamingHttpResponse
 from django_filters.rest_framework import DateTimeFromToRangeFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +17,7 @@ from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from api.models import ComputePlan as ComputePlan
+from api.models import FunctionOutput
 from api.models import Performance as Performance
 from api.serializers import CPPerformanceSerializer as CPPerformanceSerializer
 from api.serializers import ExportPerformanceSerializer as ExportPerformanceSerializer
@@ -25,6 +28,7 @@ from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import UUIDInFilter
 from api.views.utils import get_channel_name
 from libs.pagination import LargePageNumberPagination
+from orchestrator import common_pb2
 
 logger = structlog.get_logger(__name__)
 
@@ -42,13 +46,17 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
             .annotate(
                 # List all existing tasks ranks for a given compute plan
                 compute_tasks_distinct_ranks=ArrayAgg(
-                    "compute_tasks__rank", distinct=True, filter=Q(compute_tasks__rank__isnull=False)
+                    "compute_tasks__rank",
+                    distinct=True,
+                    filter=Q(compute_tasks__rank__isnull=False),
+                    default=Value([]),
                 ),
                 # List all existing tasks round indexes for a given compute plan
                 compute_tasks_distinct_rounds=ArrayAgg(
                     "compute_tasks__metadata__round_idx",
                     distinct=True,
                     filter=Q(compute_tasks__metadata__round_idx__isnull=False),
+                    default=Value([]),
                 ),
             )
             .values("compute_tasks_distinct_ranks", "compute_tasks_distinct_rounds")
@@ -56,9 +64,21 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return (
-            Performance.objects.filter(channel=get_channel_name(self.request))
-            .filter(compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk"))
-            .select_related("compute_task", "metric")
+            Performance.objects.filter(
+                channel=get_channel_name(self.request), compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk")
+            )
+            .select_related(
+                "compute_task",
+                "metric",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "metric__outputs",
+                    queryset=FunctionOutput.objects.filter(
+                        kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
+                    ).all(),
+                ),
+            )
             .distinct()
         )
 
