@@ -90,7 +90,7 @@ curl \
 
 ### Bearer tokens when already authenticated
 
-- URL: `/api-token-tap/`
+- URL: `/api-token/`
 - Implemented in `backend.views` [module](../backend/backend/views.py)
 
 Generates bearer tokens for already authenticated users.

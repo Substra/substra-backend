@@ -16,7 +16,7 @@ from users.utils import bearer_token as bearer_token_utils
 
 
 def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created": token.created, "expires_at": bearer_token_utils.expires_at(token)}
+    d = {"created_at": token.created, "expires_at": bearer_token_utils.expires_at(token)}
     if include_payload:
         d["token"] = token.key
     return d

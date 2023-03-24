@@ -59,7 +59,7 @@ class SecureJWTAuthentication(JWTAuthentication):
             validated_token = self.get_validated_token(raw_token)
             user = self.get_user(validated_token)
             check_oidc_user_is_valid(user)
-            return user, None
+            return user, None  # user, token
 
 
 class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
