@@ -161,11 +161,15 @@ def check_oidc_user_is_valid(user) -> None:
      -- unless it's an OIDC authentication request.
     """
 
+    if not settings.OIDC["ENABLED"]:
+        return
+        # this is early as to save one DB request for non-OIDC deployments.
+        # However, if OIDC users are created and then OIDC is disabled
+        # they'll be able to authenticate through existing tokens
+        #  even though OIDC has been disabled.
+
     if not hasattr(user, "oidc_info"):
         return
-
-    if not settings.OIDC["ENABLED"]:
-        raise PermissionDenied("You are an OIDC user but OIDC has been disabled")
 
     if user.oidc_info.valid_until < datetime.now(timezone.utc):
         if user.oidc_info.refresh_token:
