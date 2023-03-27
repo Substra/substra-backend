@@ -35,7 +35,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                                                                                                                                            | `private-ca.crt`     |
 | `psp.create`                     | Create a _Pod Security Policy_ in the cluster. WARNING: PodSecurityPolicy is deprecated in Kubernetes 1.21 or later and unavailable in Kubernetes 1.25 or later                    | `true`               |
 
-
 ### Server settings
 
 | Name                                              | Description                                                                                                                                        | Value                                      |
@@ -103,7 +102,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `server.metrics.serviceMonitor.metricRelabelings` | MetricRelabelConfigs to apply to samples before insertion                                                                                          | `[]`                                       |
 | `server.metrics.serviceMonitor.honorLabels`       | Specify honorLabels parameter of the scrape endpoint                                                                                               | `false`                                    |
 
-
 ### Substra worker settings
 
 | Name                                           | Description                                                                                                                                        | Value                     |
@@ -148,7 +146,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.events.serviceAccount.create`          | Create a service account for the event app                                                                                                         | `true`                    |
 | `worker.events.serviceAccount.name`            | The name of the ServiceAccount to use                                                                                                              | `""`                      |
 
-
 ### Substra periodic tasks worker settings
 
 | Name                                            | Description                                                        | Value                     |
@@ -168,7 +165,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `schedulerWorker.podSecurityContext.runAsUser`  | User ID for the pod                                                | `1001`                    |
 | `schedulerWorker.podSecurityContext.runAsGroup` | Group ID for the pod                                               | `1001`                    |
 | `schedulerWorker.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                    | `1001`                    |
-
 
 ### Celery task scheduler settings
 
@@ -190,7 +186,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `scheduler.podSecurityContext.runAsGroup` | Group ID for the pod                                               | `1001`                    |
 | `scheduler.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                    | `1001`                    |
 
-
 ### Substra container registry settings
 
 | Name                            | Description                                                                                     | Value       |
@@ -201,7 +196,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `containerRegistry.scheme`      | Communication scheme of the container registry                                                  | `http`      |
 | `containerRegistry.pullDomain`  | Hostname from which the cluster should pull container images                                    | `127.0.0.1` |
 | `containerRegistry.prepopulate` | Images to add to the container registry                                                         | `[]`        |
-
 
 ### Api event app settings
 
@@ -224,7 +218,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `api.events.serviceAccount.create`         | Create a service account for the event app           | `true`                    |
 | `api.events.serviceAccount.name`           | The name of the ServiceAccount to use                | `""`                      |
 
-
 ### Orchestrator settings
 
 | Name                                                      | Description                                                                                                                    | Value                |
@@ -239,7 +232,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `orchestrator.channels[0].mychannel.restricted`           | Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel | `false`              |
 | `orchestrator.channels[0].mychannel.model_export_enabled` | Allow logged-in users to download models trained on this organization                                                          | `false`              |
 | `orchestrator.channels[0].mychannel.chaincode.name`       | The name of the chaincode instantiated on this channel                                                                         | `mycc`               |
-
 
 ### Kaniko settings
 
@@ -257,7 +249,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `kaniko.cache.persistence.storageClass` | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                      |
 | `kaniko.cache.persistence.size`         | The size of the volume.                                                                                                                            | `10Gi`                    |
 
-
 ### Account operator settings
 
 | Name                                       | Description                                                                                        | Value |
@@ -266,6 +257,34 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
 
+### Single Sign-On through OpenID Connect
+
+Uses the authorization code flow.
+
+By default, `oidc.users.useRefreshToken` is enabled. This makes sure the user still has an account at the identity provider, without damaging user experience.
+
+The way it works is that a OIDC user that spent more than `oidc.users.loginValidityDuration` since their last login must undergo a refresh to keep using their access tokens -- but these refreshes are done in the background if `oidc.users.useRefreshToken` is enabled (otherwise a new manual authorization is necessary). The identity provider must support `offline_access` and configuration discovery.
+
+With this option active, you can set `oidc.users.loginValidityDuration` to low values (minutes).
+
+Else, you must strike a balance: longer durations are more convenient, but risk users having continued access even though their account has been disabled.
+
+
+| Name                                    | Description                                                                                                                                                     | Value   |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `oidc.enabled`                          | Whether to enable OIDC authentication                                                                                                                           | `false` |
+| `oidc.clientSecretName`                 | The name of a secret containing the keys `OIDC_RP_CLIENT_ID` and `OIDC_RP_CLIENT_SECRET` (client ID and secret, typically issued by the provider)               | `nil`   |
+| `oidc.provider.url`                     | The identity provider URL (with scheme).                                                                                                                        | `nil`   |
+| `oidc.provider.displayName`             | The name of the provider as displayed in the interface ("Sign in with X")                                                                                       | `nil`   |
+| `oidc.provider.endpoints.authorization` | Typically https://provider/auth                                                                                                                                 | `nil`   |
+| `oidc.provider.endpoints.token`         | Typically https://provider/token                                                                                                                                | `nil`   |
+| `oidc.provider.endpoints.user`          | Typically https://provider/me                                                                                                                                   | `nil`   |
+| `oidc.provider.jwksUri`                 | Typically https://provider/jwks. Only required for public-key-based signing algorithms. If not given, read from `/.well-known/openid-configuration` at startup. | `nil`   |
+| `oidc.signAlgo`                         | Either RS256 or HS256                                                                                                                                           | `RS256` |
+| `oidc.users.useRefreshToken`            | Attempt to refresh user info in the background.                                                                                                                 | `true`  |
+| `oidc.users.loginValidityDuration`      | How long a user account is valid after an OIDC login, in seconds                                                                                                | `3600`  |
+| `oidc.users.channel`                    | The channel to assign OIDC users to (mandatory)                                                                                                                 | `nil`   |
+| `oidc.users.appendDomain`               | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)   | `false` |
 
 ### Helm hooks
 

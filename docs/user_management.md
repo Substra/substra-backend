@@ -1,20 +1,16 @@
 # User management
 
-## Problem to solve
+## User creation at deploy time
 
-User creation could only be made during deployment of substra or by SRE action, and there was only one layer of privileges. We needed a proper user management mechanism with different roles for different privileges and ability to add/modify existing users. It was also necessary to allow a user to request a reset of password if forgotten.
+User creation through account operator settings (`addAccountOperator.users`) is necessary to at least create the first user. Users added through this command will have administrators role and privileges.
 
-## Solutions implemented
+## User management at runtime
 
-- User creation through account operator settings (`addAccountOperator.users`) is still necessary to at least create the first user. Users added through this command will have administrators role and privileges.
+- An admin user can create or delete users and modify the role of existing users.
+- An authenticated user can modify its own password.
+- A user can request a reset password link from their administrator.
 
-- An admin user can then create / delete users and modify the role of existing user
-
-- An authenticated user can modify its own password
-
-- A user can request a reset password link from his administrator.
-
-#### API
+### API
 
 Allow admin user to request a reset password token for any user
 `POST` on `/users/{username}/reset_password/`
@@ -39,7 +35,7 @@ Body : `{"password": {new_password}}`
 
 
 
-## Reset password security
+#### Reset password security
 
 When a reset password request is sent, we generate a jwt token based on current password hash and backend secret key and a 7 day validity.
 
@@ -48,3 +44,9 @@ When a reset password request is sent, we generate a jwt token based on current 
 - The backend secret key makes sure that only the backend can decode the token and when the key is rotated, invalidating all current sessions, all unused reset token are invalidated as well.
 
 - If a reset token is not used within 7 days, it is invalidated.
+
+## External users
+
+Substra can accept external users through OpenID Connect (OIDC), providing Single Sign-on (SSO).
+
+At first login, a user is created that corresponds to the external user. This new user has no password.

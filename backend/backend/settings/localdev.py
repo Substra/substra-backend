@@ -1,3 +1,4 @@
+from .deps.oidc import *
 from .test import *
 
 # Enable Browsable API
@@ -9,7 +10,7 @@ REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
 # Allow locally deployed frontend
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ["127.0.0.1", ".org-1.com"]
+ALLOWED_HOSTS = ALLOWED_HOSTS + ["127.0.0.1", ".org-1.com"]
 COMMON_HOST_DOMAIN = "org-1.com"
 
 LEDGER_MSP_ID = os.environ.get("LEDGER_MSP_ID", "MyOrg1MSP")

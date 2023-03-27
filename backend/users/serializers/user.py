@@ -43,13 +43,17 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     channel = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
+    is_external_user = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["username", "channel", "role"]
+        fields = ["username", "channel", "role", "is_external_user"]
 
     def get_channel(self, instance):
         return instance.channel.channel_name
 
     def get_role(self, instance):
         return instance.channel.role
+
+    def get_is_external_user(self, instance):
+        return hasattr(instance, "oidc_info")

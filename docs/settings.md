@@ -92,6 +92,25 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `BACKEND_DEFAULT_PORT` | `8000` |  |
 | string | `ORG_NAME` | nil |  |
 
+## OpenID Connect settings
+
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| bool | `OIDC_ENABLED` | `false` |  |
+| string | `OIDC_OP_AUTHORIZATION_ENDPOINT` | nil |  |
+| string | `OIDC_OP_DISPLAY_NAME` | `?` (`OIDC['OP']['URL']`) |  |
+| string | `OIDC_OP_JWKS_URI` | nil |  |
+| string | `OIDC_OP_TOKEN_ENDPOINT` | nil |  |
+| string | `OIDC_OP_URL` | nil |  |
+| string | `OIDC_OP_USER_ENDPOINT` | nil |  |
+| string | `OIDC_RP_CLIENT_ID` | nil |  |
+| string | `OIDC_RP_CLIENT_SECRET` | nil |  |
+| string | `OIDC_RP_SIGN_ALGO` | nil |  |
+| bool | `OIDC_USERS_APPEND_DOMAIN` | `false` |  |
+| string | `OIDC_USERS_DEFAULT_CHANNEL` | nil |  |
+| int | `OIDC_USERS_LOGIN_VALIDITY_DURATION` | `3600` (`60 * 60`) | seconds |
+| bool | `OIDC_USERS_USE_REFRESH_TOKEN` | `false` |  |
+
 ## CORS settings
 
 | Type | Setting | Default value | Comment |
@@ -103,7 +122,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
-| json | `LEDGER_CHANNELS` | nil |  |
+| json | `LEDGER_CHANNELS` | `[]` |  |
 | string | `LEDGER_MSP_ID` | nil |  |
 
 ## Worker event app settings
