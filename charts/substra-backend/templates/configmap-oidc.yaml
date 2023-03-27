@@ -7,13 +7,13 @@ metadata:
 data:
   OIDC_ENABLED: {{ .Values.oidc.enabled | quote }}
   OIDC_USERS_APPEND_DOMAIN: {{ .Values.oidc.users.appendDomain | quote }}
-  OIDC_USERS_DEFAULT_CHANNEL: {{ .Values.oidc.users.channel | quote }}
-  OIDC_USERS_LOGIN_VALIDITY_DURATION: {{ .Values.oidc.users.loginValidityDuration | quote }}
+  OIDC_USERS_DEFAULT_CHANNEL: {{ .Values.oidc.users.channel | default "" | quote }}
+  OIDC_USERS_LOGIN_VALIDITY_DURATION: {{ .Values.oidc.users.loginValidityDuration | default "" | quote }}
   OIDC_USERS_USE_REFRESH_TOKEN: {{ .Values.oidc.users.useRefreshToken | quote }}
-  OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | quote }}
-  OIDC_OP_URL: {{ .Values.oidc.provider.url | quote }}
-  OIDC_OP_DISPLAY_NAME: {{ .Values.oidc.provider.displayName | quote }}
-  OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.provider.endpoints.authorization | quote }}
-  OIDC_OP_TOKEN_ENDPOINT: {{ .Values.oidc.provider.endpoints.token | quote }}
-  OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.provider.endpoints.user | quote }}
-  OIDC_OP_JWKS_URI: {{ .Values.oidc.provider.jwksUri | quote }}
+  OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | default "" | quote }}
+  OIDC_OP_URL: {{ .Values.oidc.provider.url | default "" | quote }}
+  OIDC_OP_DISPLAY_NAME: {{ .Values.oidc.provider.displayName | default "" | quote }}
+  OIDC_OP_AUTHORIZATION_ENDPOINT: {{ .Values.oidc.provider.endpoints.authorization | default "" | quote }}
+  OIDC_OP_TOKEN_ENDPOINT: {{ .Values.oidc.provider.endpoints.token | default "" | quote }}
+  OIDC_OP_USER_ENDPOINT: {{ .Values.oidc.provider.endpoints.user | default "" | quote }}
+  OIDC_OP_JWKS_URI: {{ .Values.oidc.provider.jwksUri | default "" | quote }}

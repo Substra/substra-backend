@@ -1,5 +1,10 @@
 # Changelog
 
+## 22.4.1
+
+### Fixed
+- Fix OIDC values resulting in invalid manifests in some cases
+
 ## 22.4.0
 
 ### Added

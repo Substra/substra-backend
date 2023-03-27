@@ -75,7 +75,7 @@ addAccountOperator:
       channel: "yourchannel"
 
 oidc:
-  enabled: true
+  enabled: false
   clientSecretName: oidc-secret
   provider:
     url: "http://oidc-provider:4000"
