@@ -7,7 +7,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0002_auto_20210816_2217"),
     ]

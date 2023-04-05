@@ -13,7 +13,6 @@ class Command(BaseCommand):
         parser.add_argument("file")
 
     def handle(self, *args, **options):
-
         filepath = options["file"]
 
         with open(filepath) as json_file:

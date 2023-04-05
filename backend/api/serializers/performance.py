@@ -7,7 +7,6 @@ from api.serializers.utils import SafeSerializerMixin
 
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-
     # overwrite primary key field for the SafeSerializerMixin check
     # the unique constraint for compute_task_key + metric_key in the model
     # ensures no duplicates are created

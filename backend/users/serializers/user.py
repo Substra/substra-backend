@@ -16,7 +16,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class CustomTokenRefreshSerializer(serializers.Serializer):
     def validate(self, attrs):
-
         if "refresh" not in self.context["request"].COOKIES:
             raise ValidationError("refresh cookie is not present")
 

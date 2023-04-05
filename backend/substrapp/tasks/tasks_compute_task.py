@@ -251,7 +251,6 @@ def _run(
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
 
         with acquire_compute_plan_lock(compute_plan_key):
-
             # Check the task/cp status again, as the task/cp may not be in a runnable state anymore
             with get_orchestrator_client(channel_name) as client:
                 # Set allow_doing=True to allow celery retries.

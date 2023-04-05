@@ -157,7 +157,6 @@ class AuthenticationTests(APITestCase):
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class TestLoginCase(APITestCase):
-
     login_url = "/me/login/"
     logout_url = "/me/logout/"
     refresh_url = "/me/refresh/"

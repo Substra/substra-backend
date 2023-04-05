@@ -10,7 +10,6 @@ import substrapp.models.function
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0012_alter_algo_description_alter_algo_file_and_more"),
     ]

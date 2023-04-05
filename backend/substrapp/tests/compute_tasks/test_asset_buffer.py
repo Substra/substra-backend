@@ -215,7 +215,6 @@ class AssetBufferTests(APITestCase):
 
     @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_1)
     def test_add_opener_to_buffer(self):
-
         init_asset_buffer()
         organization_id = "organization id"
 
@@ -241,7 +240,6 @@ class AssetBufferTests(APITestCase):
         ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True,
     )
     def test_add_datasample_to_buffer(self):
-
         init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
             data_samples = list(self.data_samples.values())
@@ -278,7 +276,6 @@ class AssetBufferTests(APITestCase):
 
     @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_3)
     def test_add_model_to_buffer(self):
-
         init_asset_buffer()
         dest = os.path.join(ASSET_BUFFER_DIR_3, AssetBufferDirName.Models, self.model_key)
 
@@ -329,7 +326,6 @@ class AssetBufferTests(APITestCase):
 
     @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_4)
     def test_add_assets_to_taskdir_model(self):
-
         # populate the buffer
         init_asset_buffer()
         model = orc_mock.ModelFactory(

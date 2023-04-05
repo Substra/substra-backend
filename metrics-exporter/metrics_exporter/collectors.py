@@ -43,7 +43,6 @@ class CeleryCollector:
     """
 
     def __init__(self, registry, state: State) -> None:
-
         self._metrics = {}
 
         self._metrics[MetricsNames.CELERY_WORKER_UP] = metrics.Gauge(

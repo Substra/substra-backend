@@ -10,7 +10,6 @@ def populate_default_cp_names(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0012_alter_algo_category"),
     ]

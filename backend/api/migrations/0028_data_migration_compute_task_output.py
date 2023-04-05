@@ -27,7 +27,6 @@ def add_missing_compute_task_outputs(apps, schema_editor):
     compute_task_model = apps.get_model("api", "computetask")
 
     for task in compute_task_model.objects.filter(outputs__isnull=True):
-
         # TRAIN / AGGREGATE
         if task.category in [ComputeTaskCategory.TASK_TRAIN, ComputeTaskCategory.TASK_AGGREGATE]:
             permission_public = True
@@ -99,7 +98,6 @@ def create_output(apps, task, identifier, permissions_public, permissions_author
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0027_remove_computetask_head_permissions_download_authorized_ids_and_more"),
     ]

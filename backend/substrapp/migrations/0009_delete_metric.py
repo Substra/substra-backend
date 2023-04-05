@@ -20,7 +20,6 @@ def copy_from_metric_to_algo(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0008_alter_imageentrypoint_entrypoint_json"),
     ]

@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _set_token_cookies(response: Response, refresh_token) -> None:
-
     access_token = refresh_token.access_token
 
     access_expires = access_token.current_time + access_token.lifetime

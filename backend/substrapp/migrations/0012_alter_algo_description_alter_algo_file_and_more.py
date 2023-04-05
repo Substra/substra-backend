@@ -10,7 +10,6 @@ import substrapp.storages.minio
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0011_workerlastevent"),
     ]

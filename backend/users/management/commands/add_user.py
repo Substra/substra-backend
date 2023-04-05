@@ -23,7 +23,6 @@ class Command(BaseCommand):
         parser.add_argument("channel_name")
 
     def handle(self, *args, **options):
-
         username = options["username"]
         password = options["password"]
         channel_name = options["channel_name"]

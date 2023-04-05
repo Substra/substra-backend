@@ -15,7 +15,6 @@ def metric_upload_to(instance, filename) -> str:
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []

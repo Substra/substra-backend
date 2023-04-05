@@ -35,7 +35,6 @@ def create_input_assets(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0038_remove_algo_category"),
     ]

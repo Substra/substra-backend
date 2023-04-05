@@ -5,7 +5,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0006_computetask_logs_address_computetask_logs_checksum_and_more"),
     ]

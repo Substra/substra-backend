@@ -122,7 +122,6 @@ def get_temporary_text_file(contents, filename):
 
 
 def get_sample_metric():
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     description_content = "Super metric"

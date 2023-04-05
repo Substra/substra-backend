@@ -8,7 +8,6 @@ import substrapp.models.function
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0005_remove_validated_field"),
     ]

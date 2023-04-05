@@ -268,7 +268,6 @@ def delete_pod(k8s_client, name: str) -> None:
 
 
 def wait_for_pod_readiness(k8s_client, label_selector: str, timeout: int = 60) -> None:
-
     watch = kubernetes.watch.Watch()
 
     for event in watch.stream(
@@ -288,7 +287,6 @@ def wait_for_pod_readiness(k8s_client, label_selector: str, timeout: int = 60) -
 
 
 def get_pod_by_label_selector(label_selector: str) -> object:
-
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
@@ -314,7 +312,6 @@ def get_volume(
     pod_name: str,
     volume_name: str,
 ) -> kubernetes.client.V1Volume:
-
     pod = k8s_client.read_namespaced_pod(name=pod_name, namespace=NAMESPACE)
 
     for volume in pod.spec.volumes:

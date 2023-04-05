@@ -9,7 +9,6 @@ import api.models.utils
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0004_performance"),
     ]
