@@ -5,7 +5,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0007_channelnode_channelnode_unique_id_for_channel"),
     ]

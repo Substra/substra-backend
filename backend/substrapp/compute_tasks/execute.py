@@ -54,7 +54,6 @@ def execute_compute_task(ctx: Context) -> None:
     should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
 
     if should_create_pod:
-
         volume_mounts, volumes = get_volumes(ctx)
 
         with get_orchestrator_client(channel_name) as client:

@@ -112,7 +112,6 @@ def on_event(payload):
 
 def consume_channel(client: orchestrator.Client, channel_name: str, exception_raised: threading.Event):
     try:
-
         structlog.contextvars.bind_contextvars(channel_name=channel_name)
         logger.info("Attempting to connect to orchestrator gRPC stream")
 

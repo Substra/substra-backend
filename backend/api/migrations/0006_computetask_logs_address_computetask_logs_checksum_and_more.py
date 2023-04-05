@@ -7,7 +7,6 @@ import api.models.utils
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0005_model"),
     ]

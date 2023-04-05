@@ -16,7 +16,6 @@ def migrate_data(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0013_computeplan_name"),
     ]

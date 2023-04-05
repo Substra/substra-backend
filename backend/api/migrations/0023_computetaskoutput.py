@@ -7,7 +7,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0022_remove_computetask_metrics_and_more"),
     ]

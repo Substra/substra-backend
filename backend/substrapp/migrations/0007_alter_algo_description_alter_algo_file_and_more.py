@@ -13,7 +13,6 @@ def metric_upload_to(instance, filename) -> str:
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0006_create_compute_task_failure_model"),
     ]

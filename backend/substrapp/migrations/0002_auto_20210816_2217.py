@@ -9,7 +9,6 @@ import substrapp.models.model
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0001_initial"),
     ]

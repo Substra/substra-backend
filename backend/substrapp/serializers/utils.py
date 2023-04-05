@@ -32,7 +32,6 @@ class FileValidator(object):
             raise ValidationError(self.error_messages["traversal"])
 
     def __call__(self, data):
-
         archive = None
         try:
             data.file.seek(0)

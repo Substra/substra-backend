@@ -25,7 +25,6 @@ def cp_item(key, name, status, date, detail=None):
 
 
 class NewsFeedViewSet(GenericViewSet):
-
     pagination_class = DefaultPageNumberPagination
 
     def get_queryset(self):

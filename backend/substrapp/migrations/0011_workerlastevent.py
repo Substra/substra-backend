@@ -5,7 +5,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0010_remove_imageentrypoint_asset_key_and_more"),
     ]

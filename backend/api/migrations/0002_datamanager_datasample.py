@@ -8,7 +8,6 @@ import api.models.utils
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0001_initial"),
     ]

@@ -71,7 +71,6 @@ def grpc_retry(func):
 
                 return func(args[0], *args_copy, **kwargs_copy)
             except grpc.RpcError as rpc_error:
-
                 err = OrcError()
                 err.code = grpc.StatusCode(rpc_error.code())
                 err.details = rpc_error.details()
@@ -367,7 +366,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     def subscribe_to_events(self, channel_name=None, start_event_id=""):
-
         if channel_name is not None:
             metadata = (
                 ("mspid", self._mspid),

@@ -12,7 +12,6 @@ class TarSafeTests(TestCase):
 
     def test_raise_on_symlink(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-
             # create the following tree structure:
             # ./Dockerfile
             # ./foo

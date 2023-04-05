@@ -25,7 +25,6 @@ def populate_channel(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0035_remove_computeplan_delete_intermediary_models"),
     ]

@@ -22,7 +22,6 @@ def copy_from_metric_to_algo(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0010_taskdatasamples_remove_computetask_data_samples_and_more"),
     ]

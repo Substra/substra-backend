@@ -12,7 +12,6 @@ def convert_unknown_to_empty(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0016_algooutput_algoinput"),
     ]

@@ -67,7 +67,6 @@ class AuthenticatedClient(APIClient):
 
 class AuthenticatedBackendClient(APIClient):
     def request(self, **kwargs):
-
         username = "MyTestOrg"
         password = "p@sswr0d44"
         try:

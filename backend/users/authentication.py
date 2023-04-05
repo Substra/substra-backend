@@ -24,7 +24,6 @@ class BearerTokenAuthentication(DRFTokenAuthentication):
     """
 
     def authenticate_credentials(self, key):
-
         _, token = super().authenticate_credentials(key)
 
         is_expired = utils.bearer_token.is_token_expired(token)

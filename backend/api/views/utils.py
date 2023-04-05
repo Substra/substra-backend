@@ -37,7 +37,6 @@ class ApiResponse(Response):
     """
 
     def __init__(self, data=None, status=None, template_name=None, headers=None, exception=False, content_type=None):
-
         if headers is not None:
             if "Content-Disposition" not in headers:
                 headers = {**headers, **settings.CONTENT_DISPOSITION_HEADER}
@@ -197,7 +196,6 @@ class ValidationExceptionError(Exception):
 
 
 def get_channel_name(request):
-
     if hasattr(request.user, "channel"):
         return request.user.channel.channel_name
 

@@ -15,7 +15,6 @@ def set_cancelation_date_on_compute_plans(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0025_computeplan_cancelation_date"),
     ]

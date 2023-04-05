@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0040_alter_computeplan_failed_task_category_and_more"),
     ]

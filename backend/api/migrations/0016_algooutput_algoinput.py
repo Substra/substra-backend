@@ -65,7 +65,6 @@ def migrate_algo(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0015_alter_computeplan_failed_task_category_and_more"),
     ]

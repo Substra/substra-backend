@@ -5,7 +5,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("substrapp", "0007_alter_algo_description_alter_algo_file_and_more"),
     ]

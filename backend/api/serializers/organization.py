@@ -7,7 +7,6 @@ from substrapp.utils import get_owner
 
 
 class ChannelOrganizationSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-
     id = serializers.CharField(max_length=64, source="organization_id")
     address = serializers.CharField(max_length=200, required=False, allow_blank=True)
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)

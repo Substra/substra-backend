@@ -103,7 +103,6 @@ class ModelViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
 
 
 class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
-
     queryset = ModelFiles.objects.all()
 
     def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:

@@ -18,7 +18,6 @@ def migrate_data(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0011_alter_computetask_metrics_alter_performance_metric_and_more"),
     ]

@@ -151,7 +151,6 @@ def _on_create_computetask_event(event: dict) -> None:
 def _create_computetask(
     channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
 ) -> None:
-
     api_data = computetask.orc_to_api(data)
     api_data["channel"] = channel
     if start_date is not None:

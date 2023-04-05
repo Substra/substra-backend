@@ -17,7 +17,6 @@ SUBTUPLE_DIR = tempfile.mkdtemp()
 
 @override_settings(SUBTUPLE_DIR=SUBTUPLE_DIR)
 class DirectoriesTests(APITestCase):
-
     test_file_name = "some_file"
     test_dir_name = "some_dir"
 
@@ -50,7 +49,6 @@ class DirectoriesTests(APITestCase):
             self.fail("init_task_dirs raised Exception unexpectedly")
 
     def test_teardown_task_dirs(self):
-
         init_task_dirs(self.dirs)
 
         for folder in TaskDirName.All:
@@ -87,7 +85,6 @@ class DirectoriesTests(APITestCase):
             self.fail("teardown_task_dirs raised Exception unexpectedly")
 
     def test_teardown_compute_plan_dir(self):
-
         init_compute_plan_dirs(self.dirs)
         self._create_compute_plan_test_files()
         teardown_compute_plan_dir(self.dirs)
@@ -103,7 +100,6 @@ class DirectoriesTests(APITestCase):
         """Create a test file and a test folder in each compute plan subdirectory"""
 
         for folder in CPDirName.All:
-
             file_path = os.path.join(os.path.join(SUBTUPLE_DIR, self.compute_plan_key, folder, self.test_file_name))
             dir_path = os.path.join(os.path.join(SUBTUPLE_DIR, self.compute_plan_key, folder, self.test_dir_name))
 

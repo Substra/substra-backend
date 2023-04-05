@@ -12,7 +12,6 @@ def migrate_test_tasks(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0020_channelorganization_address"),
     ]

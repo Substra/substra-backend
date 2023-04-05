@@ -6,7 +6,6 @@ from django.db import models
 # Manager allowing an extra parameter, 'password', to hash passwords
 class IncomingOrganizationManager(models.Manager):
     def create(self, **obj_data):
-
         password = obj_data.pop("password", None)
         secret = obj_data.get("secret", None)
 

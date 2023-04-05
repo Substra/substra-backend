@@ -150,7 +150,6 @@ def add_model_from_path(model_path: str, model_key: str) -> None:
 
 
 def add_assets_to_taskdir(ctx: Context) -> None:
-
     dirs = ctx.directories
 
     _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, ctx.data_sample_keys)

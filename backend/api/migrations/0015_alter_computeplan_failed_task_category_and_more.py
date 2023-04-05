@@ -58,7 +58,6 @@ def migrate_computeplans(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("api", "0014_alter_model_category"),
     ]
