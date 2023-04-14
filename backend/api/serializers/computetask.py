@@ -86,7 +86,10 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
                 data.append(ModelSerializer(context=self.context, instance=model).data)
             elif output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
                 task_key, metric_key = output_asset.asset_key.split("|")
-                perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+                identifier = output_asset.identifier
+                perf = Performance.objects.get(
+                    compute_task__key=task_key, metric__key=metric_key, identifier=identifier
+                )
                 data.append(perf.value)
 
         # FIXME: we should better always return a list,
@@ -149,7 +152,10 @@ class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializ
             return ModelSerializer(context=self.context, instance=model).data
         elif task_output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
             task_key, metric_key = task_output_asset.asset_key.split("|")
-            performance = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+            identifier = task_output_asset.identifier
+            performance = Performance.objects.get(
+                compute_task__key=task_key, metric__key=metric_key, identifier=identifier
+            )
             return PerformanceSerializer(context=self.context, instance=performance).data
 
 
