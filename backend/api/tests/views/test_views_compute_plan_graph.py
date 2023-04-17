@@ -130,6 +130,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "key": str(train_task.key),
                     "rank": 1,
                     "worker": "MyOrg1MSP",
+                    "function_name": "function",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
                         {"kind": "ASSET_DATA_SAMPLE", "identifier": "datasamples"},
@@ -141,6 +142,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "key": str(predict_task.key),
                     "rank": 2,
                     "worker": "MyOrg1MSP",
+                    "function_name": "function",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "model"},
@@ -151,6 +153,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "key": str(test_task.key),
                     "rank": 3,
                     "worker": "MyOrg1MSP",
+                    "function_name": "function",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "predictions"},
@@ -161,6 +164,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "key": str(composite_task.key),
                     "rank": 10,
                     "worker": "MyOrg1MSP",
+                    "function_name": "function",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
                         {"kind": "ASSET_DATA_SAMPLE", "identifier": "datasamples"},
@@ -172,6 +176,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "key": str(aggregate_task.key),
                     "rank": 11,
                     "worker": "MyOrg1MSP",
+                    "function_name": "function",
                     "status": "STATUS_TODO",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "model"},

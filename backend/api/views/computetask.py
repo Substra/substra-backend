@@ -213,7 +213,7 @@ class ComputeTaskViewSetConfig:
         "owner",
         "rank",
         "status",
-        "worker",
+        "function__name",
         "tag",
         "compute_plan_key",
         "duration",
