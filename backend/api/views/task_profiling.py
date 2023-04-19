@@ -2,8 +2,10 @@ from typing import Any
 
 import structlog
 from django.db.models.query import QuerySet
+from django.db.utils import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
+from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -35,6 +37,14 @@ class TaskProfilingViewSet(
 
     def get_queryset(self) -> QuerySet[TaskProfiling]:
         return TaskProfiling.objects.filter(compute_task__channel=get_channel_name(self.request))
+
+    def create(self, request: Request, *args: Any, **kwargs: Any):
+        try:
+            task_profiling = super().create(request, *args, **kwargs)
+        except IntegrityError:
+            data = {"detail": f"TaskProfiling with key {request.data['compute_task_key']}"}
+            return Response(data, status=status.HTTP_409_CONFLICT)
+        return task_profiling
 
 
 class TaskProfilingStepViewSet(mixins.CreateModelMixin, GenericViewSet):

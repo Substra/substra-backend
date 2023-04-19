@@ -15,6 +15,7 @@ from requests.auth import HTTPBasicAuth
 
 from substrapp.exceptions import IntegrityError
 from substrapp.exceptions import OrganizationError
+from substrapp.exceptions import OrganizationHttpError
 from substrapp.utils import compute_hash
 
 logger = structlog.get_logger(__name__)
@@ -23,6 +24,7 @@ logger = structlog.get_logger(__name__)
 class _Method(enum.Enum):
     POST = enum.auto()
     GET = enum.auto()
+    PUT = enum.auto()
 
 
 _LEDGER_MSP_ID: str = settings.LEDGER_MSP_ID
@@ -32,6 +34,7 @@ _HTTP_STREAM_CHUNK_SIZE: int = 1024 * 1024  # in bytes, equivalent to 1 megabyte
 _HTTP_METHOD_TO_FUNC: dict[_Method, typing.Callable[..., requests.Response]] = {
     _Method.GET: requests.get,
     _Method.POST: requests.post,
+    _Method.PUT: requests.put,
 }
 
 
@@ -129,11 +132,14 @@ def _http_request(
             timeout=_HTTP_TIMEOUT,
             **_http_request_kwargs(data, stream),
         )
-        response.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
         raise OrganizationError(f"Failed to connect to {organization_id}") from exc
-    except requests.exceptions.HTTPError:
-        raise OrganizationError(f"URL: {url} returned status code {response.status_code if response else 'unknown'}")
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        status_code = exc.response.status_code if exc.response else None
+        raise OrganizationHttpError(url=url, status_code=status_code)
 
     return response
 
@@ -191,6 +197,16 @@ def post(
 ) -> bytes:
     """Post asset data."""
     return _http_request(_Method.POST, channel, organization_id, url, data=data).content
+
+
+def put(
+    channel: str,
+    organization_id: str,
+    url: str,
+    data: dict,
+) -> bytes:
+    """Update asset data."""
+    return _http_request(_Method.PUT, channel, organization_id, url, data=data).content
 
 
 def streamed_get(channel: str, organization_id: str, url: str, headers: dict[str, str]) -> requests.Response:

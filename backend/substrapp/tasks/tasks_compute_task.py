@@ -29,6 +29,7 @@ from celery.result import AsyncResult
 from django.conf import settings
 from django.core import files
 from django.urls import reverse
+from rest_framework import status
 
 import orchestrator
 from backend.celery import app
@@ -57,6 +58,7 @@ from substrapp.compute_tasks.image_builder import build_image_if_missing
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
+from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import Timer
@@ -194,7 +196,14 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
 @retry()
 def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
     url = settings.DEFAULT_DOMAIN + reverse("api:task_profiling-list")
-    return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url, {"compute_task_key": compute_task_key})
+    parameters = {"compute_task_key": compute_task_key}
+    try:
+        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+    except OrganizationHttpError as e:
+        if e.status_code == status.HTTP_409_CONFLICT:
+            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+        else:
+            raise e
 
 
 @retry()
