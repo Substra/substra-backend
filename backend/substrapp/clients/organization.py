@@ -24,7 +24,7 @@ logger = structlog.get_logger(__name__)
 class _Method(enum.Enum):
     POST = enum.auto()
     GET = enum.auto()
-    PUT = enum.auto()
+    PATCH = enum.auto()
 
 
 _LEDGER_MSP_ID: str = settings.LEDGER_MSP_ID
@@ -34,7 +34,7 @@ _HTTP_STREAM_CHUNK_SIZE: int = 1024 * 1024  # in bytes, equivalent to 1 megabyte
 _HTTP_METHOD_TO_FUNC: dict[_Method, typing.Callable[..., requests.Response]] = {
     _Method.GET: requests.get,
     _Method.POST: requests.post,
-    _Method.PUT: requests.put,
+    _Method.PATCH: requests.patch,
 }
 
 
@@ -199,14 +199,14 @@ def post(
     return _http_request(_Method.POST, channel, organization_id, url, data=data).content
 
 
-def put(
+def patch(
     channel: str,
     organization_id: str,
     url: str,
     data: dict,
 ) -> bytes:
     """Update asset data."""
-    return _http_request(_Method.PUT, channel, organization_id, url, data=data).content
+    return _http_request(_Method.PATCH, channel, organization_id, url, data=data).content
 
 
 def streamed_get(channel: str, organization_id: str, url: str, headers: dict[str, str]) -> requests.Response:

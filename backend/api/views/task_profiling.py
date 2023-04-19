@@ -25,6 +25,7 @@ logger = structlog.get_logger(__name__)
 
 class TaskProfilingViewSet(
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
     GenericViewSet,
