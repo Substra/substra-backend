@@ -2,6 +2,7 @@ import datetime
 
 from django.test import override_settings
 from django.urls.base import reverse
+from rest_framework import status
 from rest_framework.test import APITestCase
 
 from api.tests import asset_factory as factory
@@ -111,10 +112,10 @@ class TaskProfilingViewTestsBackend(APITestCase):
         task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 
 @override_settings(
