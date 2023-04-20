@@ -11,4 +11,4 @@ class Performance(models.Model):
     channel = models.CharField(max_length=100)
 
     class Meta:
-        unique_together = (("compute_task_output", "metric"),)
+        unique_together = (("compute_task_output_identifier", "metric"),)
