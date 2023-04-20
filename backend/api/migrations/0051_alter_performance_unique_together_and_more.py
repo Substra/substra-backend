@@ -19,7 +19,6 @@ class Migration(migrations.Migration):
             model_name="performance",
             name="compute_task_output",
             field=models.ForeignKey(
-                default="performance",
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="performances",
                 to="api.computetaskoutput",
