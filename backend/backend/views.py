@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
-from rest_framework.authtoken.models import Token as BearerToken
+from users.models.token import BearerToken
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -14,9 +14,9 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 from users.utils import bearer_token as bearer_token_utils
 
-
-def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created_at": token.created, "expires_at": bearer_token_utils.expires_at(token)}
+#include note in the display
+def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict: 
+    d = {"created_at": token.created, "expires_at": token.expires_at(), "note": token.note}
     if include_payload:
         d["token"] = token.key
     return d
@@ -34,19 +34,13 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        if settings.TOKEN_STRATEGY == "reuse":  # nosec
-            token, created = BearerToken.objects.get_or_create(user=user)
-            # handle_token_expiration will check whether the token is expired
-            # and will generate a new one if necessary
-            is_expired, token = bearer_token_utils.handle_token_expiration(token)
-        else:
-            # token should be new each time, remove the old one
-            BearerToken.objects.filter(user=user).delete()
-            token = BearerToken.objects.create(user=user)
+        token = BearerToken.objects.create(user=user, expiry=request.GET.get('expiry'), note=request.GET.get('note'))
         return ApiResponse(_bearer_token_dict(token))
 
 
-class AuthenticatedBearerToken(DRFObtainAuthToken):
+
+class AuthenticatedBearerToken(DRFObtainAuthToken): #The Django View corresponding to /api-token TODO !!!!!!
+    #this is the one i need to work on TODO
     """
     get a Bearer token if you're already authenticated somehow
     """
@@ -54,9 +48,8 @@ class AuthenticatedBearerToken(DRFObtainAuthToken):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # create a new token each time (you don't want a token that is about to expire)
-        BearerToken.objects.filter(user=request.user).delete()
-        token = BearerToken.objects.create(user=request.user)
+        #request.GET voir doc django, dans args ils mettent la durée et une note
+        token = BearerToken.objects.create(user=request.user, expiry=request.GET.get('expiry'), note=request.GET.get('note'))
         return ApiResponse(_bearer_token_dict(token))
 
 

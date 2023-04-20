@@ -3,9 +3,9 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
-from rest_framework.authtoken.models import Token as BearerToken
+from users.models.token import BearerToken
 
-
+#Currently bearer token expiration is handled via this TODO !!!!!!!
 def expires_at(token: BearerToken) -> datetime:
     return timezone.now() + time_left(token)
 
