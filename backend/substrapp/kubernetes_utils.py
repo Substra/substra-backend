@@ -90,8 +90,8 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str):
         PodTimeoutError: this exception is raised if the pod does not reach the running state after some time
     """
     attempt = 0
-    # with 30 attempts we wait max 1 min with a pending pod
-    max_attempts = 30
+    # with 60 attempts we wait max 2 min with a pending pod
+    max_attempts = 60
 
     # This variable is used to track the current status through retries
     previous_pod_status = None
@@ -238,7 +238,9 @@ def get_pod_logs(k8s_client, name: str, container: str, ignore_pod_not_found: bo
     except kubernetes.client.ApiException as exc:
         if ignore_pod_not_found and exc.reason == "Not Found":
             return f"Pod not found: {NAMESPACE}/{name} ({container})"
-        raise
+        if exc.reason == "Bad Request":
+            return f"In {NAMESPACE}/{name} \n {str(exc.body)}"
+        return f"Unable to get logs for pod {NAMESPACE}/{name} ({container}) \n {str(exc)}"
 
 
 def delete_pod(k8s_client, name: str) -> None:

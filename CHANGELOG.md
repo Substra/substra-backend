@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Fixed
+
+- Catch all exception in `get_pod_logs` and always return a string containing either logs, or the reason we couldn't get logs ([#637](https://github.com/Substra/substra-backend/pull/637))
+
+### Changed
+
+- Increase the `max_attempts` in `watch_log` to allow kaniko pods to take longer to start ([#637](https://github.com/Substra/substra-backend/pull/637))
+
 
 ## [0.36.0](https://github.com/Substra/substra-backend/releases/tag/0.36.0) 2023-03-31
 
