@@ -56,7 +56,7 @@ def build_image_if_missing(datastore: Datastore, function: orchestrator.Function
 
 def _build_function_image(asset: bytes, function: orchestrator.Function) -> None:
     """
-    Build an function's container image.
+    Build a function's container image.
 
     Perform multiple steps:
     1. Download the function using the provided asset storage_address/owner. Verify its checksum and uncompress the data
