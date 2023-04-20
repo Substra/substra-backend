@@ -3,8 +3,8 @@ from django.db import models
 
 class Performance(models.Model):
     metric = models.ForeignKey("Function", on_delete=models.deletion.DO_NOTHING, related_name="performances")
-    compute_task_output = models.ForeignKey(
-        "ComputeTaskOutput", on_delete=models.deletion.DO_NOTHING, related_name="performances"
+    compute_task_output_identifier = models.ForeignKey(
+        "ComputeTaskOutput.identifier", on_delete=models.deletion.DO_NOTHING, related_name="performances"
     )
     value = models.FloatField()
     creation_date = models.DateTimeField()
