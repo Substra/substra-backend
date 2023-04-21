@@ -28,7 +28,6 @@ from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
 from django.core import files
-from django.urls import reverse
 from rest_framework import status
 
 import orchestrator
@@ -64,6 +63,9 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
 from substrapp.utils import retry
+from substrapp.utils.url import TASK_PROFILING_BASE_URL
+from substrapp.utils.url import get_task_profiling_detail_url
+from substrapp.utils.url import get_task_profiling_steps_base_url
 
 logger = structlog.get_logger(__name__)
 
@@ -195,13 +197,13 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
 
 @retry()
 def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
-    url = settings.DEFAULT_DOMAIN + reverse("api:task_profiling-list")
     parameters = {"compute_task_key": compute_task_key}
     try:
-        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, TASK_PROFILING_BASE_URL, parameters)
     except OrganizationHttpError as e:
         if e.status_code == status.HTTP_409_CONFLICT:
-            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+            url = get_task_profiling_detail_url(compute_task_key)
+            return organization_client.patch(channel_name, settings.LEDGER_MSP_ID, url, parameters)
         else:
             raise e
 
@@ -210,7 +212,7 @@ def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
 def _create_task_profiling_step(
     channel_name: str, compute_task_key: str, field: ComputeTaskSteps, duration: datetime.timedelta
 ) -> bytes:
-    url = settings.DEFAULT_DOMAIN + reverse("api:step-list", args=[compute_task_key])
+    url = get_task_profiling_steps_base_url(compute_task_key)
     return organization_client.post(
         channel_name, settings.LEDGER_MSP_ID, url, {"step": field.value, "duration": duration}
     )
