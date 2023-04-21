@@ -1,5 +1,6 @@
 import datetime
 
+import pytest
 from django.test import override_settings
 from django.urls.base import reverse
 from rest_framework import status
@@ -12,18 +13,20 @@ from api.tests.common import AuthenticatedClient
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
 
+ORG_SETTINGS = {
+    "LEDGER_CHANNELS": {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    "LEDGER_MSP_ID": TEST_ORG,
+}
 
-@override_settings(
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-    LEDGER_MSP_ID=TEST_ORG,
-)
+EXTRA = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
+TASK_PROFILING_LIST_URL = reverse("api:task_profiling-list")
+
+
+@override_settings(**ORG_SETTINGS)
 class TaskProfilingViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self) -> None:
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
-        self.url = reverse("api:task_profiling-list")
-
         function = factory.create_function()
         compute_plan = factory.create_computeplan()
 
@@ -40,7 +43,7 @@ class TaskProfilingViewTests(APITestCase):
         ]
 
     def test_task_profiling_list_success(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(TASK_PROFILING_LIST_URL, **EXTRA)
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
@@ -48,13 +51,13 @@ class TaskProfilingViewTests(APITestCase):
 
     def test_task_profiling_list_wrong_channel(self):
         extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(self.url, **extra)
+        response = self.client.get(TASK_PROFILING_LIST_URL, **extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_task_profiling_retrieve_success(self):
         response = self.client.get(
             reverse("api:task_profiling-detail", args=[self.expected_results[0]["compute_task_key"]]),
-            **self.extra,
+            **EXTRA,
         )
         self.assertEqual(response.json(), self.expected_results[0])
 
@@ -63,32 +66,27 @@ class TaskProfilingViewTests(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(self.url, {"compute_task_key": str(task.key), "channel": CHANNEL}, **self.extra)
+        response = self.client.post(
+            TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key), "channel": CHANNEL}, **EXTRA
+        )
         self.assertEqual(response.status_code, 403)
 
 
-@override_settings(
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-    LEDGER_MSP_ID=TEST_ORG,
-)
+@override_settings(**ORG_SETTINGS)
 class TaskProfilingViewTestsBackend(APITestCase):
     client_class = AuthenticatedBackendClient
-
-    def setUp(self) -> None:
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
-        self.url = reverse("api:task_profiling-list")
 
     def test_task_profiling_create_success(self):
         function = factory.create_function()
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
         self.assertEqual(response.status_code, 201)
 
         step_url = reverse("api:step-list", args=[str(task.key)])
         response = self.client.post(
-            step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **self.extra
+            step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **EXTRA
         )
         self.assertEqual(response.status_code, 200)
 
@@ -100,7 +98,7 @@ class TaskProfilingViewTestsBackend(APITestCase):
             }
         ]
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(TASK_PROFILING_LIST_URL, **EXTRA)
         self.assertEqual(
             response.json(),
             {"count": len(expected_result), "next": None, "previous": None, "results": expected_result},
@@ -111,11 +109,27 @@ class TaskProfilingViewTestsBackend(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db
+def test_update_patch(authenticated_backend_client, create_compute_plan, create_compute_task):
+    compute_plan = create_compute_plan()
+    compute_task = create_compute_task(compute_plan)
+    response = authenticated_backend_client.post(
+        TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response = authenticated_backend_client.post(
+        TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA
+    )
+    assert response.status_code == status.HTTP_409_CONFLICT
 
 
 @override_settings(

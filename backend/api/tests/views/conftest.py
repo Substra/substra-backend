@@ -6,8 +6,9 @@ import pytest
 from django import conf
 from rest_framework import test
 
-from api.models import ComputeTask
+from api.models.computetask import ComputeTask
 from api.tests import asset_factory as factory
+from api.tests.common import AuthenticatedBackendClient
 from api.tests.common import AuthenticatedClient
 
 _CHANNEL_NAME: Final[str] = "mychannel"
@@ -23,6 +24,16 @@ def _set_settings(settings: conf.Settings, tmp_path: pathlib.Path):
 @pytest.fixture
 def authenticated_client() -> test.APIClient:
     client = AuthenticatedClient()
+
+    client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
+    client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
+
+    return client
+
+
+@pytest.fixture
+def authenticated_backend_client() -> test.APIClient:
+    client = AuthenticatedBackendClient()
 
     client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
     client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
