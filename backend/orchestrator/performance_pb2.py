@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11performance.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\x0eNewPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x03 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\"\x89\x01\n\x0bPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\x12\x31\n\rcreation_date\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"F\n\x16PerformanceQueryFilter\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x02 \x01(\t\"u\n\x16QueryPerformancesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12\x34\n\x06\x66ilter\x18\x03 \x01(\x0b\x32$.orchestrator.PerformanceQueryFilter\"e\n\x19QueryPerformancesResponse\x12/\n\x0cPerformances\x18\x01 \x03(\x0b\x32\x19.orchestrator.Performance\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\xc8\x01\n\x12PerformanceService\x12N\n\x13RegisterPerformance\x12\x1c.orchestrator.NewPerformance\x1a\x19.orchestrator.Performance\x12\x62\n\x11QueryPerformances\x12$.orchestrator.QueryPerformancesParam\x1a\'.orchestrator.QueryPerformancesResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11performance.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x81\x01\n\x0eNewPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x03 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\"\xb1\x01\n\x0bPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x06 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\x12\x31\n\rcreation_date\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"n\n\x16PerformanceQueryFilter\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x02 \x01(\t\x12&\n\x1e\x63ompute_task_output_identifier\x18\x03 \x01(\t\"u\n\x16QueryPerformancesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12\x34\n\x06\x66ilter\x18\x03 \x01(\x0b\x32$.orchestrator.PerformanceQueryFilter\"e\n\x19QueryPerformancesResponse\x12/\n\x0cPerformances\x18\x01 \x03(\x0b\x32\x19.orchestrator.Performance\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\xc8\x01\n\x12PerformanceService\x12N\n\x13RegisterPerformance\x12\x1c.orchestrator.NewPerformance\x1a\x19.orchestrator.Performance\x12\x62\n\x11QueryPerformances\x12$.orchestrator.QueryPerformancesParam\x1a\'.orchestrator.QueryPerformancesResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 
 
@@ -67,13 +67,13 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _NEWPERFORMANCE._serialized_start=69
   _NEWPERFORMANCE._serialized_end=198
   _PERFORMANCE._serialized_start=201
-  _PERFORMANCE._serialized_end=338
-  _PERFORMANCEQUERYFILTER._serialized_start=340
-  _PERFORMANCEQUERYFILTER._serialized_end=410
-  _QUERYPERFORMANCESPARAM._serialized_start=412
-  _QUERYPERFORMANCESPARAM._serialized_end=529
-  _QUERYPERFORMANCESRESPONSE._serialized_start=531
-  _QUERYPERFORMANCESRESPONSE._serialized_end=632
-  _PERFORMANCESERVICE._serialized_start=635
-  _PERFORMANCESERVICE._serialized_end=835
+  _PERFORMANCE._serialized_end=378
+  _PERFORMANCEQUERYFILTER._serialized_start=380
+  _PERFORMANCEQUERYFILTER._serialized_end=490
+  _QUERYPERFORMANCESPARAM._serialized_start=492
+  _QUERYPERFORMANCESPARAM._serialized_end=609
+  _QUERYPERFORMANCESRESPONSE._serialized_start=611
+  _QUERYPERFORMANCESRESPONSE._serialized_end=712
+  _PERFORMANCESERVICE._serialized_start=715
+  _PERFORMANCESERVICE._serialized_end=915
 # @@protoc_insertion_point(module_scope)
