@@ -203,7 +203,7 @@ def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
     except OrganizationHttpError as e:
         if e.status_code == status.HTTP_409_CONFLICT:
             url = get_task_profiling_detail_url(compute_task_key)
-            return organization_client.patch(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url, parameters)
         else:
             raise e
 
