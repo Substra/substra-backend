@@ -3,6 +3,7 @@ from typing import Any
 import structlog
 from django.db.models.query import QuerySet
 from django.db.utils import IntegrityError
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
 from rest_framework import status
@@ -43,9 +44,13 @@ class TaskProfilingViewSet(
         try:
             task_profiling = super().create(request, *args, **kwargs)
         except IntegrityError:
-            data = {"detail": f"TaskProfiling with key {request.data['compute_task_key']}"}
+            data = {"detail": f"TaskProfiling with key {request.data['compute_task_key']} already exists"}
             return Response(data, status=status.HTTP_409_CONFLICT)
         return task_profiling
+
+    def perform_update(self, serializer):
+        kwargs = {"creation_date": timezone.now()}
+        return serializer.save(**kwargs)
 
 
 class TaskProfilingStepViewSet(mixins.CreateModelMixin, GenericViewSet):

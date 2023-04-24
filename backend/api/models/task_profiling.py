@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class ProfilingStep(models.Model):
@@ -21,7 +22,7 @@ class TaskProfiling(models.Model):
     compute_task = models.OneToOneField(
         "ComputeTask", primary_key=True, on_delete=models.CASCADE, related_name="task_profiling"
     )
-    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["creation_date"]
