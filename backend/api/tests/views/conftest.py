@@ -37,6 +37,7 @@ def authenticated_backend_client() -> test.APIClient:
 
     client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
     client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
+    client.put = functools.partial(client.put, **_EXTRA_HTTP_HEADERS)
 
     return client
 

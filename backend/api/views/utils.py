@@ -274,7 +274,9 @@ class IsCurrentBackendOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         elif (
-            request.method == "POST" and type(request.user) is OrganizationUser and request.user.username == get_owner()
+            request.method in ["POST", "PUT"]
+            and type(request.user) is OrganizationUser
+            and request.user.username == get_owner()
         ):
             return True
         else:
