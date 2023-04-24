@@ -214,11 +214,11 @@ def test_store_failure_ignored_exception(exc_class: Type[Exception]):
 @pytest.mark.django_db
 def test_create_task_profiling_update(mock_retry: MagicMock, mocker: MockerFixture):
     mock_post = mocker.patch("substrapp.clients.organization.post")
-    mock_patch = mocker.patch("substrapp.clients.organization.patch")
+    mock_put = mocker.patch("substrapp.clients.organization.put")
     compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
     tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
     mock_post.side_effect = OrganizationHttpError(url="testurl", status_code=status.HTTP_409_CONFLICT)
     tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
 
     assert mock_post.call_count == 2
-    assert mock_patch.call_count == 1
+    assert mock_put.call_count == 1
