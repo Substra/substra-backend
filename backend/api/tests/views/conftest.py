@@ -6,7 +6,7 @@ import pytest
 from django import conf
 from rest_framework import test
 
-from api.models.computetask import ComputeTask
+from api.models import ComputeTask
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedBackendClient
 from api.tests.common import AuthenticatedClient
