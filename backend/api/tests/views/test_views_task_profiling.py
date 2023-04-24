@@ -132,6 +132,41 @@ def test_update_patch(authenticated_backend_client, create_compute_plan, create_
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db(transaction=True)
+def test_update_datetime(authenticated_backend_client, create_compute_plan, create_compute_task):
+    compute_plan = create_compute_plan()
+    compute_task = create_compute_task(compute_plan)
+    task_profiling = compute_task.task_profiling
+    assert compute_task.task_profiling is not None
+
+    task_profiling.refresh_from_db()
+    previous_datetime = task_profiling.creation_date
+    profiling_url = reverse("api:task_profiling-detail", args=[str(compute_task.key)])
+    authenticated_backend_client.put(profiling_url, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    task_profiling.refresh_from_db()
+    new_datetime = task_profiling.creation_date
+    assert new_datetime > previous_datetime
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db()
+def test_add_step_no_datetime_change(authenticated_backend_client, create_compute_plan, create_compute_task):
+    compute_plan = create_compute_plan()
+    compute_task = create_compute_task(compute_plan)
+
+    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    task_profiling = compute_task.task_profiling
+    task_profiling.refresh_from_db()
+    previous_datetime = task_profiling.creation_date
+
+    step_url = reverse("api:step-list", args=[str(compute_task.key)])
+    authenticated_backend_client.post(step_url, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    task_profiling.refresh_from_db()
+    new_datetime = task_profiling.creation_date
+    assert new_datetime == previous_datetime
+
+
 @override_settings(
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
     LEDGER_MSP_ID="other_org",
