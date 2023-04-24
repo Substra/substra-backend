@@ -61,8 +61,10 @@ def get_cp_graph(request, compute_plan_pk):
 
     tasks = (
         ComputeTask.objects.filter(compute_plan__key=compute_plan_pk, channel=get_channel_name(request))
-        .annotate(inputs_specs=Subquery(inputs), outputs_specs=Subquery(outputs), function_name=F("function__name"))
-        .values("key", "rank", "function_name", "worker", "status", "inputs_specs", "outputs_specs")
+        # fetch_related not needed because annotate already performs a JOIN
+        .annotate(
+            inputs_specs=Subquery(inputs), outputs_specs=Subquery(outputs), function_name=F("function__name")
+        ).values("key", "rank", "function_name", "worker", "status", "inputs_specs", "outputs_specs")
     )
 
     # Set a task limitation for performances issues

@@ -2,7 +2,10 @@ import os
 import shutil
 import tempfile
 
+import pytest
+from django.db import connection
 from django.test import override_settings
+from django.test import utils
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -12,6 +15,85 @@ from api.tests.common import AuthenticatedClient
 from api.views.compute_plan_graph import MAX_TASKS_DISPLAYED
 
 MEDIA_ROOT = tempfile.mkdtemp()
+
+
+def create_compute_graph():
+    compute_plan = factory.create_computeplan()
+
+    function_train = factory.create_function(
+        inputs=factory.build_function_inputs(["datasamples", "opener"]),
+        outputs=factory.build_function_outputs(["model"]),
+    )
+
+    function_predict = factory.create_function(
+        inputs=factory.build_function_inputs(["model"]),
+        outputs=factory.build_function_outputs(["predictions"]),
+    )
+
+    function_test = factory.create_function(
+        inputs=factory.build_function_inputs(["predictions"]),
+        outputs=factory.build_function_outputs(["performance"]),
+    )
+
+    function_aggregate = factory.create_function(
+        inputs=factory.build_function_inputs(["model"]),
+        outputs=factory.build_function_outputs(["model"]),
+    )
+
+    train_task = factory.create_computetask(
+        compute_plan,
+        rank=1,
+        function=function_train,
+        outputs=factory.build_computetask_outputs(function_train),
+    )
+
+    predict_task = factory.create_computetask(
+        compute_plan,
+        rank=2,
+        function=function_predict,
+        inputs=factory.build_computetask_inputs(
+            function_predict,
+            {
+                "model": [train_task.key],
+            },
+        ),
+        outputs=factory.build_computetask_outputs(function_predict),
+    )
+
+    test_task = factory.create_computetask(
+        compute_plan,
+        rank=3,
+        function=function_test,
+        inputs=factory.build_computetask_inputs(
+            function_test,
+            {
+                "predictions": [predict_task.key],
+            },
+        ),
+        outputs=factory.build_computetask_outputs(function_test),
+    )
+
+    composite_task = factory.create_computetask(
+        compute_plan,
+        rank=10,
+        function=function_train,
+        outputs=factory.build_computetask_outputs(function_train),
+    )
+
+    aggregate_task = factory.create_computetask(
+        compute_plan,
+        rank=11,
+        function=function_aggregate,
+        inputs=factory.build_computetask_inputs(
+            function_aggregate,
+            {
+                "model": [composite_task.key, train_task.key],
+            },
+        ),
+        outputs=factory.build_computetask_outputs(function_aggregate),
+    )
+
+    return compute_plan, train_task, predict_task, test_task, composite_task, aggregate_task
 
 
 @override_settings(
@@ -49,80 +131,7 @@ class ComputePlanGraphViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_cp_graph(self):
-        compute_plan = factory.create_computeplan()
-
-        function_train = factory.create_function(
-            inputs=factory.build_function_inputs(["datasamples", "opener"]),
-            outputs=factory.build_function_outputs(["model"]),
-        )
-
-        function_predict = factory.create_function(
-            inputs=factory.build_function_inputs(["model"]),
-            outputs=factory.build_function_outputs(["predictions"]),
-        )
-
-        function_test = factory.create_function(
-            inputs=factory.build_function_inputs(["predictions"]),
-            outputs=factory.build_function_outputs(["performance"]),
-        )
-
-        function_aggregate = factory.create_function(
-            inputs=factory.build_function_inputs(["model"]),
-            outputs=factory.build_function_outputs(["model"]),
-        )
-
-        train_task = factory.create_computetask(
-            compute_plan,
-            rank=1,
-            function=function_train,
-            outputs=factory.build_computetask_outputs(function_train),
-        )
-
-        predict_task = factory.create_computetask(
-            compute_plan,
-            rank=2,
-            function=function_predict,
-            inputs=factory.build_computetask_inputs(
-                function_predict,
-                {
-                    "model": [train_task.key],
-                },
-            ),
-            outputs=factory.build_computetask_outputs(function_predict),
-        )
-
-        test_task = factory.create_computetask(
-            compute_plan,
-            rank=3,
-            function=function_test,
-            inputs=factory.build_computetask_inputs(
-                function_test,
-                {
-                    "predictions": [predict_task.key],
-                },
-            ),
-            outputs=factory.build_computetask_outputs(function_test),
-        )
-
-        composite_task = factory.create_computetask(
-            compute_plan,
-            rank=10,
-            function=function_train,
-            outputs=factory.build_computetask_outputs(function_train),
-        )
-
-        aggregate_task = factory.create_computetask(
-            compute_plan,
-            rank=11,
-            function=function_aggregate,
-            inputs=factory.build_computetask_inputs(
-                function_aggregate,
-                {
-                    "model": [composite_task.key, train_task.key],
-                },
-            ),
-            outputs=factory.build_computetask_outputs(function_aggregate),
-        )
+        compute_plan, train_task, predict_task, test_task, composite_task, aggregate_task = create_compute_graph()
 
         expected_results = {
             "tasks": [
@@ -214,3 +223,22 @@ class ComputePlanGraphViewTests(APITestCase):
         url = reverse(self.base_url, args=[compute_plan.key])
         response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), expected_results)
+
+
+@pytest.mark.django_db
+def test_n_plus_one_queries_compute_graph(authenticated_client):
+    """
+    The goal of this test is to check that the number of queries is in O(1), that is to say independent of the number
+    of tasks in the DB.
+    Some queries are cached by Django, so we allow a bit of slack.
+    """
+    compute_plan, *args = create_compute_graph()
+    url = reverse("api:workflow_graph", args=[compute_plan.key])
+
+    with utils.CaptureQueriesContext(connection) as queries:
+        authenticated_client.get(
+            url, {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        )
+    queries = len(queries.captured_queries)
+
+    assert queries < 15
