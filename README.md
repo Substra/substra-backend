@@ -249,10 +249,18 @@ Currently, only the dev mode is supported with this architecture.
 
 When using pyenv-virtualenv, the python library might not be linked correctly into the python directory. Adding a manual link `sudo ln -s` to the expected folder will solve the issue:
 ```
-sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9.4/lib/python3.9/config-3.9-darwin <INSERT YOUR NOT-FOUND-PATH HERE WITHOUT libpython3.8.a FILENAME>
+sudo ln -s /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9.4/lib/python3.9/config-3.9-darwin <INSERT YOUR NOT-FOUND-PATH HERE WITHOUT libpython3.9.a FILENAME>
 ```
 
+[Link to the Gihtub issue giving the hack](https://github.com/unbit/uwsgi/issues/2270#issuecomment-844702000)
+
 2. Deploy with `skaffold run -p dev,arm64`
+
+3. If you're using `conda` to manage your Python environments, you need to install `grpcio` from `conda`:
+```
+pip uninstall grpcio
+conda install -c conda-forge grpcio
+```
 
 ## License
 
