@@ -116,8 +116,8 @@ def mock_retry(mocker: MockerFixture) -> MagicMock:
         # return exc
 
     mock_retry = mocker.patch("substrapp.tasks.tasks_compute_task.ComputeTask.retry")
-    # Explicitly set a side_effect for mretry that return an Exception,
-    # otherwise mretry will be a MagicMock, which will make celery unhappy
+    # Explicitly set a side_effect for mock_retry that return an Exception,
+    # otherwise mock_retry will be a MagicMock, which will make celery unhappy
     mock_retry.side_effect = basic_retry
 
     return mock_retry

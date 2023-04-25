@@ -118,7 +118,7 @@ class TaskProfilingViewTestsBackend(APITestCase):
 
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db
-def test_update_patch(authenticated_backend_client, create_compute_plan, create_compute_task):
+def test_task_profiling_post_duplicate(authenticated_backend_client, create_compute_plan, create_compute_task):
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
     response = authenticated_backend_client.post(
@@ -134,7 +134,7 @@ def test_update_patch(authenticated_backend_client, create_compute_plan, create_
 
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db(transaction=True)
-def test_update_datetime(authenticated_backend_client, create_compute_plan, create_compute_task):
+def test_task_profiling_update_datetime(authenticated_backend_client, create_compute_plan, create_compute_task):
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
 
@@ -153,7 +153,9 @@ def test_update_datetime(authenticated_backend_client, create_compute_plan, crea
 
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db()
-def test_add_step_no_datetime_change(authenticated_backend_client, create_compute_plan, create_compute_task):
+def test_task_profiling_add_step_no_datetime_change(
+    authenticated_backend_client, create_compute_plan, create_compute_task
+):
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
 
