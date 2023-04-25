@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Increase the `max_attempts` in `watch_log` to allow kaniko pods to take longer to start ([#637](https://github.com/Substra/substra-backend/pull/637))
 
+### Added
+
+- Add function name to workflow view & ordering on functionName in cpTasks list (#635)
 
 ## [0.36.0](https://github.com/Substra/substra-backend/releases/tag/0.36.0) 2023-03-31
 
@@ -25,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add filters to performances export (#590)
 - Filter warnings in `pyproject.toml` to follow deprecation messages in `pkg_resources`([#612](https://github.com/Substra/substra-backend/pull/612))
 - Prefetch `function__inputs`, `function__outputs` in `ComputeTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
-- Prefetch `inputs`, `outputs`, `inputs__asset`, `outputs__assets`, `function__inputs` and  `function__outputs` in `CPTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
+- Prefetch `inputs`, `outputs`, `inputs__asset`, `outputs__assets`, `function__inputs` and `function__outputs` in `CPTaskViewSet` ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Add `ComputeTaskWithDetailsSerializer` as a full-view serializer (including inputs and outputs) ([#613](https://github.com/Substra/substra-backend/pull/613))
 - Prefetch `outputs` in `_PerformanceMetricSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
 - Index on `DataManager.channel` ([#607](https://github.com/Substra/substra-backend/pull/607))
@@ -35,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - order of `data_sample_key` in tests ([#607](https://github.com/Substra/substra-backend/pull/607))
-
 
 ### Changed
 
