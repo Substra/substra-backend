@@ -11,9 +11,10 @@ from rest_framework.authentication import TokenAuthentication as DRFTokenAuthent
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from users.models.token import BearerToken
 from users.models.user_channel import UserChannel
 from users.models.user_oidc_info import UserOidcInfo
-from users.models.token import BearerToken
+
 from . import utils
 
 
@@ -22,8 +23,10 @@ class BearerTokenAuthentication(DRFTokenAuthentication):
     If token is expired then it will be removed
     and new one with different key will be created
     """
-    #use our own token model instead of the DRF one
+
+    # use our own token model instead of the DRF one
     model = BearerToken
+
     def authenticate_credentials(self, key):
         _, token = super().authenticate_credentials(key)
         if token.is_token_expired():

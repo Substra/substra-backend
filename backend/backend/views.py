@@ -1,6 +1,6 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django.urls import reverse
-from users.models.token import BearerToken
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -12,11 +12,11 @@ from api.views.utils import get_channel_name
 from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-from users.utils import bearer_token as bearer_token_utils
+from users.models.token import BearerToken
 
-#include note in the display
-def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict: 
-    d = {"created_at": token.created, "expires_at": token.expires_at(), "note": token.note}
+
+def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
+    d = {"created_at": token.created, "expires_at": token.expires_at(), "note": token.note, "token_id": token.token_id}
     if include_payload:
         d["token"] = token.key
     return d
@@ -34,13 +34,11 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        token = BearerToken.objects.create(user=user, expiry=request.GET.get('expiry'), note=request.GET.get('note'))
+        token = BearerToken.objects.create(user=user, expiry=request.GET.get("expiry"), note=request.GET.get("note"))
         return ApiResponse(_bearer_token_dict(token))
 
 
-
-class AuthenticatedBearerToken(DRFObtainAuthToken): #The Django View corresponding to /api-token TODO !!!!!!
-    #this is the one i need to work on TODO
+class AuthenticatedBearerToken(DRFObtainAuthToken):
     """
     get a Bearer token if you're already authenticated somehow
     """
@@ -48,8 +46,9 @@ class AuthenticatedBearerToken(DRFObtainAuthToken): #The Django View correspondi
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        #request.GET voir doc django, dans args ils mettent la durée et une note
-        token = BearerToken.objects.create(user=request.user, expiry=request.GET.get('expiry'), note=request.GET.get('note'))
+        token = BearerToken.objects.create(
+            user=request.user, expiry=request.GET.get("expiry"), note=request.GET.get("note")
+        )
         return ApiResponse(_bearer_token_dict(token))
 
 
@@ -64,6 +63,17 @@ class ActiveBearerTokens(APIView):
         tokens = BearerToken.objects.filter(user=request.user)
 
         return ApiResponse({"tokens": [_bearer_token_dict(token, include_payload=False) for token in tokens]})
+
+    def delete(self, request, *args, **kwargs):
+        if BearerToken.objects.filter(token_id=request.GET.get("id")):
+            token = BearerToken.objects.get(token_id=request.GET.get("id"))
+            if request.user == token.user:
+                token.delete()
+                return HttpResponse("Authorized, token removed", status=200)
+            else:
+                return HttpResponse("Unauthorized, token was NOT removed", status=401)
+        else:
+            return HttpResponse("Token not found", status=404)
 
 
 class Info(APIView):
