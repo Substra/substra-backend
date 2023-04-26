@@ -26,6 +26,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 )
 class CPPerformanceViewTests(APITestCase):
     client_class = AuthenticatedClient
+    maxDiff = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -143,6 +144,7 @@ class CPPerformanceViewTests(APITestCase):
 
     def test_performance_list(self):
         response = self.client.get(self.url, **self.extra)
+
         self.assertEqual(
             response.json(),
             {
@@ -365,7 +367,7 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     query_tasks_empty = len(query.captured_queries)
 
     for t in compute_plan.compute_tasks.all():
-        for t_output in t.outputs:
+        for t_output in t.outputs.all():
             factory.create_performance(t_output, t.function)
     with utils.CaptureQueriesContext(connection) as query:
         print(authenticated_client.get(url))

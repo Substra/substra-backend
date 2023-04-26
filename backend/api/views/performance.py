@@ -69,7 +69,8 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         return (
             Performance.objects.filter(
-                channel=get_channel_name(self.request), compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk")
+                channel=get_channel_name(self.request),
+                compute_task_output__task__compute_plan_id=self.kwargs.get("compute_plan_pk"),
             )
             .select_related(
                 "compute_task_output",

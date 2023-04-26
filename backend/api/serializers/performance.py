@@ -79,7 +79,7 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Performance
         fields = [
-            "compute_task_output",
+            "compute_task",
             "metric",
             "perf",
         ]
