@@ -36,8 +36,12 @@ logger = structlog.get_logger(__name__)
 class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = CPPerformanceSerializer
     filter_backends = [OrderingFilter]
-    ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__metadata__round_idx"]
-    ordering = ["compute_task__rank", "compute_task__worker"]
+    ordering_fields = [
+        "compute_task_output__task__rank",
+        "compute_task_output__task__worker",
+        "compute_task_output__task__metadata__round_idx",
+    ]
+    ordering = ["compute_task_output__task__rank", "compute_task_output__task__worker"]
     pagination_class = LargePageNumberPagination
 
     def _get_cp_ranks_and_rounds(self, compute_plan_pk):
@@ -68,7 +72,7 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                 channel=get_channel_name(self.request), compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk")
             )
             .select_related(
-                "compute_task",
+                "compute_task_output",
                 "metric",
             )
             .prefetch_related(
@@ -94,15 +98,15 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class PerformanceFilter(FilterSet):
-    creation_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__creation_date")
-    start_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__start_date")
-    end_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__end_date")
+    creation_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__creation_date")
+    start_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__start_date")
+    end_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__end_date")
     status = ChoiceInFilter(
-        field_name="compute_task__compute_plan__status",
+        field_name="compute_task_output__task__compute_plan__status",
         choices=ComputePlan.Status.choices,
     )
-    key = UUIDInFilter(field_name="compute_task__compute_plan__key")
-    owner = CharInFilter(field_name="compute_task__compute_plan__owner")
+    key = UUIDInFilter(field_name="compute_task_output__task__compute_plan__key")
+    owner = CharInFilter(field_name="compute_task_output__task__compute_plan__owner")
     metric_key = UUIDInFilter(field_name="metric__key")
     metric_output_identifier = CharInFilter(field_name="metric__outputs__identifier")
 
@@ -150,22 +154,24 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
         metadata = {}
         if self.request.query_params.get("metadata_columns"):
             for md in self.request.query_params.get("metadata_columns").split(","):
-                metadata[md] = F("compute_task__compute_plan__metadata__" + md)
+                metadata[md] = F("compute_task_output__task__compute_plan__metadata__" + md)
 
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task", "metric", "compute_task__compute_plan", "metric__outputs")
+            .select_related(
+                "compute_task_output", "metric", "compute_task_output__task__compute_plan", "metric__outputs"
+            )
             .annotate(
-                compute_plan_key=F("compute_task__compute_plan__key"),
-                compute_plan_name=F("compute_task__compute_plan__name"),
-                compute_plan_tag=F("compute_task__compute_plan__tag"),
-                compute_plan_status=F("compute_task__compute_plan__status"),
-                compute_plan_start_date=F("compute_task__compute_plan__start_date"),
-                compute_plan_end_date=F("compute_task__compute_plan__end_date"),
-                compute_plan_metadata=F("compute_task__compute_plan__metadata"),
-                worker=F("compute_task__worker"),
-                task_rank=F("compute_task__rank"),
-                task_round=F("compute_task__metadata__round_idx"),
+                compute_plan_key=F("compute_task_output__task__compute_plan__key"),
+                compute_plan_name=F("compute_task_output__task__compute_plan__name"),
+                compute_plan_tag=F("compute_task_output__task__compute_plan__tag"),
+                compute_plan_status=F("compute_task_output__task__compute_plan__status"),
+                compute_plan_start_date=F("compute_task_output__task__compute_plan__start_date"),
+                compute_plan_end_date=F("compute_task_output__task__compute_plan__end_date"),
+                compute_plan_metadata=F("compute_task_output__task__compute_plan__metadata"),
+                worker=F("compute_task_output__task__worker"),
+                task_rank=F("compute_task_output__task__rank"),
+                task_round=F("compute_task_output__task__metadata__round_idx"),
                 function_name=F("metric__name"),
                 performance=F("value"),
                 **metadata,

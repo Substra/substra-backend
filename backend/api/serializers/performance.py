@@ -13,7 +13,9 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     primary_key_name = "id"
 
     compute_task_key = serializers.PrimaryKeyRelatedField(
-        queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
+        queryset=ComputeTask.objects.all(),
+        source="compute_task_output__task",
+        pk_field=serializers.UUIDField(format="hex_verbose"),
     )
 
     metric_key = serializers.PrimaryKeyRelatedField(
@@ -77,7 +79,7 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Performance
         fields = [
-            "compute_task",
+            "compute_task_output",
             "metric",
             "perf",
         ]
