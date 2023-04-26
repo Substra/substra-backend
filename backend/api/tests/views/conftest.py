@@ -27,6 +27,7 @@ def authenticated_client() -> test.APIClient:
 
     client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
     client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
+    client.delete = functools.partial(client.delete, **_EXTRA_HTTP_HEADERS)
 
     return client
 

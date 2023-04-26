@@ -1,7 +1,10 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.urls import reverse
+from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
@@ -16,10 +19,20 @@ from users.models.token import BearerToken
 
 
 def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created_at": token.created, "expires_at": token.expires_at(), "note": token.note, "token_id": token.token_id}
+    d = {"created_at": token.created, "expires_at": token.expiry, "note": token.note, "token_id": token.token_id}
     if include_payload:
         d["token"] = token.key
     return d
+
+
+def _create_token_for_user(user, params) -> BearerToken:
+    if "expiry" not in params or "note" not in params:
+        raise ValidationError("expiry or note field are missing!")
+    return BearerToken.objects.create(
+        user=user,
+        expiry=None if params.get("expiry") == "never" else params.get("expiry"),
+        note=params.get("note"),
+    )
 
 
 class ObtainBearerToken(DRFObtainAuthToken):
@@ -34,7 +47,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        token = BearerToken.objects.create(user=user, expiry=request.GET.get("expiry"), note=request.GET.get("note"))
+        token = _create_token_for_user(user, request.GET)
         return ApiResponse(_bearer_token_dict(token))
 
 
@@ -46,9 +59,7 @@ class AuthenticatedBearerToken(DRFObtainAuthToken):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        token = BearerToken.objects.create(
-            user=request.user, expiry=request.GET.get("expiry"), note=request.GET.get("note")
-        )
+        token = _create_token_for_user(request.user, request.GET)
         return ApiResponse(_bearer_token_dict(token))
 
 
@@ -65,15 +76,14 @@ class ActiveBearerTokens(APIView):
         return ApiResponse({"tokens": [_bearer_token_dict(token, include_payload=False) for token in tokens]})
 
     def delete(self, request, *args, **kwargs):
-        if BearerToken.objects.filter(token_id=request.GET.get("id")):
+        try:
             token = BearerToken.objects.get(token_id=request.GET.get("id"))
             if request.user == token.user:
                 token.delete()
-                return HttpResponse("Authorized, token removed", status=200)
-            else:
-                return HttpResponse("Unauthorized, token was NOT removed", status=401)
-        else:
-            return HttpResponse("Token not found", status=404)
+                return HttpResponse("Token removed", status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            pass
+        return HttpResponse("Token not found", status=status.HTTP_404_NOT_FOUND)
 
 
 class Info(APIView):

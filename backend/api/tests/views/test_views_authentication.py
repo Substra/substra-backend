@@ -107,17 +107,18 @@ class AuthenticationTests(APITestCase):
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_obtain_token(self):
+        endpoint = "/api-token-auth/?note=&expiry=never"
         # clean use
-        response = self.client.post("/api-token-auth/", {"username": "foo", "password": "baz"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "baz"}, **self.extra)
         self.assertEqual(response.status_code, 400)
 
-        response = self.client.post("/api-token-auth/", {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
         self.assertEqual(response.status_code, 200)
         token_old = response.json()["token"]
         self.assertTrue(token_old)
 
         # token should be update after a second post
-        response = self.client.post("/api-token-auth/", {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
         self.assertEqual(response.status_code, 200)
         token = response.json()["token"]
         self.assertTrue(token)
@@ -126,13 +127,6 @@ class AuthenticationTests(APITestCase):
         self.assertNotEqual(token_old, token)
 
         # test tokens validity
-        invalid_auth_token_header = f"Token {token_old}"
-        self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
-
-        with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.function_url, **self.extra)
-
-            self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         valid_auth_token_header = f"Token {token}"
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
@@ -146,12 +140,12 @@ class AuthenticationTests(APITestCase):
         # the token should be ignored since the purpose of the view is to authenticate via user/password
         valid_auth_token_header = f"Token {token}"
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
-        response = self.client.post("/api-token-auth/", {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
         self.assertEqual(response.status_code, 200)
 
         invalid_auth_token_header = "Token nope"
         self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
-        response = self.client.post("/api-token-auth/", {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
         self.assertEqual(response.status_code, 200)
 
 

@@ -37,9 +37,9 @@ class AuthenticatedClient(APIClient):
         self.channel = channel
         self.username = username
         self.password = password
+        self.user = None
 
-    def request(self, **kwargs):
-        # create user
+    def create_user(self):
         user, created = User.objects.get_or_create(username=self.username)
         if created:
             user.set_password(self.password)
@@ -49,6 +49,11 @@ class AuthenticatedClient(APIClient):
             # without a channel
             if self.channel:
                 UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
+            self.user = user
+
+    def request(self, **kwargs):
+        # create user
+        self.create_user()
 
         # simulate login
         serializer = CustomTokenObtainPairSerializer(data={"username": self.username, "password": self.password})
