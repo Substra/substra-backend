@@ -60,14 +60,15 @@ class CPPerformanceViewTests(APITestCase):
             )
             for i in range(3)
         ]
-        self.performances = [
-            factory.create_performance(
-                self.compute_tasks[i],
-                self.metric,
-                identifier="performance",
-            )
-            for i in range(3)
-        ]
+        self.performances = []
+        for i in range(3):
+            self.performances += [
+                factory.create_performance(
+                    output,
+                    self.metric,
+                )
+                for output in self.compute_tasks[i].outputs.all()
+            ]
         self.expected_stats = {
             "compute_tasks_distinct_ranks": [1, 2, 3],
             "compute_tasks_distinct_rounds": [1],
@@ -189,24 +190,24 @@ class PerformanceViewTests(APITestCase):
             )
             for i in range(2)
         ]
-        self.performances = [
-            factory.create_performance(
-                self.compute_tasks[0],
-                self.metrics[i],
-                identifier="performance",
-            )
-            for i in range(3)
-        ]
-        self.performances.extend(
-            [
+        self.performances = []
+        for i in range(3):
+            self.performances += [
                 factory.create_performance(
-                    self.compute_tasks[1],
+                    output,
                     self.metrics[i],
-                    identifier="performance",
                 )
-                for i in range(3)
+                for output in self.compute_tasks[0].outputs.all()
             ]
-        )
+
+            self.performances += [
+                factory.create_performance(
+                    output,
+                    self.metrics[i],
+                )
+                for output in self.compute_tasks[1].outputs.all()
+            ]
+
         self.expected_results = [
             {
                 "compute_plan_key": self.compute_plans[0],
@@ -364,7 +365,8 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     query_tasks_empty = len(query.captured_queries)
 
     for t in compute_plan.compute_tasks.all():
-        factory.create_performance(t, t.function)
+        for t_output in t.outputs:
+            factory.create_performance(t_output, t.function)
     with utils.CaptureQueriesContext(connection) as query:
         print(authenticated_client.get(url))
     query_task_with_perf = len(query.captured_queries)

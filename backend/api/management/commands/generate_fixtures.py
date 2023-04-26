@@ -191,10 +191,11 @@ class Command(BaseCommand):
             status=task_status,
         )
         if task_status == ComputeTask.Status.STATUS_DONE:
-            factory.create_performance(
-                test_task,
-                self.metric_function,
-            )
+            for task_output in test_task.outputs:
+                factory.create_performance(
+                    task_output,
+                    self.metric_function,
+                )
 
         return cp
 
