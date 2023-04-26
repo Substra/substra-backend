@@ -5,6 +5,13 @@ from django.db import migrations
 from django.db import models
 
 
+def migrate_performances(apps, schema_editor):
+    performance_model = apps.get_model("api", "performance")
+
+    for performance_instance in performance_model.objects.all():
+        performance_instance.compute_task
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("api", "0050_alter_datamanager_channel"),
@@ -26,6 +33,7 @@ class Migration(migrations.Migration):
             ),
             preserve_default=False,
         ),
+        migrations.RunPython(migrate_performances),
         migrations.AlterUniqueTogether(
             name="performance",
             unique_together={("compute_task_output", "metric")},

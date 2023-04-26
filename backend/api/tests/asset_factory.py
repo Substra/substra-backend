@@ -437,9 +437,8 @@ def create_model(
 
 
 def create_performance(
-    compute_task: ComputeTask,
+    compute_task_output: ComputeTaskOutput,
     metric: Function,
-    identifier: str = "performance",
     value: float = 1.0,
     channel: str = DEFAULT_CHANNEL,
 ) -> Performance:
@@ -448,12 +447,12 @@ def create_performance(
         creation_date=timezone.now(),
         channel=channel,
         metric=metric,
-        compute_task=compute_task,
+        compute_task_output=compute_task_output,
     )
     ComputeTaskOutputAsset.objects.create(
-        task_output=compute_task.outputs.get(identifier=identifier),
+        task_output=compute_task_output,
         asset_kind=FunctionOutput.Kind.ASSET_PERFORMANCE,
-        asset_key=f"{compute_task.key}|{metric.key}",
+        asset_key=f"{compute_task_output.task}|{metric.key}",
         channel=channel,
     )
     return performance

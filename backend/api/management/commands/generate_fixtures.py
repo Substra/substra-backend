@@ -194,7 +194,6 @@ class Command(BaseCommand):
             factory.create_performance(
                 test_task,
                 self.metric_function,
-                identifier="performance",
             )
 
         return cp
