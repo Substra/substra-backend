@@ -34,27 +34,9 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         ]
 
 
-class _PerformanceMetricSerializer(serializers.ModelSerializer):
-    output_identifier = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Function
-        fields = ["key", "name", "output_identifier"]
-
-    def get_output_identifier(self, obj):
-        outputs = obj.outputs.all()
-        outputs_count = len(outputs)
-        if outputs_count != 1:
-            raise Exception(
-                f"Couldn't associate an output identifier to performance for function '{obj.key}',"
-                f" error : found {outputs_count} identifier instead of 1"
-            )
-
-        return outputs[0].identifier
-
-
-class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
-    function_key = serializers.UUIDField(format="hex_verbose", source="function_id")
+class _PerformanceComputeTaskOutputSerializer(serializers.ModelSerializer):
+    function_key = serializers.UUIDField(format="hex_verbose", source="function.key")
+    function_name = serializers.CharField(source="function.name")
     round_idx = serializers.SerializerMethodField()
 
     class Meta:
@@ -62,6 +44,7 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
         fields = [
             "key",
             "function_key",
+            "function_name",
             "rank",
             "round_idx",
             "worker",
@@ -72,15 +55,15 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
 
 
 class CPPerformanceSerializer(serializers.ModelSerializer):
-    compute_task = _PerformanceComputeTaskSerializer(read_only=True)
-    metric = _PerformanceMetricSerializer(read_only=True)
+    compute_task = _PerformanceComputeTaskOutputSerializer(read_only=True, source="compute_task_output.task")
+    identifier = serializers.CharField(source="compute_task_output.identifier")
     perf = serializers.FloatField(source="value")
 
     class Meta:
         model = Performance
         fields = [
             "compute_task",
-            "metric",
+            "identifier",
             "perf",
         ]
 

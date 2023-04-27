@@ -26,7 +26,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 )
 class CPPerformanceViewTests(APITestCase):
     client_class = AuthenticatedClient
-    maxDiff = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -79,45 +78,36 @@ class CPPerformanceViewTests(APITestCase):
                 "compute_task": {
                     "key": str(self.compute_tasks[0].key),
                     "function_key": str(self.metric.key),
+                    "function_name": self.metric.name,
                     "rank": 1,
                     "round_idx": 1,
                     "worker": "MyOrg1MSP",
                 },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                    "output_identifier": InputIdentifiers.PERFORMANCE,
-                },
+                "identifier": InputIdentifiers.PERFORMANCE,
                 "perf": self.performances[0].value,
             },
             {
                 "compute_task": {
                     "key": str(self.compute_tasks[1].key),
                     "function_key": str(self.metric.key),
+                    "function_name": self.metric.name,
                     "rank": 2,
                     "round_idx": 1,
                     "worker": "MyOrg1MSP",
                 },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                    "output_identifier": InputIdentifiers.PERFORMANCE,
-                },
+                "identifier": InputIdentifiers.PERFORMANCE,
                 "perf": self.performances[1].value,
             },
             {
                 "compute_task": {
                     "key": str(self.compute_tasks[2].key),
                     "function_key": str(self.metric.key),
+                    "function_name": self.metric.name,
                     "rank": 3,
                     "round_idx": 1,
                     "worker": "MyOrg1MSP",
                 },
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                    "output_identifier": InputIdentifiers.PERFORMANCE,
-                },
+                "identifier": InputIdentifiers.PERFORMANCE,
                 "perf": self.performances[2].value,
             },
         ]
@@ -144,7 +134,6 @@ class CPPerformanceViewTests(APITestCase):
 
     def test_performance_list(self):
         response = self.client.get(self.url, **self.extra)
-
         self.assertEqual(
             response.json(),
             {

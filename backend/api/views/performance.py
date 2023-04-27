@@ -160,7 +160,7 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
             .select_related(
-                "compute_task_output", "metric", "compute_task_output__task__compute_plan", "metric__outputs"
+                "compute_task_output__task", "metric", "compute_task_output__task__compute_plan", "metric__outputs"
             )
             .annotate(
                 compute_plan_key=F("compute_task_output__task__compute_plan__key"),
@@ -187,7 +187,6 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     def generate_rows(self):
         headers = _build_csv_headers(self.request)
         queryset = self.filter_queryset(self.get_queryset())
-
         yield headers
         if queryset.exists():
             for perf in queryset.iterator():
