@@ -9,8 +9,8 @@ def migrate_performances(apps, schema_editor):
     performance_model = apps.get_model("api", "performance")
 
     for performance_instance in performance_model.objects.all():
-        print(performance_instance)
         performance_instance.compute_task_output = performance_instance.compute_task.outputs.all()[0]
+        performance_instance.save()
 
 
 class Migration(migrations.Migration):
