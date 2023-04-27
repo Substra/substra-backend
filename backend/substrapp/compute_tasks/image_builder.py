@@ -7,6 +7,7 @@ import structlog
 from django.conf import settings
 
 import orchestrator
+from substrapp import exceptions
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import Label
@@ -114,6 +115,16 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     raise compute_task_errors.BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
+def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
+    logs = ""
+    if create_pod:
+        logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
+        delete_pod(k8s_client, pod_name)
+        for line in (logs or "").split("\n"):
+            logger.info(line, pod_name=pod_name)
+    return logs
+
+
 @timeit
 def _build_container_image(path: str, tag: str) -> None:
     _assert_dockerfile_exist(path)
@@ -130,11 +141,9 @@ def _build_container_image(path: str, tag: str) -> None:
             pod = _build_pod(path, tag)
             k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
         except kubernetes.client.ApiException as e:
-            raise compute_task_errors.BuildError(
+            raise compute_task_errors.BuildRetryError(
                 f"Error creating pod {NAMESPACE}/{pod_name}. Reason: {e.reason}, status: {e.status}, body: {e.body}"
             ) from e
-
-    build_exc = None
 
     try:
         watch_pod(k8s_client, pod_name)
@@ -142,23 +151,20 @@ def _build_container_image(path: str, tag: str) -> None:
     except Exception as e:
         # In case of concurrent builds, it may fail. Check if the image exists.
         if container_image_exists(tag):
+            logger.warning(
+                f"Build of container image {tag} failed, probably because it was done by a concurrent build",
+                exc_info=True,
+            )
             return
-        build_exc = e
 
-    finally:
-        logs = None
+        logs = _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
-        if create_pod:
-            logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
-            delete_pod(k8s_client, pod_name)
-            for line in (logs or "").split("\n"):
-                logger.info(line, pod_name=pod_name)
+        if isinstance(e, exceptions.PodTimeoutError):
+            raise compute_task_errors.BuildRetryError(logs) from e
+        else:  # exceptions.PodError or other
+            raise compute_task_errors.BuildError(logs) from e
 
-        if build_exc:
-            err_msg = str(build_exc)
-            if logs:
-                err_msg += "\n\n" + logs
-            raise compute_task_errors.BuildError(err_msg)
+    _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
 
 def _assert_dockerfile_exist(dockerfile_path):
