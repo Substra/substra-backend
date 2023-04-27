@@ -72,7 +72,7 @@ class BuildError(_ComputeTaskError, CeleryRetryError):
 
     def __init__(self, logs: str, *args, **kwargs):
         self.logs = BytesIO(str.encode(logs))
-        super().__init__(*args, **kwargs)
+        super().__init__(logs, *args, **kwargs)
 
 
 class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
