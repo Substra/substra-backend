@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
             name="compute_task_output",
             field=models.ForeignKey(
                 default=None,
+                null=True,
                 on_delete=django.db.models.deletion.DO_NOTHING,
                 related_name="performances",
                 to="api.computetaskoutput",
@@ -35,6 +36,18 @@ class Migration(migrations.Migration):
             preserve_default=False,
         ),
         migrations.RunPython(migrate_performances),
+        migrations.AlterField(
+            model_name="performance",
+            name="compute_task_output",
+            field=models.ForeignKey(
+                default=None,
+                null=False,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="performances",
+                to="api.computetaskoutput",
+            ),
+            preserve_default=False,
+        ),
         migrations.AlterUniqueTogether(
             name="performance",
             unique_together={("compute_task_output", "metric")},
