@@ -34,9 +34,14 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         ]
 
 
-class _PerformanceComputeTaskOutputSerializer(serializers.ModelSerializer):
-    function_key = serializers.UUIDField(format="hex_verbose", source="function.key")
-    function_name = serializers.CharField(source="function.name")
+class _PerformanceMetricSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Function
+        fields = ["key", "name"]
+
+
+class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
+    function_key = serializers.UUIDField(format="hex_verbose", source="function_id")
     round_idx = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,7 +49,6 @@ class _PerformanceComputeTaskOutputSerializer(serializers.ModelSerializer):
         fields = [
             "key",
             "function_key",
-            "function_name",
             "rank",
             "round_idx",
             "worker",
@@ -55,7 +59,8 @@ class _PerformanceComputeTaskOutputSerializer(serializers.ModelSerializer):
 
 
 class CPPerformanceSerializer(serializers.ModelSerializer):
-    compute_task = _PerformanceComputeTaskOutputSerializer(read_only=True, source="compute_task_output.task")
+    compute_task = _PerformanceComputeTaskSerializer(read_only=True, source="compute_task_output.task")
+    metric = _PerformanceMetricSerializer(read_only=True)
     identifier = serializers.CharField(source="compute_task_output.identifier")
     perf = serializers.FloatField(source="value")
 
@@ -63,6 +68,7 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
         model = Performance
         fields = [
             "compute_task",
+            "metric",
             "identifier",
             "perf",
         ]
