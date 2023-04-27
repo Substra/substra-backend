@@ -83,6 +83,7 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                         kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
                     ).all(),
                 ),
+                "compute_task_output__task",
             )
             .distinct()
         )

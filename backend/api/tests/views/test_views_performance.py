@@ -365,10 +365,10 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     query_tasks_empty = len(query.captured_queries)
 
     for t in compute_plan.compute_tasks.all():
-        for t_output in t.outputs.all():
-            factory.create_performance(t_output, t.function)
+        perf_output = t.outputs.all()[1]
+        factory.create_performance(perf_output, t.function)
     with utils.CaptureQueriesContext(connection) as query:
         print(authenticated_client.get(url))
     query_task_with_perf = len(query.captured_queries)
-    assert query_task_with_perf < 11
-    assert query_task_with_perf - query_tasks_empty < 3
+    assert query_task_with_perf < 12
+    assert query_task_with_perf - query_tasks_empty < 4
