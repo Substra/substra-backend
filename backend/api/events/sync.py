@@ -340,7 +340,10 @@ def _create_performance(channel: str, data: dict) -> None:
         serializer.save_if_not_exists()
     except ValidationError:
         logger.debug(
-            "Performance already exists", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
+            "Performance already exists",
+            compute_task_key=data["compute_task_key"],
+            metric_key=data["metric_key"],
+            identifier=data["identifier"],
         )
 
 

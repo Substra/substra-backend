@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.models import ComputeTask
+from api.models import ComputeTaskOutput
 from api.models import Function
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
@@ -12,9 +13,9 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # ensures no duplicates are created
     primary_key_name = "id"
 
-    compute_task_key = serializers.PrimaryKeyRelatedField(
-        queryset=ComputeTask.objects.all(),
-        source="compute_task_output__task",
+    compute_task_output_key = serializers.PrimaryKeyRelatedField(
+        queryset=ComputeTaskOutput.objects.all(),
+        source="compute_task_output",
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
 
@@ -27,7 +28,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         model = Performance
         fields = [
             "channel",
-            "compute_task_key",
+            "compute_task_output_key",
             "creation_date",
             "metric_key",
             "performance_value",
