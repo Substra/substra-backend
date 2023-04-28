@@ -341,9 +341,8 @@ def _create_performance(channel: str, data: dict) -> None:
     except ValidationError:
         logger.debug(
             "Performance already exists",
-            compute_task_key=data["compute_task_key"],
+            compute_task_output_key=data["compute_task_output_key"],
             metric_key=data["metric_key"],
-            identifier=data["identifier"],
         )
 
 
