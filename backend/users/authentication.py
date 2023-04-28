@@ -12,6 +12,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from users.models.token import BearerToken
+from users.models.token import ImplicitBearerToken
 from users.models.user_channel import UserChannel
 from users.models.user_oidc_info import UserOidcInfo
 
@@ -29,6 +30,25 @@ class BearerTokenAuthentication(DRFTokenAuthentication):
 
     def authenticate_credentials(self, key):
         _, token = super().authenticate_credentials(key)
+        if token.is_expired:
+            raise AuthenticationFailed("The Token is expired")
+
+        check_oidc_user_is_valid(token.user)
+        return token.user, token
+
+
+class ImplicitBearerTokenAuthentication(DRFTokenAuthentication):
+    """
+    Legacy BearerToken for endpoint api-token-auth/
+    """
+
+    model = ImplicitBearerToken
+
+    def authenticate_credentials(self, key):
+        try:
+            _, token = super().authenticate_credentials(key)
+        except AuthenticationFailed:
+            return None  # allow the authentication process to continue by swallowing the exception raised
         if token.is_expired:
             raise AuthenticationFailed("The Token is expired")
 

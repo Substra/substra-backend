@@ -29,8 +29,6 @@ def test_delete_token(authenticated_client):
     assert tokens_count == 1
 
     url = f"/active-api-tokens/?id={token.token_id}"
-    # url = reverse("backend:active-bearer-tokens-delete")
-    # url = reverse("backend:active_bearer_tokens-delete")
     response = authenticated_client.delete(url)
     assert response.status_code == status.HTTP_200_OK
 
@@ -51,12 +49,10 @@ def test_multiple_token(authenticated_client, api_client):
     valid_auth_token_header = f"Token {token_2}"
     api_client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
 
-    response = api_client.get("/active-api-tokens/")
+    response = api_client.get("/active-api-tokens/")  # none type error here ??
     assert response.status_code == status.HTTP_200_OK
 
     url = f"/active-api-tokens/?id={token_2.token_id}"
-    # url = reverse("backend:active-bearer-tokens-delete")
-    # url = reverse("backend:active_bearer_tokens-delete")
     response = api_client.delete(url)
     assert response.status_code == status.HTTP_200_OK
 
@@ -109,8 +105,6 @@ def test_delete_token_other_user(authenticated_client):
     assert tokens_count == 1
 
     url = f"/active-api-tokens/?id={token.token_id}"
-    # url = reverse("backend:active-bearer-tokens-delete")
-    # url = reverse("backend:active_bearer_tokens-delete")
     response = authenticated_client.delete(url)
     assert response.status_code == status.HTTP_404_NOT_FOUND
 

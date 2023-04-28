@@ -16,6 +16,7 @@ from organization.models import OutgoingOrganization
 from substrapp.models import Function as FunctionFiles
 from substrapp.tests.common import get_description_function
 from substrapp.tests.common import get_sample_function
+from users.models.token import ImplicitBearerToken
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -107,7 +108,7 @@ class AuthenticationTests(APITestCase):
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_obtain_token(self):
-        endpoint = "/api-token-auth/?note=&expiry=never"
+        endpoint = "/api-token-auth/"
         # clean use
         response = self.client.post(endpoint, {"username": "foo", "password": "baz"}, **self.extra)
         self.assertEqual(response.status_code, 400)
@@ -123,8 +124,12 @@ class AuthenticationTests(APITestCase):
         token = response.json()["token"]
         self.assertTrue(token)
 
-        # tokens should be different
-        self.assertNotEqual(token_old, token)
+        # tokens should be the same
+        self.assertEqual(token_old, token)
+
+        # token count should still be 1
+        tokens_count = ImplicitBearerToken.objects.count()
+        self.assertEqual(tokens_count, 1)
 
         # test tokens validity
 

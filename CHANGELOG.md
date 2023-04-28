@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- BREAKING: Support for multiple API tokens with expanded functionality ([#639](https://github.com/Substra/substra-backend/pull/639))
+
 ## [0.37.0](https://github.com/Substra/substra-backend/releases/tag/0.37.0) 2023-05-11
 
 ### Changed

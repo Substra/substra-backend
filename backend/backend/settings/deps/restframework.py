@@ -9,6 +9,8 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "users.authentication.SecureJWTAuthentication",  # JWT for front
+        "users.authentication.ImplicitBearerTokenAuthentication",  # Legacy Bearer token for api-token-auth/
+        # must be loaded BEFORE BearerTokenAuthentication
         "users.authentication.BearerTokenAuthentication",  # Bearer token for SDK
     ],
     "DEFAULT_PERMISSION_CLASSES": [

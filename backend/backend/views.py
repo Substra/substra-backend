@@ -16,10 +16,14 @@ from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 from users.models.token import BearerToken
+from users.models.token import ImplicitBearerToken
 
 
 def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created_at": token.created, "expires_at": token.expiry, "note": token.note, "token_id": token.token_id}
+    d = {"created_at": token.created, "expires_at": token.expiry}
+    if hasattr(token, "note") and hasattr(token, "token_id"):
+        d["note"] = token.note
+        d["token_id"] = token.token_id
     if include_payload:
         d["token"] = token.key
     return d
@@ -40,6 +44,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
     get a Bearer token from {username, password}
     """
 
+    # use legacy token
     authentication_classes = []
     throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
@@ -47,7 +52,11 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        token = _create_token_for_user(user, request.GET)
+        try:
+            token = ImplicitBearerToken.objects.get(user=user)
+            token = token.handle_expiration()
+        except ObjectDoesNotExist:
+            token = ImplicitBearerToken.objects.create(user=user)
         return ApiResponse(_bearer_token_dict(token))
 
 
@@ -71,9 +80,20 @@ class ActiveBearerTokens(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        tokens = BearerToken.objects.filter(user=request.user)
+        tokens = [
+            _bearer_token_dict(token, include_payload=False) for token in BearerToken.objects.filter(user=request.user)
+        ]
+        try:
+            implicit_token = _bearer_token_dict(ImplicitBearerToken.objects.get(user=request.user))
 
-        return ApiResponse({"tokens": [_bearer_token_dict(token, include_payload=False) for token in tokens]})
+        except ObjectDoesNotExist:
+            implicit_token = None
+        return ApiResponse(
+            {
+                "tokens": tokens,
+                "implicit_token": implicit_token,
+            }
+        )
 
     def delete(self, request, *args, **kwargs):
         try:
