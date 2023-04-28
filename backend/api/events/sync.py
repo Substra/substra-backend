@@ -335,7 +335,7 @@ def _on_create_performance_event(event: dict) -> None:
         channel=event["channel"],
         compute_task_key=asset["compute_task_key"],
         metric_key=asset["metric_key"],
-        identifier=asset["compute_task_identifier"],
+        identifier=asset["compute_task_output_identifier"],
     )
 
 
