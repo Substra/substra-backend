@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from api.models import ComputeTask
-from api.models import ComputeTaskOutput
 from api.models import Function
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
@@ -12,26 +11,26 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # the unique constraint for compute_task_key + metric_key in the model
     # ensures no duplicates are created
     primary_key_name = "id"
-
-    compute_task_output_key = serializers.PrimaryKeyRelatedField(
-        queryset=ComputeTaskOutput.objects.all(),
-        source="compute_task_output",
+    compute_task_key = serializers.PrimaryKeyRelatedField(
+        queryset=ComputeTask.objects.all(),
+        source="compute_task_output.task",
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
 
     metric_key = serializers.PrimaryKeyRelatedField(
         queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
-
+    compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
     performance_value = serializers.FloatField(source="value")
 
     class Meta:
         model = Performance
         fields = [
             "channel",
-            "compute_task_output_key",
+            "compute_task_key",
             "creation_date",
             "metric_key",
+            "compute_task_output_identifier",
             "performance_value",
         ]
 
