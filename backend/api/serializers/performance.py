@@ -22,6 +22,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     metric_key = serializers.PrimaryKeyRelatedField(
         queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
+
     performance_value = serializers.FloatField(source="value")
 
     class Meta:

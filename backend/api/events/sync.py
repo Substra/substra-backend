@@ -330,19 +330,34 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
 def _on_create_performance_event(event: dict) -> None:
     """Process create performance event to update local database."""
     logger.debug("Syncing performance create", asset_key=event["asset_key"], event_id=event["id"])
-    _create_performance(channel=event["channel"], data=event["performance"])
+    asset = event["performance"]
+    _create_performance(
+        channel=event["channel"],
+        compute_task_key=asset["compute_task_key"],
+        metric_key=asset["metric_key"],
+        identifier=asset["compute_task_identifier"],
+    )
 
 
-def _create_performance(channel: str, data: dict) -> None:
-    data["channel"] = channel
-    serializer = PerformanceSerializer(data=data)
+def _create_performance(channel: str, compute_task_key: str, metric_key: str, identifier: str) -> None:
+    task_output = ComputeTaskOutput.objects.get(
+        task__key=compute_task_key,
+        identifier=identifier,
+        channel=channel,
+    )
+    serializer = PerformanceSerializer(
+        compute_task_output=task_output,
+        metric_key=metric_key,
+        channel=channel,
+    )
     try:
         serializer.save_if_not_exists()
     except ValidationError:
         logger.debug(
             "Performance already exists",
-            compute_task_output_key=data["compute_task_output_key"],
-            metric_key=data["metric_key"],
+            compute_task_key=compute_task_key,
+            metric_key=metric_key,
+            compute_task_output_identifier=identifier,
         )
 
 
