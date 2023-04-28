@@ -120,8 +120,7 @@ def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api
     if create_pod:
         logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
         delete_pod(k8s_client, pod_name)
-        for line in (logs or "").split("\n"):
-            logger.info(line, pod_name=pod_name)
+        logger.info(logs or "", pod_name=pod_name)
     return logs
 
 
