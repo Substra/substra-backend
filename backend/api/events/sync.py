@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
-from rest_framework.exceptions import ValidationError
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
@@ -21,7 +20,9 @@ from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
+from api.models import Function
 from api.models import Model
+from api.models import Performance
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
 from api.serializers import ComputeTaskWithDetailsSerializer
@@ -29,7 +30,6 @@ from api.serializers import DataManagerSerializer
 from api.serializers import DataSampleSerializer
 from api.serializers import FunctionSerializer
 from api.serializers import ModelSerializer
-from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
 
@@ -89,9 +89,6 @@ def _on_update_function_event(event: dict) -> None:
 
 def _update_function(key: str, data: dict) -> None:
     """Process update function event to update local database."""
-
-    from api.models.function import Function
-
     function = Function.objects.get(key=key)
     function.name = data["name"]
     function.save()
@@ -330,22 +327,42 @@ def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
 def _on_create_performance_event(event: dict) -> None:
     """Process create performance event to update local database."""
     logger.debug("Syncing performance create", asset_key=event["asset_key"], event_id=event["id"])
-    _create_performance(channel=event["channel"], data=event["performance"])
+    asset = event["performance"]
+    _create_performance(
+        channel=event["channel"],
+        compute_task_key=asset["compute_task_key"],
+        identifier=asset["compute_task_output_identifier"],
+        metric_key=asset["metric_key"],
+        creation_date=asset["creation_date"],
+        value=asset["performance_value"],
+    )
 
 
-def _create_performance(channel: str, data: dict) -> None:
-    data["channel"] = channel
+def _create_performance(
+    channel: str,
+    compute_task_key: str,
+    identifier: str,
+    metric_key: str,
+    creation_date: str,
+    value: str,
+) -> None:
+    task_output = ComputeTaskOutput.objects.get(
+        task__key=compute_task_key,
+        identifier=identifier,
+        channel=channel,
+    )
+    metric = Function.objects.get(
+        key=metric_key,
+        channel=channel,
+    )
 
-    serializer = PerformanceSerializer(data=data)
-    try:
-        serializer.save_if_not_exists()
-    except ValidationError:
-        logger.debug(
-            "Performance already exists",
-            compute_task_key=data["compute_task_key"],
-            metric_key=data["metric_key"],
-            compute_task_output_identifier=data["compute_task_output_identifier"],
-        )
+    Performance.objects.create(
+        compute_task_output=task_output,
+        metric=metric,
+        channel=channel,
+        creation_date=creation_date,
+        value=value,
+    )
 
 
 def _on_create_model_event(event: dict) -> None:
