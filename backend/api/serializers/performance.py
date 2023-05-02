@@ -11,11 +11,10 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # the unique constraint for compute_task_key + metric_key in the model
     # ensures no duplicates are created
     primary_key_name = "id"
-    compute_task_key = serializers.UUIDField(format="hex_verbose")
+    compute_task_key = serializers.UUIDField(format="hex_verbose", source="compute_task_output.task.key")
 
-    metric_key = serializers.PrimaryKeyRelatedField(
-        queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
-    )
+    metric_key = serializers.UUIDField(format="hex_verbose", source="metric.key")
+
     compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
     performance_value = serializers.FloatField(source="value")
 
