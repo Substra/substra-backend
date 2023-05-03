@@ -19,6 +19,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name="computetaskoutputasset",
+            name="asset_key",
+            field=models.CharField(max_length=150),
+        ),
         migrations.AlterUniqueTogether(
             name="performance",
             unique_together=set(),
