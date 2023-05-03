@@ -24,6 +24,8 @@ def test_on_create_performance_event():
         status=ComputeTask.Status.STATUS_DONE,
     )
 
+    # This is an ugly way to simulate the orchestrator event in order to
+    # test the synchronization in a unit test.
     event = {
         "id": str(uuid4()),
         "channel": factory.DEFAULT_CHANNEL,
