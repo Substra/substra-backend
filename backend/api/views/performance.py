@@ -175,6 +175,7 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                 task_rank=F("compute_task_output__task__rank"),
                 task_round=F("compute_task_output__task__metadata__round_idx"),
                 function_name=F("metric__name"),
+                identifier=F("compute_task_output__identifier"),
                 performance=F("value"),
                 **metadata,
             )
