@@ -222,6 +222,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
             {
@@ -237,6 +238,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
             {
@@ -252,6 +254,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
             {
@@ -267,6 +270,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
             {
@@ -282,6 +286,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
             {
@@ -297,6 +302,7 @@ class PerformanceViewTests(APITestCase):
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
+                "identifier": "performance",
                 "performance": 1.0,
             },
         ]

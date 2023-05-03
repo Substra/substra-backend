@@ -100,6 +100,7 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
     worker = serializers.CharField()
     task_rank = serializers.IntegerField()
     task_round = serializers.IntegerField()
+    identifier = serializers.CharField()
     performance = serializers.FloatField()
 
     class Meta:
@@ -116,5 +117,6 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
             "worker",
             "task_rank",
             "task_round",
+            "identifier",
             "performance",
         ]
