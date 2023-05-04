@@ -9,13 +9,14 @@ from api.serializers.utils import SafeSerializerMixin
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # overwrite primary key field for the SafeSerializerMixin check
-    # the unique constraint for compute_task_key + metric_key in the model
+    # the unique constraint for compute_task_output + metric in the model
     # ensures no duplicates are created
     primary_key_name = "id"
+
     compute_task_key = serializers.UUIDField(format="hex_verbose", source="compute_task_output.task_id")
-
-    metric_key = serializers.UUIDField(format="hex_verbose", source="metric_id")
-
+    metric_key = serializers.PrimaryKeyRelatedField(
+        queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
+    )
     compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
     performance_value = serializers.FloatField(source="value")
 
@@ -39,7 +40,7 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
         performance = Performance(
             compute_task_output=task_output,
-            metric_id=validated_data["metric_id"],
+            metric=validated_data["metric"],
             channel=validated_data["channel"],
             creation_date=validated_data["creation_date"],
             value=validated_data["value"],
