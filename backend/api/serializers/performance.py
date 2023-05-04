@@ -13,11 +13,14 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # ensures no duplicates are created
     primary_key_name = "id"
 
+    # necessary to get the ComputeTaskOutput to create the Performance
     compute_task_key = serializers.UUIDField(format="hex_verbose", source="compute_task_output.task_id")
+    compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
+
     metric_key = serializers.PrimaryKeyRelatedField(
         queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
-    compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
+
     performance_value = serializers.FloatField(source="value")
 
     class Meta:
