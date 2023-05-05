@@ -1,17 +1,21 @@
 import errno
 import io
 import tempfile
+from functools import wraps
 from typing import Type
+from unittest.mock import MagicMock
 
 import pytest
 from grpc import RpcError
 from grpc import StatusCode
 from pytest_mock import MockerFixture
+from rest_framework import status
 
 import orchestrator
 import orchestrator.mock as orc_mock
 from substrapp.compute_tasks import errors
 from substrapp.compute_tasks.context import Context
+from substrapp.exceptions import OrganizationHttpError
 from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
 
@@ -95,6 +99,28 @@ def test_compute_task_exception(mocker: MockerFixture):
     with pytest.raises(errors.CeleryRetryError) as excinfo:
         compute_task(CHANNEL, task.json(), None)
     assert "Dummy error" in str(excinfo.value.__cause__)
+
+
+@pytest.fixture
+def mock_retry(mocker: MockerFixture) -> MagicMock:
+    def basic_retry(exc, **retry_kwargs):
+        # retry function that just re-raise the exception
+        def decorator(f):
+            @wraps(f)
+            def decorated_function(*args, **kwargs):
+                return f(*args, **kwargs)
+
+            return decorated_function
+
+        return decorator
+        # return exc
+
+    mock_retry = mocker.patch("substrapp.tasks.tasks_compute_task.ComputeTask.retry")
+    # Explicitly set a side_effect for mock_retry that return an Exception,
+    # otherwise mock_retry will be a MagicMock, which will make celery unhappy
+    mock_retry.side_effect = basic_retry
+
+    return mock_retry
 
 
 def test_celery_retry(mocker: MockerFixture):
@@ -183,3 +209,16 @@ def test_store_failure_build_error():
 @pytest.mark.parametrize("exc_class", [Exception])
 def test_store_failure_ignored_exception(exc_class: Type[Exception]):
     assert tasks_compute_task._store_failure(exc_class(), "uuid") is None
+
+
+@pytest.mark.django_db
+def test_create_task_profiling_update(mock_retry: MagicMock, mocker: MockerFixture):
+    mock_post = mocker.patch("substrapp.clients.organization.post")
+    mock_put = mocker.patch("substrapp.clients.organization.put")
+    compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
+    tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
+    mock_post.side_effect = OrganizationHttpError(url="testurl", status_code=status.HTTP_409_CONFLICT)
+    tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
+
+    assert mock_post.call_count == 2
+    assert mock_put.call_count == 1

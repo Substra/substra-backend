@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Raise a serializable Exception so that CeleryRetryError won't crash ([#641](https://github.com/Substra/substra-backend/pull/641))
 - Do not retry on non-timeout build errors ([#641](https://github.com/Substra/substra-backend/pull/641))
 
+### Changed
+
+- BREAKING: `TaskProfiling` do not use `create_or_update` but retry with `PUT` if error is `409` ([#636](https://github.com/Substra/substra-backend/pull/636))
+
 ## [0.36.1](https://github.com/Substra/substra-backend/releases/tag/0.36.1) 2023-04-21
 
 ### Fixed
