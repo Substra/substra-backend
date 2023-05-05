@@ -42,7 +42,7 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
         ]
 
     def get_task_duration(self, obj: TaskProfiling) -> Union[str, None]:
-        if obj.compute_task.start_date is not None and obj.creation_date is not None:
+        if obj.creation_date is not None and obj.compute_task.end_date is not None:
             duration = obj.compute_task.end_date - obj.creation_date
             return duration_microseconds(duration)
         else:
