@@ -10,6 +10,7 @@ def migrate_performances(apps, schema_editor):
 
     for performance_instance in performance_model.objects.all():
         performance_instance.compute_task_output = performance_instance.compute_task.outputs.all()[0]
+        performance_instance.compute_task_output.identifier = performance_instance.metric.name
         performance_instance.save()
 
 
