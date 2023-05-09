@@ -17,6 +17,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class DataSample(google.protobuf.message.Message):
     """DataSample represent a data sample that will be processed by a
     function to produce or test a model.
@@ -54,6 +55,7 @@ class DataSample(google.protobuf.message.Message):
 
 global___DataSample = DataSample
 
+@typing_extensions.final
 class NewDataSample(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -78,6 +80,7 @@ class NewDataSample(google.protobuf.message.Message):
 
 global___NewDataSample = NewDataSample
 
+@typing_extensions.final
 class RegisterDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -93,6 +96,7 @@ class RegisterDataSamplesParam(google.protobuf.message.Message):
 
 global___RegisterDataSamplesParam = RegisterDataSamplesParam
 
+@typing_extensions.final
 class RegisterDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -108,6 +112,7 @@ class RegisterDataSamplesResponse(google.protobuf.message.Message):
 
 global___RegisterDataSamplesResponse = RegisterDataSamplesResponse
 
+@typing_extensions.final
 class UpdateDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -127,6 +132,7 @@ class UpdateDataSamplesParam(google.protobuf.message.Message):
 
 global___UpdateDataSamplesParam = UpdateDataSamplesParam
 
+@typing_extensions.final
 class UpdateDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -136,6 +142,7 @@ class UpdateDataSamplesResponse(google.protobuf.message.Message):
 
 global___UpdateDataSamplesResponse = UpdateDataSamplesResponse
 
+@typing_extensions.final
 class DataSampleQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -151,6 +158,7 @@ class DataSampleQueryFilter(google.protobuf.message.Message):
 
 global___DataSampleQueryFilter = DataSampleQueryFilter
 
+@typing_extensions.final
 class QueryDataSamplesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -173,6 +181,7 @@ class QueryDataSamplesParam(google.protobuf.message.Message):
 
 global___QueryDataSamplesParam = QueryDataSamplesParam
 
+@typing_extensions.final
 class QueryDataSamplesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -191,6 +200,7 @@ class QueryDataSamplesResponse(google.protobuf.message.Message):
 
 global___QueryDataSamplesResponse = QueryDataSamplesResponse
 
+@typing_extensions.final
 class GetDataSampleParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

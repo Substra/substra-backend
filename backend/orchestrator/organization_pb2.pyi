@@ -17,6 +17,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class Organization(google.protobuf.message.Message):
     """Organization is a member of the network"""
 
@@ -41,6 +42,7 @@ class Organization(google.protobuf.message.Message):
 
 global___Organization = Organization
 
+@typing_extensions.final
 class GetAllOrganizationsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -56,6 +58,7 @@ class GetAllOrganizationsResponse(google.protobuf.message.Message):
 
 global___GetAllOrganizationsResponse = GetAllOrganizationsResponse
 
+@typing_extensions.final
 class RegisterOrganizationParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -70,6 +73,7 @@ class RegisterOrganizationParam(google.protobuf.message.Message):
 
 global___RegisterOrganizationParam = RegisterOrganizationParam
 
+@typing_extensions.final
 class GetAllOrganizationsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

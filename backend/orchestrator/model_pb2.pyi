@@ -18,6 +18,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class Model(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -51,6 +52,7 @@ class Model(google.protobuf.message.Message):
 
 global___Model = Model
 
+@typing_extensions.final
 class NewModel(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -76,6 +78,7 @@ class NewModel(google.protobuf.message.Message):
 
 global___NewModel = NewModel
 
+@typing_extensions.final
 class RegisterModelsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -91,6 +94,7 @@ class RegisterModelsParam(google.protobuf.message.Message):
 
 global___RegisterModelsParam = RegisterModelsParam
 
+@typing_extensions.final
 class RegisterModelsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -106,6 +110,7 @@ class RegisterModelsResponse(google.protobuf.message.Message):
 
 global___RegisterModelsResponse = RegisterModelsResponse
 
+@typing_extensions.final
 class GetComputeTaskModelsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -120,6 +125,7 @@ class GetComputeTaskModelsParam(google.protobuf.message.Message):
 
 global___GetComputeTaskModelsParam = GetComputeTaskModelsParam
 
+@typing_extensions.final
 class GetComputeTaskModelsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -135,6 +141,7 @@ class GetComputeTaskModelsResponse(google.protobuf.message.Message):
 
 global___GetComputeTaskModelsResponse = GetComputeTaskModelsResponse
 
+@typing_extensions.final
 class GetModelParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

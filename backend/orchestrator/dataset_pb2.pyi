@@ -17,6 +17,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class Dataset(google.protobuf.message.Message):
     """Dataset references several related samples"""
 
@@ -39,6 +40,7 @@ class Dataset(google.protobuf.message.Message):
 
 global___Dataset = Dataset
 
+@typing_extensions.final
 class GetDatasetParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

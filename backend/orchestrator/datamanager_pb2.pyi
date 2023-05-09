@@ -18,9 +18,11 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class DataManager(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -81,9 +83,11 @@ class DataManager(google.protobuf.message.Message):
 
 global___DataManager = DataManager
 
+@typing_extensions.final
 class NewDataManager(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -137,6 +141,7 @@ class NewDataManager(google.protobuf.message.Message):
 
 global___NewDataManager = NewDataManager
 
+@typing_extensions.final
 class GetDataManagerParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -151,6 +156,7 @@ class GetDataManagerParam(google.protobuf.message.Message):
 
 global___GetDataManagerParam = GetDataManagerParam
 
+@typing_extensions.final
 class QueryDataManagersParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -168,6 +174,7 @@ class QueryDataManagersParam(google.protobuf.message.Message):
 
 global___QueryDataManagersParam = QueryDataManagersParam
 
+@typing_extensions.final
 class QueryDataManagersResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -186,6 +193,7 @@ class QueryDataManagersResponse(google.protobuf.message.Message):
 
 global___QueryDataManagersResponse = QueryDataManagersResponse
 
+@typing_extensions.final
 class UpdateDataManagerParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -203,6 +211,7 @@ class UpdateDataManagerParam(google.protobuf.message.Message):
 
 global___UpdateDataManagerParam = UpdateDataManagerParam
 
+@typing_extensions.final
 class UpdateDataManagerResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

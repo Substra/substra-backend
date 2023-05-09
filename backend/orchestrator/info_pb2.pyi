@@ -14,6 +14,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class QueryVersionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -23,6 +24,7 @@ class QueryVersionParam(google.protobuf.message.Message):
 
 global___QueryVersionParam = QueryVersionParam
 
+@typing_extensions.final
 class QueryVersionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

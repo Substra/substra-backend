@@ -17,6 +17,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class NewPerformance(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -40,16 +41,15 @@ class NewPerformance(google.protobuf.message.Message):
 
 global___NewPerformance = NewPerformance
 
+@typing_extensions.final
 class Performance(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
-    METRIC_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
     PERFORMANCE_VALUE_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     compute_task_key: builtins.str
-    metric_key: builtins.str
     compute_task_output_identifier: builtins.str
     performance_value: builtins.float
     @property
@@ -58,36 +58,34 @@ class Performance(google.protobuf.message.Message):
         self,
         *,
         compute_task_key: builtins.str = ...,
-        metric_key: builtins.str = ...,
         compute_task_output_identifier: builtins.str = ...,
         performance_value: builtins.float = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "creation_date", b"creation_date", "metric_key", b"metric_key", "performance_value", b"performance_value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "creation_date", b"creation_date", "performance_value", b"performance_value"]) -> None: ...
 
 global___Performance = Performance
 
+@typing_extensions.final
 class PerformanceQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
-    METRIC_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
     compute_task_key: builtins.str
-    metric_key: builtins.str
     compute_task_output_identifier: builtins.str
     def __init__(
         self,
         *,
         compute_task_key: builtins.str = ...,
-        metric_key: builtins.str = ...,
         compute_task_output_identifier: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "metric_key", b"metric_key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier"]) -> None: ...
 
 global___PerformanceQueryFilter = PerformanceQueryFilter
 
+@typing_extensions.final
 class QueryPerformancesParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -110,6 +108,7 @@ class QueryPerformancesParam(google.protobuf.message.Message):
 
 global___QueryPerformancesParam = QueryPerformancesParam
 
+@typing_extensions.final
 class QueryPerformancesResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

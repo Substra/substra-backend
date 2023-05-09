@@ -27,7 +27,7 @@ class _ComputeTaskStatus:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _ComputeTaskStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputeTaskStatus.ValueType], builtins.type):  # noqa: F821
+class _ComputeTaskStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputeTaskStatus.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     STATUS_UNKNOWN: _ComputeTaskStatus.ValueType  # 0
     STATUS_WAITING: _ComputeTaskStatus.ValueType  # 1
@@ -52,7 +52,7 @@ class _ComputeTaskAction:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _ComputeTaskActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputeTaskAction.ValueType], builtins.type):  # noqa: F821
+class _ComputeTaskActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputeTaskAction.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     TASK_ACTION_UNKNOWN: _ComputeTaskAction.ValueType  # 0
     TASK_ACTION_DOING: _ComputeTaskAction.ValueType  # 1
@@ -69,6 +69,7 @@ TASK_ACTION_FAILED: ComputeTaskAction.ValueType  # 3
 TASK_ACTION_DONE: ComputeTaskAction.ValueType  # 4
 global___ComputeTaskAction = ComputeTaskAction
 
+@typing_extensions.final
 class ParentTaskOutputRef(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -86,6 +87,7 @@ class ParentTaskOutputRef(google.protobuf.message.Message):
 
 global___ParentTaskOutputRef = ParentTaskOutputRef
 
+@typing_extensions.final
 class ComputeTaskInput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -109,6 +111,7 @@ class ComputeTaskInput(google.protobuf.message.Message):
 
 global___ComputeTaskInput = ComputeTaskInput
 
+@typing_extensions.final
 class ComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -128,6 +131,7 @@ class ComputeTaskOutput(google.protobuf.message.Message):
 
 global___ComputeTaskOutput = ComputeTaskOutput
 
+@typing_extensions.final
 class NewComputeTaskOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -147,6 +151,7 @@ class NewComputeTaskOutput(google.protobuf.message.Message):
 
 global___NewComputeTaskOutput = NewComputeTaskOutput
 
+@typing_extensions.final
 class ComputeTask(google.protobuf.message.Message):
     """ComputeTask is a computation step in a ComputePlan.
     It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
@@ -154,6 +159,7 @@ class ComputeTask(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -169,6 +175,7 @@ class ComputeTask(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class OutputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -237,9 +244,11 @@ class ComputeTask(google.protobuf.message.Message):
 
 global___ComputeTask = ComputeTask
 
+@typing_extensions.final
 class NewComputeTask(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -255,6 +264,7 @@ class NewComputeTask(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class OutputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -304,6 +314,7 @@ class NewComputeTask(google.protobuf.message.Message):
 
 global___NewComputeTask = NewComputeTask
 
+@typing_extensions.final
 class RegisterTasksParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -319,6 +330,7 @@ class RegisterTasksParam(google.protobuf.message.Message):
 
 global___RegisterTasksParam = RegisterTasksParam
 
+@typing_extensions.final
 class RegisterTasksResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -334,6 +346,7 @@ class RegisterTasksResponse(google.protobuf.message.Message):
 
 global___RegisterTasksResponse = RegisterTasksResponse
 
+@typing_extensions.final
 class TaskQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -357,6 +370,7 @@ class TaskQueryFilter(google.protobuf.message.Message):
 
 global___TaskQueryFilter = TaskQueryFilter
 
+@typing_extensions.final
 class QueryTasksParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -379,6 +393,7 @@ class QueryTasksParam(google.protobuf.message.Message):
 
 global___QueryTasksParam = QueryTasksParam
 
+@typing_extensions.final
 class QueryTasksResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -397,6 +412,7 @@ class QueryTasksResponse(google.protobuf.message.Message):
 
 global___QueryTasksResponse = QueryTasksResponse
 
+@typing_extensions.final
 class GetTaskParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -411,6 +427,7 @@ class GetTaskParam(google.protobuf.message.Message):
 
 global___GetTaskParam = GetTaskParam
 
+@typing_extensions.final
 class ComputeTaskOutputAsset(google.protobuf.message.Message):
     """ComputeTaskOutputAsset links an asset to a task output.
     It is not exposed through gRPC methods, but will be sent as event.
@@ -438,6 +455,7 @@ class ComputeTaskOutputAsset(google.protobuf.message.Message):
 
 global___ComputeTaskOutputAsset = ComputeTaskOutputAsset
 
+@typing_extensions.final
 class ApplyTaskActionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -458,6 +476,7 @@ class ApplyTaskActionParam(google.protobuf.message.Message):
 
 global___ApplyTaskActionParam = ApplyTaskActionParam
 
+@typing_extensions.final
 class ApplyTaskActionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -467,6 +486,7 @@ class ApplyTaskActionResponse(google.protobuf.message.Message):
 
 global___ApplyTaskActionResponse = ApplyTaskActionResponse
 
+@typing_extensions.final
 class ComputeTaskInputAsset(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -495,6 +515,7 @@ class ComputeTaskInputAsset(google.protobuf.message.Message):
 
 global___ComputeTaskInputAsset = ComputeTaskInputAsset
 
+@typing_extensions.final
 class GetTaskInputAssetsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -509,6 +530,7 @@ class GetTaskInputAssetsParam(google.protobuf.message.Message):
 
 global___GetTaskInputAssetsParam = GetTaskInputAssetsParam
 
+@typing_extensions.final
 class GetTaskInputAssetsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -524,6 +546,7 @@ class GetTaskInputAssetsResponse(google.protobuf.message.Message):
 
 global___GetTaskInputAssetsResponse = GetTaskInputAssetsResponse
 
+@typing_extensions.final
 class DisableOutputParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -541,6 +564,7 @@ class DisableOutputParam(google.protobuf.message.Message):
 
 global___DisableOutputParam = DisableOutputParam
 
+@typing_extensions.final
 class DisableOutputResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

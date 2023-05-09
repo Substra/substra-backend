@@ -83,10 +83,6 @@ class CPPerformanceViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                 },
                 "identifier": InputIdentifiers.PERFORMANCE,
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                },
                 "perf": self.performances[0].value,
             },
             {
@@ -98,10 +94,6 @@ class CPPerformanceViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                 },
                 "identifier": InputIdentifiers.PERFORMANCE,
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                },
                 "perf": self.performances[1].value,
             },
             {
@@ -113,10 +105,6 @@ class CPPerformanceViewTests(APITestCase):
                     "worker": "MyOrg1MSP",
                 },
                 "identifier": InputIdentifiers.PERFORMANCE,
-                "metric": {
-                    "key": str(self.metric.key),
-                    "name": self.metric.name,
-                },
                 "perf": self.performances[2].value,
             },
         ]
@@ -218,7 +206,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -234,7 +221,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -250,7 +236,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -266,7 +251,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -282,7 +266,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -298,7 +281,6 @@ class PerformanceViewTests(APITestCase):
                 "compute_plan_end_date": None,
                 "compute_plan_metadata": {},
                 "compute_task_output__task__metadata": {},
-                "function_name": "metric",
                 "worker": "MyOrg1MSP",
                 "task_rank": 1,
                 "task_round": None,
@@ -376,5 +358,5 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     with utils.CaptureQueriesContext(connection) as query:
         print(authenticated_client.get(url))
     query_task_with_perf = len(query.captured_queries)
-    assert query_task_with_perf < 12
-    assert query_task_with_perf - query_tasks_empty < 4
+    assert query_task_with_perf < 11
+    assert query_task_with_perf - query_tasks_empty < 3
