@@ -1,0 +1,25 @@
+name: Docker build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  release:
+    types: [published, edited]
+  pull_request:
+    branches: [main]
+
+concurrency: 
+  group: "${{ github.workflow_ref }} - ${{ github.ref }} - ${{ github.event_name }}"
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
+    with:
+      image: substra-backend
+  
+  metrics-exporter:
+    uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
+    with:
+      image: substra-backend-metrics-exporter
+      image-folder: metrics-exporter
