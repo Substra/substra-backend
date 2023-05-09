@@ -23,21 +23,18 @@ class NewPerformance(google.protobuf.message.Message):
 
     COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_OUTPUT_IDENTIFIER_FIELD_NUMBER: builtins.int
-    METRIC_KEY_FIELD_NUMBER: builtins.int
     PERFORMANCE_VALUE_FIELD_NUMBER: builtins.int
     compute_task_key: builtins.str
     compute_task_output_identifier: builtins.str
-    metric_key: builtins.str
     performance_value: builtins.float
     def __init__(
         self,
         *,
         compute_task_key: builtins.str = ...,
         compute_task_output_identifier: builtins.str = ...,
-        metric_key: builtins.str = ...,
         performance_value: builtins.float = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "metric_key", b"metric_key", "performance_value", b"performance_value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "compute_task_output_identifier", b"compute_task_output_identifier", "performance_value", b"performance_value"]) -> None: ...
 
 global___NewPerformance = NewPerformance
 
