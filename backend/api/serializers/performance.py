@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.models import ComputeTask
+from api.models import ComputeTaskOutput
 from api.models import Function
 from api.models import Performance
 from api.serializers.utils import SafeSerializerMixin
@@ -8,17 +9,18 @@ from api.serializers.utils import SafeSerializerMixin
 
 class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # overwrite primary key field for the SafeSerializerMixin check
-    # the unique constraint for compute_task_key + metric_key in the model
+    # the unique constraint for compute_task_output + metric in the model
     # ensures no duplicates are created
     primary_key_name = "id"
 
-    compute_task_key = serializers.PrimaryKeyRelatedField(
-        queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
-    )
+    # necessary to get the ComputeTaskOutput to create the Performance
+    compute_task_key = serializers.UUIDField(format="hex_verbose", source="compute_task_output.task_id")
+    compute_task_output_identifier = serializers.CharField(source="compute_task_output.identifier")
 
     metric_key = serializers.PrimaryKeyRelatedField(
         queryset=Function.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
     )
+
     performance_value = serializers.FloatField(source="value")
 
     class Meta:
@@ -28,27 +30,32 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "compute_task_key",
             "creation_date",
             "metric_key",
+            "compute_task_output_identifier",
             "performance_value",
         ]
 
+    def create(self, validated_data):
+        task_output = ComputeTaskOutput.objects.get(
+            task__key=validated_data["compute_task_output"]["task_id"],
+            identifier=validated_data["compute_task_output"]["identifier"],
+            channel=validated_data["channel"],
+        )
+
+        performance = Performance(
+            compute_task_output=task_output,
+            metric=validated_data["metric"],
+            channel=validated_data["channel"],
+            creation_date=validated_data["creation_date"],
+            value=validated_data["value"],
+        )
+        performance.save()
+        return performance
+
 
 class _PerformanceMetricSerializer(serializers.ModelSerializer):
-    output_identifier = serializers.SerializerMethodField()
-
     class Meta:
         model = Function
-        fields = ["key", "name", "output_identifier"]
-
-    def get_output_identifier(self, obj):
-        outputs = obj.outputs.all()
-        outputs_count = len(outputs)
-        if outputs_count != 1:
-            raise Exception(
-                f"Couldn't associate an output identifier to performance for function '{obj.key}',"
-                f" error : found {outputs_count} identifier instead of 1"
-            )
-
-        return outputs[0].identifier
+        fields = ["key", "name"]
 
 
 class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
@@ -70,8 +77,9 @@ class _PerformanceComputeTaskSerializer(serializers.ModelSerializer):
 
 
 class CPPerformanceSerializer(serializers.ModelSerializer):
-    compute_task = _PerformanceComputeTaskSerializer(read_only=True)
+    compute_task = _PerformanceComputeTaskSerializer(read_only=True, source="compute_task_output.task")
     metric = _PerformanceMetricSerializer(read_only=True)
+    identifier = serializers.CharField(source="compute_task_output.identifier")
     perf = serializers.FloatField(source="value")
 
     class Meta:
@@ -79,6 +87,7 @@ class CPPerformanceSerializer(serializers.ModelSerializer):
         fields = [
             "compute_task",
             "metric",
+            "identifier",
             "perf",
         ]
 
@@ -95,6 +104,7 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
     worker = serializers.CharField()
     task_rank = serializers.IntegerField()
     task_round = serializers.IntegerField()
+    identifier = serializers.CharField()
     performance = serializers.FloatField()
 
     class Meta:
@@ -111,5 +121,6 @@ class ExportPerformanceSerializer(serializers.ModelSerializer):
             "worker",
             "task_rank",
             "task_round",
+            "identifier",
             "performance",
         ]

@@ -3,7 +3,6 @@ import csv
 import structlog
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import F
-from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Value
 from django.http import StreamingHttpResponse
@@ -17,7 +16,6 @@ from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
 from api.models import ComputePlan as ComputePlan
-from api.models import FunctionOutput
 from api.models import Performance as Performance
 from api.serializers import CPPerformanceSerializer as CPPerformanceSerializer
 from api.serializers import ExportPerformanceSerializer as ExportPerformanceSerializer
@@ -28,7 +26,6 @@ from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import UUIDInFilter
 from api.views.utils import get_channel_name
 from libs.pagination import LargePageNumberPagination
-from orchestrator import common_pb2
 
 logger = structlog.get_logger(__name__)
 
@@ -36,8 +33,12 @@ logger = structlog.get_logger(__name__)
 class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = CPPerformanceSerializer
     filter_backends = [OrderingFilter]
-    ordering_fields = ["compute_task__rank", "compute_task__worker", "compute_task__metadata__round_idx"]
-    ordering = ["compute_task__rank", "compute_task__worker"]
+    ordering_fields = [
+        "compute_task_output__task__rank",
+        "compute_task_output__task__worker",
+        "compute_task_output__task__metadata__round_idx",
+    ]
+    ordering = ["compute_task_output__task__rank", "compute_task_output__task__worker"]
     pagination_class = LargePageNumberPagination
 
     def _get_cp_ranks_and_rounds(self, compute_plan_pk):
@@ -65,20 +66,14 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         return (
             Performance.objects.filter(
-                channel=get_channel_name(self.request), compute_task__compute_plan_id=self.kwargs.get("compute_plan_pk")
+                channel=get_channel_name(self.request),
+                compute_task_output__task__compute_plan_id=self.kwargs.get("compute_plan_pk"),
             )
             .select_related(
-                "compute_task",
+                "compute_task_output",
                 "metric",
             )
-            .prefetch_related(
-                Prefetch(
-                    "metric__outputs",
-                    queryset=FunctionOutput.objects.filter(
-                        kind=common_pb2.AssetKind.Name(common_pb2.ASSET_PERFORMANCE)
-                    ).all(),
-                ),
-            )
+            .prefetch_related("compute_task_output__task")
             .distinct()
         )
 
@@ -94,17 +89,17 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class PerformanceFilter(FilterSet):
-    creation_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__creation_date")
-    start_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__start_date")
-    end_date = DateTimeFromToRangeFilter(field_name="compute_task__compute_plan__end_date")
+    creation_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__creation_date")
+    start_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__start_date")
+    end_date = DateTimeFromToRangeFilter(field_name="compute_task_output__task__compute_plan__end_date")
     status = ChoiceInFilter(
-        field_name="compute_task__compute_plan__status",
+        field_name="compute_task_output__task__compute_plan__status",
         choices=ComputePlan.Status.choices,
     )
-    key = UUIDInFilter(field_name="compute_task__compute_plan__key")
-    owner = CharInFilter(field_name="compute_task__compute_plan__owner")
+    key = UUIDInFilter(field_name="compute_task_output__task__compute_plan__key")
+    owner = CharInFilter(field_name="compute_task_output__task__compute_plan__owner")
     metric_key = UUIDInFilter(field_name="metric__key")
-    metric_output_identifier = CharInFilter(field_name="metric__outputs__identifier")
+    identifier = CharInFilter(field_name="compute_task_output__identifier")
 
 
 class PerformanceMatchFilter(MatchFilter):
@@ -150,23 +145,24 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
         metadata = {}
         if self.request.query_params.get("metadata_columns"):
             for md in self.request.query_params.get("metadata_columns").split(","):
-                metadata[md] = F("compute_task__compute_plan__metadata__" + md)
+                metadata[md] = F("compute_task_output__task__compute_plan__metadata__" + md)
 
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task", "metric", "compute_task__compute_plan", "metric__outputs")
+            .select_related("compute_task_output__task", "metric", "compute_task_output__task__compute_plan")
             .annotate(
-                compute_plan_key=F("compute_task__compute_plan__key"),
-                compute_plan_name=F("compute_task__compute_plan__name"),
-                compute_plan_tag=F("compute_task__compute_plan__tag"),
-                compute_plan_status=F("compute_task__compute_plan__status"),
-                compute_plan_start_date=F("compute_task__compute_plan__start_date"),
-                compute_plan_end_date=F("compute_task__compute_plan__end_date"),
-                compute_plan_metadata=F("compute_task__compute_plan__metadata"),
-                worker=F("compute_task__worker"),
-                task_rank=F("compute_task__rank"),
-                task_round=F("compute_task__metadata__round_idx"),
+                compute_plan_key=F("compute_task_output__task__compute_plan__key"),
+                compute_plan_name=F("compute_task_output__task__compute_plan__name"),
+                compute_plan_tag=F("compute_task_output__task__compute_plan__tag"),
+                compute_plan_status=F("compute_task_output__task__compute_plan__status"),
+                compute_plan_start_date=F("compute_task_output__task__compute_plan__start_date"),
+                compute_plan_end_date=F("compute_task_output__task__compute_plan__end_date"),
+                compute_plan_metadata=F("compute_task_output__task__compute_plan__metadata"),
+                worker=F("compute_task_output__task__worker"),
+                task_rank=F("compute_task_output__task__rank"),
+                task_round=F("compute_task_output__task__metadata__round_idx"),
                 function_name=F("metric__name"),
+                identifier=F("compute_task_output__identifier"),
                 performance=F("value"),
                 **metadata,
             )
@@ -180,7 +176,6 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     def generate_rows(self):
         headers = _build_csv_headers(self.request)
         queryset = self.filter_queryset(self.get_queryset())
-
         yield headers
         if queryset.exists():
             for perf in queryset.iterator():

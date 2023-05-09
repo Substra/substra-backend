@@ -85,8 +85,12 @@ class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMix
                 model = Model.objects.get(key=output_asset.asset_key)
                 data.append(ModelSerializer(context=self.context, instance=model).data)
             elif output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
-                task_key, metric_key = output_asset.asset_key.split("|")
-                perf = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+                compute_task_key, metric_key, identifier = output_asset.asset_key.split("|")
+                task_output = ComputeTaskOutput.objects.get(
+                    task=compute_task_key,
+                    identifier=identifier,
+                )
+                perf = Performance.objects.get(compute_task_output=task_output, metric__key=metric_key)
                 data.append(perf.value)
 
         # FIXME: we should better always return a list,
@@ -148,8 +152,12 @@ class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializ
             model = Model.objects.get(key=task_output_asset.asset_key)
             return ModelSerializer(context=self.context, instance=model).data
         elif task_output_asset.asset_kind == FunctionOutput.Kind.ASSET_PERFORMANCE:
-            task_key, metric_key = task_output_asset.asset_key.split("|")
-            performance = Performance.objects.get(compute_task__key=task_key, metric__key=metric_key)
+            compute_task_key, metric_key, identifier = task_output_asset.asset_key.split("|")
+            task_output = ComputeTaskOutput.objects.get(
+                task=compute_task_key,
+                identifier=identifier,
+            )
+            performance = Performance.objects.get(compute_task_output=task_output, metric__key=metric_key)
             return PerformanceSerializer(context=self.context, instance=performance).data
 
 

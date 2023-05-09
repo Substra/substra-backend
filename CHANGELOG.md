@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Performance is now unique regarding a ComputeTaskOutput and a Metric ([#634](https://github.com/Substra/substra-backend/pull/634))
+
 ### Fixed
 
 - Raise a serializable Exception so that CeleryRetryError won't crash ([#641](https://github.com/Substra/substra-backend/pull/641))

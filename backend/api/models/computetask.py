@@ -48,7 +48,7 @@ class ComputeTaskInputAsset(models.Model):
 class ComputeTaskOutputAsset(models.Model):
     task_output = models.ForeignKey("ComputeTaskOutput", on_delete=models.CASCADE, related_name="assets")
     asset_kind = models.CharField(max_length=64, choices=FunctionOutput.Kind.choices)
-    asset_key = models.CharField(max_length=73)  # performance have composite key: key1|key2
+    asset_key = models.CharField(max_length=150)  # performance have composite key: key1|key2|identifier
     channel = models.CharField(max_length=100)
 
 

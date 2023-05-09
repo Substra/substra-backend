@@ -21,6 +21,7 @@ from api.models import ComputeTaskOutput
 from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
+from api.models import Function
 from api.models import Model
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
@@ -89,9 +90,6 @@ def _on_update_function_event(event: dict) -> None:
 
 def _update_function(key: str, data: dict) -> None:
     """Process update function event to update local database."""
-
-    from api.models.function import Function
-
     function = Function.objects.get(key=key)
     function.name = data["name"]
     function.save()
