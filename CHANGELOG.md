@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Catch all exception in `get_pod_logs` and always return a string containing either logs, or the reason we couldn't get logs ([#637](https://github.com/Substra/substra-backend/pull/637))
+- `redis` dependency for `metric-exporter` ([#640](https://github.com/Substra/substra-backend/pull/640))
+- Skaffold `monitoring` profile ([#640](https://github.com/Substra/substra-backend/pull/640))
 
 ### Changed
 
