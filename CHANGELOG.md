@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Metric from Performance ([#358](https://github.com/Substra/substra/pull/358))
+- Metric from Performance ([#650](https://github.com/Substra/substra-backend/pull/650))
 
 ## [0.36.1](https://github.com/Substra/substra-backend/releases/tag/0.36.1) 2023-04-21
 
