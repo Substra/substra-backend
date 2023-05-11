@@ -22,7 +22,7 @@ class _AssetKind:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _AssetKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_AssetKind.ValueType], builtins.type):  # noqa: F821
+class _AssetKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_AssetKind.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     ASSET_UNKNOWN: _AssetKind.ValueType  # 0
     ASSET_ORGANIZATION: _AssetKind.ValueType  # 1
@@ -55,7 +55,7 @@ class _SortOrder:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _SortOrderEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SortOrder.ValueType], builtins.type):  # noqa: F821
+class _SortOrderEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SortOrder.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     UNSPECIFIED: _SortOrder.ValueType  # 0
     ASCENDING: _SortOrder.ValueType  # 1
@@ -68,6 +68,7 @@ ASCENDING: SortOrder.ValueType  # 1
 DESCENDING: SortOrder.ValueType  # 2
 global___SortOrder = SortOrder
 
+@typing_extensions.final
 class Addressable(google.protobuf.message.Message):
     """Addressable references an asset on the network.
     It contains both its address (backend URL) and checksum.
@@ -89,6 +90,7 @@ class Addressable(google.protobuf.message.Message):
 
 global___Addressable = Addressable
 
+@typing_extensions.final
 class Permissions(google.protobuf.message.Message):
     """Permissions for an asset, each key is an action"""
 
@@ -111,6 +113,7 @@ class Permissions(google.protobuf.message.Message):
 
 global___Permissions = Permissions
 
+@typing_extensions.final
 class Permission(google.protobuf.message.Message):
     """Permission represents the permission for a single action"""
 
@@ -131,6 +134,7 @@ class Permission(google.protobuf.message.Message):
 
 global___Permission = Permission
 
+@typing_extensions.final
 class NewPermissions(google.protobuf.message.Message):
     """NewPermissions is used to create a new permission set.
     This will be transformed in a full Permissions structure on registration.

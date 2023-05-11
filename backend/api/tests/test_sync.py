@@ -33,7 +33,6 @@ def test_on_create_performance_event():
         "performance": {
             "compute_task_key": str(test_task.key),
             "compute_task_output_identifier": "performance",
-            "metric_key": str(metric.key),
             "creation_date": timezone.now(),
             "performance_value": 0.666,
         },
@@ -48,6 +47,5 @@ def test_on_create_performance_event():
     )
     perf = Performance.objects.get(
         compute_task_output=task_output,
-        metric__key=perf_event["metric_key"],
     )
     assert perf.value == perf_event["performance_value"]

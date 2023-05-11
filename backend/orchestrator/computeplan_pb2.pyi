@@ -23,7 +23,7 @@ class _ComputePlanAction:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _ComputePlanActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputePlanAction.ValueType], builtins.type):  # noqa: F821
+class _ComputePlanActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputePlanAction.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     PLAN_ACTION_UNKNOWN: _ComputePlanAction.ValueType  # 0
     PLAN_ACTION_CANCELED: _ComputePlanAction.ValueType  # 1
@@ -34,9 +34,11 @@ PLAN_ACTION_UNKNOWN: ComputePlanAction.ValueType  # 0
 PLAN_ACTION_CANCELED: ComputePlanAction.ValueType  # 1
 global___ComputePlanAction = ComputePlanAction
 
+@typing_extensions.final
 class ComputePlan(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -89,9 +91,11 @@ class ComputePlan(google.protobuf.message.Message):
 
 global___ComputePlan = ComputePlan
 
+@typing_extensions.final
 class NewComputePlan(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -128,6 +132,7 @@ class NewComputePlan(google.protobuf.message.Message):
 
 global___NewComputePlan = NewComputePlan
 
+@typing_extensions.final
 class GetComputePlanParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -142,6 +147,7 @@ class GetComputePlanParam(google.protobuf.message.Message):
 
 global___GetComputePlanParam = GetComputePlanParam
 
+@typing_extensions.final
 class ApplyPlanActionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -159,6 +165,7 @@ class ApplyPlanActionParam(google.protobuf.message.Message):
 
 global___ApplyPlanActionParam = ApplyPlanActionParam
 
+@typing_extensions.final
 class ApplyPlanActionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -168,6 +175,7 @@ class ApplyPlanActionResponse(google.protobuf.message.Message):
 
 global___ApplyPlanActionResponse = ApplyPlanActionResponse
 
+@typing_extensions.final
 class PlanQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -182,6 +190,7 @@ class PlanQueryFilter(google.protobuf.message.Message):
 
 global___PlanQueryFilter = PlanQueryFilter
 
+@typing_extensions.final
 class QueryPlansParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -204,6 +213,7 @@ class QueryPlansParam(google.protobuf.message.Message):
 
 global___QueryPlansParam = QueryPlansParam
 
+@typing_extensions.final
 class QueryPlansResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -222,6 +232,7 @@ class QueryPlansResponse(google.protobuf.message.Message):
 
 global___QueryPlansResponse = QueryPlansResponse
 
+@typing_extensions.final
 class UpdateComputePlanParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -239,6 +250,7 @@ class UpdateComputePlanParam(google.protobuf.message.Message):
 
 global___UpdateComputePlanParam = UpdateComputePlanParam
 
+@typing_extensions.final
 class UpdateComputePlanResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -248,6 +260,7 @@ class UpdateComputePlanResponse(google.protobuf.message.Message):
 
 global___UpdateComputePlanResponse = UpdateComputePlanResponse
 
+@typing_extensions.final
 class IsPlanRunningParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -262,6 +275,7 @@ class IsPlanRunningParam(google.protobuf.message.Message):
 
 global___IsPlanRunningParam = IsPlanRunningParam
 
+@typing_extensions.final
 class IsPlanRunningResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

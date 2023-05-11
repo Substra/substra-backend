@@ -71,7 +71,6 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
             )
             .select_related(
                 "compute_task_output",
-                "metric",
             )
             .prefetch_related("compute_task_output__task")
             .distinct()
@@ -98,7 +97,6 @@ class PerformanceFilter(FilterSet):
     )
     key = UUIDInFilter(field_name="compute_task_output__task__compute_plan__key")
     owner = CharInFilter(field_name="compute_task_output__task__compute_plan__owner")
-    metric_key = UUIDInFilter(field_name="metric__key")
     identifier = CharInFilter(field_name="compute_task_output__identifier")
 
 
@@ -118,7 +116,7 @@ def _build_csv_headers(request) -> list:
     if request.query_params.get("metadata_columns"):
         for md in request.query_params.get("metadata_columns").split(","):
             headers.append(md)
-    headers.extend(["function_name", "worker", "task_rank", "task_round", "performance"])
+    headers.extend(["identifier", "worker", "task_rank", "task_round", "performance"])
     return headers
 
 
@@ -149,7 +147,7 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
 
         return (
             Performance.objects.filter(channel=get_channel_name(self.request))
-            .select_related("compute_task_output__task", "metric", "compute_task_output__task__compute_plan")
+            .select_related("compute_task_output__task", "compute_task_output__task__compute_plan")
             .annotate(
                 compute_plan_key=F("compute_task_output__task__compute_plan__key"),
                 compute_plan_name=F("compute_task_output__task__compute_plan__name"),
@@ -161,7 +159,6 @@ class PerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
                 worker=F("compute_task_output__task__worker"),
                 task_rank=F("compute_task_output__task__rank"),
                 task_round=F("compute_task_output__task__metadata__round_idx"),
-                function_name=F("metric__name"),
                 identifier=F("compute_task_output__identifier"),
                 performance=F("value"),
                 **metadata,

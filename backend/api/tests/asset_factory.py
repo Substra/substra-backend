@@ -44,7 +44,7 @@ Basic example:
 ...     outputs=factory.build_computetask_outputs(metric),
 ...     status=ComputeTask.Status.STATUS_DONE,
 ... )
->>> performance = create_performance(test_task.outputs[0], metric)
+>>> performance = create_performance(test_task.outputs[0])
 
 Customized example:
 
@@ -446,7 +446,6 @@ def create_performance(
         value=value,
         creation_date=timezone.now(),
         channel=channel,
-        metric=metric,
         compute_task_output=compute_task_output,
     )
     ComputeTaskOutputAsset.objects.create(

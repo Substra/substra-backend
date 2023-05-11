@@ -18,6 +18,7 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+@typing_extensions.final
 class FunctionInput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -38,6 +39,7 @@ class FunctionInput(google.protobuf.message.Message):
 
 global___FunctionInput = FunctionInput
 
+@typing_extensions.final
 class FunctionOutput(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -55,6 +57,7 @@ class FunctionOutput(google.protobuf.message.Message):
 
 global___FunctionOutput = FunctionOutput
 
+@typing_extensions.final
 class Function(google.protobuf.message.Message):
     """Function represents the code which will be used
     to produce or test a model.
@@ -62,6 +65,7 @@ class Function(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -77,6 +81,7 @@ class Function(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class InputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -94,6 +99,7 @@ class Function(google.protobuf.message.Message):
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class OutputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -157,6 +163,7 @@ class Function(google.protobuf.message.Message):
 
 global___Function = Function
 
+@typing_extensions.final
 class NewFunction(google.protobuf.message.Message):
     """NewFunction is used to register an Function.
     It will be processed into an Function.
@@ -164,6 +171,7 @@ class NewFunction(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -179,6 +187,7 @@ class NewFunction(google.protobuf.message.Message):
         ) -> None: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class InputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -196,6 +205,7 @@ class NewFunction(google.protobuf.message.Message):
         def HasField(self, field_name: typing_extensions.Literal["value", b"value"]) -> builtins.bool: ...
         def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "value", b"value"]) -> None: ...
 
+    @typing_extensions.final
     class OutputsEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -252,6 +262,7 @@ class NewFunction(google.protobuf.message.Message):
 
 global___NewFunction = NewFunction
 
+@typing_extensions.final
 class GetFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -266,6 +277,7 @@ class GetFunctionParam(google.protobuf.message.Message):
 
 global___GetFunctionParam = GetFunctionParam
 
+@typing_extensions.final
 class QueryFunctionsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -284,6 +296,7 @@ class QueryFunctionsResponse(google.protobuf.message.Message):
 
 global___QueryFunctionsResponse = QueryFunctionsResponse
 
+@typing_extensions.final
 class FunctionQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -298,6 +311,7 @@ class FunctionQueryFilter(google.protobuf.message.Message):
 
 global___FunctionQueryFilter = FunctionQueryFilter
 
+@typing_extensions.final
 class QueryFunctionsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -320,6 +334,7 @@ class QueryFunctionsParam(google.protobuf.message.Message):
 
 global___QueryFunctionsParam = QueryFunctionsParam
 
+@typing_extensions.final
 class UpdateFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -337,6 +352,7 @@ class UpdateFunctionParam(google.protobuf.message.Message):
 
 global___UpdateFunctionParam = UpdateFunctionParam
 
+@typing_extensions.final
 class UpdateFunctionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

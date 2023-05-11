@@ -22,7 +22,7 @@ class _ErrorType:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ErrorType.ValueType], builtins.type):  # noqa: F821
+class _ErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ErrorType.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     ERROR_TYPE_UNSPECIFIED: _ErrorType.ValueType  # 0
     ERROR_TYPE_BUILD: _ErrorType.ValueType  # 1
@@ -56,6 +56,7 @@ It is likely to be caused by a fault in the system. It would require the action 
 """
 global___ErrorType = ErrorType
 
+@typing_extensions.final
 class FailureReport(google.protobuf.message.Message):
     """FailureReport is used to store information related to a failed ComputeTask."""
 
@@ -92,6 +93,7 @@ class FailureReport(google.protobuf.message.Message):
 
 global___FailureReport = FailureReport
 
+@typing_extensions.final
 class NewFailureReport(google.protobuf.message.Message):
     """NewFailureReport is used to register a FailureReport.
     It will be processed into a FailureReport.
@@ -118,6 +120,7 @@ class NewFailureReport(google.protobuf.message.Message):
 
 global___NewFailureReport = NewFailureReport
 
+@typing_extensions.final
 class GetFailureReportParam(google.protobuf.message.Message):
     """GetFailureReportParam is used to fetch a Failure."""
 

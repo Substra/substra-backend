@@ -44,7 +44,6 @@ class OutputSaver:
             perf = _get_perf(perf_path)
             performance_obj = {
                 "compute_task_key": self._ctx.task.key,
-                "metric_key": self._ctx.function.key,
                 "performance_value": perf,
                 "compute_task_output_identifier": output.identifier,
             }
@@ -121,8 +120,7 @@ def _get_perf(perf_path: str) -> float:
     """Retrieves the performance from the performance file produced by the task
 
     Args:
-        dirs: The compute task directories that contains the task outputs.
-        metric_key: The key of the metric from which we want to retrieve the performance.
+        perf_path: Path to the performance to load
 
     Returns:
         The performance as a floating point value.

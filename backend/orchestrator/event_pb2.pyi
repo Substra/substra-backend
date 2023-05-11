@@ -33,7 +33,7 @@ class _EventKind:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
 
-class _EventKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_EventKind.ValueType], builtins.type):  # noqa: F821
+class _EventKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_EventKind.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     EVENT_UNKNOWN: _EventKind.ValueType  # 0
     EVENT_ASSET_CREATED: _EventKind.ValueType  # 1
@@ -48,6 +48,7 @@ EVENT_ASSET_UPDATED: EventKind.ValueType  # 2
 EVENT_ASSET_DISABLED: EventKind.ValueType  # 3
 global___EventKind = EventKind
 
+@typing_extensions.final
 class Event(google.protobuf.message.Message):
     """Event is an occurrence of an orchestration event.
     It is triggered during orchestration and allows a consumer to react to the orchestration process.
@@ -55,6 +56,7 @@ class Event(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -143,6 +145,7 @@ class Event(google.protobuf.message.Message):
 
 global___Event = Event
 
+@typing_extensions.final
 class QueryEventsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -168,9 +171,11 @@ class QueryEventsParam(google.protobuf.message.Message):
 
 global___QueryEventsParam = QueryEventsParam
 
+@typing_extensions.final
 class EventQueryFilter(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    @typing_extensions.final
     class MetadataEntry(google.protobuf.message.Message):
         DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -218,6 +223,7 @@ class EventQueryFilter(google.protobuf.message.Message):
 
 global___EventQueryFilter = EventQueryFilter
 
+@typing_extensions.final
 class QueryEventsResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -236,6 +242,7 @@ class QueryEventsResponse(google.protobuf.message.Message):
 
 global___QueryEventsResponse = QueryEventsResponse
 
+@typing_extensions.final
 class SubscribeToEventsParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
