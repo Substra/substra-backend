@@ -24,6 +24,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(migrate_performances),
         migrations.AlterUniqueTogether(
             name="performance",
             unique_together=set(),
@@ -32,5 +33,4 @@ class Migration(migrations.Migration):
             model_name="performance",
             name="metric",
         ),
-        migrations.RunPython(migrate_performances),
     ]
