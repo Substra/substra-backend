@@ -28,9 +28,9 @@ class Migration(migrations.Migration):
             name="performance",
             unique_together=set(),
         ),
-        migrations.RunPython(migrate_performances),
         migrations.RemoveField(
             model_name="performance",
             name="metric",
         ),
+        migrations.RunPython(migrate_performances),
     ]
