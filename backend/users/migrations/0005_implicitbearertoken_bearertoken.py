@@ -42,8 +42,8 @@ class Migration(migrations.Migration):
                 ("key", models.CharField(max_length=40, primary_key=True, serialize=False, verbose_name="Key")),
                 ("created", models.DateTimeField(auto_now_add=True, verbose_name="Created")),
                 ("note", models.TextField(null=True)),
-                ("expiry", models.DateTimeField(null=True)),
-                ("token_id", models.UUIDField(default=uuid.uuid4, editable=False)),
+                ("expires_at", models.DateTimeField(null=True)),
+                ("id", models.UUIDField(default=uuid.uuid4, editable=False)),
                 (
                     "user",
                     models.ForeignKey(

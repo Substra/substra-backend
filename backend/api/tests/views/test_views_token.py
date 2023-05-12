@@ -1,5 +1,3 @@
-import os
-import tempfile
 from datetime import timedelta
 
 import pytest
@@ -8,15 +6,6 @@ from django.utils import timezone
 from rest_framework import status
 
 from users.models.token import BearerToken
-
-MEDIA_ROOT = tempfile.mkdtemp()
-DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-FIXTURE_PATH = os.path.abspath(os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datasamples"))
-
-ORG_SETTINGS = {
-    "MEDIA_ROOT": MEDIA_ROOT,
-    "LEDGER_CHANNELS": {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-}
 
 
 @pytest.mark.django_db
@@ -28,7 +17,7 @@ def test_delete_token(authenticated_client):
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 1
 
-    url = f"/active-api-tokens/?id={token.token_id}"
+    url = f"/active-api-tokens/?id={token.id}"
     response = authenticated_client.delete(url)
     assert response.status_code == status.HTTP_200_OK
 
@@ -49,10 +38,10 @@ def test_multiple_token(authenticated_client, api_client):
     valid_auth_token_header = f"Token {token_2}"
     api_client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
 
-    response = api_client.get("/active-api-tokens/")  # none type error here ??
+    response = api_client.get("/active-api-tokens/")
     assert response.status_code == status.HTTP_200_OK
 
-    url = f"/active-api-tokens/?id={token_2.token_id}"
+    url = f"/active-api-tokens/?id={token_2.id}"
     response = api_client.delete(url)
     assert response.status_code == status.HTTP_200_OK
 
@@ -75,7 +64,7 @@ def test_expiring_token(authenticated_client, api_client):
     authenticated_client.create_user()
     user = authenticated_client.user
     # create a token that expired a day ago
-    token = BearerToken.objects.create(user=user, expiry=timezone.now() - timedelta(days=1))
+    token = BearerToken.objects.create(user=user, expires_at=timezone.now() - timedelta(days=1))
 
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 1
@@ -86,7 +75,7 @@ def test_expiring_token(authenticated_client, api_client):
     response = api_client.get("/active-api-tokens/")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    url = f"/active-api-tokens/?id={token.token_id}"
+    url = f"/active-api-tokens/?id={token.id}"
     response = api_client.delete(url)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -104,9 +93,22 @@ def test_delete_token_other_user(authenticated_client):
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 1
 
-    url = f"/active-api-tokens/?id={token.token_id}"
+    url = f"/active-api-tokens/?id={token.id}"
     response = authenticated_client.delete(url)
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    tokens_count = BearerToken.objects.count()
+    assert tokens_count == 1
+
+
+@pytest.mark.django_db
+def test_token_creation_post(authenticated_client):
+    authenticated_client.create_user()
+    extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+    payload = {"expires_at": "2023-07-14T11:55:36.509Z", "note": "gfyqgbs"}
+    url = "/api-token/"
+    response = authenticated_client.post(url, payload, **extra)
+    assert response.status_code == status.HTTP_200_OK
 
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 1

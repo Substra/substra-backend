@@ -1,10 +1,8 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
@@ -17,26 +15,8 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 from users.models.token import BearerToken
 from users.models.token import ImplicitBearerToken
-
-
-def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created_at": token.created, "expires_at": token.expiry}
-    if hasattr(token, "note") and hasattr(token, "token_id"):
-        d["note"] = token.note
-        d["token_id"] = token.token_id
-    if include_payload:
-        d["token"] = token.key
-    return d
-
-
-def _create_token_for_user(user, params) -> BearerToken:
-    if "expiry" not in params or "note" not in params:
-        raise ValidationError("expiry or note field are missing!")
-    return BearerToken.objects.create(
-        user=user,
-        expiry=None if params.get("expiry") == "never" else params.get("expiry"),
-        note=params.get("note"),
-    )
+from users.serializers.token import BearerTokenSerializer
+from users.serializers.token import ImplicitBearerTokenSerializer
 
 
 class ObtainBearerToken(DRFObtainAuthToken):
@@ -57,7 +37,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
             token = token.handle_expiration()
         except ObjectDoesNotExist:
             token = ImplicitBearerToken.objects.create(user=user)
-        return ApiResponse(_bearer_token_dict(token))
+        return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
 class AuthenticatedBearerToken(DRFObtainAuthToken):
@@ -67,9 +47,11 @@ class AuthenticatedBearerToken(DRFObtainAuthToken):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        token = _create_token_for_user(request.user, request.GET)
-        return ApiResponse(_bearer_token_dict(token))
+    def post(self, request, *args, **kwargs):
+        s = BearerTokenSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        token = BearerToken.objects.create(user=request.user, **s.validated_data)
+        return ApiResponse(BearerTokenSerializer(token, include_payload=True).data)
 
 
 class ActiveBearerTokens(APIView):
@@ -81,10 +63,11 @@ class ActiveBearerTokens(APIView):
 
     def get(self, request, *args, **kwargs):
         tokens = [
-            _bearer_token_dict(token, include_payload=False) for token in BearerToken.objects.filter(user=request.user)
+            BearerTokenSerializer(token).data
+            for token in BearerToken.objects.filter(user=request.user).order_by("-created")
         ]
         try:
-            implicit_token = _bearer_token_dict(ImplicitBearerToken.objects.get(user=request.user))
+            implicit_token = ImplicitBearerTokenSerializer(ImplicitBearerToken.objects.get(user=request.user)).data
 
         except ObjectDoesNotExist:
             implicit_token = None
@@ -97,13 +80,13 @@ class ActiveBearerTokens(APIView):
 
     def delete(self, request, *args, **kwargs):
         try:
-            token = BearerToken.objects.get(token_id=request.GET.get("id"))
+            token = BearerToken.objects.get(id=request.GET.get("id"))
             if request.user == token.user:
                 token.delete()
-                return HttpResponse("Token removed", status=status.HTTP_200_OK)
-        except ObjectDoesNotExist:
+                return ApiResponse(data={"message": "Token removed"}, status=status.HTTP_200_OK)
+        except BearerToken.ObjectDoesNotExist or BearerToken.MultipleObjectsReturned:
             pass
-        return HttpResponse("Token not found", status=status.HTTP_404_NOT_FOUND)
+        return ApiResponse(data={"message": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class Info(APIView):

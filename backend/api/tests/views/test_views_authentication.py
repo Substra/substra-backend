@@ -118,7 +118,7 @@ class AuthenticationTests(APITestCase):
         token_old = response.json()["token"]
         self.assertTrue(token_old)
 
-        # token should be update after a second post
+        # token should be updated after a second post
         response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
         self.assertEqual(response.status_code, 200)
         token = response.json()["token"]
