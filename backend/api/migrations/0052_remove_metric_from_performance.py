@@ -24,11 +24,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_performances),
         migrations.AlterUniqueTogether(
             name="performance",
             unique_together=set(),
         ),
+        migrations.RunPython(migrate_performances),
         migrations.RemoveField(
             model_name="performance",
             name="metric",
