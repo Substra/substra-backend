@@ -11,16 +11,19 @@ def migrate_performances(apps, schema_editor):
     for performance_instance in performance_model.objects.all():
         compute_task_output = performance_instance.compute_task.outputs.get()
         compute_task_output_asset = compute_task_output.assets.get()
+        metric_output = performance_instance.metric.outputs.get()
 
         compute_task_output.identifier = performance_instance.metric.name
+        metric_output.identifier = performance_instance.metric.name
 
         compute_task_key, metric_key = compute_task_output_asset.asset_key.split("|")
         compute_task_output_asset.asset_key = compute_task_key + "|" + metric_key + "|" + compute_task_output.identifier
 
         performance_instance.compute_task_output = compute_task_output
 
-        compute_task_output_asset.save()
         compute_task_output.save()
+        compute_task_output_asset.save()
+        metric_output.save()
         performance_instance.save()
 
 
