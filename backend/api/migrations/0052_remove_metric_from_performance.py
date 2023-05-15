@@ -3,14 +3,12 @@
 from django.db import migrations
 
 
-def migrate_performances(apps, schema_editor):
+def migrate_compute_task_output_asset_keys(apps, schema_editor):
     performance_model = apps.get_model("api", "performance")
 
     for performance_instance in performance_model.objects.all():
         compute_task_output = performance_instance.compute_task_output.get()
         compute_task_output_asset = compute_task_output.assets.get()
-
-        compute_task_output.identifier = performance_instance.metric.name
 
         compute_task_key, _, identifier = compute_task_output_asset.asset_key.split("|")
         compute_task_output_asset.asset_key = compute_task_key + "|" + identifier
@@ -28,7 +26,7 @@ class Migration(migrations.Migration):
             name="performance",
             unique_together=set(),
         ),
-        migrations.RunPython(migrate_performances),
+        migrations.RunPython(migrate_compute_task_output_asset_keys),
         migrations.RemoveField(
             model_name="performance",
             name="metric",
