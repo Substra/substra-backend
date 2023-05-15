@@ -7,7 +7,7 @@ def migrate_compute_task_output_asset_keys(apps, schema_editor):
     performance_model = apps.get_model("api", "performance")
 
     for performance_instance in performance_model.objects.all():
-        compute_task_output = performance_instance.compute_task_output.get()
+        compute_task_output = performance_instance.compute_task_output
         compute_task_output_asset = compute_task_output.assets.get()
 
         compute_task_key, _, identifier = compute_task_output_asset.asset_key.split("|")
