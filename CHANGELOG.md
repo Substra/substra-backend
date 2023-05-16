@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - BREAKING: Support for multiple API tokens with expanded functionality ([#639](https://github.com/Substra/substra-backend/pull/639))
+- New `JWT_SECRET_PATH` and `JWT_SECRET_NEEDED` environment variables ([#657](https://github.com/Substra/substra-backend/pull/657))
 
 ### Changed
 
