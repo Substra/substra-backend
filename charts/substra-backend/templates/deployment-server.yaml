@@ -73,6 +73,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
+          - name: SECRET_KEY_LOAD_AND_STORE
+            value: "True"
           {{- if .Values.server.metrics.enabled }}
           - name: ENABLE_METRICS
             value: "True"
@@ -96,6 +98,8 @@ spec:
             mountPath: /usr/src/app/uwsgi.ini
             subPath: uwsgi.ini
             readOnly: true
+          - name: runtime-secrets
+            mountPath: /var/substra/runtime-secrets
           {{- if .Values.privateCa.enabled }}
           - mountPath: /etc/ssl/certs
             name: ssl-certs
@@ -226,6 +230,8 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.server.persistence.servermedias.existingClaim | default (print (include "substra.fullname" $) "-servermedias") }}
       - name: statics
+        emptyDir: {}
+      - name: runtime-secrets
         emptyDir: {}
       - name: uwsgi
         configMap:

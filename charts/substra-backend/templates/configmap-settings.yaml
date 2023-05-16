@@ -8,6 +8,7 @@ data:
   ORG_NAME: {{ .Values.organizationName | quote }}
   MEDIA_ROOT: /var/substra/medias/
   SERVERMEDIAS_ROOT: /var/substra/servermedias/
+  SECRET_KEY_PATH: /var/substra/runtime-secrets/SECRET_KEY
   SUBTUPLE_DIR: /var/substra/medias/subtuple/
   DEFAULT_DOMAIN: {{ .Values.server.defaultDomain | quote }}
   COMMON_HOST_DOMAIN: {{ .Values.server.commonHostDomain | quote }}
