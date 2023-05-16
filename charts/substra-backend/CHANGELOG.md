@@ -1,5 +1,15 @@
 # Changelog
 
+## [22.7.0] - 2023-08-14
+
+### Changed
+
+- Components now avoid writing on the root file system, allowing this chart to run under `readOnlyRootFilesystem: true`
+
+### Fixed
+
+- Missing dash in some created Kubernetes objects
+
 ## [22.6.1] - 2023-07-25
 
 ### Changed
