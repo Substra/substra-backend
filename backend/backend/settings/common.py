@@ -77,6 +77,8 @@ if to_bool(os.environ.get("JWT_SECRET_NEEDED", "False")):
             SECRET_KEY = write_secret_key(JWT_SECRET_PATH)
         except IOError:
             raise Exception(f"Cannot open file `{JWT_SECRET_PATH}` for writing.")
+else:
+    SECRET_KEY = "unused default value"
 # END KEY CONFIGURATION
 
 # SECURITY WARNING: don't run with debug turned on in production!
