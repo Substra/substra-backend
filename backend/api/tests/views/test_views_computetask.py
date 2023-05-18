@@ -287,7 +287,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "authorized_ids": ["MyOrg1MSP"],
             },
             "duration": 0,  # because start_date is None
-            "inputs": [self.datasamples_input, self.opener_input_with_value],
+            "inputs": [self.datasamples_input, self.opener_input],
             "outputs": {"model": self.model_output},
         }
 
