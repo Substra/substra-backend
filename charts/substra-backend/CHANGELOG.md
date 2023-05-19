@@ -1,5 +1,15 @@
 # Changelog
 
+## [23.0.0] - 2023-05-19
+
+### Added
+
+- allow using an external database in standalone mode ([#658](https://github.com/Substra/substra-backend/pull/658))
+
+### Changed
+
+- BREAKING: `postgresql.enabled` is now called `integrated-postgresql.enabled`
+
 ## 22.4.4
 
 ### Changed

@@ -32,10 +32,10 @@ LEDGER_CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}}}
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("BACKEND_DB_NAME", "substra"),
-        "USER": os.environ.get("BACKEND_DB_USER", "postgres"),
-        "PASSWORD": os.environ.get("BACKEND_DB_PWD", "postgres"),
-        "HOST": os.environ.get("BACKEND_DB_HOST", "localhost"),
-        "PORT": os.environ.get("BACKEND_DB_PORT", 5432),
+        "NAME": os.environ.get("POSTGRESQL_DATABASE", "substra"),
+        "USER": os.environ.get("POSTGRESQL_USERNAME", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRESQL_PASSWORD", "postgres"),
+        "HOST": os.environ.get("POSTGRESQL_HOSTNAME", "localhost"),
+        "PORT": int(os.environ.get("POSTGRESQL_PORT", 5432)),
     }
 }

@@ -699,16 +699,36 @@ oidc:
     ## @param oidc.users.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)
     appendDomain: false
 
+## @section PostgreSQL settings
+postgresql:
+  auth:
+    ## @param postgresql.auth.database what DB to connect to
+    database: &psql-database substra
+    ## @param postgresql.auth.username what user to connect as
+    username: &psql-username postgres
+    ## @param postgresql.auth.password what password to use for connecting
+    password: &psql-password postgres
+    
+    ## @param postgresql.auth.credentialsSecretName An alternative to giving username and password; must have `POSTGRESQL_USERNAME` and `POSTGRESQL_PASSWORD` keys.
+    ##
+    credentialsSecretName: null
+  
+  ## @param postgresql.host Hostname of the database to connect to (defaults to local)
+  host: null
+  ## @param postgresql.port Port of an external database to connect to
+  ## (defaults to postgresql.primary.service.ports.postgresql)
+  port: null
+
 ## @skip postgresql
 ##
-postgresql:
+integrated-postgresql:
   enabled: true
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres
-    username: postgres
-    password: postgres
-    database: substra
+    postgresPassword: *psql-password
+    username: *psql-username
+    password: *psql-password
+    database: *psql-database
 
 ## @skip redis
 ##

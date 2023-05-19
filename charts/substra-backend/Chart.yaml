@@ -18,9 +18,10 @@ dependencies:
     condition: redis.enabled
     version: 17.0.7
   - name: postgresql
+    alias: integrated-postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 11.6.2
-    condition: postgresql.enabled
+    condition: integrated-postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
     version: 1.13.0

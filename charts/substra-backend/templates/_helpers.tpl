@@ -69,20 +69,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 
 {{/*
-Redefine the postgresql service name because we can't use subchart templates directly.
-*/}}
-{{- define "postgresql.serviceName" -}}
-{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
-{{- $fullname := default (printf "%s-%s" .Release.Name $name) .Values.postgresql.fullnameOverride -}}
-{{- if .Values.postgresql.replication.enabled -}}
-{{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
 Redefine the redis service name because we can't use subchart templates directly.
 */}}
 {{- define "redis.serviceName" -}}
@@ -189,3 +175,40 @@ example:
     {{- printf "%s:%s" .img.repository $tag -}}
     {{- end -}}
 {{- end -}}
+
+{{/*
+The hostname we should connect to (external is defined, otherwise integrated)
+*/}}
+{{- define "substra-backend.postgresql.host" -}}
+    {{- if .Values.postgresql.host }}
+        {{- .Values.postgresql.host }}
+    {{- else }}
+        {{- template "postgresql.primary.fullname" (index .Subcharts "integrated-postgresql") }}.{{ .Release.Namespace }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+The port we should connect to (external is defined, otherwise integrated)
+*/}}
+{{- define "substra-backend.postgresql.port" -}}
+    {{- .Values.postgresql.port | default (index .Values "integrated-postgresql" "primary" "service" "ports" "postgresql") }}
+{{- end -}}
+
+{{/*
+Disable SSL if using the integrated Postgres, otherwise leave users with the option of setting their own.
+*/}}
+{{- define "substra-backend.postgresql.uriParams" -}}
+    {{- if .Values.postgresql.uriParams -}}
+        ?{{ .Values.postgresql.uriParams }}
+    {{- else if index .Values "integrated-postgresql" "enabled" -}}
+        ?sslmode=disable
+    {{- end }}
+{{- end -}}
+
+{{- define "substra-backend.postgresql.credsSecret" }}
+    {{- if .Values.postgresql.auth.credentialsSecretName }}
+        {{ .Values.postgresql.auth.credentialsSecretName }}
+    {{- else }}
+        {{- template "substra.fullname" . }}-database
+    {{- end }}
+{{- end }}

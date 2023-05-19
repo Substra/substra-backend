@@ -111,7 +111,7 @@ spec:
         {{- end }}
         - name: wait-postgresql
           image: jwilder/dockerize:0.6.1
-          command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+          command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.postgresql.host" . }}:{{ .Values.postgresql.auth.port }}']
         - name: wait-init-migrations
           image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']

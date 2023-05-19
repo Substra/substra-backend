@@ -25,11 +25,11 @@ REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("BACKEND_DB_NAME", f"backend_{ORG_NAME}"),
-        "USER": os.environ.get("BACKEND_DB_USER", "backend"),
-        "PASSWORD": os.environ.get("BACKEND_DB_PWD", "backend"),
-        "HOST": os.environ.get("DATABASE_HOST", "localhost"),
-        "PORT": 5432,
+        "NAME": os.environ.get("POSTGRESQL_DATABASE", f"backend_{ORG_NAME}"),
+        "USER": os.environ.get("POSTGRESQL_USERNAME", "backend"),
+        "PASSWORD": os.environ.get("POSTGRESQL_PASSWORD", "backend"),
+        "HOST": os.environ.get("POSTGRESQL_HOSTNAME", "localhost"),
+        "PORT": int(os.environ.get("POSTGRESQL_PORT", 5432)),
     }
 }
 

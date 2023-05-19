@@ -5,6 +5,6 @@ metadata:
   labels:
   {{- include "substra.labels" . | nindent 4 }}
 data:
-  BACKEND_DB_NAME: {{ .Values.postgresql.auth.database }}
-  BACKEND_DB_USER: {{ .Values.postgresql.auth.username }}
-  DATABASE_HOST: {{ template "postgresql.serviceName" . }}
+  POSTGRESQL_DATABASE: {{ .Values.postgresql.auth.database }}
+  POSTGRESQL_HOSTNAME: {{ template "substra-backend.postgresql.host" . }}
+  POSTGRESQL_PORT: {{ .Values.postgresql.auth.port }}
