@@ -260,6 +260,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:task-list")
+        self.maxDiff = None
 
         todo_task = self.compute_tasks[ComputeTask.Status.STATUS_TODO]
         waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING]
@@ -311,6 +312,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(waiting_task.key),
@@ -331,6 +334,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(doing_task.key),
@@ -351,6 +356,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(done_task.key),
@@ -371,6 +378,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(failed_task.key),
@@ -391,6 +400,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(canceled_task.key),
@@ -411,6 +422,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
         ]
 
@@ -543,7 +556,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         # this should be enough to guarantee that there will only be one matching task
         params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
+        print(self.list_expected_results[0].get("function"))
+        self.assertDictEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
