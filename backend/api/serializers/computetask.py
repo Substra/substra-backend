@@ -131,6 +131,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
 
     duration = serializers.IntegerField(read_only=True)
+    inputs = ComputeTaskInputSerializer(many=True)
+    outputs = ComputeTaskOutputSerializer(many=True)
 
     class Meta:
         model = ComputeTask
