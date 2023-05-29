@@ -188,18 +188,20 @@ class ComputeTaskFilter(FilterSet):
 
 class InputAssetFilter(FilterSet):
     kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionInput.Kind.choices)
+    identifier = CharInFilter(field_name="task_input__identifier")
 
     class Meta:
         model = ComputeTaskInputAsset
-        fields = ["kind"]
+        fields = ["kind", "identifier"]
 
 
 class OutputAssetFilter(FilterSet):
     kind = ChoiceInFilter(field_name="asset_kind", choices=FunctionOutput.Kind.choices)
+    identifier = CharInFilter(field_name="task_output__identifier")
 
     class Meta:
         model = ComputeTaskOutputAsset
-        fields = ["kind"]
+        fields = ["kind", "identifier"]
 
 
 class ComputeTaskViewSetConfig:
