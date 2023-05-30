@@ -1,6 +1,7 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
-from rest_framework.authtoken.models import Token as BearerToken
+from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -12,14 +13,10 @@ from api.views.utils import get_channel_name
 from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-from users.utils import bearer_token as bearer_token_utils
-
-
-def _bearer_token_dict(token: BearerToken, include_payload: bool = True) -> dict:
-    d = {"created_at": token.created, "expires_at": bearer_token_utils.expires_at(token)}
-    if include_payload:
-        d["token"] = token.key
-    return d
+from users.models.token import BearerToken
+from users.models.token import ImplicitBearerToken
+from users.serializers.token import BearerTokenSerializer
+from users.serializers.token import ImplicitBearerTokenSerializer
 
 
 class ObtainBearerToken(DRFObtainAuthToken):
@@ -27,6 +24,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
     get a Bearer token from {username, password}
     """
 
+    # use legacy token
     authentication_classes = []
     throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
@@ -34,16 +32,12 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        if settings.TOKEN_STRATEGY == "reuse":  # nosec
-            token, created = BearerToken.objects.get_or_create(user=user)
-            # handle_token_expiration will check whether the token is expired
-            # and will generate a new one if necessary
-            is_expired, token = bearer_token_utils.handle_token_expiration(token)
-        else:
-            # token should be new each time, remove the old one
-            BearerToken.objects.filter(user=user).delete()
-            token = BearerToken.objects.create(user=user)
-        return ApiResponse(_bearer_token_dict(token))
+        try:
+            token = ImplicitBearerToken.objects.get(user=user)
+            token = token.handle_expiration()
+        except ObjectDoesNotExist:
+            token = ImplicitBearerToken.objects.create(user=user)
+        return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
 class AuthenticatedBearerToken(DRFObtainAuthToken):
@@ -53,11 +47,11 @@ class AuthenticatedBearerToken(DRFObtainAuthToken):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        # create a new token each time (you don't want a token that is about to expire)
-        BearerToken.objects.filter(user=request.user).delete()
-        token = BearerToken.objects.create(user=request.user)
-        return ApiResponse(_bearer_token_dict(token))
+    def post(self, request, *args, **kwargs):
+        s = BearerTokenSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        token = BearerToken.objects.create(user=request.user, **s.validated_data)
+        return ApiResponse(BearerTokenSerializer(token, include_payload=True).data)
 
 
 class ActiveBearerTokens(APIView):
@@ -68,9 +62,31 @@ class ActiveBearerTokens(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        tokens = BearerToken.objects.filter(user=request.user)
+        tokens = [
+            BearerTokenSerializer(token).data
+            for token in BearerToken.objects.filter(user=request.user).order_by("-created")
+        ]
+        try:
+            implicit_token = ImplicitBearerTokenSerializer(ImplicitBearerToken.objects.get(user=request.user)).data
 
-        return ApiResponse({"tokens": [_bearer_token_dict(token, include_payload=False) for token in tokens]})
+        except ObjectDoesNotExist:
+            implicit_token = None
+        return ApiResponse(
+            {
+                "tokens": tokens,
+                "implicit_token": implicit_token,
+            }
+        )
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            token = BearerToken.objects.get(id=request.GET.get("id"))
+            if request.user == token.user:
+                token.delete()
+                return ApiResponse(data={"message": "Token removed"}, status=status.HTTP_200_OK)
+        except BearerToken.ObjectDoesNotExist or BearerToken.MultipleObjectsReturned:
+            pass
+        return ApiResponse(data={"message": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class Info(APIView):

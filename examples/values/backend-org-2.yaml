@@ -1,6 +1,5 @@
 settings: dev
 config:
-  TOKEN_STRATEGY: "reuse"
   CORS_ORIGIN_WHITELIST: '["http://substra-frontend.org-2.com", "http://substra-frontend.org-2.com:3000", "http://substra-frontend.org-2.com:3001"]'
   CSRF_TRUSTED_ORIGINS: '["http://substra-frontend.org-2.com", "http://substra-frontend.org-2.com:3000", "http://substra-frontend.org-2.com:3001"]'
   CORS_ALLOW_CREDENTIALS: "true"
