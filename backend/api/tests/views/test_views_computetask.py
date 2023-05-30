@@ -790,7 +790,7 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
     queries_for_10_tasks = len(queries_10.captured_queries)
 
     assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
-    assert queries_for_60_tasks < 15
+    assert queries_for_60_tasks < 17
 
 
 @pytest.mark.django_db

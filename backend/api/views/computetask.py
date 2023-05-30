@@ -291,7 +291,7 @@ class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericView
             ComputeTask.objects.filter(channel=get_channel_name(self.request))
             .filter(compute_plan__key=compute_plan_key)
             .select_related("function")
-            .prefetch_related("function__inputs", "function__outputs")
+            .prefetch_related("function__inputs", "function__outputs", "inputs", "outputs")
             .annotate(
                 # Using 0 as default value instead of None for ordering purpose, as default
                 # Postgres behavior considers null as greater than any other value.
