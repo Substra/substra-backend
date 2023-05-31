@@ -47,16 +47,9 @@ class ObtainBearerToken(DRFObtainAuthToken):
             [(it.created, it.is_expired) for it in ImplicitBearerToken.objects.all()],
         )
 
-        with transaction.atomic():
-            try:
-                token = ImplicitBearerToken.objects.get(user=user)
-                token = token.handle_expiration()
-            except ObjectDoesNotExist as e:
-                print(f"Debugging info {DEBUG_SESSION_ID}_ZA:", e)
-                print(traceback.format_exc())
-                print(f"Debugging info {DEBUG_SESSION_ID}_ZB")
-                token = ImplicitBearerToken.objects.create(user=user)
-                print(f"Debugging info {DEBUG_SESSION_ID}_ZC:", token, token.user)
+        token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
+        if not just_created:
+            token = token.handle_expiration()
         return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 

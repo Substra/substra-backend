@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
-
+from django.db import transaction
 
 class BearerToken(Token):
     note = models.TextField(null=True)
@@ -33,14 +33,14 @@ class ImplicitBearerToken(Token):
     def is_expired(self) -> bool:
         return self.expires_at < timezone.now()
 
+    @transaction.atomic
     def handle_expiration(self) -> "ImplicitBearerToken":
         """
-        If token is expired a new token will be created.
-        If token is expired then it will be removed
+        If token is expired a new token will be created and the old one removed.
         """
         if self.is_expired:
+            user = self.user
             self.delete()
-            print(f"Debugging info ({__name__}):", self)
-            token = ImplicitBearerToken.objects.create(user=self.user)
+            token = ImplicitBearerToken.objects.create(user=user)
             return token
         return self
