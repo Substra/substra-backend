@@ -32,6 +32,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
+        print("Debugging info:", request.data, user, user.id)
         try:
             token = ImplicitBearerToken.objects.get(user=user)
             token = token.handle_expiration()
