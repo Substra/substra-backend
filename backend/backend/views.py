@@ -8,6 +8,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from traceback import print_exception
+import random
+import string
 
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
@@ -33,10 +36,13 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        print("Debugging info A:", request.data)
-        print("Debugging info B:", type(user), user, user.id)
+        
+        DEBUG_SESSION_ID = ''.join(random.choices(string.ascii_uppercase, k=4))
+        
+        print(f"Debugging info {DEBUG_SESSION_ID}_A:", request.data)
+        print(f"Debugging info {DEBUG_SESSION_ID}_B:", type(user), user, user.id)
         print(
-            "Debugging info C:",
+            f"Debugging info {DEBUG_SESSION_ID}_C:",
             ImplicitBearerToken.objects.all(),
             [(it.created, it.is_expired) for it in ImplicitBearerToken.objects.all()],
         )
@@ -46,9 +52,11 @@ class ObtainBearerToken(DRFObtainAuthToken):
                 token = ImplicitBearerToken.objects.get(user=user)
                 token = token.handle_expiration()
             except ObjectDoesNotExist as e:
-                print("Debugging info ZA:", e)
-                print("Debugging info ZB")
+                print(f"Debugging info {DEBUG_SESSION_ID}_ZA:", e)
+                print_exception(e)
+                print(f"Debugging info {DEBUG_SESSION_ID}_ZB")
                 token = ImplicitBearerToken.objects.create(user=user)
+                print(f"Debugging info {DEBUG_SESSION_ID}_ZC:", token, token.user)
         return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
