@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
-from traceback import print_exception
+import traceback
 import random
 import string
 
@@ -53,7 +53,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
                 token = token.handle_expiration()
             except ObjectDoesNotExist as e:
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZA:", e)
-                print_exception(e)
+                traceback.format_exc()
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZB")
                 token = ImplicitBearerToken.objects.create(user=user)
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZC:", token, token.user)
