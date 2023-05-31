@@ -40,6 +40,7 @@ class ImplicitBearerToken(Token):
         """
         if self.is_expired:
             self.delete()
+            print(f"Debugging info ({__name__}):", self)
             token = ImplicitBearerToken.objects.create(user=self.user)
             return token
         return self

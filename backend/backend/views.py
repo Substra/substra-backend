@@ -32,11 +32,19 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        print("Debugging info:", request.data, user, user.id)
+        print("Debugging info A:", request.data)
+        print("Debugging info B:", type(user), user, user.id)
+        print(
+            "Debugging info C:",
+            ImplicitBearerToken.objects.all(),
+            [(it.created, it.is_expired) for it in ImplicitBearerToken.objects.all()],
+        )
         try:
             token = ImplicitBearerToken.objects.get(user=user)
             token = token.handle_expiration()
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
+            print("Debugging info ZA:", e)
+            print("Debugging info ZB")
             token = ImplicitBearerToken.objects.create(user=user)
         return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
