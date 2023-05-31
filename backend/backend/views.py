@@ -48,6 +48,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
         )
 
         token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
+        print(f"Debugging info {DEBUG_SESSION_ID}_D:", token.created, token.key, just_created)
         if not just_created:
             token = token.handle_expiration()
         return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
