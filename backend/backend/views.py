@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
@@ -39,13 +40,15 @@ class ObtainBearerToken(DRFObtainAuthToken):
             ImplicitBearerToken.objects.all(),
             [(it.created, it.is_expired) for it in ImplicitBearerToken.objects.all()],
         )
-        try:
-            token = ImplicitBearerToken.objects.get(user=user)
-            token = token.handle_expiration()
-        except ObjectDoesNotExist as e:
-            print("Debugging info ZA:", e)
-            print("Debugging info ZB")
-            token = ImplicitBearerToken.objects.create(user=user)
+
+        with transaction.atomic():
+            try:
+                token = ImplicitBearerToken.objects.get(user=user)
+                token = token.handle_expiration()
+            except ObjectDoesNotExist as e:
+                print("Debugging info ZA:", e)
+                print("Debugging info ZB")
+                token = ImplicitBearerToken.objects.create(user=user)
         return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
