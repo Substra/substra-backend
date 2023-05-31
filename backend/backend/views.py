@@ -53,7 +53,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
                 token = token.handle_expiration()
             except ObjectDoesNotExist as e:
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZA:", e)
-                traceback.format_exc()
+                print(traceback.format_exc())
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZB")
                 token = ImplicitBearerToken.objects.create(user=user)
                 print(f"Debugging info {DEBUG_SESSION_ID}_ZC:", token, token.user)
