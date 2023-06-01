@@ -3,9 +3,10 @@ from datetime import datetime
 
 from django.conf import settings
 from django.db import models
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.authtoken.models import Token
-from django.db import transaction
+
 
 class BearerToken(Token):
     note = models.TextField(null=True)
