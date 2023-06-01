@@ -8,9 +8,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
-import traceback
-import random
-import string
 
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
@@ -36,22 +33,12 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        
-        DEBUG_SESSION_ID = ''.join(random.choices(string.ascii_uppercase, k=4))
-        
-        print(f"Debugging info {DEBUG_SESSION_ID}_A:", request.data)
-        print(f"Debugging info {DEBUG_SESSION_ID}_B:", type(user), user, user.id)
-        print(
-            f"Debugging info {DEBUG_SESSION_ID}_C:",
-            ImplicitBearerToken.objects.all(),
-            [(it.created, it.is_expired) for it in ImplicitBearerToken.objects.all()],
-        )
 
-        token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
-        print(f"Debugging info {DEBUG_SESSION_ID}_D:", token.created, token.key, just_created)
-        if not just_created:
-            token = token.handle_expiration()
-        return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
+        with transaction.atomic():
+            token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
+            if not just_created:
+                token = token.handle_expiration()
+            return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
 class AuthenticatedBearerToken(DRFObtainAuthToken):
