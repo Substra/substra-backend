@@ -99,7 +99,7 @@ spec:
       {{- end}}
       - name: wait-postgresql
         image: jwilder/dockerize:0.6.1
-        command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.postgresql.host" . }}:{{ .Values.postgresql.auth.port }}']
+        command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.postgresql.host" . }}:{{ .Values.postgresql.port }}']
       - name: wait-minio
         image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
