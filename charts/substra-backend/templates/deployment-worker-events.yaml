@@ -59,7 +59,7 @@ spec:
             - secretRef:
                 name: {{ include "substra.fullname" . }}-redis
             - secretRef:
-                name: {{ include "substra.fullname" . }}-database
+                name: {{ include "substra-backend.postgresql.secret-name" . }}
           readinessProbe:
             exec:
               command:
@@ -127,7 +127,7 @@ spec:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-settings
             - secretRef:
-                name: {{ include "substra.fullname" . }}-database
+                name: {{ template "substra-backend.postgresql.secret-name" . }}
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.{{ .Values.settings }}
