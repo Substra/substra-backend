@@ -556,7 +556,6 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         # this should be enough to guarantee that there will only be one matching task
         params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        print(self.list_expected_results[0].get("function"))
         self.assertDictEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
