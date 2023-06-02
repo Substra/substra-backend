@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
@@ -32,12 +33,12 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        try:
-            token = ImplicitBearerToken.objects.get(user=user)
-            token = token.handle_expiration()
-        except ObjectDoesNotExist:
-            token = ImplicitBearerToken.objects.create(user=user)
-        return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
+
+        with transaction.atomic():
+            token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
+            if not just_created:
+                token = token.handle_expiration()
+            return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
 class AuthenticatedBearerToken(DRFObtainAuthToken):
