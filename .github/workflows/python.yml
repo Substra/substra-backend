@@ -18,9 +18,9 @@ jobs:
     env:
       DJANGO_SETTINGS_MODULE: backend.settings.test
       SRC_DIRS: backend metrics-exporter fixtures
-      BACKEND_DB_NAME: substra
-      BACKEND_DB_USER: postgres
-      BACKEND_DB_PWD: postgres
+      BACKEND_DB_NAME: backend_default
+      BACKEND_DB_USER: backend
+      BACKEND_DB_PWD: backend
       BACKEND_DB_HOST: localhost
       BACKEND_DB_PORT: 5432
     runs-on: ubuntu-latest
@@ -28,9 +28,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_DB: substra
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: backend_default
+          POSTGRES_USER: backend
+          POSTGRES_PASSWORD: backend
         options: >-
           --health-cmd pg_isready
           --health-interval 10s

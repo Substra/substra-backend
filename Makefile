@@ -8,10 +8,11 @@ install:  ## Install Python development dependencies
 
 .PHONY: db
 db:  ## Set up test database
-	docker run --name postgres --rm \
-		-e POSTGRES_DB=substra \
-		-e POSTGRES_USER=postgres \
-		-e POSTGRES_PASSWORD=postgres \
+	[ `docker ps -f 'name=postgres_backend_db' --format '{{ .ID }}' | wc -l` -gt 0 ] && docker stop postgres_backend_db; true
+	docker run --name postgres_backend_db --rm \
+		-e POSTGRES_DB=backend_default \
+		-e POSTGRES_USER=backend \
+		-e POSTGRES_PASSWORD=backend \
 		-p 5432:5432 -d postgres:latest
 
 .PHONY: test

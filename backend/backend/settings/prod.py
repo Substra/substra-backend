@@ -22,20 +22,6 @@ CSRF_COOKIE_SECURE = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, "statics")
 
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRESQL_DATABASE", f"backend_{ORG_NAME}"),
-        "USER": os.environ.get("POSTGRESQL_USERNAME", "backend"),
-        "PASSWORD": os.environ.get("POSTGRESQL_PASSWORD", "backend"),
-        "HOST": os.environ.get("POSTGRESQL_HOSTNAME", "localhost"),
-        "PORT": int(os.environ.get("POSTGRESQL_PORT", 5432)),
-    }
-}
-
 DATASAMPLE_BUCKET_NAME = "substra-datasample"
 DATASAMPLE_STORAGE = MinioStorage(DATASAMPLE_BUCKET_NAME)
 

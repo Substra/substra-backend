@@ -28,14 +28,3 @@ ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA = 0
 
 LEDGER_MSP_ID = "testOrgMSP"
 LEDGER_CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}}}
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRESQL_DATABASE", "substra"),
-        "USER": os.environ.get("POSTGRESQL_USERNAME", "postgres"),
-        "PASSWORD": os.environ.get("POSTGRESQL_PASSWORD", "postgres"),
-        "HOST": os.environ.get("POSTGRESQL_HOSTNAME", "localhost"),
-        "PORT": int(os.environ.get("POSTGRESQL_PORT", 5432)),
-    }
-}

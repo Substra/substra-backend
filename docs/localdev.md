@@ -37,7 +37,7 @@ docker exec substra-backend python manage.py generate_fixtures
 Warning: it will erase the database content (user, fixtures, etc).
 
 ```sh
-cat dump-file.sql | docker exec -it postgres psql postgresql://postgres:postgres@localhost:5432/substra
+cat dump-file.sql | docker exec -it postgres psql postgresql://backend:backend@localhost:5432/backend_default
 ```
 
 ## (Optional) Use another DB
@@ -52,8 +52,8 @@ brew install postgres  # install the psql client
 
 ### Create a database
 
-Create a `substra` database. To use another name, set the `BACKEND_DB_NAME` env var accordingly.
+Create a `backend_default` database. To use another name, set the `BACKEND_DB_NAME` env var accordingly.
 
 ```sh
-psql postgresql://postgres:postgres@localhost:5432/postgres -c "CREATE DATABASE substra;"
+psql postgresql://backend:backend@localhost:5432/backend_default -c "CREATE DATABASE backend_default;"
 ```
