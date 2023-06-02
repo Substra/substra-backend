@@ -716,13 +716,18 @@ postgresql:
   ## @param postgresql.host Hostname of the database to connect to (defaults to local)
   host: null
   ## @param postgresql.port Port of an external database to connect to
-  ## (defaults to postgresql.primary.service.ports.postgresql)
-  port: null
+  port: 5432
 
-## @skip postgresql
-##
+
+## @section Integrated PostgreSQL settings
+## @descriptionStart See Bitnami documentation
+## @descriptionEnd
+
 integrated-postgresql:
+  ## @param integrated-postgresql.enabled Deploy a PostgreSQL instance along the orchestrator for its use
+  ##
   enabled: true
+  ## @skip integrated-postgresql.auth
   auth:
     enablePostgresUser: true
     postgresPassword: *psql-password

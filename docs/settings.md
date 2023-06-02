@@ -54,6 +54,11 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OBJECTSTORE_URL` | nil |  |
 | int | `PAGINATION_MAX_PAGE_SIZE` | `10000` |  |
 | string | `POD_IP` | nil |  |
+| string | `POSTGRESQL_DATABASE` | `?` (`f'backend_{ORG_NAME}'`) |  |
+| string | `POSTGRESQL_HOSTNAME` | `localhost` |  |
+| string | `POSTGRESQL_PASSWORD` | `backend` |  |
+| int | `POSTGRESQL_PORT` | `5432` |  |
+| string | `POSTGRESQL_USERNAME` | `backend` |  |
 | string | `REGISTRY` | nil |  |
 | bool | `REGISTRY_IS_LOCAL` | nil |  |
 | string | `REGISTRY_PULL_DOMAIN` | nil |  |
@@ -89,7 +94,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
 | string | `BACKEND_DEFAULT_PORT` | `8000` |  |
-| string | `ORG_NAME` | nil |  |
+| string | `ORG_NAME` | `default` |  |
 
 ## OpenID Connect settings
 

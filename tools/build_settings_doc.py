@@ -8,9 +8,9 @@ from typing import Collection
 from typing import Optional
 from typing import Union
 
-FILE_PATH = pathlib.Path(__file__).parent.resolve()
-SETTINGS_FOLDER = (FILE_PATH / "../backend/backend/settings/").resolve()
-DOC_PATH = (FILE_PATH / "../docs/settings.md").resolve()
+ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
+SETTINGS_FOLDER = (ROOT_PATH / "backend/backend/settings/").resolve()
+DOC_PATH = (ROOT_PATH / "docs/settings.md").resolve()
 FILE_HEADER = """
 <!-- This file is an auto-generated file, please do not edit manually. Instead you can run `make docs` to update it -->
 # Substra setting
@@ -104,7 +104,7 @@ def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:  # noqa C9
                     except Exception as e:
                         setting.default_value = "?"
                         print(
-                            f"Warning: Couldn't eval {filename} line {node.lineno}: {ast.unparse(node.args[1])} ({e})"
+                            f"Warning: Couldn't eval {filename.relative_to(ROOT_PATH)} line {node.lineno}: {ast.unparse(node.args[1])} ({e}), leaving it as-is in the documentation."
                         )
 
                     setting.default_value_comment = ast.unparse(node.args[1])
