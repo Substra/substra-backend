@@ -8,7 +8,7 @@
 
 ### Changed
 
-- BREAKING: `postgresql.enabled` is now called `integrated-postgresql.enabled`
+- BREAKING: values that used to be under `postgresql` are now under `integrated-postgresql`
 
 ## 22.4.4
 

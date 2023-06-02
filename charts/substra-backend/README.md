@@ -375,6 +375,39 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/PATH/TO/YOUR/LOCAL_STORAGE"
+```
 
+### Database
 
+#### Internal
+
+If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
+
+```yaml
+postgresql:
+  auth:
+    password: abcd1234 # the password the backend will use
+
+integrated-postgresql:
+  auth:
+    password: abcd1234 # the password the database expects
+```
+
+(you could use YAML anchors for this)
+
+#### External
+
+The backend uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
+
+```yaml
+postgresql:
+  host: my.database.host
+  
+  auth:
+    username: my-user
+    password: aStrongPassword
+    database: orchestrator
+
+integrated-postgresql:
+  enabled: false
 ```
