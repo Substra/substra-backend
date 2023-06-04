@@ -15,17 +15,16 @@ import os
 import pathlib
 import sys
 from datetime import timedelta
+import secrets
 
 import structlog
 from django.core.files.storage import FileSystemStorage
 
-from libs.gen_secret_key import write_secret_key
 from substrapp.compute_tasks.errors import CeleryRetryError
 
 from .deps.org import *
 
 TRUE_VALUES = {"t", "T", "y", "Y", "yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "1", 1, True}
-
 
 def to_bool(value):
     return value in TRUE_VALUES
@@ -66,15 +65,15 @@ sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, "libs")))
 JWT_SECRET_PATH = os.environ.get("JWT_SECRET_PATH", os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET")))
 
 # KEY CONFIGURATION
-# Try to load the SECRET_KEY from our JWT_SECRET_PATH. If that fails, then generate
-# a random SECRET_KEY and save it into our JWT_SECRET_PATH for future loading. If
-# everything fails, then just raise an exception.
+# this is used for JSON web tokens (JWT) authentication
 if to_bool(os.environ.get("JWT_SECRET_NEEDED", "False")):
     try:
         SECRET_KEY = pathlib.Path(JWT_SECRET_PATH).read_text().strip()
     except IOError:
         try:
-            SECRET_KEY = write_secret_key(JWT_SECRET_PATH)
+            SECRET_KEY = secrets.token_urlsafe() # "reasonable default" used
+            with open(JWT_SECRET_PATH, "w") as fp:
+                fp.write(SECRET_KEY)
         except IOError:
             raise Exception(f"Cannot open file `{JWT_SECRET_PATH}` for writing.")
 else:
