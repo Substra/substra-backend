@@ -32,14 +32,6 @@ docker run -it --name substra-backend --rm -p 8000:8000 \
 docker exec substra-backend python manage.py generate_fixtures
 ```
 
-Connect Substra client (`org-1` profile is used by Titanic example).
-
-```sh
-substra config --profile org-1 http://127.0.0.1:8000
-substra login --profile org-1 -u org-1 -p p@sswr0d44
-substra list --profile org-1 algo  # should display fixtures
-```
-
 ## (Optional) Restore a dump
 
 Warning: it will erase the database content (user, fixtures, etc).
