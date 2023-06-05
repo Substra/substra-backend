@@ -1,5 +1,16 @@
 # Changelog
 
+## 22.5.0
+
+### Changed
+
+- Components now avoid writing on the root file system, allowing this chart to run under `readOnlyRootFilesystem: true`
+- Created role no longer requests the `extensions` API group
+
+### Fixed
+
+- Missing dash in some created Kubernetes objects
+
 ## 22.4.4
 
 ### Changed
