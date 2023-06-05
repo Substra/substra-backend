@@ -15,11 +15,11 @@ import os
 import pathlib
 import sys
 from datetime import timedelta
-import secrets
 
 import structlog
 from django.core.files.storage import FileSystemStorage
 
+from libs.gen_secret_key import write_secret_key
 from substrapp.compute_tasks.errors import CeleryRetryError
 
 from .deps.org import *
@@ -63,21 +63,20 @@ sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, "libs")))
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-JWT_SECRET_PATH = os.environ.get("JWT_SECRET_PATH", os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET")))
+SECRET_FILE = os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET"))
 
-# Key configuration for JSON web tokens (JWT) authentication
-if to_bool(os.environ.get("JWT_SECRET_NEEDED", "False")):
+# KEY CONFIGURATION
+# Try to load the SECRET_KEY from our SECRET_FILE. If that fails, then generate
+# a random SECRET_KEY and save it into our SECRET_FILE for future loading. If
+# everything fails, then just raise an exception.
+try:
+    SECRET_KEY = pathlib.Path(SECRET_FILE).read_text().strip()
+except IOError:
     try:
-        SECRET_KEY = pathlib.Path(JWT_SECRET_PATH).read_text().strip()
+        SECRET_KEY = write_secret_key(SECRET_FILE)
     except IOError:
-        try:
-            SECRET_KEY = secrets.token_urlsafe()  # uses a "reasonable default" length
-            with open(JWT_SECRET_PATH, "w") as fp:
-                fp.write(SECRET_KEY)
-        except IOError:
-            raise Exception(f"Cannot open file `{JWT_SECRET_PATH}` for writing.")
-else:
-    SECRET_KEY = "unused default value " + secrets.token_urlsafe()
+        raise Exception(f"Cannot open file `{SECRET_FILE}` for writing.")
+# END KEY CONFIGURATION
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

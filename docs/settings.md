@@ -42,8 +42,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `HOST_IP` | nil |  |
 | int | `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |  |
 | bool | `ISOLATED` | nil |  |
-| bool | `JWT_SECRET_NEEDED` | `False` |  |
-| string | `JWT_SECRET_PATH` | `?` (`os.path.normpath(os.path.join(PROJECT_ROOT, 'SECRET'))`) |  |
 | string | `K8S_SECRET_NAMESPACE` | `default` |  |
 | string | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | nil |  |
 | string | `KANIKO_IMAGE` | nil |  |
