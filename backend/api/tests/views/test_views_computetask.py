@@ -101,45 +101,30 @@ class ComputeTaskViewTests(APITestCase):
             "parent_task_key": None,
             "parent_task_output_identifier": None,
         }
-        self.opener_input_with_value = {**self.opener_input}
-        self.opener_input_with_value["addressable"] = self.data_manager_data["opener"]
-        self.opener_input_with_value["permissions"] = self.data_manager_data["permissions"]
         self.model_input = {
             "identifier": "model",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.model_input_with_value = {**self.model_input}
-        self.model_input_with_value["addressable"] = self.model_data["address"]
-        self.model_input_with_value["permissions"] = self.model_data["permissions"]
         self.models_input = {
             "identifier": "models",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.models_input_with_value = {**self.models_input}
-        self.models_input_with_value["addressable"] = self.model_data["address"]
-        self.models_input_with_value["permissions"] = self.model_data["permissions"]
         self.shared_input = {
             "identifier": "shared",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.shared_input_with_value = {**self.shared_input}
-        self.shared_input_with_value["addressable"] = self.model_data["address"]
-        self.shared_input_with_value["permissions"] = self.model_data["permissions"]
         self.predictions_input = {
             "identifier": "predictions",
             "asset_key": None,
             "parent_task_key": str(self.done_task.key),
             "parent_task_output_identifier": "model",
         }
-        self.predictions_input_with_value = {**self.predictions_input}
-        self.predictions_input_with_value["addressable"] = self.model_data["address"]
-        self.predictions_input_with_value["permissions"] = self.model_data["permissions"]
 
     def prepare_outputs(self):
         self.model_output = {
@@ -148,17 +133,13 @@ class ComputeTaskViewTests(APITestCase):
                 "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
             },
             "transient": False,
-            "value": None,
         }
-        self.model_output_with_value = {**self.model_output}
-        self.model_output_with_value["value"] = self.model_data
         self.predictions_output = {
             "permissions": {
                 "process": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
                 "download": {"public": False, "authorized_ids": ["MyOrg1MSP"]},
             },
             "transient": False,
-            "value": None,
         }
         self.performance_output = {
             "permissions": {
@@ -166,7 +147,6 @@ class ComputeTaskViewTests(APITestCase):
                 "process": {"authorized_ids": ["MyOrg1MSP"], "public": False},
             },
             "transient": False,
-            "value": None,
         }
 
     def tearDown(self):
@@ -254,8 +234,8 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "worker": "MyOrg1MSP",
                 "inputs": [
                     self.datasamples_input,
-                    self.opener_input_with_value,
-                    self.model_input_with_value,
+                    self.opener_input,
+                    self.model_input,
                 ],
                 "outputs": {
                     "model": self.model_output,
@@ -280,6 +260,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:task-list")
+        self.maxDiff = None
 
         todo_task = self.compute_tasks[ComputeTask.Status.STATUS_TODO]
         waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING]
@@ -307,7 +288,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "authorized_ids": ["MyOrg1MSP"],
             },
             "duration": 0,  # because start_date is None
-            "inputs": [self.datasamples_input, self.opener_input_with_value],
+            "inputs": [self.datasamples_input, self.opener_input],
             "outputs": {"model": self.model_output},
         }
 
@@ -331,6 +312,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(waiting_task.key),
@@ -351,6 +334,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 0,  # because start_date is None
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(doing_task.key),
@@ -371,6 +356,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(done_task.key),
@@ -391,6 +378,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(failed_task.key),
@@ -411,6 +400,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
             {
                 "key": str(canceled_task.key),
@@ -431,6 +422,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                     "authorized_ids": ["MyOrg1MSP"],
                 },
                 "duration": 3600,
+                "inputs": [self.datasamples_input, self.opener_input],
+                "outputs": {"model": self.model_output},
             },
         ]
 
@@ -563,7 +556,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         # this should be enough to guarantee that there will only be one matching task
         params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
@@ -796,7 +789,7 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
     queries_for_10_tasks = len(queries_10.captured_queries)
 
     assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
-    assert queries_for_60_tasks < 15
+    assert queries_for_60_tasks < 17
 
 
 @pytest.mark.django_db

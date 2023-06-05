@@ -356,7 +356,7 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
         perf_output = t.outputs.all()[1]
         factory.create_performance(perf_output, t.function)
     with utils.CaptureQueriesContext(connection) as query:
-        print(authenticated_client.get(url))
+        authenticated_client.get(url)
     query_task_with_perf = len(query.captured_queries)
     assert query_task_with_perf < 11
     assert query_task_with_perf - query_tasks_empty < 3

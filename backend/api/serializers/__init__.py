@@ -2,7 +2,6 @@ from .computeplan import ComputePlanSerializer
 from .computetask import ComputeTaskInputAssetSerializer
 from .computetask import ComputeTaskOutputAssetSerializer
 from .computetask import ComputeTaskSerializer
-from .computetask import ComputeTaskWithDetailsSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
@@ -18,7 +17,6 @@ __all__ = [
     "FunctionSerializer",
     "ComputePlanSerializer",
     "ComputeTaskSerializer",
-    "ComputeTaskWithDetailsSerializer",
     "ComputeTaskInputAssetSerializer",
     "ComputeTaskOutputAssetSerializer",
     "DataManagerSerializer",
