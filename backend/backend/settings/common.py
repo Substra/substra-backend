@@ -75,6 +75,7 @@ MIDDLEWARE = [
     "libs.health_check_middleware.HealthCheckMiddleware",
     "django_structlog.middlewares.RequestMiddleware",
     "django_structlog.middlewares.CeleryMiddleware",
+    "users.middlewares.user_registration.UserRegistration",
 ]
 
 DJANGO_LOG_SQL_QUERIES = to_bool(os.environ.get("DJANGO_LOG_SQL_QUERIES", "True"))
