@@ -384,11 +384,11 @@ spec:
 If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
 
 ```yaml
-postgresql:
+database:
   auth:
     password: abcd1234 # the password the backend will use
 
-integrated-postgresql:
+postgresql:
   auth:
     password: abcd1234 # the password the database expects
 ```
@@ -400,7 +400,7 @@ integrated-postgresql:
 The backend uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
 
 ```yaml
-postgresql:
+database:
   host: my.database.host
   
   auth:
@@ -408,6 +408,6 @@ postgresql:
     password: aStrongPassword
     database: orchestrator
 
-integrated-postgresql:
+postgresql:
   enabled: false
 ```

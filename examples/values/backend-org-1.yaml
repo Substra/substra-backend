@@ -9,7 +9,7 @@ config:
   LOG_LEVEL: DEBUG
 organizationName: MyOrg1
 
-integrated-postgresql:
+postgresql:
   primary:
     persistence:
       enabled: false

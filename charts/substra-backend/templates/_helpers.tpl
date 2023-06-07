@@ -177,9 +177,9 @@ example:
 {{- end -}}
 
 
-{{- define "substra-backend.postgresql.secret-name" -}}
-    {{- if .Values.postgresql.auth.credentialsSecretName -}}
-        {{- .Values.postgresql.auth.credentialsSecretName }}
+{{- define "substra-backend.database.secret-name" -}}
+    {{- if .Values.database.auth.credentialsSecretName -}}
+        {{- .Values.database.auth.credentialsSecretName }}
     {{- else -}}
         {{- template "substra.fullname" . }}-database
     {{- end -}}
@@ -188,10 +188,10 @@ example:
 {{/*
 The hostname we should connect to (external is defined, otherwise integrated)
 */}}
-{{- define "substra-backend.postgresql.host" -}}
-    {{- if .Values.postgresql.host }}
-        {{- .Values.postgresql.host }}
+{{- define "substra-backend.database.host" -}}
+    {{- if .Values.database.host }}
+        {{- .Values.database.host }}
     {{- else }}
-        {{- template "postgresql.primary.fullname" (index .Subcharts "integrated-postgresql") }}.{{ .Release.Namespace }}
+        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
