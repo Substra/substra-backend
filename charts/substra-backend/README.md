@@ -286,24 +286,24 @@ Else, you must strike a balance: longer durations are more convenient, but risk 
 | `oidc.users.channel`                    | The channel to assign OIDC users to (mandatory)                                                                                                                 | `nil`   |
 | `oidc.users.appendDomain`               | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)   | `false` |
 
-### PostgreSQL settings
+### Database connection settings
 
-| Name                                    | Description                                                                                                     | Value      |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------- |
-| `postgresql.auth.database`              | what DB to connect to                                                                                           | `substra`  |
-| `postgresql.auth.username`              | what user to connect as                                                                                         | `postgres` |
-| `postgresql.auth.password`              | what password to use for connecting                                                                             | `postgres` |
-| `postgresql.auth.credentialsSecretName` | An alternative to giving username and password; must have `POSTGRESQL_USERNAME` and `POSTGRESQL_PASSWORD` keys. | `nil`      |
-| `postgresql.host`                       | Hostname of the database to connect to (defaults to local)                                                      | `nil`      |
-| `postgresql.port`                       | Port of an external database to connect to                                                                      | `5432`     |
+| Name                                  | Description                                                                                                 | Value      |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| `database.auth.database`              | what DB to connect to                                                                                       | `substra`  |
+| `database.auth.username`              | what user to connect as                                                                                     | `postgres` |
+| `database.auth.password`              | what password to use for connecting                                                                         | `postgres` |
+| `database.auth.credentialsSecretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `nil`      |
+| `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`      |
+| `database.port`                       | Port of an external database to connect to                                                                  | `5432`     |
 
 ### Integrated PostgreSQL settings
 
 See Bitnami documentation
 
-| Name                            | Description                                                     | Value  |
-| ------------------------------- | --------------------------------------------------------------- | ------ |
-| `integrated-postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
+| Name                 | Description                                                     | Value  |
+| -------------------- | --------------------------------------------------------------- | ------ |
+| `postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
 
 ### Helm hooks
 

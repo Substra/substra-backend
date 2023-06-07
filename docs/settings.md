@@ -31,6 +31,11 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
 | int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
 | json | `CSRF_TRUSTED_ORIGINS` | `[]` | A list of origins that are allowed to use unsafe HTTP methods |
+| string | `DATABASE_DATABASE` | `?` (`f'backend_{ORG_NAME}'`) |  |
+| string | `DATABASE_HOSTNAME` | `localhost` |  |
+| string | `DATABASE_PASSWORD` | `backend` |  |
+| int | `DATABASE_PORT` | `5432` |  |
+| string | `DATABASE_USERNAME` | `backend` |  |
 | int | `DATA_UPLOAD_MAX_SIZE` | `1073741824` (`1024 * 1024 * 1024`) | bytes |
 | bool | `DEBUG_KEEP_POD_AND_DIRS` | `False` |  |
 | bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
@@ -54,11 +59,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OBJECTSTORE_URL` | nil |  |
 | int | `PAGINATION_MAX_PAGE_SIZE` | `10000` |  |
 | string | `POD_IP` | nil |  |
-| string | `POSTGRESQL_DATABASE` | `?` (`f'backend_{ORG_NAME}'`) |  |
-| string | `POSTGRESQL_HOSTNAME` | `localhost` |  |
-| string | `POSTGRESQL_PASSWORD` | `backend` |  |
-| int | `POSTGRESQL_PORT` | `5432` |  |
-| string | `POSTGRESQL_USERNAME` | `backend` |  |
 | string | `REGISTRY` | nil |  |
 | bool | `REGISTRY_IS_LOCAL` | nil |  |
 | string | `REGISTRY_PULL_DOMAIN` | nil |  |
