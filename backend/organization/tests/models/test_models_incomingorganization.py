@@ -17,7 +17,7 @@ class PBKDF2PasswordDefault40Hasher(PBKDF2PasswordHasher):
 # Cf Django 4.2 release notes https://docs.djangoproject.com/en/dev/releases/4.2
 class PBKDF2PasswordDefault41Hasher(PBKDF2PasswordHasher):
     algorithm = "pbkdf2_4_1"
-    iterations = 600_000
+    iterations = 390_000
 
 
 class IncomingOrganizationTests(TestCase):
