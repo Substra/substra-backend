@@ -297,13 +297,15 @@ Else, you must strike a balance: longer durations are more convenient, but risk 
 | `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`      |
 | `database.port`                       | Port of an external database to connect to                                                                  | `5432`     |
 
-### Integrated PostgreSQL settings
+### PostgreSQL settings
 
-See Bitnami documentation
+Database included as a subchart used by default.
 
-| Name                 | Description                                                     | Value  |
-| -------------------- | --------------------------------------------------------------- | ------ |
-| `postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
+See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
+
+| Name                 | Description                                                | Value  |
+| -------------------- | ---------------------------------------------------------- | ------ |
+| `postgresql.enabled` | Deploy a PostgreSQL instance along the backend for its use | `true` |
 
 ### Helm hooks
 
