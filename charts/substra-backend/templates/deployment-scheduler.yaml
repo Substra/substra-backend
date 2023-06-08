@@ -57,7 +57,7 @@ spec:
             - secretRef:
                 name: {{ include "substra.fullname" . }}-redis
             - secretRef:
-                name: {{ include "substra.fullname" . }}-database
+                name: {{ include "substra-backend.database.secret-name" . }}
           env:
             - name: NAMESPACE
               valueFrom:

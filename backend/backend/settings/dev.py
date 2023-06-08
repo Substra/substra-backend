@@ -19,20 +19,6 @@ REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
     "libs.session_authentication.CustomSessionAuthentication",
 ]
 
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("BACKEND_DB_NAME", f"backend_{ORG_NAME}"),
-        "USER": os.environ.get("BACKEND_DB_USER", "backend"),
-        "PASSWORD": os.environ.get("BACKEND_DB_PWD", "backend"),
-        "HOST": os.environ.get("DATABASE_HOST", "localhost"),
-        "PORT": 5432,
-    }
-}
-
 DATASAMPLE_BUCKET_NAME = "substra-datasample"
 DATASAMPLE_STORAGE = MinioStorage(DATASAMPLE_BUCKET_NAME)
 

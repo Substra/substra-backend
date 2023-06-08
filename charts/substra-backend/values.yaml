@@ -699,16 +699,44 @@ oidc:
     ## @param oidc.users.appendDomain As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)
     appendDomain: false
 
-## @skip postgresql
+## @section Database connection settings
+database:
+  auth:
+    ## @param database.auth.database what DB to connect to
+    database: &psql-database substra
+    ## @param database.auth.username what user to connect as
+    username: &psql-username postgres
+    ## @param database.auth.password what password to use for connecting
+    password: &psql-password postgres
+    
+    ## @param database.auth.credentialsSecretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
+    ##
+    credentialsSecretName: null
+  
+  ## @param database.host Hostname of the database to connect to (defaults to local)
+  host: null
+  ## @param database.port Port of an external database to connect to
+  port: 5432
+
+
+## @section PostgreSQL settings
+## @descriptionStart
+## Database included as a subchart used by default.
 ##
+## See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
+## @descriptionEnd
+
 postgresql:
+  ## @param postgresql.enabled Deploy a PostgreSQL instance along the backend for its use
+  ##
   enabled: true
+  ## @skip postgresql.auth
   auth:
     enablePostgresUser: true
-    postgresPassword: postgres
-    username: postgres
-    password: postgres
-    database: substra
+    postgresPassword: *psql-password
+    username: *psql-username
+    password: *psql-password
+    database: *psql-database
 
 ## @skip redis
 ##

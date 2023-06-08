@@ -31,6 +31,11 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
 | int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
 | json | `CSRF_TRUSTED_ORIGINS` | `[]` | A list of origins that are allowed to use unsafe HTTP methods |
+| string | `DATABASE_DATABASE` | `?` (`f'backend_{ORG_NAME}'`) |  |
+| string | `DATABASE_HOSTNAME` | `localhost` |  |
+| string | `DATABASE_PASSWORD` | `backend` |  |
+| int | `DATABASE_PORT` | `5432` |  |
+| string | `DATABASE_USERNAME` | `backend` |  |
 | int | `DATA_UPLOAD_MAX_SIZE` | `1073741824` (`1024 * 1024 * 1024`) | bytes |
 | bool | `DEBUG_KEEP_POD_AND_DIRS` | `False` |  |
 | bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
@@ -89,7 +94,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
 | string | `BACKEND_DEFAULT_PORT` | `8000` |  |
-| string | `ORG_NAME` | nil |  |
+| string | `ORG_NAME` | `default` |  |
 
 ## OpenID Connect settings
 

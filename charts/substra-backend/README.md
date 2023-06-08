@@ -286,6 +286,27 @@ Else, you must strike a balance: longer durations are more convenient, but risk 
 | `oidc.users.channel`                    | The channel to assign OIDC users to (mandatory)                                                                                                                 | `nil`   |
 | `oidc.users.appendDomain`               | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)   | `false` |
 
+### Database connection settings
+
+| Name                                  | Description                                                                                                 | Value      |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| `database.auth.database`              | what DB to connect to                                                                                       | `substra`  |
+| `database.auth.username`              | what user to connect as                                                                                     | `postgres` |
+| `database.auth.password`              | what password to use for connecting                                                                         | `postgres` |
+| `database.auth.credentialsSecretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `nil`      |
+| `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`      |
+| `database.port`                       | Port of an external database to connect to                                                                  | `5432`     |
+
+### PostgreSQL settings
+
+Database included as a subchart used by default.
+
+See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
+
+| Name                 | Description                                                | Value  |
+| -------------------- | ---------------------------------------------------------- | ------ |
+| `postgresql.enabled` | Deploy a PostgreSQL instance along the backend for its use | `true` |
+
 ### Helm hooks
 
 | Name                                       | Description                                                                 | Value             |
@@ -356,6 +377,39 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/PATH/TO/YOUR/LOCAL_STORAGE"
+```
 
+### Database
 
+#### Internal
+
+If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
+
+```yaml
+database:
+  auth:
+    password: abcd1234 # the password the backend will use
+
+postgresql:
+  auth:
+    password: abcd1234 # the password the database expects
+```
+
+(you could use YAML anchors for this)
+
+#### External
+
+The backend uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
+
+```yaml
+database:
+  host: my.database.host
+  
+  auth:
+    username: my-user
+    password: aStrongPassword
+    database: orchestrator
+
+postgresql:
+  enabled: false
 ```

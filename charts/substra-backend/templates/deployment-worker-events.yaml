@@ -59,7 +59,7 @@ spec:
             - secretRef:
                 name: {{ include "substra.fullname" . }}-redis
             - secretRef:
-                name: {{ include "substra.fullname" . }}-database
+                name: {{ include "substra-backend.database.secret-name" . }}
           readinessProbe:
             exec:
               command:
@@ -111,7 +111,7 @@ spec:
         {{- end }}
         - name: wait-postgresql
           image: jwilder/dockerize:0.6.1
-          command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+          command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.database.host" . }}:{{ .Values.database.port }}']
         - name: wait-init-migrations
           image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
           command: ['bash', '/usr/src/app/wait-init-migration.sh']
@@ -127,7 +127,7 @@ spec:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-settings
             - secretRef:
-                name: {{ include "substra.fullname" . }}-database
+                name: {{ include "substra-backend.database.secret-name" . }}
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.{{ .Values.settings }}

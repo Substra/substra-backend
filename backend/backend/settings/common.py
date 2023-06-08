@@ -163,12 +163,16 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = json.loads(os.environ.get("CSRF_TRUSTED_ORIGINS", "[]"))
 
 # Database
-# https://docs.djangoproject.com/en/1.9/ref/settings/#databases
+# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(PROJECT_ROOT, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DATABASE_DATABASE", f"backend_{ORG_NAME}"),
+        "USER": os.environ.get("DATABASE_USERNAME", "backend"),
+        "PASSWORD": os.environ.get("DATABASE_PASSWORD", "backend"),
+        "HOST": os.environ.get("DATABASE_HOSTNAME", "localhost"),
+        "PORT": int(os.environ.get("DATABASE_PORT", "5432")),
     }
 }
 

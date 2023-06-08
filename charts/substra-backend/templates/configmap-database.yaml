@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "substra.fullname" . }}-database
+  name: {{ include "substra.fullname" . }}-database
   labels:
   {{- include "substra.labels" . | nindent 4 }}
 data:
-  BACKEND_DB_NAME: {{ .Values.postgresql.auth.database }}
-  BACKEND_DB_USER: {{ .Values.postgresql.auth.username }}
-  DATABASE_HOST: {{ template "postgresql.serviceName" . }}
+  DATABASE_DATABASE: !!str {{ .Values.database.auth.database }}
+  DATABASE_HOSTNAME: !!str {{ include "substra-backend.database.host" . }}
+  DATABASE_PORT: !!str {{ .Values.database.port }}

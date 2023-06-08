@@ -69,20 +69,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 
 {{/*
-Redefine the postgresql service name because we can't use subchart templates directly.
-*/}}
-{{- define "postgresql.serviceName" -}}
-{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
-{{- $fullname := default (printf "%s-%s" .Release.Name $name) .Values.postgresql.fullnameOverride -}}
-{{- if .Values.postgresql.replication.enabled -}}
-{{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
 Redefine the redis service name because we can't use subchart templates directly.
 */}}
 {{- define "redis.serviceName" -}}
@@ -188,4 +174,24 @@ example:
     {{- else -}}
     {{- printf "%s:%s" .img.repository $tag -}}
     {{- end -}}
+{{- end -}}
+
+
+{{- define "substra-backend.database.secret-name" -}}
+    {{- if .Values.database.auth.credentialsSecretName -}}
+        {{- .Values.database.auth.credentialsSecretName }}
+    {{- else -}}
+        {{- template "substra.fullname" . }}-database
+    {{- end -}}
+{{- end -}}
+
+{{/*
+The hostname we should connect to (external is defined, otherwise integrated)
+*/}}
+{{- define "substra-backend.database.host" -}}
+    {{- if .Values.database.host }}
+        {{- .Values.database.host }}
+    {{- else }}
+        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
+    {{- end }}
 {{- end -}}
