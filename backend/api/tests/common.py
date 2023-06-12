@@ -25,9 +25,10 @@ def generate_jwt_auth_header(jwt):
 class AuthenticatedClient(APIClient):
     def __init__(
         self,
+        *,
+        channel=None,
         enforce_csrf_checks=False,
         role=UserChannel.Role.USER,
-        channel=None,
         username="substra",
         password="p@sswr0d44",
         **defaults,
@@ -41,15 +42,16 @@ class AuthenticatedClient(APIClient):
 
     def create_user(self):
         user, created = User.objects.get_or_create(username=self.username)
+
         if created:
             user.set_password(self.password)
-            user.save()
             # for testing purpose most authentication are done without channel allowing to mock passing channel in
             # header, this check is necessary to not break previous tests but irl a user cannot be created
             # without a channel
             if self.channel:
                 UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
-            self.user = user
+            user.save()
+        self.user = user
 
     def request(self, **kwargs):
         # create user

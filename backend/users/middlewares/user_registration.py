@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from rest_framework.exceptions import PermissionDenied
 
 
@@ -7,8 +8,12 @@ class UserRegistration:
         # One-time configuration and initialization.
 
     def __call__(self, request):
-        if not hasattr(request.user, "channel"):
-            raise PermissionDenied(detail={"error_code": "registration_error", "description": "User is not registered"})
+        if not isinstance(request.user, AnonymousUser):
+            print(request.user)
+            if not hasattr(request.user, "channel"):
+                raise PermissionDenied(
+                    detail={"error_code": "registration_error", "description": "User is not registered"}
+                )
 
         response = self.get_response(request)
 
