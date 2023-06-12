@@ -18,7 +18,6 @@ from api.models import Model
 from api.models import Performance
 from api.serializers.datamanager import DataManagerSerializer
 from api.serializers.datasample import DataSampleSerializer
-from api.serializers.function import FunctionSerializer
 from api.serializers.model import ModelSerializer
 from api.serializers.performance import PerformanceSerializer
 from api.serializers.utils import SafeSerializerMixin
@@ -37,6 +36,31 @@ class ComputeTaskInputSerializer(serializers.ModelSerializer, SafeSerializerMixi
             "parent_task_key",
             "parent_task_output_identifier",
         ]
+
+    asset = serializers.SerializerMethodField(source="*", read_only=True)
+
+    def to_representation(self, data):
+        data = super().to_representation(data)
+        asset_data = data.pop("asset")
+        data.update(asset_data)
+        return data
+
+    def get_asset(self, task_input):
+        data = {}
+        try:
+            if task_input.asset.asset_kind == FunctionInput.Kind.ASSET_DATA_MANAGER:
+                data_manager = DataManager.objects.get(key=task_input.asset.asset_key)
+                data_manager_data = DataManagerSerializer(context=self.context, instance=data_manager).data
+                data["addressable"] = data_manager_data["opener"]
+                data["permissions"] = data_manager_data["permissions"]
+            elif task_input.asset.asset_kind == FunctionInput.Kind.ASSET_MODEL:
+                model = Model.objects.get(key=task_input.asset.asset_key)
+                model_data = ModelSerializer(context=self.context, instance=model).data
+                data["addressable"] = model_data["address"]
+                data["permissions"] = model_data["permissions"]
+        except ComputeTaskInputAsset.DoesNotExist:
+            pass
+        return data
 
 
 class ComputeTaskOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -109,17 +133,8 @@ class ComputeTaskOutputAssetSerializer(serializers.ModelSerializer, SafeSerializ
             return PerformanceSerializer(context=self.context, instance=performance).data
 
 
-class FunctionField(serializers.Field):
-    def to_representation(self, data):
-        return FunctionSerializer(instance=data).data
-
-    def to_internal_value(self, data):
-        return Function.objects.get(key=data["key"])
-
-
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     logs_permission = make_permission_serializer("logs_permission")(source="*")
-    function = FunctionField()
 
     # Need to set `pk_field` for `PrimaryKeyRelatedField` in order to correctly serialize `UUID` to `str`
     # See: https://stackoverflow.com/a/51636009
@@ -128,6 +143,12 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         source="compute_plan",
         pk_field=serializers.UUIDField(format="hex_verbose"),
     )
+    function_key = serializers.PrimaryKeyRelatedField(
+        queryset=Function.objects.all(),
+        source="function",
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
+    function_name = serializers.SlugRelatedField(queryset=Function.objects.all(), source="function", slug_field="name")
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
 
     duration = serializers.IntegerField(read_only=True)
@@ -137,7 +158,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
         model = ComputeTask
         fields = [
-            "function",
+            "function_key",
+            "function_name",
             "channel",
             "compute_plan_key",
             "creation_date",
@@ -186,6 +208,25 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             task["function"]["function"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[task["function"]["key"]])
             )
+
+
+class ComputeTaskWithDetailsSerializer(ComputeTaskSerializer):
+    inputs = ComputeTaskInputSerializer(many=True)
+    outputs = ComputeTaskOutputSerializer(many=True)
+
+    class Meta:
+        model = ComputeTask
+        fields = ComputeTaskSerializer.Meta.fields + [
+            "inputs",
+            "outputs",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        data["outputs"] = {_output.pop("identifier"): _output for _output in data["outputs"]}
+
+        return data
 
     @transaction.atomic
     def create(self, validated_data):
