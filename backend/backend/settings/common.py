@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import json
 import os
-import pathlib
-import secrets
 import sys
 from datetime import timedelta
 
@@ -22,6 +20,7 @@ from django.core.files.storage import FileSystemStorage
 
 from substrapp.compute_tasks.errors import CeleryRetryError
 
+from .deps.jwt import *
 from .deps.org import *
 
 TRUE_VALUES = {"t", "T", "y", "Y", "yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "1", 1, True}
@@ -62,22 +61,6 @@ sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, "libs")))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-JWT_SECRET_PATH = os.environ.get("JWT_SECRET_PATH", os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET")))
-
-# Key configuration for JSON web tokens (JWT) authentication
-if to_bool(os.environ.get("JWT_SECRET_NEEDED", "False")):
-    try:
-        SECRET_KEY = pathlib.Path(JWT_SECRET_PATH).read_text().strip()
-    except IOError:
-        try:
-            SECRET_KEY = secrets.token_urlsafe()  # uses a "reasonable default" length
-            with open(JWT_SECRET_PATH, "w") as fp:
-                fp.write(SECRET_KEY)
-        except IOError:
-            raise Exception(f"Cannot open file `{JWT_SECRET_PATH}` for writing.")
-else:
-    SECRET_KEY = "unused default value " + secrets.token_urlsafe()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
