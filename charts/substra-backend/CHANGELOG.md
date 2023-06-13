@@ -1,5 +1,11 @@
 # Changelog
 
+## 22.5.1
+
+### Changed
+
+- Update substra-backend image tag to `0.38.0`
+
 ## [22.5.0] - 2023-06-07
 
 ### Added
@@ -326,7 +332,7 @@ This release contains a breaking change check the UPGRADE document for the upgra
 
 ## 16.2.0
 
-### Added
+###  Added
 
 - Add lazy-apps to the uWSGI config
 - Exposed Django metrics behind the flag `server.metrics`
