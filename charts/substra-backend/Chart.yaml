@@ -2,7 +2,7 @@ apiVersion: v2
 name: substra-backend
 home: https://github.com/Substra
 version: 22.5.1
-appVersion: 0.38.0rc1
+appVersion: 0.38.0-rc1
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
 type: application
