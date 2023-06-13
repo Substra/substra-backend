@@ -187,7 +187,7 @@ class UserViewSet(
         username = unquote(kwargs.get("username"))
         instance = self.user_model.objects.get(username=username)
 
-        secret = _xor_secrets(instance.password, force_str(settings.JWT_SECRET_KEY))
+        secret = _xor_secrets(instance.password, force_str(settings.SECRET_KEY))
         token_validation = _validate_token(token, secret)
 
         if token_validation.get("is_valid"):
@@ -207,7 +207,7 @@ class UserViewSet(
         username = unquote(kwargs.get("username"))
         instance = self.user_model.objects.get(username=username)
 
-        secret = _xor_secrets(instance.password, force_str(settings.JWT_SECRET_KEY))
+        secret = _xor_secrets(instance.password, force_str(settings.SECRET_KEY))
         token_validation = _validate_token(token, secret)
         if token_validation.get("is_valid"):
             return ApiResponse(data={}, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
@@ -221,7 +221,7 @@ class UserViewSet(
     def generate_reset_password_token(self, request, *args, **kwargs):
         """Returns reset password token. Restricted to Admin request"""
         instance = self.get_object()
-        secret = _xor_secrets(instance.password, force_str(settings.JWT_SECRET_KEY))
+        secret = _xor_secrets(instance.password, force_str(settings.SECRET_KEY))
 
         jwt_token = jwt.encode(
             payload={"exp": datetime.datetime.now() + datetime.timedelta(days=7)},

@@ -1,4 +1,4 @@
-from .deps.oidc import *
+from .mods.oidc import *
 from .test import *
 
 # Enable Browsable API

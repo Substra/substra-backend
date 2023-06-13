@@ -12,62 +12,25 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import json
 import os
-import sys
 from datetime import timedelta
 
 import structlog
 from django.core.files.storage import FileSystemStorage
 
-from substrapp.compute_tasks.errors import CeleryRetryError
-
+from .deps.celery import *
 from .deps.jwt import *
 from .deps.org import *
-
-TRUE_VALUES = {"t", "T", "y", "Y", "yes", "YES", "true", "True", "TRUE", "on", "On", "ON", "1", 1, True}
-
-
-def to_bool(value):
-    return value in TRUE_VALUES
-
-
-def build_broker_url(user: str, password: str, host: str, port: str) -> str:
-    """Builds a redis connection string
-
-    Args:
-        user (str): redis user
-        password (str): redis password
-        host (str): redis hostname
-        port (str): redis port
-
-    Returns:
-        str: a connection string of the form "redis://user:password@hostname:port//"
-    """
-    conn_info = ""
-    conn_port = ""
-    if user and password:
-        conn_info = f"{user}:{password}@"
-    if port:
-        conn_port = f":{port}"
-    return f"redis://{conn_info}{host}{conn_port}//"
-
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
-
-sys.path.append(PROJECT_ROOT)
-sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, "libs")))
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
-
+from .deps.path import *
+from .deps.secret_key import *
+from .deps.utils import to_bool
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-SUBPATH = ""
-if os.environ.get("SUBPATH"):
-    SUBPATH = os.environ.get("SUBPATH").strip("/") + "/"
+
+SUBPATH = os.environ.get("SUBPATH", "")  # prefix for backend endpoints
+if SUBPATH:
+    SUBPATH = SUBPATH.strip("/") + "/"
 
 ALLOWED_HOSTS = ["127.0.0.1", "::1", "localhost"] + json.loads(os.environ.get("ALLOWED_HOSTS", "[]"))
 if os.environ.get("HOST_IP"):
@@ -231,40 +194,6 @@ TASK = {
     "COMPUTE_POD_STARTUP_TIMEOUT_SECONDS": int(os.environ.get("COMPUTE_POD_STARTUP_TIMEOUT_SECONDS", 300)),
 }
 
-CELERY_BROKER_USER = os.environ.get("CELERY_BROKER_USER")
-CELERY_BROKER_PASSWORD = os.environ.get("CELERY_BROKER_PASSWORD")
-CELERY_BROKER_HOST = os.environ.get("CELERY_BROKER_HOST", "localhost")
-CELERY_BROKER_PORT = os.environ.get("CELERY_BROKER_PORT", "5672")
-CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_USER, CELERY_BROKER_PASSWORD, CELERY_BROKER_HOST, CELERY_BROKER_PORT)
-
-CELERY_ACCEPT_CONTENT = ["application/json"]
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TASK_SERIALIZER = "json"
-CELERY_TASK_TRACK_STARTED = True  # since 4.0
-
-# With these settings, tasks will be retried for up to a maximum of 127 minutes.
-#
-# max_wait = CELERY_TASK_RETRY_BACKOFF * sum(2 ** n for n in range(CELERY_TASK_MAX_RETRIES))
-#          = 60 * (1 + 2 + 4 + 8 + 16 + 32 + 64)
-#          = 127 minutes
-#
-# Since jitter is enabled, the actual cumulative wait can be much less than max_wait. From the doc
-# (https://docs.celeryproject.org/en/stable/userguide/tasks.html#Task.retry_jitter):
-#
-# > If this option is set to True, the delay value calculated by retry_backoff is treated as a maximum, and the actual
-# > delay value will be a random number between zero and that maximum.
-CELERY_TASK_AUTORETRY_FOR = (CeleryRetryError,)
-CELERY_TASK_MAX_RETRIES = int(os.environ.get("CELERY_TASK_MAX_RETRIES", 7))
-CELERY_TASK_RETRY_BACKOFF = int(os.environ.get("CELERY_TASK_RETRY_BACKOFF", 60))  # time in seconds
-CELERY_TASK_RETRY_BACKOFF_MAX = int(os.environ.get("CELERY_TASK_RETRY_BACKOFF_MAX", 64 * 60))
-CELERY_TASK_RETRY_JITTER = True
-
-CELERY_WORKER_CONCURRENCY = int(os.environ.get("CELERY_WORKER_CONCURRENCY", 1))
-CELERY_BROADCAST = f"{ORG_NAME}.broadcast"
-
-CELERYBEAT_MAXIMUM_IMAGES_TTL = os.environ.get("CELERYBEAT_MAXIMUM_IMAGES_TTL", 7 * 24 * 3600)
-CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD = os.environ.get("CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD", 24 * 3600)
-
 WORKER_PVC_IS_HOSTPATH = to_bool(os.environ.get("WORKER_PVC_IS_HOSTPATH"))
 WORKER_PVC_DOCKER_CACHE = os.environ.get("WORKER_PVC_DOCKER_CACHE")
 WORKER_PVC_SUBTUPLE = os.environ.get("WORKER_PVC_SUBTUPLE")
@@ -405,9 +334,6 @@ COMMON_HOST_DOMAIN = os.environ.get("COMMON_HOST_DOMAIN")
 ISOLATED = to_bool(os.environ.get("ISOLATED"))
 
 CONTENT_DISPOSITION_HEADER = {}
-
-# To encode unique jwt token generated with reset password request
-RESET_JWT_SIGNATURE_ALGORITHM = "HS256"
 
 # Username of additional Django user representing user external to organization
 EXTERNAL_USERNAME = "external"
