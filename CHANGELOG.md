@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `SECRET_KEY_PATH` and `SECRET_KEY_LOAD_AND_STORE` environment variables ([#668](https://github.com/Substra/substra-backend/pull/668))
+
 ## [0.38.0](https://github.com/Substra/substra-backend/releases/tag/0.38.0) 2023-06-12
 
 ### Added
 
 - BREAKING: Support for multiple API tokens with expanded functionality ([#639](https://github.com/Substra/substra-backend/pull/639))
-- New `SECRET_KEY_PATH` and `SECRET_KEY_STORE` environment variables ([#657](https://github.com/Substra/substra-backend/pull/657))
 
 ### Changed
 
