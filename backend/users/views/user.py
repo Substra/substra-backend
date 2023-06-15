@@ -1,11 +1,14 @@
 import datetime
+import json
 from urllib.parse import unquote
 
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
+from django.core.serializers import serialize
 from django.utils.encoding import force_str
 from django_filters.rest_framework import ChoiceFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,6 +19,7 @@ from jwt.exceptions import InvalidTokenError
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import status
+from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -86,6 +90,12 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             return True
 
         return request.user.channel.role == UserChannel.Role.ADMIN
+
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return request.user.channel.role == UserChannel.Role.ADMIN
 
 
 class IsSelf(permissions.BasePermission):
@@ -232,3 +242,24 @@ class UserViewSet(
         data = {"reset_password_token": jwt_token}
 
         return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
+
+
+class UnactivatedUserView(DRFObtainAuthToken):
+    permission_classes = [IsAdmin]
+
+    def get(self, request, *args, **kwargs):
+        """
+        list unactivated users usernames
+        """
+        users = [user.username for user in User.objects.filter(channel=None)]
+        return ApiResponse(data={"unactivated_users": users}, status=status.HTTP_200_OK)
+
+    # TODO THIS SHOULD NOT BE IN THE PULL REQUEST
+    def post(self, request, *args, **kwargs):
+        d = json.loads(request.body)
+        user, created = User.objects.get_or_create(username=d.get("username"))
+        if created:
+            user.set_password(d.get("password"))
+            user.save()
+        user_json = serialize("json", [user])
+        return ApiResponse({"new_unactivated_user": user_json})
