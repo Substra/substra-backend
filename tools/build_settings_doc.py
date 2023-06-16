@@ -98,16 +98,16 @@ def load_settings_from_file(filename: pathlib.Path) -> list[Setting]:  # noqa C9
                 try:
                     setting.default_value = ast.literal_eval(node.args[1])
                 except ValueError:
+                    setting.default_value_comment = ast.unparse(node.args[1])
                     # default value is an expression, evaluate it to get a valid input
                     try:
                         setting.default_value = eval(ast.unparse(node.args[1]))  # nosec
                     except Exception as e:
-                        setting.default_value = "?"
+                        setting.default_value = setting.default_value_comment
+                        setting.default_value_comment = None
                         print(
                             f"Warning: Couldn't eval {filename.relative_to(ROOT_PATH)} line {node.lineno}: {ast.unparse(node.args[1])} ({e}), leaving it as-is in the documentation."
                         )
-
-                    setting.default_value_comment = ast.unparse(node.args[1])
 
             # get same-line comment
             for line in range(node_to_consider_for_comments.lineno, node_to_consider_for_comments.end_lineno + 1):
@@ -164,7 +164,13 @@ def generate_doc(settings_by_section: dict[str, list[Setting]], true_values: Col
 
             for setting in sorted(settings, key=lambda setting: setting.name):
                 # Replace None with nil since None has a meaning in python
-                default = "nil" if setting.default_value is None else f"`{setting.default_value}`"
+
+                if setting.default_value is None:
+                    default = "nil"
+                elif isinstance(setting.default_value, str) and len(setting.default_value) == 0:
+                    default = "empty string"
+                else:
+                    default = f"`{setting.default_value}`"
                 default_value_comment = f" (`{setting.default_value_comment}`)" if setting.default_value_comment else ""
                 settings_doc.write(
                     f"| {setting.type} | `{setting.name}` | {default}{default_value_comment} | {setting.comment} |\n"
@@ -201,15 +207,18 @@ if __name__ == "__main__":
     args = parse_arguments()
     settings = {}
     settings["Global"] = load_settings_from_file(SETTINGS_FOLDER / "common.py")
+    settings["Secret key"] = load_settings_from_file(SETTINGS_FOLDER / "deps/secret_key.py")
+    settings["JWT"] = load_settings_from_file(SETTINGS_FOLDER / "deps/jwt.py")
     settings["Orchestrator"] = load_settings_from_file(SETTINGS_FOLDER / "deps/orchestrator.py")
+    settings["Task broker"] = load_settings_from_file(SETTINGS_FOLDER / "deps/celery.py")
     settings["Org"] = load_settings_from_file(SETTINGS_FOLDER / "deps/org.py")
-    settings["OpenID Connect"] = load_settings_from_file(SETTINGS_FOLDER / "deps/oidc.py")
-    settings["CORS"] = load_settings_from_file(SETTINGS_FOLDER / "deps/cors.py")
+    settings["OpenID Connect"] = load_settings_from_file(SETTINGS_FOLDER / "mods/oidc.py")
+    settings["CORS"] = load_settings_from_file(SETTINGS_FOLDER / "mods/cors.py")
     settings["Ledger"] = load_settings_from_file(SETTINGS_FOLDER / "deps/ledger.py")
     settings["Worker event app"] = load_settings_from_file(SETTINGS_FOLDER / "worker/events/common.py")
     settings["API event app"] = load_settings_from_file(SETTINGS_FOLDER / "api/events/common.py")
 
-    true_values = load_true_values_from_file(SETTINGS_FOLDER / "common.py")
+    true_values = load_true_values_from_file(SETTINGS_FOLDER / "deps/utils.py")
 
     if args["check"]:
         with tempfile.TemporaryDirectory() as tmpdir:

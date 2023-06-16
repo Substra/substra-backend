@@ -14,16 +14,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 |------|---------|---------------|---------|
 | json | `ALLOWED_HOSTS` | `[]` |  |
 | string | `BACKEND_VERSION` | `dev` |  |
-| string | `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `86400` (`24 * 3600`) |  |
-| string | `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `604800` (`7 * 24 * 3600`) |  |
-| string | `CELERY_BROKER_HOST` | `localhost` |  |
-| string | `CELERY_BROKER_PASSWORD` | nil |  |
-| string | `CELERY_BROKER_PORT` | `5672` |  |
-| string | `CELERY_BROKER_USER` | nil |  |
-| int | `CELERY_TASK_MAX_RETRIES` | `7` |  |
-| int | `CELERY_TASK_RETRY_BACKOFF` | `60` | time in seconds |
-| int | `CELERY_TASK_RETRY_BACKOFF_MAX` | `3840` (`64 * 60`) |  |
-| int | `CELERY_WORKER_CONCURRENCY` | `1` |  |
 | string | `COMMON_HOST_DOMAIN` | nil |  |
 | string | `COMPUTE_POD_FS_GROUP` | nil |  |
 | int | `COMPUTE_POD_GKE_GPUS_LIMITS` | `0` |  |
@@ -31,7 +21,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
 | int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
 | json | `CSRF_TRUSTED_ORIGINS` | `[]` | A list of origins that are allowed to use unsafe HTTP methods |
-| string | `DATABASE_DATABASE` | `?` (`f'backend_{ORG_NAME}'`) |  |
+| string | `DATABASE_DATABASE` | `f'backend_{ORG_NAME}'` |  |
 | string | `DATABASE_HOSTNAME` | `localhost` |  |
 | string | `DATABASE_PASSWORD` | `backend` |  |
 | int | `DATABASE_PORT` | `5432` |  |
@@ -64,7 +54,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `REGISTRY_PULL_DOMAIN` | nil |  |
 | string | `REGISTRY_SCHEME` | nil |  |
 | string | `REGISTRY_SERVICE_NAME` | nil |  |
-| string | `SUBPATH` | nil |  |
+| string | `SUBPATH` | empty string | prefix for backend endpoints |
 | bool | `TASK_CACHE_DOCKER_IMAGES` | `False` |  |
 | bool | `TASK_CHAINKEYS_ENABLED` | `False` |  |
 | bool | `TASK_LIST_WORKSPACE` | `True` |  |
@@ -72,6 +62,20 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `WORKER_PVC_IS_HOSTPATH` | nil |  |
 | string | `WORKER_PVC_SUBTUPLE` | nil |  |
 | string | `WORKER_REPLICA_SET_NAME` | nil |  |
+
+## Secret key settings
+
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| bool | `SECRET_KEY_LOAD_AND_STORE` | `False` | Whether to load the secret key from file (and write it there if it doesn't exist) |
+| string | `SECRET_KEY_PATH` | `os.path.normpath(os.path.join(path.PROJECT_ROOT, 'SECRET'))` |  |
+
+## JWT settings
+
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| int | `ACCESS_TOKEN_LIFETIME` | `1440` (`24 * 60`) |  |
+| int | `REFRESH_TOKEN_LIFETIME` | `10080` (`24 * 60 * 7`) |  |
 
 ## Orchestrator settings
 
@@ -89,6 +93,21 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `ORCHESTRATOR_TLS_ENABLED` | nil |  |
 | string | `ORCHESTRATOR_TLS_SERVER_CACERT_PATH` | nil |  |
 
+## Task broker settings
+
+| Type | Setting | Default value | Comment |
+|------|---------|---------------|---------|
+| string | `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD` | `86400` (`24 * 3600`) |  |
+| string | `CELERYBEAT_MAXIMUM_IMAGES_TTL` | `604800` (`7 * 24 * 3600`) |  |
+| string | `CELERY_BROKER_HOST` | `localhost` |  |
+| string | `CELERY_BROKER_PASSWORD` | nil |  |
+| string | `CELERY_BROKER_PORT` | `5672` |  |
+| string | `CELERY_BROKER_USER` | nil |  |
+| int | `CELERY_TASK_MAX_RETRIES` | `7` |  |
+| int | `CELERY_TASK_RETRY_BACKOFF` | `60` | time in seconds |
+| int | `CELERY_TASK_RETRY_BACKOFF_MAX` | `3840` (`64 * 60`) |  |
+| int | `CELERY_WORKER_CONCURRENCY` | `1` |  |
+
 ## Org settings
 
 | Type | Setting | Default value | Comment |
@@ -102,7 +121,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 |------|---------|---------------|---------|
 | bool | `OIDC_ENABLED` | `false` |  |
 | string | `OIDC_OP_AUTHORIZATION_ENDPOINT` | nil |  |
-| string | `OIDC_OP_DISPLAY_NAME` | `?` (`OIDC['OP']['URL']`) |  |
+| string | `OIDC_OP_DISPLAY_NAME` | `OIDC['OP']['URL']` |  |
 | string | `OIDC_OP_JWKS_URI` | nil |  |
 | string | `OIDC_OP_TOKEN_ENDPOINT` | nil |  |
 | string | `OIDC_OP_URL` | nil |  |
