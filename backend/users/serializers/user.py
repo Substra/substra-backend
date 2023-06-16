@@ -56,3 +56,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_external_user(self, instance):
         return hasattr(instance, "oidc_info")
+
+
+class UserAwaitingApprovalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["username"]

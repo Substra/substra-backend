@@ -30,7 +30,7 @@ from backend.views import obtain_auth_token
 from backend.views import obtain_auth_token_already_authenticated
 from organization.urls import router as organization_router
 from users.urls import router as user_router
-from users.views.user import UnactivatedUserView
+from users.views.user import UserAwaitingApprovalViewSet
 
 urlpatterns = (
     [
@@ -44,7 +44,7 @@ urlpatterns = (
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
                     path("api-token/", obtain_auth_token_already_authenticated),
                     path("active-api-tokens/", active_bearer_tokens),
-                    path("unactivated-users/", UnactivatedUserView.as_view()),
+                    path("unactivated-users/", UserAwaitingApprovalViewSet.as_view({"get": "list"})),
                 ]
             ),
         ),

@@ -19,7 +19,6 @@ from jwt.exceptions import InvalidTokenError
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import status
-from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -32,6 +31,7 @@ from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
 from users.models.user_channel import UserChannel
+from users.serializers.user import UserAwaitingApprovalSerializer
 from users.serializers.user import UserSerializer
 
 
@@ -244,15 +244,23 @@ class UserViewSet(
         return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
 
-class UnactivatedUserView(DRFObtainAuthToken):
+class UserAwaitingApprovalViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+):
+    user_model = get_user_model()
     permission_classes = [IsAdmin]
+    pagination_class = DefaultPageNumberPagination
+    serializer_class = UserAwaitingApprovalSerializer
+    ordering_fields = ["username"]
+    ordering = ["username"]
+    filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
+    lookup_field = "username"
+    search_fields = ["username"]
+    filterset_class = UserFilter
 
-    def get(self, request, *args, **kwargs):
-        """
-        list unactivated users usernames
-        """
-        users = [user.username for user in User.objects.filter(channel=None)]
-        return ApiResponse(data={"unactivated_users": users}, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        return self.user_model.objects.filter(channel=None)
 
     # TODO THIS SHOULD NOT BE IN THE PULL REQUEST
     def post(self, request, *args, **kwargs):
