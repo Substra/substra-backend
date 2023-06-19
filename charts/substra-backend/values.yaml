@@ -80,9 +80,9 @@ server:
   ##
   podSecurityContext:
     enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
 
   service:
     ## @param server.service.type Kubernetes Service type
@@ -299,9 +299,9 @@ worker:
   ##
   podSecurityContext:
     enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
   ## @param worker.resources Worker container resources requests and limits
   ##
   resources: {}
@@ -332,9 +332,9 @@ worker:
     ## @param worker.computePod.securityContext.runAsGroup Set the group for the Compute pod
     ##
     securityContext:
-      fsGroup: 1001
-      runAsUser: 1001
-      runAsGroup: 1001
+      fsGroup: 1000
+      runAsUser: 1000
+      runAsGroup: 1000
   events:
     ## @param worker.events.enabled Enable event service
     ##
@@ -358,9 +358,9 @@ worker:
     ##
     podSecurityContext:
       enabled: true
-      runAsUser: 1001
-      runAsGroup: 1001
-      fsGroup: 1001
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
     ## @param worker.events.nodeSelector Node labels for pod assignment
     ##
     nodeSelector: {}
@@ -423,9 +423,9 @@ schedulerWorker:
   ##
   podSecurityContext:
     enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
 
 
 ## @section Celery task scheduler settings
@@ -467,9 +467,9 @@ scheduler:
   ##
   podSecurityContext:
     enabled: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
 
 ## @section Substra container registry settings
 ##
@@ -524,9 +524,9 @@ api:
     ##
     podSecurityContext:
       enabled: true
-      runAsUser: 1001
-      runAsGroup: 1001
-      fsGroup: 1001
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
     ## @param api.events.nodeSelector Node labels for pod assignment
     ##
     nodeSelector: {}
@@ -589,15 +589,17 @@ orchestrator:
 
 ## @section Kaniko settings
 ##
-kaniko:
+builder:
   ## @param kaniko.image.registry Kaniko image registry
   ## @param kaniko.image.repository Kaniko image repository
   ## @param kaniko.image.tag Kaniko image tag
   ##
+  name: buildkit
   image:
-    registry: gcr.io
-    repository: kaniko-project/executor
-    tag: v1.8.1
+    repository: moby/buildkit
+    tag: master-rootless
+    # ARM64 sha256 if ever needed
+    # tag: master-rootless@sha256:cb63454a66f5bba35eba3926962fb5a18912aa3e57629f69c714a0cd303241ce
   ## @param kaniko.mirror If set to `true` pull base images from the local registry.
   ##
   mirror: false
@@ -609,8 +611,8 @@ kaniko:
       ## @param kaniko.cache.warmer.image.registry Kaniko cache warmer registry
       ## @param kaniko.cache.warmer.image.repository Kaniko cache warmer repository
       ## @param kaniko.cache.warmer.image.tag Kaniko cache warmer image tag
-      ##
       image:
+        # Not yet addressed
         registry: gcr.io
         repository: kaniko-project/warmer
         tag: v1.8.1

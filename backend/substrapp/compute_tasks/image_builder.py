@@ -16,7 +16,8 @@ from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import container_image_exists
-from substrapp.kubernetes_utils import delete_pod
+
+# from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_pod_logs
 from substrapp.kubernetes_utils import get_security_context
 from substrapp.kubernetes_utils import pod_exists
@@ -31,14 +32,14 @@ logger = structlog.get_logger(__name__)
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
 NAMESPACE = settings.NAMESPACE
-KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
-KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
-KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
-KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
+BUILDER_MIRROR = settings.TASK["BUILDER_MIRROR"]
+BUILDER_IMAGE = settings.TASK["BUILDER_IMAGE"]
+BUILDER_DOCKER_CONFIG_SECRET_NAME = settings.TASK["BUILDER_DOCKER_CONFIG_SECRET_NAME"]
+BUILDER_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
 CELERY_WORKER_CONCURRENCY = settings.CELERY_WORKER_CONCURRENCY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
-KANIKO_CONTAINER_NAME = "kaniko"
+BUILDER_CONTAINER_NAME = "buildkit"
 HOSTNAME = settings.HOSTNAME
 
 
@@ -115,11 +116,12 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     raise compute_task_errors.BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
-def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
+def _delete_builder_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
     logs = ""
     if create_pod:
-        logs = get_pod_logs(k8s_client, pod_name, KANIKO_CONTAINER_NAME, ignore_pod_not_found=True)
-        delete_pod(k8s_client, pod_name)
+        logs = get_pod_logs(k8s_client, pod_name, BUILDER_CONTAINER_NAME, ignore_pod_not_found=True)
+        # ..todo:: Reactivate. Deactivated for easier debbuging.
+        # delete_pod(k8s_client, pod_name)
         logger.info(logs or "", pod_name=pod_name)
     return logs
 
@@ -156,14 +158,14 @@ def _build_container_image(path: str, tag: str) -> None:
             )
             return
 
-        logs = _delete_kaniko_pod(create_pod, k8s_client, pod_name)
+        logs = _delete_builder_pod(create_pod, k8s_client, pod_name)
 
         if isinstance(e, exceptions.PodTimeoutError):
             raise compute_task_errors.BuildRetryError(logs) from e
         else:  # exceptions.PodError or other
             raise compute_task_errors.BuildError(logs) from e
 
-    _delete_kaniko_pod(create_pod, k8s_client, pod_name)
+    _delete_builder_pod(create_pod, k8s_client, pod_name)
 
 
 def _assert_dockerfile_exist(dockerfile_path):
@@ -185,6 +187,7 @@ def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.
                 Label.PodType: "image-build",
                 Label.Component: Label.Component_Compute,
             },
+            annotations={f"container.apparmor.security.beta.kubernetes.io/{BUILDER_CONTAINER_NAME}": "unconfined"},
         ),
         spec=pod_spec,
     )
@@ -192,7 +195,7 @@ def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.
 
 def _build_pod_name(image_tag: str) -> str:
     dns_1123_compliant_tag = image_tag.split("/")[-1].replace("_", "-")
-    return f"kaniko-{dns_1123_compliant_tag}"
+    return f"{BUILDER_CONTAINER_NAME}-{dns_1123_compliant_tag}"
 
 
 def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.V1PodSpec:
@@ -215,13 +218,23 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
         persistent_volume_claim=kubernetes.client.V1PersistentVolumeClaimVolumeSource(claim_name=dockerfile_pvc_name),
     )
 
-    volumes = [cache, dockerfile]
+    # Should not be needed unless using Container-Optimized OS from Google:
+    # https://github.com/moby/buildkit/blob/master/docs/rootless.md#container-optimized-os-from-google
+    buildkit_daemon = kubernetes.client.V1Volume(
+        name="buildkit-daemon", empty_dir=kubernetes.client.V1EmptyDirVolumeSource()
+    )
+    # Should not be needed if runAsUser / runAsGroup issue is addressed (see `deployment-scheduler-worker.yaml`#L32-L43)
+    buildkitd_tmp = kubernetes.client.V1Volume(
+        name="buildkit-tmp", empty_dir=kubernetes.client.V1EmptyDirVolumeSource()
+    )
 
-    if KANIKO_DOCKER_CONFIG_SECRET_NAME:
+    volumes = [dockerfile, cache, buildkit_daemon, buildkitd_tmp]
+
+    if BUILDER_DOCKER_CONFIG_SECRET_NAME:
         docker_config = kubernetes.client.V1Volume(
-            name=KANIKO_DOCKER_CONFIG_VOLUME_NAME,
+            name=BUILDER_DOCKER_CONFIG_VOLUME_NAME,
             secret=kubernetes.client.V1SecretVolumeSource(
-                secret_name=KANIKO_DOCKER_CONFIG_SECRET_NAME,
+                secret_name=BUILDER_DOCKER_CONFIG_SECRET_NAME,
                 items=[kubernetes.client.V1KeyToPath(key=".dockerconfigjson", path="config.json")],
             ),
         )
@@ -259,52 +272,94 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
     # https://github.com/moby/moby/blob/master/oci/caps/defaults.go
     # https://man7.org/linux/man-pages/man7/capabilities.7.html
     capabilities = ["CHOWN", "SETUID", "SETGID", "FOWNER", "DAC_OVERRIDE", "SETFCAP"]
-    container_security_context = get_security_context(root=True, capabilities=capabilities)
+    container_security_context = get_security_context(root=False, capabilities=capabilities)
+    cmd = _build_container_cmd()
     args = _build_container_args(dockerfile_mount_path, image_tag)
+    env = _build_container_env()
+
     dockerfile_mount_subpath = dockerfile_mount_path.split("/subtuple/")[-1]
 
     dockerfile = kubernetes.client.V1VolumeMount(
         name="dockerfile", mount_path=dockerfile_mount_path, sub_path=dockerfile_mount_subpath, read_only=True
     )
     cache = kubernetes.client.V1VolumeMount(name="cache", mount_path="/cache", read_only=True)
-    volume_mounts = [dockerfile, cache]
 
-    if KANIKO_DOCKER_CONFIG_SECRET_NAME:
+    # Should not be needed unless using Container-Optimized OS from Google:
+    # https://github.com/moby/buildkit/blob/master/docs/rootless.md#container-optimized-os-from-google
+    # buildkit_d = kubernetes.client.V1VolumeMount(
+    # name="buildkit-daemon", mount_path="/home/user/.local/share/buildkit"
+    # )
+    # Should not be needed if runAsUser / runAsGroup issue is addressed (see `deployment-scheduler-worker.yaml`#L32-L43)
+    # buildkitd_tmp = kubernetes.client.V1VolumeMount(name="buildkit-tmp", mount_path="/home/user/.local/tmp")
+
+    volume_mounts = [
+        dockerfile,
+        cache,
+        # buildkit_d,
+        # buildkitd_tmp
+    ]
+
+    if BUILDER_DOCKER_CONFIG_SECRET_NAME:
         docker_config = kubernetes.client.V1VolumeMount(
-            name=KANIKO_DOCKER_CONFIG_VOLUME_NAME, mount_path="/kaniko/.docker"
+            name=BUILDER_DOCKER_CONFIG_VOLUME_NAME, mount_path=f"/{BUILDER_CONTAINER_NAME}/.docker"
         )
         volume_mounts.append(docker_config)
 
     return kubernetes.client.V1Container(
-        name=KANIKO_CONTAINER_NAME,
-        image=KANIKO_IMAGE,
-        command=None,
+        name=BUILDER_CONTAINER_NAME,
+        image=BUILDER_IMAGE,
+        command=cmd,
         args=args,
         volume_mounts=volume_mounts,
         security_context=container_security_context,
+        env=env,
     )
 
 
+def _build_container_cmd() -> list[str]:
+    # return ["buildctl-daemonless.sh"]
+    # Ugly lazy debug mode, do not judge please
+    return ["/bin/sh"]
+
+
 def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[str]:
-    dockerfile_fullpath = os.path.join(dockerfile_mount_path, "Dockerfile")
+    base_image_name = f'"name={REGISTRY}/{USER_IMAGE_REPOSITORY}"'
+    full_image_name = f"{base_image_name}:{image_tag}"
+
     args = [
-        f"--dockerfile={dockerfile_fullpath}",
-        f"--context=dir://{dockerfile_mount_path}",
-        f"--destination={REGISTRY}/{USER_IMAGE_REPOSITORY}:{image_tag}",
-        "--cache=true",
-        "--log-timestamp=true",
-        "--snapshotMode=redo",
-        "--push-retry=3",
-        "--cache-copy-layers",
-        "--log-format=text",
-        f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
+        "--oci-worker-no-process-sandbox",
+        "build",
+        "--frontend",
+        "dockerfile.v0",
+        "--local",
+        f"context={dockerfile_mount_path}",
+        "--local",
+        f"dockerfile={dockerfile_mount_path}",
+        "--output",
     ]
+    output_arg = f"type=image,{full_image_name},push=true"
 
     if REGISTRY_SCHEME == "http":
-        args.append("--insecure")
+        output_arg = ",".join((output_arg, "registry.insecure=true"))
 
-    if KANIKO_MIRROR:
+    args.append(output_arg)
+
+    # Not yet tested
+    # cache_registry = f"type=registry,ref={base_image_name}:buildcache"
+    # cache_args = [f"--export-cache {cache_registry}", f"--import-cache {cache_registry}",]
+    # args.append(cache_args)
+
+    if BUILDER_MIRROR:
+        # Assuming it arg update should not be needed in this case with BuildKit
+        pass
         args.append(f"--registry-mirror={REGISTRY}")
         if REGISTRY_SCHEME == "http":
             args.append("--insecure-pull")
-    return args
+
+    # return args
+    # Ugly lazy debug mode, do not judge please
+    return ["-c", "while sleep 1; do sleep 1; done"]
+
+
+def _build_container_env() -> list[kubernetes.client.V1EnvVar]:
+    return [kubernetes.client.V1EnvVar(name="BUILDKITD_FLAGS", value="--oci-worker-no-process-sandbox")]

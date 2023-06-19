@@ -79,12 +79,12 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if .Values.kaniko.cache.warmer.cachedImages }}
-      - name: kaniko-cache-warmer
-        image: {{ include "common.images.name" .Values.kaniko.cache.warmer.image }}
+      {{- if .Values.builder.cache.warmer.cachedImages }}
+      - name: '{{ $.Values.builder.name }}-cache-warmer'
+        image: {{ include "common.images.name" .Values.builder.cache.warmer.image }}
         args:
         - "--cache-dir=/cache"
-        {{- range .Values.kaniko.cache.warmer.cachedImages }}
+        {{- range .Values.builder.cache.warmer.cachedImages }}
         - "--image={{ . }}"
         {{- end }}
         - "--verbosity=debug"
@@ -92,9 +92,9 @@ spec:
           - name: docker-cache
             mountPath: /cache
             readOnly: False
-          {{- if .Values.kaniko.dockerConfigSecretName }}
+          {{- if .Values.builder.dockerConfigSecretName }}
           - name: docker-config
-            mountPath: /kaniko/.docker
+            mountPath: '{{ $.Values.builder.name }}/.docker'
           {{- end }}
       {{- end}}
       - name: wait-postgresql
@@ -153,8 +153,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
-              value: {{ .Values.kaniko.dockerConfigSecretName | quote  }}
+            - name: BUILDER_DOCKER_CONFIG_SECRET_NAME
+              value: {{ .Values.builder.dockerConfigSecretName | quote  }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL
@@ -208,10 +208,10 @@ spec:
           secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-      {{- if .Values.kaniko.dockerConfigSecretName }}
+      {{- if .Values.builder.dockerConfigSecretName }}
       - name: docker-config
         secret:
-          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
+          secretName: {{ .Values.builder.dockerConfigSecretName }}
           items:
           - key: .dockerconfigjson
             path: config.json
@@ -254,8 +254,8 @@ spec:
       name: docker-cache
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      {{ include "common.storage.class" .Values.kaniko.cache.persistence }}
+      {{ include "common.storage.class" .Values.builder.cache.persistence }}
       resources:
         requests:
-          storage: {{ .Values.kaniko.cache.persistence.size }}
+          storage: {{ .Values.builder.cache.persistence.size }}
 {{- end }}

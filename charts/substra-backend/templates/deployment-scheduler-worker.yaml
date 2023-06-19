@@ -29,6 +29,8 @@ spec:
     spec:
       {{- if .Values.schedulerWorker.podSecurityContext.enabled }}
       securityContext:
+        # fsGroup, runAsUser, runAsGroup must be 1000 to match bulidkit mapping UID:
+        # https://github.com/moby/buildkit/blob/master/docs/rootless.md#change-uidgid
         fsGroup: {{ .Values.schedulerWorker.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.schedulerWorker.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.schedulerWorker.podSecurityContext.runAsGroup }}

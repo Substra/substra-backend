@@ -241,9 +241,9 @@ TASK = {
     "CACHE_DOCKER_IMAGES": to_bool(os.environ.get("TASK_CACHE_DOCKER_IMAGES", False)),
     "CHAINKEYS_ENABLED": to_bool(os.environ.get("TASK_CHAINKEYS_ENABLED", False)),
     "LIST_WORKSPACE": to_bool(os.environ.get("TASK_LIST_WORKSPACE", True)),
-    "KANIKO_MIRROR": to_bool(os.environ.get("KANIKO_MIRROR", False)),
-    "KANIKO_IMAGE": os.environ.get("KANIKO_IMAGE"),
-    "KANIKO_DOCKER_CONFIG_SECRET_NAME": os.environ.get("KANIKO_DOCKER_CONFIG_SECRET_NAME"),
+    "BUILDER_MIRROR": to_bool(os.environ.get("BUILDER_MIRROR", False)),
+    "BUILDER_IMAGE": os.environ.get("BUILDER_IMAGE"),
+    "BUILDER_DOCKER_CONFIG_SECRET_NAME": os.environ.get("BUILDER_DOCKER_CONFIG_SECRET_NAME"),
     "COMPUTE_POD_STARTUP_TIMEOUT_SECONDS": int(os.environ.get("COMPUTE_POD_STARTUP_TIMEOUT_SECONDS", 300)),
 }
 

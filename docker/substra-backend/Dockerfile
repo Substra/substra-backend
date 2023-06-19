@@ -33,8 +33,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
     && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.3
 
-ARG USER_ID=1001
-ARG GROUP_ID=1001
+ARG USER_ID=1000
+ARG GROUP_ID=1000
 
 RUN mkdir -p /var/substra/ /tmp/django_cache \
     && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
@@ -53,8 +53,8 @@ FROM python:3.9-slim
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
 
-ARG USER_ID=1001
-ARG GROUP_ID=1001
+ARG USER_ID=1000
+ARG GROUP_ID=1000
 ENV GRPC_POLL_STRATEGY=epoll1
 
 COPY --from=build /usr/local/lib/python3.9/ /usr/local/lib/python3.9/

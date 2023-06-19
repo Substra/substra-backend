@@ -24,22 +24,40 @@ spec:
       - name: wait-registry
         image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
-      - name: kaniko
-        image: {{ include "common.images.name" $.Values.kaniko.image }}
-        args: ["--context=/docker-context",
-                {{- if .dstImage }}
-                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}",
-                {{- else }}
-                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
-                {{ end }}
-                "--insecure",
-                "--verbosity=debug"]
+      - name: {{ $.Values.builder.name }}
+        image: {{ include "common.images.name" $.Values.builder.image }}
+        command: ['buildctl-daemonless.sh', 'build']
+        args: [
+          '--frontend',
+          'dockerfile.v0',
+          '--local',
+          'context=/docker-context',
+          '--local',
+          'dockerfile=/docker-context',
+          '--output',
+          {{- if .dstImage }}
+          'type=image,"name={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}",push=true,registry.insecure=true',
+          # Can be used for cache optimization: https://github.com/moby/buildkit/tree/master#export-cache
+          # Currently both the {{ .dstImage }} and {{ .image }} variables include the docker ':<tag>'
+          # We should probably consider splitting the repository and the tag for this to work or find another strategy for cache I/O
+          # '--export-cache type=registry,ref={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}:buildcache',
+          # '--import-cache type=registry,ref={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}:buildcache',
+          {{- else }}
+          'type=image,"name={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",push=true,registry.insecure=true',
+          # '--export-cache type=registry,ref={{ $.Release.Name }}-docker-registry:5000/{{ .image }}:buildcache',
+          # '--import-cache type=registry,ref={{ $.Release.Name }}-docker-registry:5000/{{ .image }}:buildcache',
+          {{ end }}
+
+        ]
+        env:
+          - name: "BUILDKITD_FLAGS"
+            value: "--oci-worker-no-process-sandbox"
         volumeMounts:
           - name: dockerfile
             mountPath: /docker-context
           {{- if .dockerConfigSecretName }}
           - name: docker-config
-            mountPath: /kaniko/.docker
+            mountPath: '{{ $.Values.builder.name }}/.docker'
           {{- end }}
       containers:
       - image: gcr.io/google-containers/pause:3.2

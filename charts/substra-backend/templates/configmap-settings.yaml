@@ -16,8 +16,8 @@ data:
   COMPUTE_POD_RUN_AS_GROUP: {{ .Values.worker.computePod.securityContext.runAsGroup | quote }}
   COMPUTE_POD_FS_GROUP: {{ .Values.worker.computePod.securityContext.fsGroup | quote }}
 
-  KANIKO_IMAGE: {{ include "common.images.name" .Values.kaniko.image }}
-  KANIKO_MIRROR: {{ .Values.kaniko.mirror | quote }}
+  BUILDER_IMAGE: {{ include "common.images.name" .Values.builder.image }}
+  BUILDER_MIRROR: {{ .Values.builder.mirror | quote }}
 
   OBJECTSTORE_URL: {{ .Release.Name }}-minio:9000
 
