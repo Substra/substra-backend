@@ -17,7 +17,7 @@ def _generate_secret_key():
 
 
 _SECRET_KEY_LOAD_AND_STORE = to_bool(
-    os.environ.get("SECRET_KEY_LOAD_AND_STORE", "False")
+    os.environ.get("SECRET_KEY_LOAD_AND_STORE", "True")
 )  # Whether to load the secret key from file (and write it there if it doesn't exist)
 
 if _SECRET_KEY_LOAD_AND_STORE:
