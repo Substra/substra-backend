@@ -61,4 +61,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserAwaitingApprovalSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username"]
+        fields = ["username", "email"]

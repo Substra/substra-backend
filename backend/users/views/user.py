@@ -262,12 +262,22 @@ class UserAwaitingApprovalViewSet(
     def get_queryset(self):
         return self.user_model.objects.filter(channel=None)
 
+    def delete(self, request, *args, **kwargs):
+        # d = json.loads(request.body)
+        try:
+            user = User.objects.get(username=request.GET.get("username"))
+            user.delete()
+            return ApiResponse(data={"message": "User removed"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist or User.MultipleObjectsReturned:
+            pass
+        return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
     # TODO THIS SHOULD NOT BE IN THE PULL REQUEST
     def post(self, request, *args, **kwargs):
         d = json.loads(request.body)
-        user, created = User.objects.get_or_create(username=d.get("username"))
+        user, created = User.objects.get_or_create(username=d.get("username"), email=d.get("email"))
         if created:
             user.set_password(d.get("password"))
             user.save()
         user_json = serialize("json", [user])
-        return ApiResponse({"new_unactivated_user": user_json})
+        return ApiResponse({"users_awaiting_approval": user_json})
