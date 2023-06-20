@@ -68,7 +68,7 @@ SECRET_FILE = os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET"))
 SECRET_KEY_PATH = os.environ.get("SECRET_KEY_PATH", os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET")))
 
 _SECRET_KEY_LOAD_AND_STORE = to_bool(
-    os.environ.get("SECRET_KEY_LOAD_AND_STORE", "False")
+    os.environ.get("SECRET_KEY_LOAD_AND_STORE", "True")
 )  # Whether to load the secret key from file (and write it there if it doesn't exist)
 
 if _SECRET_KEY_LOAD_AND_STORE:
