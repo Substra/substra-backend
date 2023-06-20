@@ -1,3 +1,0 @@
-"""
-self-contained categorized settings
-"""
