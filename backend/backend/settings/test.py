@@ -2,9 +2,9 @@ import logging
 import tempfile
 
 from .common import *
+from .deps.cors import *
+from .deps.oidc import *
 from .deps.restframework import *
-from .mods.cors import *
-from .mods.oidc import *
 
 logging.disable(logging.CRITICAL)
 

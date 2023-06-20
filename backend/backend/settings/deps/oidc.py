@@ -1,15 +1,10 @@
-"""
-OpenID Connect (for SSO)
-"""
-
 import logging
 import os
 
 import requests
 
 from .. import common
-from ..deps import ledger
-from ..deps.utils import to_bool
+from . import ledger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 # we'll use an "OIDC" dict for any setting added by us
 
 OIDC = {
-    "ENABLED": to_bool(os.environ.get("OIDC_ENABLED", "false")),
+    "ENABLED": common.to_bool(os.environ.get("OIDC_ENABLED", "false")),
     "USERS": {},
     "OP": {},
 }
@@ -31,7 +26,7 @@ if OIDC["ENABLED"]:  # noqa: C901
         "propagate": False,
     }
 
-    OIDC["USERS"]["APPEND_DOMAIN"] = to_bool(os.environ.get("OIDC_USERS_APPEND_DOMAIN", "false"))
+    OIDC["USERS"]["APPEND_DOMAIN"] = common.to_bool(os.environ.get("OIDC_USERS_APPEND_DOMAIN", "false"))
 
     OIDC["USERS"]["DEFAULT_CHANNEL"] = os.environ.get("OIDC_USERS_DEFAULT_CHANNEL")
     if not OIDC["USERS"]["DEFAULT_CHANNEL"]:
@@ -58,7 +53,7 @@ if OIDC["ENABLED"]:  # noqa: C901
     OIDC["OP"]["DISPLAY_NAME"] = os.environ.get("OIDC_OP_DISPLAY_NAME", OIDC["OP"]["URL"])
 
     OIDC["OP"]["SUPPORTS_REFRESH"] = False
-    OIDC["USERS"]["USE_REFRESH_TOKEN"] = to_bool(os.environ.get("OIDC_USERS_USE_REFRESH_TOKEN", "false"))
+    OIDC["USERS"]["USE_REFRESH_TOKEN"] = common.to_bool(os.environ.get("OIDC_USERS_USE_REFRESH_TOKEN", "false"))
 
     op_settings = None
     try:
