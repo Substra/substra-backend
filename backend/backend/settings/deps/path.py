@@ -1,9 +1,8 @@
-import os
 import sys
+from pathlib import Path
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
+BASE_DIR: Path = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BASE_DIR.parent
 
-sys.path.append(PROJECT_ROOT)
-sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, "libs")))
+sys.path.append(str(PROJECT_ROOT))
+sys.path.append(str(PROJECT_ROOT / "libs"))

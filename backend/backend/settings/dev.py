@@ -11,7 +11,7 @@ from .mods.oidc import *
 
 DEBUG = True
 
-STATIC_ROOT = os.path.join(BASE_DIR, "statics")
+STATIC_ROOT = BASE_DIR / "statics"
 
 # Enable Browsable API
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ("rest_framework.renderers.BrowsableAPIRenderer",)
@@ -25,8 +25,8 @@ DATASAMPLE_STORAGE = MinioStorage(DATASAMPLE_BUCKET_NAME)
 MODEL_BUCKET_NAME = "substra-model"
 MODEL_STORAGE = MinioStorage(MODEL_BUCKET_NAME)
 
-MEDIA_ROOT = os.environ.get("MEDIA_ROOT", os.path.join(PROJECT_ROOT, f"medias/{ORG_NAME}"))
-SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", os.path.join(PROJECT_ROOT, f"servermedias/{ORG_NAME}"))
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(PROJECT_ROOT / f"medias/{ORG_NAME}"))
+SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", str(PROJECT_ROOT / f"servermedias/{ORG_NAME}"))
 FUNCTION_BUCKET_NAME = "substra-function"
 FUNCTION_STORAGE = MinioStorage(FUNCTION_BUCKET_NAME)
 

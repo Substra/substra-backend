@@ -3,13 +3,13 @@ SECRET_KEY is built in Django, but also used for signing JWTs
 """
 
 import os
-import pathlib
 import secrets
+from pathlib import Path
 
 from . import path
 from .utils import to_bool
 
-SECRET_KEY_PATH = os.environ.get("SECRET_KEY_PATH", os.path.normpath(os.path.join(path.PROJECT_ROOT, "SECRET")))
+SECRET_KEY_PATH = Path(os.environ.get("SECRET_KEY_PATH", path.PROJECT_ROOT / "SECRET"))
 
 
 def _generate_secret_key():
@@ -22,7 +22,7 @@ _SECRET_KEY_LOAD_AND_STORE = to_bool(
 
 if _SECRET_KEY_LOAD_AND_STORE:
     try:
-        SECRET_KEY = pathlib.Path(SECRET_KEY_PATH).read_text().strip()
+        SECRET_KEY = SECRET_KEY_PATH.read_text().strip()
     except IOError:
         try:
             SECRET_KEY = _generate_secret_key()
