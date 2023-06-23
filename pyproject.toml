@@ -21,6 +21,7 @@ DJANGO_SETTINGS_MODULE = "backend.settings.test"
 addopts = "-n auto --cov=. --cov-config=../pyproject.toml -p no:unraisableexception"
 filterwarnings = [
     "error",
+    "ignore:(?s).*Implementing implicit namespace package:DeprecationWarning:pkg_resources",
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:rest_framework_simplejwt",
     # wait for pytest-cov to release a version > 4.0.0, see https://github.com/pytest-dev/pytest-xdist/issues/825#issuecomment-1292283870
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated.:DeprecationWarning",
