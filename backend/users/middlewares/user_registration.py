@@ -9,7 +9,6 @@ class UserRegistration:
 
     def __call__(self, request):
         if not isinstance(request.user, AnonymousUser):
-            print(request.user)
             if not hasattr(request.user, "channel"):
                 raise PermissionDenied(
                     detail={"error_code": "registration_error", "description": "User is not registered"}

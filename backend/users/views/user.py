@@ -263,7 +263,6 @@ class UserAwaitingApprovalViewSet(
         return self.user_model.objects.filter(channel=None)
 
     def delete(self, request, *args, **kwargs):
-        # d = json.loads(request.body)
         try:
             user = User.objects.get(username=request.GET.get("username"))
             user.delete()
@@ -271,6 +270,22 @@ class UserAwaitingApprovalViewSet(
         except User.DoesNotExist or User.MultipleObjectsReturned:
             pass
         return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, *args, **kwargs):
+        d = json.loads(request.body)
+        try:
+            user = User.objects.get(username=request.GET.get("username"))
+        except User.DoesNotExist or User.MultipleObjectsReturned:
+            return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        channel_name = get_channel_name(request)
+        channel_data = {"channel_name": channel_name}
+        channel_data["role"] = _validate_role(d.get("role"))
+        channel_data["user"] = user
+        UserChannel.objects.create(**channel_data)
+        user.refresh_from_db()
+        data = UserSerializer(instance=user).data
+        return ApiResponse(data=data, status=status.HTTP_200_OK)  # get success header ?
 
     # TODO THIS SHOULD NOT BE IN THE PULL REQUEST
     def post(self, request, *args, **kwargs):
