@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.permissions import BasePermission
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -17,6 +16,7 @@ from rest_framework.viewsets import ViewSet
 
 from api.errors import AssetPermissionError
 from api.errors import BadRequestError
+from libs.permissions import IsAuthorized
 from organization.authentication import OrganizationUser
 from substrapp.clients import organization as organization_client
 from substrapp.storages.minio import MinioStorage
@@ -60,7 +60,7 @@ class CustomFileResponse(django.http.FileResponse):
 
 class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthorized]
 
     def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Returns true if API consumer is allowed to access data.

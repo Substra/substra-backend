@@ -30,6 +30,7 @@ from api.views.filters_utils import MatchFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
+from libs.permissions import IsAuthorized
 from users.models.user_channel import UserChannel
 from users.serializers.user import UserAwaitingApprovalSerializer
 from users.serializers.user import UserSerializer
@@ -129,7 +130,7 @@ class UserViewSet(
     ordering = ["username"]
     filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
     lookup_field = "username"
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthorized, IsAdminOrReadOnly]
     search_fields = ["username"]
     filterset_class = UserFilter
 

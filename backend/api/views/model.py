@@ -13,7 +13,6 @@ from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
 
@@ -27,6 +26,7 @@ from api.views.utils import PermissionMixin
 from api.views.utils import get_channel_name
 from api.views.utils import if_true
 from libs.pagination import DefaultPageNumberPagination
+from libs.permissions import IsAuthorized
 from organization.authentication import OrganizationUser
 from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_owner
@@ -93,7 +93,7 @@ class ModelViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
     filterset_class = ModelFilter
 
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
-    permission_classes = [IsAuthenticated, IsCurrentBackendOrReadOnly]
+    permission_classes = [IsAuthorized, IsCurrentBackendOrReadOnly]
 
     def get_queryset(self):
         return Model.objects.filter(channel=get_channel_name(self.request))

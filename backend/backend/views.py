@@ -5,12 +5,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
 from rest_framework.permissions import AllowAny
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
+from libs.permissions import IsAuthorized
 from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
@@ -46,7 +46,7 @@ class AuthenticatedBearerToken(DRFObtainAuthToken):
     get a Bearer token if you're already authenticated somehow
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthorized]
 
     def post(self, request, *args, **kwargs):
         s = BearerTokenSerializer(data=request.data)
@@ -60,7 +60,7 @@ class ActiveBearerTokens(APIView):
     list Bearer tokens for a user
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthorized]
 
     def get(self, request, *args, **kwargs):
         tokens = [

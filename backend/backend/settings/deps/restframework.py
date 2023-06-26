@@ -13,7 +13,7 @@ REST_FRAMEWORK = {
         "users.authentication.BearerTokenAuthentication",  # Bearer token for SDK
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        "libs.permissions.IsAuthorized",
     ],
     "UNICODE_JSON": False,
     "ALLOWED_VERSIONS": ("0.0",),
@@ -36,5 +36,5 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAuthenticated"],
+    "SERVE_PERMISSIONS": ["libs.permissions.IsAuthorized"],
 }
