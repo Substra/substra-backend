@@ -67,8 +67,8 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
-| bool | `SECRET_KEY_LOAD_AND_STORE` | `False` | Whether to load the secret key from file (and write it there if it doesn't exist) |
-| string | `SECRET_KEY_PATH` | `os.path.normpath(os.path.join(path.PROJECT_ROOT, 'SECRET'))` |  |
+| bool | `SECRET_KEY_LOAD_AND_STORE` | `True` | Whether to load the secret key from file (and write it there if it doesn't exist) |
+| string | `SECRET_KEY_PATH` | `path.PROJECT_ROOT / 'SECRET'` |  |
 
 ## JWT settings
 
