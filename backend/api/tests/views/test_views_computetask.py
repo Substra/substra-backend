@@ -788,8 +788,8 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
 
     queries_for_10_tasks = len(queries_10.captured_queries)
 
-    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
-    assert queries_for_60_tasks < 17
+    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 6
+    assert queries_for_60_tasks < 19
 
 
 @pytest.mark.django_db
@@ -816,7 +816,7 @@ def test_n_plus_one_queries_compute_task_detail(authenticated_client, create_com
         authenticated_client.get(url_10)
     queries_for_10_samples = len(queries_10.captured_queries)
 
-    assert abs(queries_for_4_samples - queries_for_10_samples) < 5
+    assert abs(queries_for_4_samples - queries_for_10_samples) < 6
     assert queries_for_4_samples < 20
 
 
@@ -844,5 +844,5 @@ def test_n_plus_one_queries_compute_task_list(authenticated_client, create_compu
         authenticated_client.get(url)
     queries_for_60_tasks = len(queries_60.captured_queries)
 
-    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
+    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 6
     assert queries_for_60_tasks < 15

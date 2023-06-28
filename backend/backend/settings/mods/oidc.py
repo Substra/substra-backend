@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 # we'll use an "OIDC" dict for any setting added by us
 
 OIDC = {
-    "ENABLED": to_bool(os.environ.get("OIDC_ENABLED", "false")),
+    "ENABLED": to_bool(os.environ.get("OIDC_ENABLED", "true")),  # TODO should be changed to false before merging
     "USERS": {},
     "OP": {},
 }
@@ -34,10 +34,17 @@ if OIDC["ENABLED"]:  # noqa: C901
     OIDC["USERS"]["APPEND_DOMAIN"] = to_bool(os.environ.get("OIDC_USERS_APPEND_DOMAIN", "false"))
 
     OIDC["USERS"]["DEFAULT_CHANNEL"] = os.environ.get("OIDC_USERS_DEFAULT_CHANNEL")
-    if not OIDC["USERS"]["DEFAULT_CHANNEL"]:
-        raise Exception("No default channel provided for OIDC users")
-    if OIDC["USERS"]["DEFAULT_CHANNEL"] not in ledger.LEDGER_CHANNELS:
-        raise Exception(f"Channel {OIDC['USERS']['DEFAULT_CHANNEL']} does not exist")
+    OIDC["USERS"]["MUST_BE_APPROVED"] = os.environ.get(
+        "OIDC_USERS_MUST_BE_APPROVED", "true"
+    )  # TODO MUST BE FALSE => None by default(?)
+    if OIDC["USERS"]["DEFAULT_CHANNEL"] and OIDC["USERS"]["MUST_BE_APPROVED"]:
+        raise Exception("Both 'default channel' and 'user must be approved' options are activated")
+    if not (OIDC["USERS"]["DEFAULT_CHANNEL"] or OIDC["USERS"]["MUST_BE_APPROVED"]):
+        raise Exception(
+            "At least one option between 'default channel' and 'user must be approved' needs to be activated"
+        )
+    # if OIDC["USERS"]["DEFAULT_CHANNEL"] not in ledger.LEDGER_CHANNELS:
+    #    raise Exception(f"Channel {OIDC['USERS']['DEFAULT_CHANNEL']} does not exist")
     OIDC["USERS"]["LOGIN_VALIDITY_DURATION"] = int(
         os.environ.get("OIDC_USERS_LOGIN_VALIDITY_DURATION", 60 * 60)
     )  # seconds
@@ -45,16 +52,16 @@ if OIDC["ENABLED"]:  # noqa: C901
     OIDC_AUTHENTICATE_CLASS = "users.views.authentication.OIDCAuthenticationRequestView"
     OIDC_CALLBACK_CLASS = "users.views.authentication.OIDCAuthenticationCallbackView"
 
-    OIDC_RP_CLIENT_ID = os.environ.get("OIDC_RP_CLIENT_ID")
-    OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET")
-    OIDC_RP_SIGN_ALGO = os.environ.get("OIDC_RP_SIGN_ALGO")
+    OIDC_RP_CLIENT_ID = os.environ.get("OIDC_RP_CLIENT_ID", "substra_backend")
+    OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET", "somesecret")
+    OIDC_RP_SIGN_ALGO = os.environ.get("OIDC_RP_SIGN_ALGO", "RS256")
 
     OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get("OIDC_OP_AUTHORIZATION_ENDPOINT")
     OIDC_OP_TOKEN_ENDPOINT = os.environ.get("OIDC_OP_TOKEN_ENDPOINT")
     OIDC_OP_USER_ENDPOINT = os.environ.get("OIDC_OP_USER_ENDPOINT")
     OIDC_OP_JWKS_ENDPOINT = os.environ.get("OIDC_OP_JWKS_URI")
 
-    OIDC["OP"]["URL"] = os.environ.get("OIDC_OP_URL").removesuffix("/")
+    OIDC["OP"]["URL"] = os.environ.get("OIDC_OP_URL", "http://oidc-provider:4000").removesuffix("/")
     OIDC["OP"]["DISPLAY_NAME"] = os.environ.get("OIDC_OP_DISPLAY_NAME", OIDC["OP"]["URL"])
 
     OIDC["OP"]["SUPPORTS_REFRESH"] = False

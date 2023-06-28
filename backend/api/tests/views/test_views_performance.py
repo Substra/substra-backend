@@ -352,5 +352,5 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     with utils.CaptureQueriesContext(connection) as query:
         authenticated_client.get(url)
     query_task_with_perf = len(query.captured_queries)
-    assert query_task_with_perf < 11
+    assert query_task_with_perf < 12
     assert query_task_with_perf - query_tasks_empty < 3

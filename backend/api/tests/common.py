@@ -26,7 +26,7 @@ class AuthenticatedClient(APIClient):
     def __init__(
         self,
         *,
-        channel=None,
+        channel="mychannel",
         enforce_csrf_checks=False,
         role=UserChannel.Role.USER,
         username="substra",
