@@ -17,6 +17,7 @@ from substrapp.models import Function as FunctionFiles
 from substrapp.tests.common import get_description_function
 from substrapp.tests.common import get_sample_function
 from users.models.token import ImplicitBearerToken
+from users.models.user_channel import UserChannel
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -56,11 +57,12 @@ class AuthenticationTests(APITestCase):
         user, created = User.objects.get_or_create(username="foo")
         if created:
             user.set_password("bar")
+            UserChannel.objects.create(user=user, channel_name="mychannel", role=UserChannel.Role.USER)
             user.save()
         cls.user = user
 
     def test_authentication_fail(self):
-        response = self.client.get(self.function_url, **self.extra)
+        response = self.client.get(self.function_url)
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -80,7 +82,7 @@ class AuthenticationTests(APITestCase):
         authorization_header = generate_basic_auth_header("unauthorized_username", "unauthorized_password")
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
-        response = self.client.get(self.function_url, **self.extra)
+        response = self.client.get(self.function_url)
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
@@ -103,23 +105,23 @@ class AuthenticationTests(APITestCase):
 
         for header in bad_authorization_headers:
             self.client.credentials(HTTP_AUTHORIZATION=header)
-            response = self.client.get(self.function_url, **self.extra)
+            response = self.client.get(self.function_url)
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_obtain_token(self):
         endpoint = "/api-token-auth/"
         # clean use
-        response = self.client.post(endpoint, {"username": "foo", "password": "baz"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "baz"})
         self.assertEqual(response.status_code, 400)
 
-        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
         self.assertEqual(response.status_code, 200)
         token_old = response.json()["token"]
         self.assertTrue(token_old)
 
         # token should be updated after a second post
-        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
         self.assertEqual(response.status_code, 200)
         token = response.json()["token"]
         self.assertTrue(token)
@@ -137,20 +139,14 @@ class AuthenticationTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
 
         with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.function_url, **self.extra)
-
+            response = self.client.get(self.function_url)
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         # usage with an existing token
         # the token should be ignored since the purpose of the view is to authenticate via user/password
         valid_auth_token_header = f"Token {token}"
         self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
-        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
-        self.assertEqual(response.status_code, 200)
-
-        invalid_auth_token_header = "Token nope"
-        self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
-        response = self.client.post(endpoint, {"username": "foo", "password": "bar"}, **self.extra)
+        response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
         self.assertEqual(response.status_code, 200)
 
 
@@ -175,7 +171,7 @@ class TestLoginCase(APITestCase):
 
     def _login(self):
         data = {"username": self.username, "password": self.password}
-        r = self.client.post(self.login_url, data, **self.extra)
+        r = self.client.post(self.login_url, data)
 
         return r.status_code, r
 

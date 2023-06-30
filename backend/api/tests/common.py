@@ -45,13 +45,11 @@ class AuthenticatedClient(APIClient):
 
         if created:
             user.set_password(self.password)
-            # for testing purpose most authentication are done without channel allowing to mock passing channel in
-            # header, this check is necessary to not break previous tests but irl a user cannot be created
-            # without a channel
+            user.save()
             if self.channel:
                 UserChannel.objects.create(user=user, channel_name=self.channel, role=self.role)
-            user.save()
-        self.user = user
+
+            self.user = user
 
     def request(self, **kwargs):
         # create user

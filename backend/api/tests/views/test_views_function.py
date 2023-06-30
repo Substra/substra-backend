@@ -38,7 +38,7 @@ class FunctionViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
@@ -246,11 +246,11 @@ class FunctionViewTests(APITestCase):
 
     def test_function_list_empty(self):
         Function.objects.all().delete()
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_function_list_success(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {
@@ -262,14 +262,14 @@ class FunctionViewTests(APITestCase):
         )
 
     def test_function_list_wrong_channel(self):
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(self.url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(self.url)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
     @mock.patch("api.views.function.FunctionViewSet.list", side_effect=Exception("Unexpected error"))
     def test_function_list_fail(self, _):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_function_list_storage_addresses_update(self):
@@ -278,7 +278,7 @@ class FunctionViewTests(APITestCase):
             function.function_address.replace("http://testserver", "http://remotetestserver")
             function.save()
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.data["count"], len(self.expected_functions))
         for result, function in zip(response.data["results"], self.expected_functions):
             for field in ("description", "function"):
@@ -288,7 +288,7 @@ class FunctionViewTests(APITestCase):
         """Filter function on key."""
         key = self.expected_functions[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
         )
@@ -297,7 +297,7 @@ class FunctionViewTests(APITestCase):
         """Filter function on key and owner."""
         key, owner = self.expected_functions[0]["key"], self.expected_functions[0]["owner"]
         params = urlencode({"key": key, "owner": owner})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
         )
@@ -307,7 +307,7 @@ class FunctionViewTests(APITestCase):
         key_0 = self.expected_functions[0]["key"]
         key_1 = self.expected_functions[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.expected_functions[:2]}
         )
@@ -315,7 +315,7 @@ class FunctionViewTests(APITestCase):
     def test_function_match(self):
         """Match function on part of the name."""
         params = urlencode({"match": "le fu"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
         )
@@ -328,7 +328,7 @@ class FunctionViewTests(APITestCase):
                 "match": "le fu",
             }
         )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.expected_functions[:1]}
         )
@@ -342,16 +342,16 @@ class FunctionViewTests(APITestCase):
 
         # filter on compute_plan_key
         params = urlencode({"compute_plan_key": compute_plan.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions[:2])
 
     def test_function_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions),
 
         params = urlencode({"ordering": "-creation_date"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions[::-1]),
 
     @parameterized.expand(
@@ -363,7 +363,7 @@ class FunctionViewTests(APITestCase):
     )
     def test_function_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         r = response.json()
         self.assertEqual(r["count"], len(self.expected_functions))
         offset = (page - 1) * page_size
@@ -377,7 +377,7 @@ class FunctionViewTests(APITestCase):
         factory.create_computetask(compute_plan, self.functions[1])
 
         url = reverse("api:compute_plan_function-list", args=[compute_plan.key])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         self.assertEqual(
             response.json(),
             {
@@ -400,19 +400,19 @@ class FunctionViewTests(APITestCase):
         self.expected_functions[1]["permissions"]["process"]["authorized_ids"] = ["MyOrg1MSP", "MyOrg2MSP"]
 
         params = urlencode({"can_process": "MyOrg1MSP"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions),
 
         params = urlencode({"can_process": "MyOrg2MSP"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions[:2]),
 
         params = urlencode({"can_process": "MyOrg3MSP"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), [self.expected_functions[0]]),
 
         params = urlencode({"can_process": "MyOrg1MSP,MyOrg2MSP"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(response.json().get("results"), self.expected_functions[:2]),
 
     @parameterized.expand(
@@ -476,7 +476,7 @@ class FunctionViewTests(APITestCase):
         }
 
         with mock.patch.object(OrchestratorClient, "register_function", side_effect=mock_orc_response):
-            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+            response = self.client.post(self.url, data=data, format="multipart")
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
@@ -513,7 +513,7 @@ class FunctionViewTests(APITestCase):
             "description": open(description_path, "rb"),
         }
 
-        response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+        response = self.client.post(self.url, data=data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("File too large", response.data["message"][0]["file"])
@@ -555,7 +555,7 @@ class FunctionViewTests(APITestCase):
         }
 
         with mock.patch.object(OrchestratorClient, "register_function", side_effect=MockOrcError()):
-            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+            response = self.client.post(self.url, data=data, format="multipart")
         # asset not created in local db
         self.assertEqual(Function.objects.count(), len(self.expected_functions))
         # orc error code should be propagated
@@ -569,13 +569,13 @@ class FunctionViewTests(APITestCase):
 
     def test_function_retrieve(self):
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         self.assertEqual(response.json(), self.expected_functions[0])
 
     def test_function_retrieve_wrong_channel(self):
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_function_retrieve_storage_addresses_update(self):
@@ -585,7 +585,7 @@ class FunctionViewTests(APITestCase):
         function.save()
 
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         for field in ("description", "function"):
             self.assertEqual(
                 response.data[field]["storage_address"], self.expected_functions[0][field]["storage_address"]
@@ -595,7 +595,7 @@ class FunctionViewTests(APITestCase):
     @mock.patch("api.views.function.FunctionViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_function_retrieve_fail(self, _):
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_function_download_file(self):
@@ -603,7 +603,7 @@ class FunctionViewTests(APITestCase):
         function = factory.create_function(key=function_files.key)
         url = reverse("api:function-file", args=[function.key])
         with mock.patch("api.views.utils.get_owner", return_value=function.owner):
-            response = self.client.get(url, **self.extra)
+            response = self.client.get(url)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content, function_files.file.read())
@@ -614,7 +614,7 @@ class FunctionViewTests(APITestCase):
         function = factory.create_function(key=function_files.key)
         url = reverse("api:function-description", args=[function.key])
         with mock.patch("api.views.utils.get_owner", return_value=function.owner):
-            response = self.client.get(url, **self.extra)
+            response = self.client.get(url)
         content = response.getvalue()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content, function_files.description.read())
@@ -630,7 +630,7 @@ class FunctionViewTests(APITestCase):
         function["name"] = data["name"]
 
         with mock.patch.object(OrchestratorClient, "update_function", side_effect=function):
-            response = self.client.put(url, data=data, format="json", **self.extra)
+            response = self.client.put(url, data=data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -638,5 +638,5 @@ class FunctionViewTests(APITestCase):
         error.code = StatusCode.INTERNAL
 
         with mock.patch.object(OrchestratorClient, "update_function", side_effect=error):
-            response = self.client.put(url, data=data, format="json", **self.extra)
+            response = self.client.put(url, data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

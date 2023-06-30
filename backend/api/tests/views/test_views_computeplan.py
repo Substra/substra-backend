@@ -325,7 +325,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         )
 
     def test_computeplan_list_wrong_channel(self):
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        extra = {"HTTP_ACCEPT": "application/json;version=0.0"}
+        self.client.channel = "yourchannel"
         response = self.client.get(self.url, **extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 

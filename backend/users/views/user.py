@@ -261,7 +261,7 @@ class UserAwaitingApprovalViewSet(
     filterset_class = UserFilter
 
     def get_queryset(self):
-        return self.user_model.objects.filter(channel=None)
+        return self.user_model.objects.filter(channel=None).exclude(username="deleted")
 
     def delete(self, request, *args, **kwargs):
         try:

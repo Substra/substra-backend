@@ -13,9 +13,6 @@ from orchestrator.resources import OrchestratorVersion
 @override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
 class InfoViewTests(APITestCase):
     url = "/info/"
-    extra = {
-        "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
-    }
 
     def test_anonymous(self):
         client = APIClient()
@@ -35,7 +32,7 @@ class InfoViewTests(APITestCase):
         with mock.patch.object(
             OrchestratorClient, "query_version", return_value=OrchestratorVersion(server="foo", chaincode="bar")
         ):
-            response = client.get(self.url, **self.extra)
+            response = client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

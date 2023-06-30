@@ -1,9 +1,6 @@
 import functools
-import pathlib
-from typing import Final
 
 import pytest
-from django import conf
 from rest_framework import test
 
 from api.models import ComputeTask
@@ -11,23 +8,14 @@ from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedBackendClient
 from api.tests.common import AuthenticatedClient
 
-_CHANNEL_NAME: Final[str] = "mychannel"
-_EXTRA_HTTP_HEADERS: Final[dict[str, str]] = {"HTTP_SUBSTRA_CHANNEL_NAME": _CHANNEL_NAME}
-
-
-@pytest.fixture(autouse=True)
-def _set_settings(settings: conf.Settings, tmp_path: pathlib.Path):
-    settings.MEDIA_ROOT = tmp_path.resolve()
-    settings.LEDGER_CHANNELS = {_CHANNEL_NAME: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
-
 
 @pytest.fixture
 def authenticated_client() -> test.APIClient:
     client = AuthenticatedClient()
 
-    client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
-    client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
-    client.delete = functools.partial(client.delete, **_EXTRA_HTTP_HEADERS)
+    client.get = functools.partial(client.get)
+    client.post = functools.partial(client.post)
+    client.delete = functools.partial(client.delete)
 
     return client
 
@@ -36,9 +24,9 @@ def authenticated_client() -> test.APIClient:
 def authenticated_backend_client() -> test.APIClient:
     client = AuthenticatedBackendClient()
 
-    client.get = functools.partial(client.get, **_EXTRA_HTTP_HEADERS)
-    client.post = functools.partial(client.post, **_EXTRA_HTTP_HEADERS)
-    client.put = functools.partial(client.put, **_EXTRA_HTTP_HEADERS)
+    client.get = functools.partial(client.get)
+    client.post = functools.partial(client.post)
+    client.put = functools.partial(client.put)
 
     return client
 

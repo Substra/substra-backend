@@ -117,7 +117,6 @@ class TestUserEndpoints:
         usually contains tests).
         """
         cls.url = reverse("user:users-list")
-        cls.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         cls.channel = "mychannel"
 
     @pytest.mark.django_db
@@ -193,7 +192,9 @@ class TestUserEndpoints:
     @pytest.mark.django_db
     def test_retrieve_user(self):
         url = reverse("user:users-detail", args=["substra"])
-        response = AuthenticatedClient(channel=self.channel).get(url, **self.extra)
+        response = AuthenticatedClient(channel=self.channel).get(
+            url,
+        )
         assert response.status_code == status.HTTP_200_OK
 
     @pytest.mark.django_db
@@ -322,7 +323,9 @@ class TestUserEndpoints:
 
     @pytest.mark.django_db
     def test_list_users(self):
-        response = AuthenticatedClient(channel=self.channel).get(self.url, **self.extra)
+        response = AuthenticatedClient(channel=self.channel).get(
+            self.url,
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert "substra" == response.json()["results"][0]["username"]
@@ -338,21 +341,29 @@ class TestUserEndpoints:
         assert response.status_code == status.HTTP_201_CREATED
 
         # list all users (no filter)
-        response = AuthenticatedClient(channel=self.channel).get(self.url, **self.extra)
+        response = AuthenticatedClient(channel=self.channel).get(
+            self.url,
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["count"] == 2
         assert {user["role"] for user in data["results"]} == {"USER", "ADMIN"}
 
         # list only admin users
-        response = AuthenticatedClient(channel=self.channel).get(self.url, data={"role": "ADMIN"}, **self.extra)
+        response = AuthenticatedClient(channel=self.channel).get(
+            self.url,
+            data={"role": "ADMIN"},
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["count"] == 1
         assert data["results"][0]["role"] == "ADMIN"
 
         # list only non admin users
-        response = AuthenticatedClient(channel=self.channel).get(self.url, data={"role": "USER"}, **self.extra)
+        response = AuthenticatedClient(channel=self.channel).get(
+            self.url,
+            data={"role": "USER"},
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["count"] == 1
