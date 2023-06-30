@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0](https://github.com/Substra/substra-backend/releases/tag/0.39.0) 2023-06-27
+
 ### Added
 
 - New `SECRET_KEY_PATH` and `SECRET_KEY_LOAD_AND_STORE` environment variables ([#668](https://github.com/Substra/substra-backend/pull/668))
