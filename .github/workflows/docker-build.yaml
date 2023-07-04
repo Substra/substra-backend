@@ -1,6 +1,10 @@
 name: Docker build
 on:
   workflow_dispatch:
+    inputs:
+      force-publish:
+        description: Force publishing the image
+        type: boolean
   push:
     branches: [main]
   release:
