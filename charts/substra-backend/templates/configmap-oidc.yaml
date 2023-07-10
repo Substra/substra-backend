@@ -8,6 +8,7 @@ data:
   OIDC_ENABLED: {{ .Values.oidc.enabled | quote }}
   OIDC_USERS_APPEND_DOMAIN: {{ .Values.oidc.users.appendDomain | quote }}
   OIDC_USERS_DEFAULT_CHANNEL: {{ .Values.oidc.users.channel | default "" | quote }}
+  OIDC_USERS_MUST_BE_APPROVED: {{ .Values.oidc.users.requireApproval | default "" | quote }}
   OIDC_USERS_LOGIN_VALIDITY_DURATION: {{ .Values.oidc.users.loginValidityDuration | default "" | quote }}
   OIDC_USERS_USE_REFRESH_TOKEN: {{ .Values.oidc.users.useRefreshToken | quote }}
   OIDC_RP_SIGN_ALGO: {{ .Values.oidc.signAlgo | default "" | quote }}

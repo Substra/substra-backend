@@ -105,7 +105,6 @@ class TestUserUtil:
 
 class TestUserEndpoints:
     url = None
-    extra = None
 
     @pytest.fixture(autouse=True)
     def use_dummy_channels(self, settings):

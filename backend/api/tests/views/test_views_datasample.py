@@ -3,7 +3,6 @@ import logging
 import ntpath
 import os
 import shutil
-import sys
 import tempfile
 from unittest import mock
 
@@ -111,12 +110,8 @@ class DataSampleViewTests(APITestCase):
 
     def test_datasample_retrieve_wrong_channel(self):
         url = reverse("api:data_sample-detail", args=[self.expected_results[0]["key"]])
-        extra = {"HTTP_ACCEPT": "application/json;version=0.0"}
         self.client.channel = "yourchannel"
-        sys.stderr.write(f"{self.client.channel}")
-        sys.stderr.write(f"{type(self.client.channel)}")
-
-        response = self.client.get(url, **extra)
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @internal_server_error_on_exception()
@@ -139,9 +134,8 @@ class DataSampleViewTests(APITestCase):
         )
 
     def test_datasample_list_wrong_channel(self):
-        extra = {"HTTP_ACCEPT": "application/json;version=0.0"}
         self.client.channel = "yourchannel"
-        response = self.client.get(self.url, **extra)
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()

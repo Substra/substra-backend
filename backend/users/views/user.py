@@ -95,8 +95,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
 
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return request.user.channel.role == UserChannel.Role.ADMIN
+        return request.user.channel.role == UserChannel.Role.ADMIN
 
 
 class IsSelf(permissions.BasePermission):
@@ -276,19 +275,21 @@ class UserAwaitingApprovalViewSet(
         d = json.loads(request.body)
         try:
             user = User.objects.get(username=request.GET.get("username"))
-        except User.DoesNotExist or User.MultipleObjectsReturned:
+        except User.DoesNotExist:
             return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except User.MultipleObjectsReturned:
+            return ApiResponse(
+                data={"message": "Multiple instance of the same user found"}, status=status.HTTP_409_CONFLICT
+            )
 
         channel_name = get_channel_name(request)
-        channel_data = {"channel_name": channel_name}
-        channel_data["role"] = _validate_role(d.get("role"))
-        channel_data["user"] = user
-        UserChannel.objects.create(**channel_data)
-        user.refresh_from_db()
+        channel_name = get_channel_name(request)
+        role = _validate_role(d.get("role"))
+        UserChannel.objects.create(channel_name=channel_name, role=role, user=user)
         data = UserSerializer(instance=user).data
-        return ApiResponse(data=data, status=status.HTTP_200_OK)  # get success header ?
+        return ApiResponse(data=data, status=status.HTTP_200_OK)
 
-    # TODO THIS SHOULD NOT BE IN THE PULL REQUEST
+    # TODO THIS SHOULD NOT BE MERGED
     def post(self, request, *args, **kwargs):
         d = json.loads(request.body)
         user, created = User.objects.get_or_create(username=d.get("username"), email=d.get("email"))
