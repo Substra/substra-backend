@@ -1,5 +1,3 @@
-import functools
-
 import pytest
 from rest_framework import test
 
@@ -13,20 +11,12 @@ from api.tests.common import AuthenticatedClient
 def authenticated_client() -> test.APIClient:
     client = AuthenticatedClient()
 
-    client.get = functools.partial(client.get)
-    client.post = functools.partial(client.post)
-    client.delete = functools.partial(client.delete)
-
     return client
 
 
 @pytest.fixture
 def authenticated_backend_client() -> test.APIClient:
     client = AuthenticatedBackendClient()
-
-    client.get = functools.partial(client.get)
-    client.post = functools.partial(client.post)
-    client.put = functools.partial(client.put)
 
     return client
 

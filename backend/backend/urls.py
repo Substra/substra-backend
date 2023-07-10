@@ -44,7 +44,7 @@ urlpatterns = (
                     path("api-token-auth/", obtain_auth_token),  # for expiry token authent
                     path("api-token/", obtain_auth_token_already_authenticated),
                     path("active-api-tokens/", active_bearer_tokens),
-                    path("unactivated-users/", UserAwaitingApprovalViewSet.as_view({"get": "list"})),
+                    path("users-awaiting-approval/", UserAwaitingApprovalViewSet.as_view({"get": "list"})),
                 ]
             ),
         ),
