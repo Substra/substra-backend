@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "api",
     "drf_spectacular",
     "django_filters",
+    "builder",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -299,6 +300,11 @@ LOGGING = {
             "propagate": False,
         },
         "events": {
+            "level": LOG_LEVEL,
+            "handlers": ["console"],
+            "propagate": False,
+        },
+        "builder": {
             "level": LOG_LEVEL,
             "handlers": ["console"],
             "propagate": False,
