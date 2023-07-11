@@ -4,7 +4,6 @@ This file contains the main logic for executing a compute task:
 - Create execution context
 - Populate asset buffer
 - Loads assets from the asset buffer
-- Build container images
 - **Execute the compute task**
 - Save the models/results
 - Teardown the context
@@ -32,6 +31,7 @@ from rest_framework import status
 
 import orchestrator
 from backend.celery import app
+from builder.tasks.tasks_build_image import build_image
 from substrapp import models
 from substrapp import utils
 from substrapp.clients import organization as organization_client
@@ -53,13 +53,14 @@ from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
 from substrapp.compute_tasks.execute import execute_compute_task
-from substrapp.compute_tasks.image_builder import build_image_if_missing
+from substrapp.compute_tasks.image_builder import wait_for_image_built
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.task_routing import get_builder_queue
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
 from substrapp.utils import retry
@@ -150,6 +151,13 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
             celery_task_key=task.key,
         )
         return
+
+    # add image build to the Celery queue
+    with get_orchestrator_client(channel_name) as client:
+        function = client.query_function(task.function_key)
+    builder_queue = get_builder_queue()
+    # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
+    build_image.apply_async((function.json(),), queue=builder_queue, task_id=function.key)
 
     with get_orchestrator_client(channel_name) as client:
         if not task_utils.is_task_runnable(task.key, client):
@@ -262,7 +270,7 @@ def _run(
         # start build_image timer
         timer.start()
 
-        build_image_if_missing(datastore, ctx.function)
+        wait_for_image_built(ctx.function)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())

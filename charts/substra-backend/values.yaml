@@ -471,6 +471,83 @@ scheduler:
     runAsGroup: 1001
     fsGroup: 1001
 
+
+## @section Builder settings
+## @param builder.replicaCount Number of builder replicas
+##
+builder:
+  ## @param builder.enabled Enable worker service
+  ##
+  enabled: true
+  ## @param builder.replicaCount Replica count for the worker service
+  ##
+  replicaCount: 1
+
+  ## @param builder.concurrency Maximum amount of tasks to process in parallel
+  ##
+  concurrency: 1
+
+  ## Substra backend image version
+  ## @param builder.image.registry Substra backend server image registry
+  ## @param builder.image.repository Substra backend server image repository
+  ## @param builder.image.tag Substra backend server image tag (defaults to AppVersion)
+  ## @param builder.image.pullPolicy Substra backend server image pull policy
+  ## @param builder.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: ghcr.io
+    repository: substra/substra-backend
+    tag: null
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be created manually in the namespace.
+    ##
+    pullSecrets: []
+
+  ## @param builder.podSecurityContext.enabled Enable security context
+  ## @param builder.podSecurityContext.runAsUser User ID for the pod
+  ## @param builder.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param builder.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+
+
+  ## @param builder.resources Builder container resources requests and limits
+  ## e.g:
+  ## resources:
+  ##   limits:
+  ##     cpu: 100m
+  ##     memory: 128Mi
+  ##   requests:
+  ##     cpu: 100m
+  ##     memory: 128Mi
+  ##
+  resources: {}
+
+  ## @param builder.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: { }
+  ## @param builder.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: [ ]
+  ## @param builder.affinity Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`
+  ##
+  affinity: { }
+
+
+  persistence:
+    ## @param builder.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
+    ## @param builder.persistence.size The size of the volume.
+    ##
+    storageClass: ""
+    size: 10Gi
+
+
+
 ## @section Substra container registry settings
 ##
 containerRegistry:
