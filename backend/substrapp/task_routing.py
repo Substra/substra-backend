@@ -29,6 +29,7 @@ enforced by a unique condition in the ComputePlanWorkerMapping model.
 
 
 WORKER_QUEUE = f"{settings.ORG_NAME}.worker"
+BUILDER_QUEUE = f"{settings.ORG_NAME}.builder"
 
 
 def get_generic_worker_queue() -> str:
@@ -44,6 +45,10 @@ def get_worker_queue(compute_plan_key: str) -> str:
     """
     worker_index = _acquire_worker_index(compute_plan_key)
     return _get_worker_queue(worker_index)
+
+
+def get_builder_queue() -> str:
+    return BUILDER_QUEUE
 
 
 def get_existing_worker_queue(compute_plan_key: str) -> Optional[str]:
