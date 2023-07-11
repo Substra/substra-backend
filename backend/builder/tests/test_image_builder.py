@@ -25,7 +25,7 @@ ENTRYPOINT python3 myfunction.py
 def test_build_image_if_missing_image_already_exists(mocker: MockerFixture, function: orchestrator.Function):
     ds = mocker.Mock()
     m_container_image_exists = mocker.patch(
-        "substrapp.compute_tasks.image_builder.container_image_exists", return_value=True
+        "builder.compute_tasks.image_builder.container_image_exists", return_value=True
     )
     function_image_tag = utils.container_image_tag_from_function(function)
 
@@ -37,9 +37,9 @@ def test_build_image_if_missing_image_already_exists(mocker: MockerFixture, func
 def test_build_image_if_missing_image_build_needed(mocker: MockerFixture, function: orchestrator.Function):
     ds = mocker.Mock()
     m_container_image_exists = mocker.patch(
-        "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
+        "builder.compute_tasks.image_builder.container_image_exists", return_value=False
     )
-    m_build_function_image = mocker.patch("substrapp.compute_tasks.image_builder._build_function_image")
+    m_build_function_image = mocker.patch("builder.compute_tasks.image_builder._build_function_image")
     function_image_tag = utils.container_image_tag_from_function(function)
 
     image_builder.build_image_if_missing(datastore=ds, function=function)
