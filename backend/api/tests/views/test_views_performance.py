@@ -118,9 +118,6 @@ class CPPerformanceViewTests(APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "count": 0,
-                "next": None,
-                "previous": None,
                 "compute_plan_statistics": {
                     "compute_tasks_distinct_ranks": [1, 2, 3],
                     "compute_tasks_distinct_rounds": [1],
@@ -134,9 +131,6 @@ class CPPerformanceViewTests(APITestCase):
         self.assertEqual(
             response.json(),
             {
-                "count": len(self.expected_results),
-                "next": None,
-                "previous": None,
                 "compute_plan_statistics": self.expected_stats,
                 "results": self.expected_results,
             },
