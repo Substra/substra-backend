@@ -63,4 +63,4 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(compute_task_profile_id=task_profile_pk)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

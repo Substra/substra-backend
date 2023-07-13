@@ -134,7 +134,7 @@ def test_task_profiling_add_step(authenticated_backend_client, task_profiling):
     response = authenticated_backend_client.post(
         step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **EXTRA
     )
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
 
     expected_results = [
         {
