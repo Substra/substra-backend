@@ -25,7 +25,7 @@ def _get_profiling_expected_result(key: str):
     return [
         {
             "compute_task_key": str(key),
-            "execution_rundown": [{"duration": 10000000, "step": "step 1"}],
+            "execution_rundown": [],
             "task_duration": None,
         }
     ]
