@@ -52,21 +52,23 @@ class TaskProfilingViewTests(APITestCase):
     def test_task_profiling_list_wrong_channel(self):
         self.client.channel = "yourchannel"
         response = self.client.get(TASK_PROFILING_LIST_URL)
-        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+        assert response.json() == {"count": 0, "next": None, "previous": None, "results": []}
 
     def test_task_profiling_retrieve_success(self):
         response = self.client.get(
             reverse("api:task_profiling-detail", args=[self.expected_results[0]["compute_task_key"]])
         )
-        self.assertEqual(response.json(), self.expected_results[0])
+        assert response.json() == self.expected_results[0]
 
     def test_task_profiling_create_bad_client(self):
         function = factory.create_function()
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key), "channel": CHANNEL})
-        self.assertEqual(response.status_code, 403)
+        response = self.client.post(
+            TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key), "channel": CHANNEL}
+        )
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @override_settings(**ORG_SETTINGS)
@@ -79,12 +81,12 @@ class TaskProfilingViewTestsBackend(APITestCase):
         task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
-        self.assertEqual(response.status_code, 201)
+        assert response.status_code == status.HTTP_201_CREATED
 
         step_url = reverse("api:step-list", args=[str(task.key)])
         response = self.client.post(step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)})
-        self.assertEqual(response.status_code, 200)
-
+        assert response.status_code == status.HTTP_200_OK
+        
         expected_result = [
             {
                 "compute_task_key": str(task.key),
@@ -94,10 +96,12 @@ class TaskProfilingViewTestsBackend(APITestCase):
         ]
 
         response = self.client.get(TASK_PROFILING_LIST_URL, **EXTRA)
-        self.assertEqual(
-            response.json(),
-            {"count": len(expected_result), "next": None, "previous": None, "results": expected_result},
-        )
+        assert response.json() == {
+            "count": len(expected_result),
+            "next": None,
+            "previous": None,
+            "results": expected_result,
+        }
 
     def test_already_exist_task_profiling(self):
         function = factory.create_function()
@@ -105,10 +109,10 @@ class TaskProfilingViewTestsBackend(APITestCase):
         task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        assert response.status_code == status.HTTP_201_CREATED
 
         response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        assert response.status_code == status.HTTP_409_CONFLICT
 
 
 @override_settings(**ORG_SETTINGS)
@@ -178,4 +182,4 @@ class TaskProfilingViewTestsOtherBackend(APITestCase):
         task = factory.create_computetask(compute_plan=cp, function=function)
 
         response = self.client.post(self.url, {"compute_task_key": str(task.key)})
-        self.assertEqual(response.status_code, 403)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
