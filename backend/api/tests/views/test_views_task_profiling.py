@@ -80,28 +80,6 @@ def test_task_profiling_create_success(authenticated_backend_client, create_comp
     )
     assert response.status_code == status.HTTP_201_CREATED
 
-    step_url = reverse("api:step-list", args=[str(compute_task.key)])
-    response = authenticated_backend_client.post(
-        step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **EXTRA
-    )
-    assert response.status_code == status.HTTP_200_OK
-
-    expected_results = [
-        {
-            "compute_task_key": str(compute_task.key),
-            "execution_rundown": [{"duration": 20000000, "step": "custom_step"}],
-            "task_duration": None,
-        }
-    ]
-
-    response = authenticated_backend_client.get(TASK_PROFILING_LIST_URL, **EXTRA)
-    assert response.json() == {
-        "count": len(expected_results),
-        "next": None,
-        "previous": None,
-        "results": expected_results,
-    }
-
 
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db
@@ -149,20 +127,39 @@ def test_task_profiling_update_datetime(authenticated_backend_client, create_com
 
 
 @override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db
+def test_task_profiling_add_step(authenticated_backend_client, task_profiling):
+    compute_task_key = task_profiling.compute_task.key
+    step_url = reverse("api:step-list", args=[str(compute_task_key)])
+    response = authenticated_backend_client.post(
+        step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **EXTRA
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    expected_results = [
+        {
+            "compute_task_key": str(compute_task_key),
+            "execution_rundown": [{"duration": 20000000, "step": "custom_step"}],
+            "task_duration": None,
+        }
+    ]
+
+    response = authenticated_backend_client.get(TASK_PROFILING_LIST_URL)
+    assert response.json() == {
+        "count": len(expected_results),
+        "next": None,
+        "previous": None,
+        "results": expected_results,
+    }
+
+
+@override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db()
-def test_task_profiling_add_step_no_datetime_change(
-    authenticated_backend_client, create_compute_plan, create_compute_task
-):
-    compute_plan = create_compute_plan()
-    compute_task = create_compute_task(compute_plan)
-
-    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
-    task_profiling = compute_task.task_profiling
-    task_profiling.refresh_from_db()
+def test_task_profiling_add_step_no_datetime_change(authenticated_backend_client, task_profiling):
+    compute_task_key = task_profiling.compute_task.key
     previous_datetime = task_profiling.creation_date
-
-    step_url = reverse("api:step-list", args=[str(compute_task.key)])
-    authenticated_backend_client.post(step_url, {"compute_task_key": str(compute_task.key)})
+    step_url = reverse("api:step-list", args=[str(compute_task_key)])
+    authenticated_backend_client.post(step_url, {"compute_task_key": str(compute_task_key)})
     task_profiling.refresh_from_db()
     new_datetime = task_profiling.creation_date
     assert new_datetime == previous_datetime
@@ -174,8 +171,7 @@ def test_task_profiling_add_step_no_datetime_change(
 )
 @pytest.mark.django_db()
 def test_task_profiling_create_fail_other_backend(authenticated_client, create_compute_task):
-    url = reverse("api:task_profiling-list")
     task = create_compute_task()
 
-    response = authenticated_client.post(url, {"compute_task_key": str(task.key)})
+    response = authenticated_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
     assert response.status_code == status.HTTP_403_FORBIDDEN
