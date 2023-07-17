@@ -12,6 +12,7 @@ from django_filters.rest_framework import FilterSet
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
@@ -32,6 +33,7 @@ logger = structlog.get_logger(__name__)
 
 class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = CPPerformanceSerializer
+    pagination_class = None
     filter_backends = [OrderingFilter]
     ordering_fields = [
         "compute_task_output__task__rank",
@@ -79,12 +81,8 @@ class CPPerformanceViewSet(mixins.ListModelMixin, GenericViewSet):
     def list(self, request, compute_plan_pk):
         queryset = self.filter_queryset(self.get_queryset())
         cp_stats = self._get_cp_ranks_and_rounds(compute_plan_pk).first()
-
-        page = self.paginate_queryset(queryset)
-        serializer = self.get_serializer(page, many=True)
-        response = self.get_paginated_response(serializer.data)
-        response.data["compute_plan_statistics"] = cp_stats
-        return response
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"results": serializer.data, "compute_plan_statistics": cp_stats})
 
 
 class PerformanceFilter(FilterSet):
