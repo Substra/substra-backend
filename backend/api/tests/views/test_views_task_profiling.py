@@ -96,18 +96,6 @@ def test_already_exist_task_profiling(authenticated_backend_client):
 
 
 @override_settings(**ORG_SETTINGS)
-@pytest.mark.django_db
-def test_task_profiling_post_duplicate(authenticated_backend_client, create_compute_plan, create_compute_task):
-    compute_plan = create_compute_plan()
-    compute_task = create_compute_task(compute_plan)
-    response = authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
-    assert response.status_code == status.HTTP_201_CREATED
-
-    response = authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
-    assert response.status_code == status.HTTP_409_CONFLICT
-
-
-@override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db(transaction=True)
 def test_task_profiling_update_datetime(authenticated_backend_client, create_compute_plan, create_compute_task):
     compute_plan = create_compute_plan()
@@ -163,6 +151,41 @@ def test_task_profiling_add_step_no_datetime_change(authenticated_backend_client
     task_profiling.refresh_from_db()
     new_datetime = task_profiling.creation_date
     assert new_datetime == previous_datetime
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db
+def test_already_exist_step(authenticated_backend_client, task_profiling):
+    url = reverse("api:step-list", args=[str(task_profiling.compute_task.key)])
+    content = {"step": "step name", "duration": datetime.timedelta(seconds=20)}
+    response = authenticated_backend_client.post(url, content, **EXTRA)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response = authenticated_backend_client.post(url, content, **EXTRA)
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db(transaction=True)
+def test_step_update(authenticated_backend_client, task_profiling):
+    url = reverse("api:step-list", args=[str(task_profiling.compute_task.key)])
+    old_duration = datetime.timedelta(seconds=20)
+    new_duration = datetime.timedelta(seconds=40)
+    content = {"step": "step name", "duration": old_duration}
+    assert old_duration != new_duration
+
+    authenticated_backend_client.post(url, content, **EXTRA)
+    task_profiling.refresh_from_db()
+    step = task_profiling.execution_rundown.first()
+    assert step.duration == old_duration
+
+    url = reverse("api:step-detail", args=[str(task_profiling.compute_task.key), content["step"]])
+    content["duration"] = new_duration
+    response = authenticated_backend_client.put(url, content, **EXTRA)
+    assert response.status_code == status.HTTP_200_OK
+
+    step.refresh_from_db()
+    assert step.duration == new_duration
 
 
 @override_settings(**EXTRA)
