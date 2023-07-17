@@ -66,6 +66,7 @@ from substrapp.utils import retry
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
+from substrapp.utils.url import get_task_profiling_steps_detail_url
 
 logger = structlog.get_logger(__name__)
 
@@ -195,27 +196,32 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
         raise compute_task_errors.CeleryRetryError() from exception
 
 
-@retry()
-def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
-    parameters = {"compute_task_key": compute_task_key}
+def _send_profiling_event(*, channel_name: str, url_create: str, url_update: str, data: dict[str, Any]) -> bytes:
     try:
-        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, TASK_PROFILING_BASE_URL, parameters)
+        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url_create, data)
     except OrganizationHttpError as e:
         if e.status_code == status.HTTP_409_CONFLICT:
-            url = get_task_profiling_detail_url(compute_task_key)
-            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url, parameters)
+            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url_update, data)
         else:
             raise e
+
+
+@retry()
+def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
+    url_create = TASK_PROFILING_BASE_URL
+    url_update = get_task_profiling_detail_url(compute_task_key)
+    data = {"compute_task_key": compute_task_key}
+    return _send_profiling_event(channel_name=channel_name, url_create=url_create, url_update=url_update, data=data)
 
 
 @retry()
 def _create_task_profiling_step(
     channel_name: str, compute_task_key: str, field: ComputeTaskSteps, duration: datetime.timedelta
 ) -> bytes:
-    url = get_task_profiling_steps_base_url(compute_task_key)
-    return organization_client.post(
-        channel_name, settings.LEDGER_MSP_ID, url, {"step": field.value, "duration": duration}
-    )
+    url_create = get_task_profiling_steps_base_url(compute_task_key)
+    url_update = get_task_profiling_steps_detail_url(compute_task_key, field.value)
+    data = {"step": field.value, "duration": duration}
+    return _send_profiling_event(channel_name=channel_name, url_create=url_create, url_update=url_update, data=data)
 
 
 # TODO: function too complex, consider refactoring
