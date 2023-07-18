@@ -34,10 +34,13 @@ if OIDC["ENABLED"]:  # noqa: C901
     OIDC["USERS"]["APPEND_DOMAIN"] = to_bool(os.environ.get("OIDC_USERS_APPEND_DOMAIN", "false"))
 
     OIDC["USERS"]["DEFAULT_CHANNEL"] = os.environ.get("OIDC_USERS_DEFAULT_CHANNEL")
-    if not OIDC["USERS"]["DEFAULT_CHANNEL"]:
-        raise Exception("No default channel provided for OIDC users")
-    if OIDC["USERS"]["DEFAULT_CHANNEL"] not in ledger.LEDGER_CHANNELS:
-        raise Exception(f"Channel {OIDC['USERS']['DEFAULT_CHANNEL']} does not exist")
+    OIDC["USERS"]["MUST_BE_APPROVED"] = to_bool(os.environ.get("OIDC_USERS_MUST_BE_APPROVED", "false"))
+    if OIDC["USERS"]["DEFAULT_CHANNEL"] and OIDC["USERS"]["MUST_BE_APPROVED"]:
+        raise Exception("Both 'default channel' and 'user must be approved' options are activated")
+    if not (OIDC["USERS"]["DEFAULT_CHANNEL"] or OIDC["USERS"]["MUST_BE_APPROVED"]):
+        raise Exception(
+            "At least one option between 'default channel' and 'user must be approved' needs to be activated"
+        )
     OIDC["USERS"]["LOGIN_VALIDITY_DURATION"] = int(
         os.environ.get("OIDC_USERS_LOGIN_VALIDITY_DURATION", 60 * 60)
     )  # seconds

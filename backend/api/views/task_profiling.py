@@ -8,7 +8,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -20,6 +19,7 @@ from api.serializers.task_profiling import ProfilingStepSerializer
 from api.views.utils import IsCurrentBackendOrReadOnly
 from api.views.utils import get_channel_name
 from libs.pagination import LargePageNumberPagination
+from libs.permissions import IsAuthorized
 
 logger = structlog.get_logger(__name__)
 
@@ -35,7 +35,7 @@ class TaskProfilingViewSet(
     serializer_class = TaskProfilingSerializer
     pagination_class = LargePageNumberPagination
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
-    permission_classes = [IsAuthenticated, IsCurrentBackendOrReadOnly]
+    permission_classes = [IsAuthorized, IsCurrentBackendOrReadOnly]
 
     def get_queryset(self) -> QuerySet[TaskProfiling]:
         return TaskProfiling.objects.filter(compute_task__channel=get_channel_name(self.request))
@@ -56,7 +56,7 @@ class TaskProfilingViewSet(
 class TaskProfilingStepViewSet(mixins.CreateModelMixin, GenericViewSet):
     serializer_class = ProfilingStepSerializer
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
-    permission_classes = [IsAuthenticated, IsCurrentBackendOrReadOnly]
+    permission_classes = [IsAuthorized, IsCurrentBackendOrReadOnly]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         task_profile_pk = kwargs["task_profiling_pk"]

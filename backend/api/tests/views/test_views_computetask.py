@@ -35,7 +35,6 @@ class ComputeTaskViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
@@ -245,7 +244,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
 
         url = reverse("api:task-bulk_create")
         with mock.patch.object(OrchestratorClient, "register_tasks", side_effect=mock_register_compute_task):
-            response = self.client.post(url, data=data, format="json", **self.extra)
+            response = self.client.post(url, data=data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         assert response.json()[0] == expected_response[0]
@@ -430,7 +429,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         self.done_task_key = done_task.key
 
     def test_task_list_success(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -447,21 +446,21 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         )
 
     def test_task_list_wrong_channel(self):
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(self.url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(self.url)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
     @mock.patch("api.views.computetask.ComputeTaskViewSet.list", side_effect=Exception("Unexpected error"))
     def test_task_list_fail(self, _):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_task_list_filter(self):
         """Filter task on key."""
         key = self.list_expected_results[0]["key"]
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
@@ -470,7 +469,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         """Filter task on key and owner."""
         key, owner = self.list_expected_results[0]["key"], self.list_expected_results[0]["owner"]
         params = urlencode({"key": key, "owner": owner})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
@@ -480,7 +479,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         key_0 = self.list_expected_results[0]["key"]
         key_1 = self.list_expected_results[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.list_expected_results[:2]}
         )
@@ -500,7 +499,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         """Filter task on status."""
         filtered_train_tasks = [task for task in self.list_expected_results if task["status"] == t_status]
         params = urlencode({"status": t_status})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
 
         if t_status != "STATUS_XXX":
             if t_status == ComputeTask.Status.STATUS_DOING:
@@ -527,7 +526,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         """Filter task on status."""
         filtered_train_tasks = [task for task in self.list_expected_results if task["status"] in t_statuses]
         params = urlencode({"status": ",".join(t_statuses)})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
 
         if "STATUS_XXX" not in t_statuses:
             if ComputeTask.Status.STATUS_DOING in t_statuses:
@@ -555,7 +554,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         # this will be handled as 2 tokens, so items matching both XXXX and YYYYYYYYYYYY will be returned
         # this should be enough to guarantee that there will only be one matching task
         params = urlencode({"match": key[19:]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertDictEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
@@ -570,7 +569,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "match": key[19:],
             }
         )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
@@ -584,7 +583,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     )
     def test_task_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         r = response.json()
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
@@ -598,7 +597,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def test_task_cp_list_success(self):
         """List tasks for a specific compute plan (CPTaskViewSet)."""
         url = reverse("api:compute_plan_task-list", args=[self.compute_plan.key])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -621,7 +620,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         ]
 
         for params in params_list:
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+            response = self.client.get(f"{self.url}?{params}")
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -631,12 +630,12 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
         # filter on wrong key
         params = urlencode({"function_key": self.data_manager.key})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(len(response.json().get("results")), 0)
 
     def test_task_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -645,7 +644,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         self.assertEqual(response.json().get("results"), self.list_expected_results),
 
         params = urlencode({"ordering": "-creation_date"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
         # couldn't be properly mocked
         for task in response.json().get("results"):
@@ -655,26 +654,26 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
     def test_task_retrieve(self):
         url = reverse("api:task-detail", args=[self.detail_expected_results["key"]])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         self.assertEqual(response.json(), self.detail_expected_results)
 
     def test_task_retrieve_wrong_channel(self):
         url = reverse("api:task-detail", args=[self.detail_expected_results["key"]])
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @internal_server_error_on_exception()
     @mock.patch("api.views.computetask.ComputeTaskViewSet.retrieve", side_effect=Exception("Unexpected error"))
     def test_task_retrieve_fail(self, _):
         url = reverse("api:task-detail", args=[self.detail_expected_results["key"]])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_task_list_input_assets(self):
         url = reverse("api:task-input_assets", args=[self.done_task_key])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         expected_results = [
             {
                 "identifier": "datasamples",
@@ -696,33 +695,33 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         url = reverse("api:task-input_assets", args=[self.done_task_key])
 
         # base response should contain a datamanager and a datasample
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         data = response.json()
         assert data["count"] == 2
 
         # single filter
-        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER"})
         data = response.json()
         assert data["count"] == 1
 
         # multi filter
-        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,ASSET_MODEL"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,ASSET_MODEL"})
         data = response.json()
         assert data["count"] == 1
 
         # invalid filter
-        response = self.client.get(url, data={"kind": "foo"}, **self.extra)
+        response = self.client.get(url, data={"kind": "foo"})
         data = response.json()
         assert data["count"] == 2
 
         # invalid multi filter
-        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,foo"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_DATA_MANAGER,foo"})
         data = response.json()
         assert data["count"] == 2
 
     def test_task_list_output_assets(self):
         url = reverse("api:task-output_assets", args=[self.done_task_key])
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         expected_results = [
             {
                 "identifier": "model",
@@ -739,27 +738,27 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         url = reverse("api:task-output_assets", args=[self.done_task_key])
 
         # base response should contain a model
-        response = self.client.get(url, **self.extra)
+        response = self.client.get(url)
         data = response.json()
         assert data["count"] == 1
 
         # single filter
-        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE"})
         data = response.json()
         assert data["count"] == 0
 
         # multi filter
-        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,ASSET_MODEL"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,ASSET_MODEL"})
         data = response.json()
         assert data["count"] == 1
 
         # invalid filter
-        response = self.client.get(url, data={"kind": "foo"}, **self.extra)
+        response = self.client.get(url, data={"kind": "foo"})
         data = response.json()
         assert data["count"] == 1
 
         # invalid multi filter
-        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,foo"}, **self.extra)
+        response = self.client.get(url, data={"kind": "ASSET_PERFORMANCE,foo"})
         data = response.json()
         assert data["count"] == 1
 
@@ -788,8 +787,8 @@ def test_n_plus_one_queries_compute_task_in_compute_plan(authenticated_client, c
 
     queries_for_10_tasks = len(queries_10.captured_queries)
 
-    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
-    assert queries_for_60_tasks < 17
+    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 6
+    assert queries_for_60_tasks < 19
 
 
 @pytest.mark.django_db
@@ -816,7 +815,7 @@ def test_n_plus_one_queries_compute_task_detail(authenticated_client, create_com
         authenticated_client.get(url_10)
     queries_for_10_samples = len(queries_10.captured_queries)
 
-    assert abs(queries_for_4_samples - queries_for_10_samples) < 5
+    assert abs(queries_for_4_samples - queries_for_10_samples) < 6
     assert queries_for_4_samples < 20
 
 
@@ -844,5 +843,5 @@ def test_n_plus_one_queries_compute_task_list(authenticated_client, create_compu
         authenticated_client.get(url)
     queries_for_60_tasks = len(queries_60.captured_queries)
 
-    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 5
+    assert abs(queries_for_60_tasks - queries_for_10_tasks) < 6
     assert queries_for_60_tasks < 15

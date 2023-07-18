@@ -137,8 +137,8 @@ class OIDCAuthenticationBackend(OIDCAuthenticationBackend):
             username = utils.oidc.generate_username(email, issuer, subject)
 
         user = self.UserModel.objects.create_user(username, email=email)
-
-        UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS"]["DEFAULT_CHANNEL"])
+        if settings.OIDC["USERS"]["DEFAULT_CHANNEL"]:
+            UserChannel.objects.create(user=user, channel_name=settings.OIDC["USERS"]["DEFAULT_CHANNEL"])
         UserOidcInfo.objects.create(
             user=user, openid_issuer=issuer, openid_subject=subject, valid_until=_get_user_valid_until()
         )

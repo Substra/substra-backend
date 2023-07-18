@@ -22,8 +22,6 @@ class ModelViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
@@ -41,7 +39,7 @@ class ModelViewTests(APITestCase):
     def test_organization_list_success(self):
         url = reverse("organization:organization-list")
         with mock.patch("api.serializers.organization.get_owner", return_value="foo"):
-            response = self.client.get(url, **self.extra)
+            response = self.client.get(url)
             self.assertEqual(
                 response.json(),
                 [

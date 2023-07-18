@@ -104,10 +104,9 @@ def test_delete_token_other_user(authenticated_client):
 @pytest.mark.django_db
 def test_token_creation_post(authenticated_client):
     authenticated_client.create_user()
-    extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
     payload = {"expires_at": "2023-07-14T11:55:36.509Z", "note": "gfyqgbs"}
     url = "/api-token/"
-    response = authenticated_client.post(url, payload, **extra)
+    response = authenticated_client.post(url, payload)
     assert response.status_code == status.HTTP_200_OK
 
     tokens_count = BearerToken.objects.count()

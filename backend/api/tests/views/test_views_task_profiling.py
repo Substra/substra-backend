@@ -43,21 +43,20 @@ class TaskProfilingViewTests(APITestCase):
         ]
 
     def test_task_profiling_list_success(self):
-        response = self.client.get(TASK_PROFILING_LIST_URL, **EXTRA)
+        response = self.client.get(TASK_PROFILING_LIST_URL)
         self.assertEqual(
             response.json(),
             {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
     def test_task_profiling_list_wrong_channel(self):
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(TASK_PROFILING_LIST_URL, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(TASK_PROFILING_LIST_URL)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_task_profiling_retrieve_success(self):
         response = self.client.get(
-            reverse("api:task_profiling-detail", args=[self.expected_results[0]["compute_task_key"]]),
-            **EXTRA,
+            reverse("api:task_profiling-detail", args=[self.expected_results[0]["compute_task_key"]])
         )
         self.assertEqual(response.json(), self.expected_results[0])
 
@@ -66,9 +65,7 @@ class TaskProfilingViewTests(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(
-            TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key), "channel": CHANNEL}, **EXTRA
-        )
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key), "channel": CHANNEL})
         self.assertEqual(response.status_code, 403)
 
 
@@ -81,13 +78,11 @@ class TaskProfilingViewTestsBackend(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
         self.assertEqual(response.status_code, 201)
 
         step_url = reverse("api:step-list", args=[str(task.key)])
-        response = self.client.post(
-            step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)}, **EXTRA
-        )
+        response = self.client.post(step_url, {"step": "custom_step", "duration": datetime.timedelta(seconds=20)})
         self.assertEqual(response.status_code, 200)
 
         expected_result = [
@@ -109,10 +104,10 @@ class TaskProfilingViewTestsBackend(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)}, **EXTRA)
+        response = self.client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
 
@@ -121,14 +116,10 @@ class TaskProfilingViewTestsBackend(APITestCase):
 def test_task_profiling_post_duplicate(authenticated_backend_client, create_compute_plan, create_compute_task):
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
-    response = authenticated_backend_client.post(
-        TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA
-    )
+    response = authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
     assert response.status_code == status.HTTP_201_CREATED
 
-    response = authenticated_backend_client.post(
-        TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA
-    )
+    response = authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
@@ -138,7 +129,7 @@ def test_task_profiling_update_datetime(authenticated_backend_client, create_com
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
 
-    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
     task_profiling = compute_task.task_profiling
     task_profiling.refresh_from_db()
     previous_datetime = task_profiling.creation_date
@@ -159,13 +150,13 @@ def test_task_profiling_add_step_no_datetime_change(
     compute_plan = create_compute_plan()
     compute_task = create_compute_task(compute_plan)
 
-    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    authenticated_backend_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)})
     task_profiling = compute_task.task_profiling
     task_profiling.refresh_from_db()
     previous_datetime = task_profiling.creation_date
 
     step_url = reverse("api:step-list", args=[str(compute_task.key)])
-    authenticated_backend_client.post(step_url, {"compute_task_key": str(compute_task.key)}, **EXTRA)
+    authenticated_backend_client.post(step_url, {"compute_task_key": str(compute_task.key)})
     task_profiling.refresh_from_db()
     new_datetime = task_profiling.creation_date
     assert new_datetime == previous_datetime
@@ -179,7 +170,6 @@ class TaskProfilingViewTestsOtherBackend(APITestCase):
     client_class = AuthenticatedBackendClient
 
     def setUp(self) -> None:
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:task_profiling-list")
 
     def test_task_profiling_create_fail_other_backend(self):
@@ -187,5 +177,5 @@ class TaskProfilingViewTestsOtherBackend(APITestCase):
         cp = factory.create_computeplan()
         task = factory.create_computetask(compute_plan=cp, function=function)
 
-        response = self.client.post(self.url, {"compute_task_key": str(task.key)}, **self.extra)
+        response = self.client.post(self.url, {"compute_task_key": str(task.key)})
         self.assertEqual(response.status_code, 403)

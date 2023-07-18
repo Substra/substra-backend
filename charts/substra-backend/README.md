@@ -284,6 +284,7 @@ Else, you must strike a balance: longer durations are more convenient, but risk 
 | `oidc.users.useRefreshToken`            | Attempt to refresh user info in the background.                                                                                                                 | `true`  |
 | `oidc.users.loginValidityDuration`      | How long a user account is valid after an OIDC login, in seconds                                                                                                | `3600`  |
 | `oidc.users.channel`                    | The channel to assign OIDC users to (mandatory)                                                                                                                 | `nil`   |
+| `oidc.users.requireApproval`            | Activate the user approval. A user using the OIDC login for the first time will need approval from an admin. It is not compatible with default channel          | `false` |
 | `oidc.users.appendDomain`               | As usernames are assigned based on e-mail address, whether to suffix user names with the email domain (john.doe@example.com would then be `john-doe-example`)   | `false` |
 
 ### Database connection settings

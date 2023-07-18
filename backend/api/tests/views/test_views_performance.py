@@ -35,7 +35,6 @@ class CPPerformanceViewTests(APITestCase):
         self.data_sample = factory.create_datasample([self.data_manager])
         self.compute_plan = factory.create_computeplan()
 
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:compute_plan_perf-list", args=[self.compute_plan.key])
 
         self.metric = factory.create_function(
@@ -114,7 +113,7 @@ class CPPerformanceViewTests(APITestCase):
 
     def test_performance_list_empty(self):
         Performance.objects.all().delete()
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {
@@ -127,7 +126,7 @@ class CPPerformanceViewTests(APITestCase):
         )
 
     def test_performance_list(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {
@@ -151,9 +150,8 @@ class PerformanceViewTests(APITestCase):
             factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DONE),
         ]
 
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:performance-list")
-        self.export_extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "*/*"}
+
         self.export_url = reverse("api:performance-export")
 
         self.metrics = [
@@ -287,18 +285,18 @@ class PerformanceViewTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_performance_view(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_performance_export(self):
-        response = self.client.get(self.export_url, **self.export_extra)
+        response = self.client.get(self.export_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(list(response.streaming_content)), len(self.expected_results) + 1)
 
     def test_performance_export_with_metadata(self):
         metadata = "epochs,hidden_sizes,last_hidden_sizes"
         params = urlencode({"metadata_columns": metadata})
-        response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
+        response = self.client.get(f"{self.export_url}?{params}")
         content_list = list(response.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(metadata in str(content_list[0]))
@@ -308,7 +306,7 @@ class PerformanceViewTests(APITestCase):
         """Filter performance on cp key."""
         key = self.compute_plans[0].key
         params = urlencode({"key": key})
-        response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
+        response = self.client.get(f"{self.export_url}?{params}")
         content_list = list(response.streaming_content)
         self.assertEqual(len(content_list), 4)
         self.assertTrue(str(self.compute_plans[0].key) in str(content_list[1]))
@@ -318,7 +316,7 @@ class PerformanceViewTests(APITestCase):
         key_0 = self.compute_plans[0].key
         key_1 = self.compute_plans[1].key
         params = urlencode({"key": ",".join([str(key_0), str(key_1)])})
-        response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
+        response = self.client.get(f"{self.export_url}?{params}")
         content_list = list(response.streaming_content)
         self.assertEqual(len(content_list), len(self.expected_results) + 1)
 
@@ -328,7 +326,7 @@ class PerformanceViewTests(APITestCase):
         key_1 = self.compute_plans[1].key
         status = ComputePlan.Status.PLAN_STATUS_DOING
         params = urlencode({"key": ",".join([str(key_0), str(key_1)]), "status": status})
-        response = self.client.get(f"{self.export_url}?{params}", **self.export_extra)
+        response = self.client.get(f"{self.export_url}?{params}")
         content_list = list(response.streaming_content)
         self.assertEqual(len(content_list), 4)
         self.assertTrue(status in str(content_list[1]))
@@ -352,5 +350,5 @@ def test_n_plus_one_queries_performance_list(authenticated_client, create_comput
     with utils.CaptureQueriesContext(connection) as query:
         authenticated_client.get(url)
     query_task_with_perf = len(query.captured_queries)
-    assert query_task_with_perf < 11
+    assert query_task_with_perf < 12
     assert query_task_with_perf - query_tasks_empty < 3

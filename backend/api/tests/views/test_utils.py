@@ -56,7 +56,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertIn("local-organization", metadata.permissions_process_authorized_ids)
 
         with mock.patch("api.views.utils.get_owner", return_value="local-organization"):
-            response = self.client.get(self.function_url, **self.extra)
+            response = self.client.get(self.function_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.headers["Content-Disposition"], f'attachment; filename="{self.function_filename}"')
@@ -72,7 +72,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         metadata.save()
 
         with mock.patch("api.views.utils.get_owner", return_value="local-organization"):
-            response = self.client.get(self.function_url, **self.extra)
+            response = self.client.get(self.function_url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -92,7 +92,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
                 body=self.function_content,
                 content_type="text/plain; charset=utf-8",
             )
-            response = self.client.get(self.function_url, **self.extra)
+            response = self.client.get(self.function_url)
             mocked_responses.assert_call_count(metadata.function_address, 1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- New `requireApproval` field, that triggers the User Awaiting Approval functionality ([#680](https://github.com/Substra/substra-backend/pull/680))
+
 ## [22.5.2] - 2023-06-27
 
 ### Changed

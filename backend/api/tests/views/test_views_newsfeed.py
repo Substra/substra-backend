@@ -24,15 +24,13 @@ class NewsFeedViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:news_feed-list")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_newsfeed_list_empty(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_newsfeed_list(self):
@@ -164,7 +162,7 @@ class NewsFeedViewTests(APITestCase):
             },
         ]
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
@@ -202,21 +200,21 @@ class NewsFeedViewTests(APITestCase):
             },
         ]
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
 
         params = urlencode({"timestamp_after": expected_results[2]["timestamp"]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 3, "next": None, "previous": None, "results": expected_results[:3]},
         )
 
         params = urlencode({"timestamp_before": expected_results[0]["timestamp"]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 2, "next": None, "previous": None, "results": expected_results[1:]},
@@ -225,7 +223,7 @@ class NewsFeedViewTests(APITestCase):
         params = urlencode(
             {"timestamp_before": expected_results[1]["timestamp"], "timestamp_after": expected_results[2]["timestamp"]}
         )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 1, "next": None, "previous": None, "results": [expected_results[2]]},
@@ -261,21 +259,21 @@ class NewsFeedViewTests(APITestCase):
             },
         ]
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
 
         params = urlencode({"timestamp_after": expected_results[1]["timestamp"]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 2, "next": None, "previous": None, "results": expected_results[:2]},
         )
 
         params = urlencode({"timestamp_before": expected_results[0]["timestamp"]})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 2, "next": None, "previous": None, "results": expected_results[1:]},
@@ -284,7 +282,7 @@ class NewsFeedViewTests(APITestCase):
         params = urlencode(
             {"timestamp_before": expected_results[0]["timestamp"], "timestamp_after": expected_results[1]["timestamp"]}
         )
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 1, "next": None, "previous": None, "results": [expected_results[1]]},
@@ -329,28 +327,28 @@ class NewsFeedViewTests(APITestCase):
             },
         ]
 
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
 
         params = urlencode({"important_news_only": "true"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": 1, "next": None, "previous": None, "results": [expected_results[0]]},
         )
 
         params = urlencode({"important_news_only": "false"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},
         )
 
         params = urlencode({"important_news_only": "else"})
-        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}")
         self.assertEqual(
             response.json(),
             {"count": len(expected_results), "next": None, "previous": None, "results": expected_results},

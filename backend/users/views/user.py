@@ -1,9 +1,11 @@
 import datetime
+import json
 from urllib.parse import unquote
 
 import jwt
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
 from django.utils.encoding import force_str
@@ -27,7 +29,9 @@ from api.views.filters_utils import MatchFilter
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
+from libs.permissions import IsAuthorized
 from users.models.user_channel import UserChannel
+from users.serializers.user import UserAwaitingApprovalSerializer
 from users.serializers.user import UserSerializer
 
 
@@ -88,6 +92,11 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         return request.user.channel.role == UserChannel.Role.ADMIN
 
 
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.channel.role == UserChannel.Role.ADMIN
+
+
 class IsSelf(permissions.BasePermission):
     def has_permission(self, request, view):
         user = view.get_object()
@@ -119,7 +128,7 @@ class UserViewSet(
     ordering = ["username"]
     filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
     lookup_field = "username"
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
+    permission_classes = [IsAuthorized, IsAdminOrReadOnly]
     search_fields = ["username"]
     filterset_class = UserFilter
 
@@ -232,3 +241,49 @@ class UserViewSet(
         data = {"reset_password_token": jwt_token}
 
         return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
+
+
+class UserAwaitingApprovalViewSet(
+    GenericViewSet,
+    mixins.ListModelMixin,
+):
+    user_model = get_user_model()
+    permission_classes = [IsAdmin]
+    pagination_class = DefaultPageNumberPagination
+    serializer_class = UserAwaitingApprovalSerializer
+    ordering_fields = ["username"]
+    ordering = ["username"]
+    filter_backends = [OrderingFilter, MatchFilter, DjangoFilterBackend]
+    lookup_field = "username"
+    search_fields = ["username"]
+    filterset_class = UserFilter
+
+    def get_queryset(self):
+        return self.user_model.objects.filter(channel=None).exclude(username="deleted")
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            user = User.objects.get(username=request.GET.get("username"))
+            user.delete()
+            return ApiResponse(data={"message": "User removed"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist or User.MultipleObjectsReturned:
+            pass
+        return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, *args, **kwargs):
+        d = json.loads(request.body)
+        try:
+            user = User.objects.get(username=request.GET.get("username"))
+        except User.DoesNotExist:
+            return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except User.MultipleObjectsReturned:
+            return ApiResponse(
+                data={"message": "Multiple instance of the same user found"}, status=status.HTTP_409_CONFLICT
+            )
+
+        channel_name = get_channel_name(request)
+        channel_name = get_channel_name(request)
+        role = _validate_role(d.get("role"))
+        UserChannel.objects.create(channel_name=channel_name, role=role, user=user)
+        data = UserSerializer(instance=user).data
+        return ApiResponse(data=data, status=status.HTTP_200_OK)

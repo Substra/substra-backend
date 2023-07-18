@@ -106,7 +106,7 @@ class ComputePlanGraphViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        self.extra = {"HTTP_ACCEPT": "application/json;version=0.0"}
         self.base_url = "api:workflow_graph"
 
     def tearDown(self):
@@ -236,9 +236,7 @@ def test_n_plus_one_queries_compute_graph(authenticated_client):
     url = reverse("api:workflow_graph", args=[compute_plan.key])
 
     with utils.CaptureQueriesContext(connection) as queries:
-        authenticated_client.get(
-            url, {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        )
+        authenticated_client.get(url, {"HTTP_ACCEPT": "application/json;version=0.0"})
     queries = len(queries.captured_queries)
 
     assert queries < 15

@@ -61,7 +61,7 @@ class DataSampleViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
         self.url = reverse("api:data_sample-list")
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        self.extra = {"HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
@@ -110,8 +110,8 @@ class DataSampleViewTests(APITestCase):
 
     def test_datasample_retrieve_wrong_channel(self):
         url = reverse("api:data_sample-detail", args=[self.expected_results[0]["key"]])
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @internal_server_error_on_exception()
@@ -134,8 +134,8 @@ class DataSampleViewTests(APITestCase):
         )
 
     def test_datasample_list_wrong_channel(self):
-        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
-        response = self.client.get(self.url, **extra)
+        self.client.channel = "yourchannel"
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()

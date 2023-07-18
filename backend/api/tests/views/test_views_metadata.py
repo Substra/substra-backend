@@ -28,7 +28,6 @@ class ComputePlanMetadataViewTests(APITestCase):
             metadata=dict(One="case_sensitive", three="duplicate_three", four="test")
         )
 
-        self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.url = reverse("api:compute_plan_metadata-list")
 
         # alphabetically ordered list
@@ -39,9 +38,9 @@ class ComputePlanMetadataViewTests(APITestCase):
 
     def test_metadata_list_empty(self):
         ComputePlan.objects.all().delete()
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(list(response.data), [])
 
     def test_metadata_list(self):
-        response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url)
         self.assertEqual(list(response.data), self.expected_results)

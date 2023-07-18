@@ -132,6 +132,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `OIDC_USERS_APPEND_DOMAIN` | `false` |  |
 | string | `OIDC_USERS_DEFAULT_CHANNEL` | nil |  |
 | int | `OIDC_USERS_LOGIN_VALIDITY_DURATION` | `3600` (`60 * 60`) | seconds |
+| bool | `OIDC_USERS_MUST_BE_APPROVED` | `false` |  |
 | bool | `OIDC_USERS_USE_REFRESH_TOKEN` | `false` |  |
 
 ## CORS settings

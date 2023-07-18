@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove pagination on `get_performances` to remove limitation on 1000 first points ([#690](https://github.com/Substra/substra-backend/pull/690))
 
+### Added
+
+- New UserAwaitingApproval (base user with no channel) ([#680](https://github.com/Substra/substra-backend/pull/680))
+
 ## [0.39.0](https://github.com/Substra/substra-backend/releases/tag/0.39.0) 2023-06-27
 
 ### Added
@@ -30,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- references to `substra` cli commands in `localdev.md`  ([#667](https://github.com/Substra/substra-backend/pull/667))
+- references to `substra` cli commands in `localdev.md` ([#667](https://github.com/Substra/substra-backend/pull/667))
 
 ## [0.37.0](https://github.com/Substra/substra-backend/releases/tag/0.37.0) 2023-05-11
 
