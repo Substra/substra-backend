@@ -37,6 +37,7 @@ deploy:
           server.image: *image-params
           worker.events.image: *image-params
           worker.image: *image-params
+          builder.image: *image-params
         createNamespace: true
 
       - name: backend-org-2

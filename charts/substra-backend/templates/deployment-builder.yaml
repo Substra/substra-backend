@@ -53,15 +53,13 @@ spec:
       - name: builder
         image: {{ include "substra-backend.images.name" (dict "img" .Values.builder.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: "{{ .Values.builder.image.pullPolicy }}"
-        command: ["/bin/bash"]
+        command: ["/bin/bash", "-c"]
         {{- if eq .Values.settings "prod" }}
-        args: ["-c", "celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
+        args: ["celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
         {{ else }}
-        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
+        args: ["watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
         {{ end }}
         envFrom:
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-orchestrator
           - configMapRef:
               name: {{ include "substra.fullname" . }}-settings
           - configMapRef:
