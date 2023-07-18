@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as djangoValidationError
-from django.core.serializers import serialize
 from django.utils.encoding import force_str
 from django_filters.rest_framework import ChoiceFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -288,13 +287,3 @@ class UserAwaitingApprovalViewSet(
         UserChannel.objects.create(channel_name=channel_name, role=role, user=user)
         data = UserSerializer(instance=user).data
         return ApiResponse(data=data, status=status.HTTP_200_OK)
-
-    # TODO THIS SHOULD NOT BE MERGED
-    def post(self, request, *args, **kwargs):
-        d = json.loads(request.body)
-        user, created = User.objects.get_or_create(username=d.get("username"), email=d.get("email"))
-        if created:
-            user.set_password(d.get("password"))
-            user.save()
-        user_json = serialize("json", [user])
-        return ApiResponse({"users_awaiting_approval": user_json})
