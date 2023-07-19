@@ -37,7 +37,7 @@ KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NA
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
 CELERY_WORKER_CONCURRENCY = settings.CELERY_WORKER_CONCURRENCY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
-MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
+IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 KANIKO_CONTAINER_NAME = "kaniko"
 HOSTNAME = settings.HOSTNAME
 
@@ -62,7 +62,7 @@ def build_image_if_missing(channel: str, function: orchestrator.Function) -> Non
     """
     datastore = Datastore(channel=channel)
     container_image_tag = utils.container_image_tag_from_function(function)
-    with lock_resource("image-build", container_image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
+    with lock_resource("image-build", container_image_tag, ttl=IMAGE_BUILD_TIMEOUT, timeout=IMAGE_BUILD_TIMEOUT):
         if container_image_exists(container_image_tag):
             logger.info("Reusing existing image", image=container_image_tag)
         else:
