@@ -1,6 +1,7 @@
 import time
 
 import structlog
+from django.conf import settings
 
 import orchestrator
 from substrapp import exceptions
@@ -9,23 +10,23 @@ from substrapp.docker_registry import container_image_exists
 
 logger = structlog.get_logger(__name__)
 
-MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
-WAITING_TIME = 5  # wait 5 seconds between two queries
+IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
+IMAGE_BUILD_CHECK_DELAY = settings.IMAGE_BUILD_CHECK_DELAY
 
 
 def wait_for_image_built(function: orchestrator.Function) -> None:
     container_image_tag = utils.container_image_tag_from_function(function)
     attempt = 0
     # with 60 attempts we wait max 2 min with a pending pod
-    max_attempts = MAX_IMAGE_BUILD_TIME / WAITING_TIME
+    max_attempts = IMAGE_BUILD_TIMEOUT / IMAGE_BUILD_CHECK_DELAY
     while attempt < max_attempts:
         if container_image_exists(container_image_tag):
             logger.info("Found existing image", image=container_image_tag)
             return
 
         attempt += 1
-        time.sleep(WAITING_TIME)
+        time.sleep(IMAGE_BUILD_CHECK_DELAY)
 
     raise exceptions.PodTimeoutError(
-        f"Build for function {function.key} didn't complete after {MAX_IMAGE_BUILD_TIME} seconds"
+        f"Build for function {function.key} didn't complete after {IMAGE_BUILD_TIMEOUT} seconds"
     )
