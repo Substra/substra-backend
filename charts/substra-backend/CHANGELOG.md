@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [22.6.0] - 2023-07-18
 
 ### Added
 
-- New `requireApproval` field, that triggers the User Awaiting Approval functionality ([#680](https://github.com/Substra/substra-backend/pull/680))
+- New `oidc.users.requireApproval` field, that triggers the User Awaiting Approval functionality ([#680](https://github.com/Substra/substra-backend/pull/680))
 
 ## [22.5.2] - 2023-06-27
 
