@@ -129,4 +129,57 @@ roleRef:
   kind: Role
   name: {{ template "substra.fullname" . }}-api-event
   apiGroup: rbac.authorization.k8s.io
+{{- end -}}
+{{- if .Values.builder.rbac.create }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "substra.fullname" . }}-builder
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "substra.fullname" . }}-builder
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["pods/log", "pods/status"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
+  {{- if .Values.psp.create }}
+  - apiGroups: [""]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames:
+      - {{ template "substra.fullname" . }}-psp
+  {{- end }}
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "substra.fullname" . }}-builder
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "substra.fullname" . }}-builder
+roleRef:
+  kind: Role
+  name: {{ template "substra.fullname" . }}-builder
+  apiGroup: rbac.authorization.k8s.io
 {{- end }}

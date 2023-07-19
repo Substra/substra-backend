@@ -546,6 +546,11 @@ builder:
     storageClass: ""
     size: 10Gi
 
+  ## @param builder.rbac.create Create a role and service account for the builder
+  ##
+  rbac:
+    create: true
+
 
 
 ## @section Substra container registry settings
