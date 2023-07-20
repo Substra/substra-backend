@@ -31,6 +31,7 @@ from rest_framework import status
 
 import orchestrator
 from backend.celery import app
+from builder import exceptions as builder_errors
 from builder.tasks.tasks_build_image import build_image
 from substrapp import models
 from substrapp import utils
@@ -366,7 +367,7 @@ def _store_failure(exc: Exception, compute_task_key: str) -> Optional[models.Com
         neither a `BuildError` nor an `ExecutionError`.
     """
 
-    if not isinstance(exc, (compute_task_errors.ExecutionError, compute_task_errors.BuildError)):
+    if not isinstance(exc, (compute_task_errors.ExecutionError, builder_errors.BuildError)):
         return None
 
     file = files.File(exc.logs)
