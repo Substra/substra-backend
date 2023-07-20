@@ -7,20 +7,21 @@ import structlog
 from django.conf import settings
 
 import orchestrator
-from substrapp import exceptions
-from substrapp.compute_tasks import errors as compute_task_errors
+from builder import exceptions
+from builder.exceptions import BuildError
+from builder.exceptions import BuildRetryError
+from builder.kubernetes import get_pod_logs
+from builder.kubernetes import pod_exists
+from builder.kubernetes import watch_pod
+from builder.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.datastore import Datastore
-from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import container_image_exists
 from substrapp.kubernetes_utils import delete_pod
-from substrapp.kubernetes_utils import get_pod_logs
 from substrapp.kubernetes_utils import get_security_context
-from substrapp.kubernetes_utils import pod_exists
-from substrapp.kubernetes_utils import watch_pod
 from substrapp.lock_local import lock_resource
 from substrapp.models.image_entrypoint import ImageEntrypoint
 from substrapp.utils import timeit
@@ -120,14 +121,14 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
                     res = None
 
                 if not isinstance(res, list):
-                    raise compute_task_errors.BuildError(
+                    raise BuildError(
                         "Invalid ENTRYPOINT in function/metric Dockerfile. "
                         "You must use the exec form in your Dockerfile. "
                         "See https://docs.docker.com/engine/reference/builder/#entrypoint"
                     )
                 return res
 
-    raise compute_task_errors.BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
+    raise BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
 def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
@@ -155,7 +156,7 @@ def _build_container_image(path: str, tag: str) -> None:
             pod = _build_pod(path, tag)
             k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
         except kubernetes.client.ApiException as e:
-            raise compute_task_errors.BuildRetryError(
+            raise BuildRetryError(
                 f"Error creating pod {NAMESPACE}/{pod_name}. Reason: {e.reason}, status: {e.status}, body: {e.body}"
             ) from e
 
@@ -174,17 +175,17 @@ def _build_container_image(path: str, tag: str) -> None:
         logs = _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
         if isinstance(e, exceptions.PodTimeoutError):
-            raise compute_task_errors.BuildRetryError(logs) from e
+            raise BuildRetryError(logs) from e
         else:  # exceptions.PodError or other
-            raise compute_task_errors.BuildError(logs) from e
+            raise BuildError(logs) from e
 
     _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
 
-def _assert_dockerfile_exist(dockerfile_path):
+def _assert_dockerfile_exist(dockerfile_path: os.PathLike) -> None:
     dockerfile_fullpath = os.path.join(dockerfile_path, "Dockerfile")
     if not os.path.exists(dockerfile_fullpath):
-        raise compute_task_errors.BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")
+        raise BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")
 
 
 def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.V1Pod:

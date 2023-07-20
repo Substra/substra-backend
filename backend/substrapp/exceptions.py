@@ -5,19 +5,11 @@ class KubernetesError(Exception):
     pass
 
 
-class PodError(Exception):
-    pass
-
-
 class PodDeletedError(Exception):
     pass
 
 
 class PodReadinessTimeoutError(Exception):
-    pass
-
-
-class PodTimeoutError(Exception):
     pass
 
 
