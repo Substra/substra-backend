@@ -61,7 +61,3 @@ def _create_mount(task_dir: str, folder: str, read_only: bool = False):
 
 def get_worker_subtuple_pvc_name():
     return f"{settings.WORKER_PVC_SUBTUPLE}-{os.getenv('HOSTNAME')}"
-
-
-def get_docker_cache_pvc_name():
-    return f"{settings.WORKER_PVC_DOCKER_CACHE}-{os.getenv('HOSTNAME')}"

@@ -194,19 +194,6 @@ def test_store_failure_execution_error(logs: bytes):
     assert failure_report.logs.read() == logs
 
 
-@pytest.mark.django_db
-def test_store_failure_build_error():
-    compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
-    msg = "Error building image"
-    exc = errors.BuildError(msg)
-
-    failure_report = tasks_compute_task._store_failure(exc, compute_task_key)
-    failure_report.refresh_from_db()
-
-    assert str(failure_report.compute_task_key) == compute_task_key
-    assert failure_report.logs.read() == str.encode(msg)
-
-
 @pytest.mark.parametrize("exc_class", [Exception])
 def test_store_failure_ignored_exception(exc_class: Type[Exception]):
     assert tasks_compute_task._store_failure(exc_class(), "uuid") is None
