@@ -335,8 +335,9 @@ ISOLATED = to_bool(os.environ.get("ISOLATED"))
 
 CONTENT_DISPOSITION_HEADER = {}
 
-# Username of additional Django user representing user external to organization
-EXTERNAL_USERNAME = "external"
-
-# Username of additional Django user representing deleted user to not break FK references
-DELETED_USERNAME = "deleted"
+VIRTUAL_USERNAMES = {
+    # Username of additional Django user representing user external to organization
+    "EXTERNAL": "external",
+    # Username of additional Django user representing deleted user to not break FK references
+    "DELETED": "deleted",
+}

@@ -268,7 +268,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         # asset creator should be deleted user
         url = reverse("api:compute_plan-detail", args=[key])
         response = self.client.get(url)
-        self.assertEqual(response.data["creator"], settings.DELETED_USERNAME)
+        self.assertEqual(response.data["creator"], settings.VIRTUAL_USERNAMES["DELETED"])
 
     def test_compute_plan_update(self):
         key = str(uuid.uuid4())
