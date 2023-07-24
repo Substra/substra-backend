@@ -1,3 +1,4 @@
+import enum
 import time
 
 import kubernetes
@@ -6,12 +7,20 @@ from django.conf import settings
 
 from builder.exceptions import PodError
 from builder.exceptions import PodTimeoutError
-from substrapp.kubernetes_utils import ObjectState
 from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
+
+
+class ObjectState(enum.Enum):
+    PENDING = enum.auto()
+    WAITING = enum.auto()
+    RUNNING = enum.auto()
+    FAILED = enum.auto()
+    COMPLETED = enum.auto()
+    UNKNOWN = enum.auto()
 
 
 class PodState:
