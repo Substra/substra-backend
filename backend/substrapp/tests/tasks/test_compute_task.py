@@ -17,6 +17,7 @@ from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
+from substrapp.utils.errors import store_failure
 
 CHANNEL = "mychannel"
 
