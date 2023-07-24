@@ -1,5 +1,3 @@
-import enum
-
 import kubernetes
 import structlog
 from django.conf import settings
@@ -14,15 +12,6 @@ NAMESPACE = settings.NAMESPACE
 RUN_AS_GROUP = settings.COMPUTE_POD_RUN_AS_GROUP
 RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
 FS_GROUP = settings.COMPUTE_POD_FS_GROUP
-
-
-class ObjectState(enum.Enum):
-    PENDING = enum.auto()
-    WAITING = enum.auto()
-    RUNNING = enum.auto()
-    FAILED = enum.auto()
-    COMPLETED = enum.auto()
-    UNKNOWN = enum.auto()
 
 
 def get_pod_security_context():
