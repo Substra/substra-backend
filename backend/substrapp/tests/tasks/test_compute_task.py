@@ -19,6 +19,7 @@ from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
+from substrapp.utils.errors import store_failure
 
 CHANNEL = "mychannel"
 
@@ -187,7 +188,7 @@ def test_store_failure_execution_error(logs: bytes):
     compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
     exc = errors.ExecutionError(logs=io.BytesIO(logs))
 
-    failure_report = tasks_compute_task._store_failure(exc, compute_task_key)
+    failure_report = store_failure(exc, compute_task_key)
     failure_report.refresh_from_db()
 
     assert str(failure_report.compute_task_key) == compute_task_key
@@ -196,7 +197,7 @@ def test_store_failure_execution_error(logs: bytes):
 
 @pytest.mark.parametrize("exc_class", [Exception])
 def test_store_failure_ignored_exception(exc_class: Type[Exception]):
-    assert tasks_compute_task._store_failure(exc_class(), "uuid") is None
+    assert store_failure(exc_class(), "uuid") is None
 
 
 @pytest.mark.django_db
