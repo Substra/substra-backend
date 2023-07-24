@@ -21,7 +21,7 @@ Field.register_lookup(Any)
 
 logger = structlog.get_logger(__name__)
 
-MAX_TASKS_DISPLAYED = 1000
+MAX_TASKS_DISPLAYED = 5000
 
 
 class JsonbBuildObj(Func):
