@@ -11,10 +11,6 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
-from __future__ import annotations
-
-import datetime
-import enum
 import errno
 import os
 from typing import Any
@@ -25,12 +21,10 @@ from billiard.einfo import ExceptionInfo
 from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
-from rest_framework import status
 
 import orchestrator
 from backend.celery import app
 from builder.tasks.tasks_build_image import build_image
-from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
@@ -59,12 +53,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import get_builder_queue
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
-from substrapp.utils import retry
 from substrapp.utils.errors import store_failure
-from substrapp.utils.url import TASK_PROFILING_BASE_URL
-from substrapp.utils.url import get_task_profiling_detail_url
-from substrapp.utils.url import get_task_profiling_steps_base_url
-from substrapp.utils.url import get_task_profiling_steps_detail_url
 
 logger = structlog.get_logger(__name__)
 
@@ -164,10 +153,6 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
     # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
     build_image.apply_async((function.json(), channel_name, task.key), queue=builder_queue, task_id=function.key)
 
-
-    with get_orchestrator_client(channel_name) as client:
-        if not task_utils.is_task_runnable(task.key, client):
-            return  # avoid creating a Celery task
 
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task.compute_plan_key)
