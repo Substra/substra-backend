@@ -1,7 +1,7 @@
 import pytest
 
 from builder.exceptions import BuildError
-from substrapp.tasks import tasks_compute_task
+from substrapp.utils.errors import store_failure
 
 
 @pytest.mark.django_db
@@ -10,7 +10,7 @@ def test_store_failure_build_error():
     msg = "Error building image"
     exc = BuildError(msg)
 
-    failure_report = tasks_compute_task._store_failure(exc, compute_task_key)
+    failure_report = store_failure(exc, compute_task_key)
     failure_report.refresh_from_db()
 
     assert str(failure_report.compute_task_key) == compute_task_key

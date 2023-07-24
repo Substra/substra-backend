@@ -8,7 +8,7 @@ from django.conf import settings
 import orchestrator
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.tasks.tasks_compute_task import _store_failure
+from substrapp.utils.errors import store_failure
 
 logger = structlog.get_logger(__name__)
 
@@ -46,7 +46,7 @@ class BuildTask(Task):
 
         channel_name, function, compute_task_key = self.split_args(args)
 
-        failure_report = _store_failure(exc, compute_task_key)
+        failure_report = store_failure(exc, compute_task_key)
         error_type = compute_task_errors.get_error_type(exc)
 
         with get_orchestrator_client(channel_name) as client:
