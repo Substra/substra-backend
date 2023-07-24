@@ -1,9 +1,9 @@
 from io import BytesIO
 
+from substrapp.compute_tasks.errors import CeleryNoRetryError
+from substrapp.compute_tasks.errors import CeleryRetryError
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
-from substrapp.tasks.errors import CeleryNoRetryError
-from substrapp.tasks.errors import CeleryRetryError
-from substrapp.tasks.errors import _ComputeTaskError
+from substrapp.compute_tasks.errors import _ComputeTaskError
 
 
 class PodError(Exception):

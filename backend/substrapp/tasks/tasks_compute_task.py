@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import datetime
 import enum
+
 import errno
 import os
 from typing import Any
-from typing import Optional
 
 import celery.exceptions
 import structlog
@@ -31,7 +31,6 @@ from rest_framework import status
 
 import orchestrator
 from backend.celery import app
-from builder import exceptions as builder_errors
 from builder.tasks.tasks_build_image import build_image
 from substrapp import models
 from substrapp import utils
@@ -69,6 +68,7 @@ from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
 from substrapp.utils.url import get_task_profiling_steps_detail_url
+from substrapp.utils.errors import store_failure
 
 logger = structlog.get_logger(__name__)
 
@@ -117,7 +117,7 @@ class ComputeTask(Task):
         channel_name, task = self.split_args(args)
         compute_task_key = task.key
 
-        failure_report = _store_failure(exc, compute_task_key)
+        failure_report = store_failure(exc, compute_task_key)
         error_type = compute_task_errors.get_error_type(exc)
 
         with get_orchestrator_client(channel_name) as client:
@@ -356,23 +356,3 @@ def _run(
 def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str) -> None:
     chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
     prepare_chainkeys_dir(chainkeys_dir, compute_plan_tag)  # does nothing if chainkeys already populated
-
-
-def _store_failure(exc: Exception, compute_task_key: str) -> Optional[models.ComputeTaskFailureReport]:
-    """If the provided exception is a `BuildError` or an `ExecutionError`, store its logs in the Django storage and
-    in the database. Otherwise, do nothing.
-
-    Returns:
-        An instance of `models.ComputeTaskFailureReport` storing the error logs or None if the provided exception is
-        neither a `BuildError` nor an `ExecutionError`.
-    """
-
-    if not isinstance(exc, (compute_task_errors.ExecutionError, builder_errors.BuildError)):
-        return None
-
-    file = files.File(exc.logs)
-    failure_report = models.ComputeTaskFailureReport(
-        compute_task_key=compute_task_key, logs_checksum=utils.get_hash(file)
-    )
-    failure_report.logs.save(name=compute_task_key, content=file, save=True)
-    return failure_report
