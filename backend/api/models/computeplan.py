@@ -14,7 +14,7 @@ logger = structlog.get_logger(__name__)
 
 
 def _get_or_create_deleted_user() -> User:
-    user_deleted, created = User.objects.get_or_create(username=settings.DELETED_USERNAME, is_active=False)
+    user_deleted, created = User.objects.get_or_create(username=settings.VIRTUAL_USERNAMES["DELETED"], is_active=False)
     if created:
         password = "".join(
             (secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(24))
