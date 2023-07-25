@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2023-07-25] 0.40.0
+
+https://github.com/Substra/substra-backend/releases/tag/0.40.0
+
+
 ## [Unreleased]
 
 ### Fixed
@@ -15,11 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New UserAwaitingApproval (base user with no channel) ([#680](https://github.com/Substra/substra-backend/pull/680))
 
+
 ## [0.39.0](https://github.com/Substra/substra-backend/releases/tag/0.39.0) 2023-06-27
 
 ### Added
 
 - New `SECRET_KEY_PATH` and `SECRET_KEY_LOAD_AND_STORE` environment variables ([#668](https://github.com/Substra/substra-backend/pull/668))
+
 
 ## [0.38.0](https://github.com/Substra/substra-backend/releases/tag/0.38.0) 2023-06-12
 
@@ -35,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - references to `substra` cli commands in `localdev.md` ([#667](https://github.com/Substra/substra-backend/pull/667))
+
 
 ## [0.37.0](https://github.com/Substra/substra-backend/releases/tag/0.37.0) 2023-05-11
 
@@ -52,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Metric from Performance ([#650](https://github.com/Substra/substra-backend/pull/650))
 
+
 ## [0.36.1](https://github.com/Substra/substra-backend/releases/tag/0.36.1) 2023-04-21
 
 ### Fixed
@@ -67,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add function name to workflow view & ordering on functionName in cpTasks list (#635)
+
 
 ## [0.36.0](https://github.com/Substra/substra-backend/releases/tag/0.36.0) 2023-03-31
 
@@ -100,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - model `TaskDataSample` and fields `ComputeTask.data_samples` / `DataManager.compute_tasks` ([#614](https://github.com/Substra/substra-backend/pull/614))
 - `data_samples_keys` in `_PerformanceComputeTaskSerializer` ([#611](https://github.com/Substra/substra-backend/pull/611))
 
+
 ## [0.35.1](https://github.com/Substra/substra-backend/releases/tag/0.35.1) 2023-02-16
 
 ## Fixed
@@ -109,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - BREAKING: asset values in compute task inputs/outputs. ([#509](https://github.com/Substra/substra-backend/pull/509))
+
 
 ## [0.35.0](https://github.com/Substra/substra-backend/releases/tag/0.35.0) 2023-02-06
 
@@ -126,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test only field for data samples (#551)
 - BREAKING: failed task category from compute plan API response([#525](https://github.com/Substra/substra-backend/pull/525))
 
+
 ## [0.34.1](https://github.com/Substra/substra-backend/releases/tag/0.34.1) 2023-01-09
 
 ### Removed
@@ -133,9 +146,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update or create the task profiling or step profiling, instead of raising an error if already exists (#559)
 - `parent_tasks` in `ComputeTask` ([#554](https://github.com/Substra/substra-backend/pull/554))
 
+
 ## [0.34.0](https://github.com/Substra/substra-backend/releases/tag/0.34.0) 2022-12-19
 
 - Pass the rank of a task in a task properties dictionary, send in a `--task-properties` argument (#548)
+
 
 ## [0.33.0](https://github.com/Substra/substra-backend/releases/tag/0.33.0) 2022-11-22
 
@@ -167,6 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: compute task specific data
 - BREAKING: task category
 
+
 ## [0.32.0] 2022-10-03
 
 ### Changed
@@ -194,6 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: algo categories
 - Outdated information on patching RabbitMQ for Apple Silicon chips.
 
+
 ## [0.31.0] 2022-09-26
 
 ### Changed
@@ -212,12 +229,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI job to test forward migrations.
 
+
 ## [0.30.0] 2022-09-19
 
 ### Changed
 
 - BREAKING! Rename `localrep` app to `api`, see `UPGRADE.md` for migration.
 - Accept `ALGO_UNKNOWN` as a valid algo category.
+
 
 ## [0.29.0] 2022-09-12
 
@@ -232,6 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add address and permissions for `inputs` of kind datamanager and model in compute_tasks api response
 - Synchronize compute task output assets into localrep
 - Add `compute_task_key` filter on the model view.
+
 
 ## [0.28.0] 2022-08-29
 
@@ -252,11 +272,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Saving of tasks timings
 
+
 ## [0.27.0] 2022-08-23
 
 ### Added
 
 - Add CP default status at creation
+
 
 ## [0.26.0] 2022-08-17
 
@@ -267,6 +289,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - BREAKING: Replace celery RabbitMQ by Redis
+
 
 ## [0.25.0] 2022-08-09
 
@@ -285,6 +308,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: Orchestrator RabbitMQ connection to listen to events
 
+
 ## [0.24.0] 2022-08-01
 
 ### Added
@@ -301,11 +325,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed invalid metric asset kind from newsfeed
 - Add missing compute task outputs data migration
 
+
 ## [0.23.1] 2022-07-26
 
 ### Changed
 
 - CP Performance endpoint returns array of performances in "results" instead of dict
+
 
 ## [0.23.0] 2022-07-25
 
@@ -332,6 +358,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `python manage.py get_outgoing_organization` can now be used to check inter-org connection.
 
+
 ## [0.22.0] 2022-07-11
 
 ### Removed
@@ -348,6 +375,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compute plan workflow graph endpoint handles predict tasks
 - Don't raise an error when retrying certain orchestrator requests - @grpc_retry
 
+
 ## [0.21.0] 2022-07-05
 
 ### Added
@@ -358,6 +386,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - arm64 stage in the dockerfile to install dependencies and build psycopg2 from source
+
 
 ## [0.20.0] 2022-06-27
 
@@ -378,6 +407,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Return HTTP 413 "Payload Too Large" when the orchestrator gRPC payload exceeds max size
+
 
 ## [0.19.0] 2022-06-20
 
@@ -400,6 +430,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Delete metrics endpoints; use algo endpoints instead
 
+
 ## [0.18.0] 2022-06-14
 
 ### Removed
@@ -413,6 +444,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Duplicated datasamples
+
 
 ## [0.17.0] 2022-06-07
 
@@ -428,6 +460,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use assets embedded in events during sync
 
+
 ## [0.16.0] 2022-05-30
 
 ### Fixed
@@ -440,6 +473,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Empty compute plan status
+
 
 ## [0.15.0] 2022-05-23
 
@@ -457,6 +491,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Mount GPU manually in GKE to be able to share them
+
 
 ## [0.14.0] 2022-05-16
 
@@ -476,6 +511,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Completed pod state in `kubernetes_utils.watch_pod()`
 
+
 ## [0.13.0] 2022-05-09
 
 ### Changed
@@ -487,6 +523,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Filtering on permissions for algos and datamanagers
+
 
 ## [0.12.0] 2022-05-03
 
@@ -512,6 +549,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Fix cancelled CP inconsistencies
 - Cancel CP should return json
 
+
 ## [0.11.0] 2022-04-19
 
 ### Fixed
@@ -521,6 +559,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Drop support for `DEBUG_QUICK_IMAGE`
+
 
 ## [0.10.1] 2022-04-13
 
@@ -534,6 +573,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Handle disabled model in resync by making address not mandatory
+
 
 ## [0.10.0] 2022-04-11
 
@@ -579,6 +619,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compute task stays doing forever if saving the model raises an OSError
 - Compute CP dates before updating CP status
 - W340 null has no effect on ManyToManyField during migrations
+
 
 ## [0.9.0] 2022-03-01
 
@@ -632,6 +673,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compute CP status after computetasks resync
 - Safe serializer should not break db transaction
 
+
 ## [0.8.0] 2022-01-16
 
 ### Added
@@ -655,6 +697,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - News feed now handles incomplete event metadata
 
+
 ## [0.7.0] 2022-01-05
 
 ### Fixed
@@ -672,6 +715,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove validated field on Datasample, Algo, Metrics, Model and Datamanager models
 - Update backend and metric export python dependencies
 - Reorganize and rename exported archives
+
 
 ## [0.6.0] 2021-12-01
 
@@ -704,6 +748,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Properly prevent path traversal in archives and don't allow symbolic links
 - Inject task extra information even if there are no query params
 
+
 ## [0.5.0] 2021-11-02
 
 ### Added
@@ -730,6 +775,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix trailing comma that turned versions at /info into lists
 - Accept `UUID.hex` UUID as asset keys
 - Trying to download a disabled model will now result in a consistent http 410 error code instead of an http 500 or http 404 error code
+
 
 ## [0.4.0] 2021-10-04
 
@@ -766,6 +812,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     /model?search=objective:field_key:value
 ```
 
+
 ## [0.3.1] - 2021-08-25
 
 ### Added
@@ -776,6 +823,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Compute-plan-less compute tasks all using the same lock key
 - Asset buffer skipping some data samples
+
 
 ## [0.3.0] - 2021-08-17
 
@@ -795,6 +843,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The opener is now downloaded instead of being copied from disk
 - Better use of shutil.copytree
 
+
 ## [0.2.0] - 2021-08-04
 
 ### Added
@@ -807,6 +856,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use a single compute pod for all the tasks of a compute plan .
 - Add two missing `__init__` files .
 - Update python dependencies.
+
 
 ## [0.1.12] - 2021-04-13
 
@@ -825,11 +875,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump django from 2.2.19 to 2.2.20 in /backend.
 - Update cryptography to its latest release.
 
+
 ## [0.1.11] - 2021-03-12
 
 ### Changed
 
 - Update django and django-celery-results.
+
 
 ## [0.1.10] - 2021-03-09
 
@@ -841,6 +893,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix JWT token blacklist at logout
 - Add django shared cache to prevent issue in throttling
 - Less permissive CORS & AllowHosts
+
 
 ## [0.1.9] - 2021-02-09
 
