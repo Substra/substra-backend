@@ -1,5 +1,11 @@
 # Changelog
 
+## [22.6.1] - 2023-07-25
+
+### Changed
+
+- Update substra-backend image tag to `0.40.0`
+
 ## [22.6.0] - 2023-07-18
 
 ### Added
