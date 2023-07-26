@@ -20,7 +20,6 @@ EXTRA = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;
 TASK_PROFILING_LIST_URL = reverse("api:task_profiling-list")
 
 
-
 def _get_profiling_expected_result(key: str):
     return [
         {
@@ -43,7 +42,7 @@ def test_task_profiling_list_success(authenticated_client, task_profiling):
         "results": expected_results,
     }
 
-       
+
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db
 def test_task_profiling_list_wrong_channel(authenticated_client, task_profiling):
@@ -132,7 +131,7 @@ def test_task_profiling_add_step(authenticated_backend_client, task_profiling):
         }
     ]
 
-    response = authenticated_backend_client.get(TASK_PROFILING_LIST_URL)
+    response = authenticated_backend_client.get(TASK_PROFILING_LIST_URL, **EXTRA)
     assert response.json() == {
         "count": len(expected_results),
         "next": None,
