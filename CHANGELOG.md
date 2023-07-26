@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Increase the number of tasks displayable in frontend workflow [#697](https://github.com/Substra/substra-backend/pull/697)
+
 ## [0.40.0](https://github.com/Substra/substra-backend/releases/tag/0.40.0) 2023-07-25
 
 ### Fixed
