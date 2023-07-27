@@ -24,7 +24,6 @@ from django.conf import settings
 
 import orchestrator
 from backend.celery import app
-from builder.tasks.tasks_build_image import build_image
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
@@ -50,7 +49,6 @@ from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.task_routing import get_builder_queue
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
 from substrapp.utils.errors import store_failure
@@ -137,22 +135,6 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
             celery_task_key=task.key,
         )
         return
-
-    # add image build to the Celery queue
-    with get_orchestrator_client(channel_name) as client:
-        function = client.query_function(task.function_key)
-    builder_queue = get_builder_queue()
-
-    logger.info(
-        "Assigned function to builder queue",
-        function_key=function.key,
-        compute_task_key=task.key,
-        compute_plan_key=task.compute_plan_key,
-        queue=builder_queue,
-    )
-    # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
-    build_image.apply_async((function.json(), channel_name, task.key), queue=builder_queue, task_id=function.key)
-
 
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task.compute_plan_key)
