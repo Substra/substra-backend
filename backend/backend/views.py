@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
@@ -29,6 +30,9 @@ class ObtainBearerToken(DRFObtainAuthToken):
     throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
     def post(self, request, *args, **kwargs):
+        if not settings.EXPIRY_TOKEN_ENABLED:
+            raise PermissionDenied("Implicit login is disabled on this server")
+
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]

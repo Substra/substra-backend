@@ -1,4 +1,7 @@
 import os
+from datetime import timedelta
+
+from .utils import to_bool
 
 REST_FRAMEWORK = {
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -8,8 +11,6 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "users.authentication.SecureJWTAuthentication",  # JWT for front
-        "users.authentication.ImplicitBearerTokenAuthentication",  # Legacy Bearer token for api-token-auth/
-        # must be loaded BEFORE BearerTokenAuthentication
         "users.authentication.BearerTokenAuthentication",  # Bearer token for SDK
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -38,3 +39,12 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "SERVE_PERMISSIONS": ["libs.permissions.IsAuthorized"],
 }
+
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get("EXPIRY_TOKEN_LIFETIME", 24 * 60)))  # minutes
+EXPIRY_TOKEN_ENABLED = to_bool(os.environ.get("EXPIRY_TOKEN_ENABLED", True))
+if EXPIRY_TOKEN_ENABLED:
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        "users.authentication.ImplicitBearerTokenAuthentication"
+    ] + REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"]
+    # Legacy Bearer token for api-token-auth/
+    # must be loaded BEFORE BearerTokenAuthentication
