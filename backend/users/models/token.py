@@ -26,6 +26,8 @@ class ImplicitBearerToken(Token):
     Legacy token to make the endpoint api-token-auth/ work like it used to
     """
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="implicit_bearer_tokens", on_delete=models.CASCADE)
+
     @property
     def expires_at(self) -> datetime:
         return self.created + settings.EXPIRY_TOKEN_LIFETIME
@@ -34,14 +36,26 @@ class ImplicitBearerToken(Token):
     def is_expired(self) -> bool:
         return self.expires_at < timezone.now()
 
-    @transaction.atomic
-    def handle_expiration(self) -> "ImplicitBearerToken":
+    @property
+    def is_young(self) -> bool:
         """
-        If token is expired a new token will be created and the old one removed.
+        Young enough to be issued
         """
-        if self.is_expired:
-            user = self.user
-            self.delete()
-            token = ImplicitBearerToken.objects.create(user=user)
+        return self.created + (settings.EXPIRY_TOKEN_LIFETIME / 2) > timezone.now()
+
+
+@transaction.atomic
+def get_implicit_bearer_token(user) -> ImplicitBearerToken:
+    """
+    rotates between ImplicitBearerTokens for a user
+    """
+    tokens = ImplicitBearerToken.objects.filter(user=user).order_by("created")
+    to_delete = []
+    for token in tokens:  # this works thanks to the ordering
+        if token.is_young:
             return token
-        return self
+        elif token.is_expired:
+            to_delete.append(token)
+    for token in to_delete:
+        token.delete()
+    return ImplicitBearerToken.objects.create(user=user)

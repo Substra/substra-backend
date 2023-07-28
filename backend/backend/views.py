@@ -1,6 +1,4 @@
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken as DRFObtainAuthToken
@@ -16,6 +14,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 from users.models.token import BearerToken
 from users.models.token import ImplicitBearerToken
+from users.models.token import get_implicit_bearer_token
 from users.serializers.token import BearerTokenSerializer
 from users.serializers.token import ImplicitBearerTokenSerializer
 
@@ -34,11 +33,8 @@ class ObtainBearerToken(DRFObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
-        with transaction.atomic():
-            token, just_created = ImplicitBearerToken.objects.get_or_create(user=user)
-            if not just_created:
-                token = token.handle_expiration()
-            return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
+        token = get_implicit_bearer_token(user)
+        return ApiResponse(ImplicitBearerTokenSerializer(token, include_payload=True).data)
 
 
 class AuthenticatedBearerToken(DRFObtainAuthToken):
@@ -67,15 +63,14 @@ class ActiveBearerTokens(APIView):
             BearerTokenSerializer(token).data
             for token in BearerToken.objects.filter(user=request.user).order_by("-created")
         ]
-        try:
-            implicit_token = ImplicitBearerTokenSerializer(ImplicitBearerToken.objects.get(user=request.user)).data
-
-        except ObjectDoesNotExist:
-            implicit_token = None
+        implicit_tokens = [
+            ImplicitBearerTokenSerializer(token).data
+            for token in ImplicitBearerToken.objects.filter(user=request.user).order_by("-created")
+        ]
         return ApiResponse(
             {
                 "tokens": tokens,
-                "implicit_token": implicit_token,
+                "implicit_tokens": implicit_tokens,
             }
         )
 
