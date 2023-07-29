@@ -57,7 +57,7 @@ curl \
 {"host":"http://testserver","organization_id":"MyOrg1MSP","organization_name":"OrgTestSuite","config":{"model_export_enabled":false},"auth":{},"channel":"mychannel","version":"dev","orchestrator_version":null,"user":"org-1","user_role":"ADMIN"}
 ```
 
-## Bearer token
+## Bearer token (ImplicitBearerToken)
 
 - URL: `/api-token-auth/`
 - Implemented in `backend.views` [module](../backend/backend/views.py)
@@ -66,7 +66,9 @@ curl \
   - The token is stored on server side (in `authtoken_token` table), alongside a creation date and and the user ID.
   - The token is a random string encoded in hexadecimal format. [Source](https://github.com/encode/django-rest-framework/blob/master/rest_framework/authtoken/models.py)
   - The token should be included in the `Authorization` HTTP header
-- The API has a custom layer to handle the token expiration based on its expiry date. [Source](../backend/users/utils/bearer_token.py)
+- The API has a custom layer to handle the token expiration based on its expiry date. [Source](../backend/users/models/token.py)
+  - Expiry date controlled by `settings.EXPIRY_TOKEN_LIFETIME`
+- Only enabled if `settings.EXPIRY_TOKEN_ENABLED` is set
 
 1. Post the credentials using JSON data to download the authentication token (this is the legacy token named implicit in the code).
 

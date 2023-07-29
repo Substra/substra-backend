@@ -23,7 +23,8 @@ class BearerToken(Token):
 
 class ImplicitBearerToken(Token):
     """
-    Legacy token to make the endpoint api-token-auth/ work like it used to
+    Separate from frontend-visible BearerTokens,
+    so the behavior of /api-token-auth/ stays the same
     """
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="implicit_bearer_tokens", on_delete=models.CASCADE)

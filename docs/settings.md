@@ -31,7 +31,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
 | bool | `ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS` | `False` |  |
 | bool | `ENABLE_METRICS` | `False` |  |
-| int | `EXPIRY_TOKEN_LIFETIME` | `1440` (`24 * 60`) | minutes |
 | bool | `GZIP_MODELS` | `False` |  |
 | string | `HOSTNAME` | nil |  |
 | string | `HOST_IP` | nil |  |
