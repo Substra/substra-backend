@@ -31,7 +31,7 @@ class BearerTokenAuthentication(DRFTokenAuthentication):
     def authenticate_credentials(self, key):
         _, token = super().authenticate_credentials(key)
         if token.is_expired:
-            raise AuthenticationFailed("The Token is expired")
+            raise AuthenticationFailed("The token is expired")
 
         check_oidc_user_is_valid(token.user)
         return token.user, token
@@ -50,7 +50,7 @@ class ImplicitBearerTokenAuthentication(DRFTokenAuthentication):
         except AuthenticationFailed:
             return None  # allow the authentication process to continue by swallowing the exception raised
         if token.is_expired:
-            raise AuthenticationFailed("The Token is expired")
+            raise AuthenticationFailed("The token is expired")
 
         check_oidc_user_is_valid(token.user)
         return token.user, token
