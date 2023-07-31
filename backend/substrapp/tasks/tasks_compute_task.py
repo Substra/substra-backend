@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import datetime
 import enum
-
 import errno
 import os
 from typing import Any
@@ -26,14 +25,11 @@ from billiard.einfo import ExceptionInfo
 from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
-from django.core import files
 from rest_framework import status
 
 import orchestrator
 from backend.celery import app
 from builder.tasks.tasks_build_image import build_image
-from substrapp import models
-from substrapp import utils
 from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
@@ -64,11 +60,11 @@ from substrapp.task_routing import get_builder_queue
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
 from substrapp.utils import retry
+from substrapp.utils.errors import store_failure
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
 from substrapp.utils.url import get_task_profiling_steps_detail_url
-from substrapp.utils.errors import store_failure
 
 logger = structlog.get_logger(__name__)
 
