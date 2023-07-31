@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import datetime
 import enum
-
 import errno
 import os
 from typing import Any
@@ -58,11 +57,11 @@ from substrapp.utils import Timer
 from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
+from substrapp.utils.errors import store_failure
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
 from substrapp.utils.url import get_task_profiling_steps_detail_url
-from substrapp.utils.errors import store_failure
 
 logger = structlog.get_logger(__name__)
 

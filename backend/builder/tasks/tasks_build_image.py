@@ -7,9 +7,6 @@ from builder.exceptions import BuildRetryError
 from builder.exceptions import CeleryNoRetryError
 from builder.image_builder.image_builder import build_image_if_missing
 from builder.tasks.task import BuildTask
-from substrapp.models.compute_task_profiling import ComputeTaskSteps
-from substrapp.tasks.tasks_task_profiling import create_task_profiling_step
-from substrapp.utils import Timer
 
 logger = structlog.get_logger(__name__)
 max_retries = settings.CELERY_TASK_MAX_RETRIES
