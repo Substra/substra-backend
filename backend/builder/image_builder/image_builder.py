@@ -23,7 +23,6 @@ from substrapp.docker_registry import container_image_exists
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_security_context
 from substrapp.lock_local import lock_resource
-from substrapp.models.image_entrypoint import ImageEntrypoint
 from substrapp.utils import timeit
 from substrapp.utils import uncompress_content
 
@@ -88,16 +87,8 @@ def _build_function_image(asset: bytes, function: orchestrator.Function) -> None
         # Download source
         uncompress_content(asset, tmp_dir)
 
-        # Extract ENTRYPOINT from Dockerfile
-        entrypoint = _get_entrypoint_from_dockerfile(tmp_dir)
-
         # Build image
         _build_container_image(tmp_dir, utils.container_image_tag_from_function(function))
-
-        # Save entrypoint to DB if the image build was successful
-        ImageEntrypoint.objects.get_or_create(
-            function_checksum=function.function_address.checksum, entrypoint_json=entrypoint
-        )
 
 
 def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
