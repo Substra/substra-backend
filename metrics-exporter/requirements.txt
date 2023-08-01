@@ -1,4 +1,4 @@
-prometheus-client==0.17.0
+prometheus-client==0.17.1
 structlog==23.1.0
 celery==5.2.7
 redis==4.5.5
