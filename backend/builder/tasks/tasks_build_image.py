@@ -1,7 +1,12 @@
+import structlog
+
 import orchestrator
 from backend.celery import app
+from builder.exceptions import CeleryRetryError
 from builder.image_builder.image_builder import build_image_if_missing
 from builder.tasks.task import BuildTask
+
+logger = structlog.get_logger(__name__)
 
 
 @app.task(
@@ -15,6 +20,10 @@ from builder.tasks.task import BuildTask
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def build_image(task: BuildTask, function_serialized: str, channel: str, compute_task_key: str) -> None:
-    function = orchestrator.Function.parse_raw(function_serialized)
+    try:
+        function = orchestrator.Function.parse_raw(function_serialized)
 
-    build_image_if_missing(channel, function)
+        build_image_if_missing(channel, function)
+    except Exception as exception:
+        logger.exception(exception)
+        raise CeleryRetryError() from exception
