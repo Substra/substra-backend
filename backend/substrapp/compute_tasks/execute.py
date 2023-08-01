@@ -26,12 +26,14 @@ from substrapp.compute_tasks.environment import get_environment
 from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import get_container_image_name
+from substrapp.docker_registry import get_entrypoint
 from substrapp.exceptions import PodReadinessTimeoutError
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import execute
 from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
+from substrapp.models import ImageEntrypoint
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import timeit
 
@@ -48,6 +50,12 @@ def execute_compute_task(ctx: Context) -> None:
 
     env = get_environment(ctx)
     image = get_container_image_name(container_image_tag)
+
+    # save entrypoint to DB
+    entrypoint = get_entrypoint(container_image_tag)
+    ImageEntrypoint.objects.get_or_create(
+        function_checksum=ctx.function.function_address.checksum, entrypoint_json=entrypoint
+    )
 
     k8s_client = _get_k8s_client()
 
