@@ -72,9 +72,9 @@ def _validate_token(token, secret):
     try:
         jwt.decode(token, secret, algorithms=[settings.RESET_JWT_SIGNATURE_ALGORITHM])
     except (DecodeError, ExpiredSignatureError, InvalidTokenError) as err:
-        return {"is_valid": False, "message": err}
+        return {"is_valid": False, "detail": err}
 
-    return {"is_valid": True, "message": ""}
+    return {"is_valid": True, "detail": ""}
 
 
 def _save_password(view, instance, password):
@@ -185,7 +185,7 @@ class UserViewSet(
             data = _save_password(self, instance, password)
             return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
-        return ApiResponse(data={"message": "missing password in the request"}, status=status.HTTP_400_BAD_REQUEST)
+        return ApiResponse(data={"detail": "missing password in the request"}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["post"], detail=True, permission_classes=[permissions.AllowAny], url_name="set-password")
     def set_password(self, request, *args, **kwargs):
@@ -204,7 +204,7 @@ class UserViewSet(
             return ApiResponse(data=data, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
         return ApiResponse(
-            data={"message": "must provide a valid token to set a new password"},
+            data={"detail": "must provide a valid token to set a new password"},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -222,7 +222,7 @@ class UserViewSet(
             return ApiResponse(data={}, status=status.HTTP_200_OK, headers=self.get_success_headers({}))
 
         return ApiResponse(
-            data={"message": f"token not valid: {token_validation.get('message')}"},
+            data={"detail": f"token not valid: {token_validation.get('detail')}"},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -265,20 +265,20 @@ class UserAwaitingApprovalViewSet(
         try:
             user = User.objects.get(username=request.GET.get("username"))
             user.delete()
-            return ApiResponse(data={"message": "User removed"}, status=status.HTTP_200_OK)
+            return ApiResponse(data={"detail": "User removed"}, status=status.HTTP_200_OK)
         except User.DoesNotExist or User.MultipleObjectsReturned:
             pass
-        return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        return ApiResponse(data={"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request, *args, **kwargs):
         d = json.loads(request.body)
         try:
             user = User.objects.get(username=request.GET.get("username"))
         except User.DoesNotExist:
-            return ApiResponse(data={"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return ApiResponse(data={"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         except User.MultipleObjectsReturned:
             return ApiResponse(
-                data={"message": "Multiple instance of the same user found"}, status=status.HTTP_409_CONFLICT
+                data={"detail": "Multiple instance of the same user found"}, status=status.HTTP_409_CONFLICT
             )
 
         channel_name = get_channel_name(request)

@@ -143,7 +143,7 @@ class TestUserEndpoints:
         response = AuthenticatedClient(role=UserChannel.Role.ADMIN, channel=self.channel).post(self.url, data=data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data.get("message") == "Username already exists"
+        assert response.data.get("detail") == "Username already exists"
 
     @pytest.mark.django_db
     def test_user_create_short_password(self):

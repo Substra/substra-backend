@@ -82,7 +82,7 @@ class PermissionMixin(object):
 
     def download_file(self, request, asset_class, content_field, address_field):
         if settings.ISOLATED:
-            return ApiResponse({"message": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
+            return ApiResponse({"detail": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
@@ -93,11 +93,11 @@ class PermissionMixin(object):
         try:
             self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except AssetPermissionError as e:
-            return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
+            return ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         url = getattr(asset, address_field)
         if not url:
-            return ApiResponse({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
+            return ApiResponse({"detail": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 
         if get_owner() == asset.get_owner():
             response = self._get_local_file_response(content_field)

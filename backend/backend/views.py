@@ -84,10 +84,10 @@ class ActiveBearerTokens(APIView):
             token = BearerToken.objects.get(id=request.GET.get("id"))
             if request.user == token.user:
                 token.delete()
-                return ApiResponse(data={"message": "Token removed"}, status=status.HTTP_200_OK)
+                return ApiResponse(data={"detail": "Token removed"}, status=status.HTTP_200_OK)
         except BearerToken.ObjectDoesNotExist or BearerToken.MultipleObjectsReturned:
             pass
-        return ApiResponse(data={"message": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
+        return ApiResponse(data={"detail": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class Info(APIView):
