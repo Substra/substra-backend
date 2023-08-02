@@ -17,7 +17,7 @@ requests>=2.20.0
 uwsgi==2.0.21
 zxcvbn==4.4.28
 grpcio==1.53.0
-grpcio-tools==1.51.1
+grpcio-tools==1.56.2
 minio==7.1.14
 django-prometheus==2.3.1
 django-filter==23.2
