@@ -167,6 +167,8 @@ def _build_container_image(path: str, tag: str) -> None:
 
         if isinstance(e, exceptions.PodTimeoutError):
             raise BuildRetryError(logs) from e
+        elif "ConnectionResetError" in logs:  # retry when download failed
+            raise BuildRetryError(logs) from e
         else:  # exceptions.PodError or other
             raise BuildError(logs) from e
 
