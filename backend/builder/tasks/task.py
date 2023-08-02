@@ -18,9 +18,9 @@ logger = structlog.get_logger(__name__)
 class BuildTask(Task):
     autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
     max_retries = settings.CELERY_TASK_MAX_RETRIES
-    # retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
-    # retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
-    # retry_jitter = settings.CELERY_TASK_RETRY_JITTER
+    retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
+    retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
+    retry_jitter = settings.CELERY_TASK_RETRY_JITTER
 
     @property
     def attempt(self) -> int:
@@ -30,14 +30,6 @@ class BuildTask(Task):
         from django.db import close_old_connections
 
         close_old_connections()
-
-    def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
-        logger.info(
-            "Retrying build",
-            celery_task_id=task_id,
-            attempt=(self.attempt + 1),
-            max_attempts=(self.max_retries + 1),
-        )
 
     def on_failure(
         self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
