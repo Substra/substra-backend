@@ -18,3 +18,9 @@ def get_task_profiling_steps_base_url(profiling_key: str) -> str:
     """Get URL for steps list for a specific profiling"""
     profiling_detail_url = get_task_profiling_detail_url(profiling_key)
     return _join_url(profiling_detail_url, "step")
+
+
+def get_task_profiling_steps_detail_url(profiling_key: str, step_key: str) -> str:
+    """Get URL for steps list for a specific step"""
+    base_step_url = get_task_profiling_steps_base_url(profiling_key)
+    return _join_url(base_step_url, step_key)
