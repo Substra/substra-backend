@@ -191,6 +191,9 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | Name                                    | Description                                                                                                                                        | Value                     |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
 | `builder.replicaCount`                  | Number of builder replicas                                                                                                                         | `1`                       |
+| `builder.enabled`                       | Enable worker service                                                                                                                              | `true`                    |
+| `builder.replicaCount`                  | Replica count for the worker service                                                                                                               | `1`                       |
+| `builder.concurrency`                   | Maximum amount of tasks to process in parallel                                                                                                     | `1`                       |
 | `builder.image.registry`                | Substra backend server image registry                                                                                                              | `ghcr.io`                 |
 | `builder.image.repository`              | Substra backend server image repository                                                                                                            | `substra/substra-backend` |
 | `builder.image.tag`                     | Substra backend server image tag (defaults to AppVersion)                                                                                          | `nil`                     |
@@ -200,12 +203,13 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `builder.podSecurityContext.runAsUser`  | User ID for the pod                                                                                                                                | `1001`                    |
 | `builder.podSecurityContext.runAsGroup` | Group ID for the pod                                                                                                                               | `1001`                    |
 | `builder.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                                                                                                    | `1001`                    |
-| `builder.resources`                     | Server container resources requests and limits                                                                                                     | `{}`                      |
+| `builder.resources`                     | Builder container resources requests and limits                                                                                                    | `{}`                      |
 | `builder.nodeSelector`                  | Node labels for pod assignment                                                                                                                     | `{}`                      |
 | `builder.tolerations`                   | Toleration labels for pod assignment                                                                                                               | `[]`                      |
 | `builder.affinity`                      | Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`                                                        | `{}`                      |
 | `builder.persistence.storageClass`      | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                      |
 | `builder.persistence.size`              | The size of the volume.                                                                                                                            | `10Gi`                    |
+| `builder.rbac.create`                   | Create a role and service account for the builder                                                                                                  | `true`                    |
 
 ### Substra container registry settings
 
