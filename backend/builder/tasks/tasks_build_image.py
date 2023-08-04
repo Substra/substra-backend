@@ -28,7 +28,7 @@ def build_image(task: BuildTask, function_serialized: str, channel: str, compute
     function = orchestrator.Function.parse_raw(function_serialized)
 
     attempt = 0
-    while attempt < task.max_retries:
+    while attempt <= task.max_retries:
         try:
             build_image_if_missing(channel, function)
         except BuildRetryError as e:
