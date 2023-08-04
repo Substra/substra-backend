@@ -18,7 +18,7 @@ from users.models.token import get_implicit_bearer_token
 from users.serializers.token import BearerTokenSerializer
 from users.serializers.token import ImplicitBearerTokenSerializer
 
-from .exceptions import GoneException
+from .exceptions import ImplicitLoginDisabled
 
 
 class ObtainBearerToken(DRFObtainAuthToken):
@@ -32,7 +32,7 @@ class ObtainBearerToken(DRFObtainAuthToken):
 
     def post(self, request, *args, **kwargs):
         if not settings.EXPIRY_TOKEN_ENABLED:
-            raise GoneException("Implicit login is disabled on this server")
+            raise ImplicitLoginDisabled()
 
         serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
