@@ -206,3 +206,8 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
         return self.download_file(request, Function, "description", "description_address")
+
+    @action(detail=True)
+    def image(self, request, *args, **kwargs):
+        # TODO fix url
+        return self.download_file(request, Function, "file", "function_address")
