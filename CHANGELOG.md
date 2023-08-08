@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Increase the number of tasks displayable in frontend workflow [#697](https://github.com/Substra/substra-backend/pull/697)
+- BREAKING: Change the format of many API responses from `{"message":...}` to `{"detail":...}` ([#705](https://github.com/Substra/substra-backend/pull/705))
 
 ## [0.40.0](https://github.com/Substra/substra-backend/releases/tag/0.40.0) 2023-07-25
 

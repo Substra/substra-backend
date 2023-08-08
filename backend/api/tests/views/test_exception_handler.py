@@ -17,13 +17,13 @@ class ApiExceptionHandlerTests(unittest.TestCase):
         response = exception_handler.api_exception_handler(exc, None)
 
         self.assertEqual(response.status_code, orchestrator.error.RPC_TO_HTTP[code])
-        self.assertEqual(response.data["message"], details)
+        self.assertEqual(response.data["detail"], details)
 
     def test_catch_custom_validation_error(self):
-        message, key, status_code = "foo", "bar", status.HTTP_403_FORBIDDEN
-        exc = utils.ValidationExceptionError(message, key, status_code)
+        detail, key, status_code = "foo", "bar", status.HTTP_403_FORBIDDEN
+        exc = utils.ValidationExceptionError(detail, key, status_code)
         response = exception_handler.api_exception_handler(exc, None)
 
         self.assertEqual(response.status_code, status_code)
-        self.assertEqual(response.data["message"], message)
+        self.assertEqual(response.data["detail"], detail)
         self.assertEqual(response.data["key"], key)

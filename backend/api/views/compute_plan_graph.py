@@ -70,7 +70,7 @@ def get_cp_graph(request, compute_plan_pk):
     # Set a task limitation for performances issues
     if len(tasks) > MAX_TASKS_DISPLAYED:
         return ApiResponse(
-            data={"message": f"Cannot build workflow graph for more than {MAX_TASKS_DISPLAYED} tasks."},
+            data={"detail": f"Cannot build workflow graph for more than {MAX_TASKS_DISPLAYED} tasks."},
             status=status.HTTP_403_FORBIDDEN,
         )
 

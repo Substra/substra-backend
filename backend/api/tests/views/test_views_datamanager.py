@@ -428,7 +428,7 @@ class DataManagerViewTests(APITestCase):
         response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("File too large", response.data["message"][0]["data_opener"])
+        self.assertIn("File too large", response.data["detail"][0]["data_opener"])
 
         data["data_opener"].close()
         data["description"].close()

@@ -49,7 +49,7 @@ def create(request, get_success_headers):
     #  not be caught to return a response. The following code only exists to preserve
     #  a previously established API contract.
     except serializers.ValidationError as e:
-        return ApiResponse({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return ApiResponse({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     headers = get_success_headers(data)
     return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)

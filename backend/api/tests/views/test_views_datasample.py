@@ -334,7 +334,7 @@ class DataSampleViewTests(APITestCase):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("File too large", response.data["message"])
+        self.assertIn("File too large", response.data["detail"])
         data["file"].close()
 
     def test_datasample_create_fail_rollback(self):

@@ -12,15 +12,15 @@ class ApiError(Exception):
     """Base error response returned by API."""
 
     status = status.HTTP_500_INTERNAL_SERVER_ERROR
-    message = "Internal server error."
+    detail = "Internal server error."
 
-    def __init__(self, message=None, data=None):
-        message = message or self.message
+    def __init__(self, detail=None, data=None):
+        detail = detail or self.detail
 
         self.error = data or {}
-        self.error["message"] = message
+        self.error["detail"] = detail
 
-        super().__init__(message)
+        super().__init__(detail)
 
     def response(self):
         """Get HTTP Response from error instance."""
@@ -29,9 +29,9 @@ class ApiError(Exception):
 
 class BadRequestError(ApiError):
     status = status.HTTP_400_BAD_REQUEST
-    message = "Bad request."
+    detail = "Bad request."
 
 
 class AssetPermissionError(Exception):
-    def __init__(self, message="Unauthorized"):
-        super().__init__(self, message)
+    def __init__(self, detail="Unauthorized"):
+        super().__init__(self, detail)
