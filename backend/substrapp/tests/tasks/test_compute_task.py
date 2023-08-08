@@ -1,3 +1,4 @@
+import datetime
 import errno
 import io
 import tempfile
@@ -212,6 +213,19 @@ def test_store_failure_ignored_exception(exc_class: Type[Exception]):
 
 
 @pytest.mark.django_db
+def test_send_profiling_event(mock_retry: MagicMock, mocker: MockerFixture):
+    mock_post = mocker.patch("substrapp.clients.organization.post")
+    mock_put = mocker.patch("substrapp.clients.organization.put")
+    params = {"channel_name": CHANNEL, "url_create": "testurl", "url_update": "testurl", "data": {}}
+    tasks_compute_task._send_profiling_event(**params)
+    mock_post.side_effect = OrganizationHttpError(url="testurl", status_code=status.HTTP_409_CONFLICT)
+    tasks_compute_task._send_profiling_event(**params)
+
+    assert mock_post.call_count == 2
+    assert mock_put.call_count == 1
+
+
+@pytest.mark.django_db
 def test_create_task_profiling_update(mock_retry: MagicMock, mocker: MockerFixture):
     mock_post = mocker.patch("substrapp.clients.organization.post")
     mock_put = mocker.patch("substrapp.clients.organization.put")
@@ -219,6 +233,25 @@ def test_create_task_profiling_update(mock_retry: MagicMock, mocker: MockerFixtu
     tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
     mock_post.side_effect = OrganizationHttpError(url="testurl", status_code=status.HTTP_409_CONFLICT)
     tasks_compute_task._create_task_profiling(CHANNEL, compute_task_key)
+
+    assert mock_post.call_count == 2
+    assert mock_put.call_count == 1
+
+
+@pytest.mark.django_db
+def test_create_task_profiling_step_update(mock_retry: MagicMock, mocker: MockerFixture):
+    mock_post = mocker.patch("substrapp.clients.organization.post")
+    mock_put = mocker.patch("substrapp.clients.organization.put")
+    params = {
+        "channel_name": CHANNEL,
+        "compute_task_key": "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f",
+        "field": tasks_compute_task.ComputeTaskSteps.BUILD_IMAGE,
+        "duration": datetime.timedelta(seconds=20),
+    }
+
+    tasks_compute_task._create_task_profiling_step(**params)
+    mock_post.side_effect = OrganizationHttpError(url="testurl", status_code=status.HTTP_409_CONFLICT)
+    tasks_compute_task._create_task_profiling_step(**params)
 
     assert mock_post.call_count == 2
     assert mock_put.call_count == 1

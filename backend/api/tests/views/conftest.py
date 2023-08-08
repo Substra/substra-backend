@@ -1,7 +1,11 @@
+from typing import Optional
+
 import pytest
 from rest_framework import test
 
+from api.models import ComputePlan
 from api.models import ComputeTask
+from api.models import TaskProfiling
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedBackendClient
 from api.tests.common import AuthenticatedClient
@@ -28,7 +32,14 @@ def api_client() -> test.APIClient:
 
 @pytest.fixture
 def create_compute_task():
-    def _create_compute_task(compute_plan, n_data_sample=4):
+    def _create_compute_task(
+        compute_plan: Optional[ComputePlan] = None,
+        n_data_sample: int = 4,
+        status: ComputeTask.Status = ComputeTask.Status.STATUS_DONE,
+    ) -> ComputeTask:
+        if not compute_plan:
+            compute_plan = factory.create_computeplan()
+
         data_manager = factory.create_datamanager()
         data_samples = [factory.create_datasample([data_manager]) for _ in range(n_data_sample)]
         input_keys = {
@@ -45,7 +56,7 @@ def create_compute_task():
             function,
             inputs=factory.build_computetask_inputs(function, input_keys),
             outputs=factory.build_computetask_outputs(function),
-            status=ComputeTask.Status.STATUS_DONE,
+            status=status,
         )
 
     return _create_compute_task
@@ -53,9 +64,15 @@ def create_compute_task():
 
 @pytest.fixture
 def create_compute_plan(create_compute_task):
-    def _create_compute_plan(n_task=20, n_data_sample=4):
+    def _create_compute_plan(n_task: int = 20, n_data_sample: int = 4) -> ComputePlan:
         compute_plan = factory.create_computeplan()
         [create_compute_task(compute_plan, n_data_sample=n_data_sample) for _ in range(n_task)]
         return compute_plan
 
     return _create_compute_plan
+
+
+@pytest.fixture
+def task_profiling(create_compute_task) -> TaskProfiling:
+    task = create_compute_task(status=ComputeTask.Status.STATUS_DOING)
+    return factory.create_computetask_profiling(compute_task=task)

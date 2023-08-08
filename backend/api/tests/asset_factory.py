@@ -79,7 +79,6 @@ from api.models import FunctionInput
 from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
-from api.models import ProfilingStep
 from api.models import TaskProfiling
 from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
 from substrapp.models import DataManager as DataManagerFiles
@@ -553,7 +552,4 @@ def create_computetask_logs(
 
 def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:
     profile = TaskProfiling.objects.create(compute_task=compute_task)
-    ProfilingStep.objects.create(
-        compute_task_profile=profile, step="step 1", duration=str(datetime.timedelta(seconds=10))
-    )
     return profile

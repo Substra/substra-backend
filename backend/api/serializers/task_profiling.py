@@ -16,10 +16,6 @@ class ProfilingStepSerializer(serializers.ModelSerializer):
             "duration",
         ]
 
-    def create(self, data):
-        profiling_step, created = ProfilingStep.objects.update_or_create(**data)
-        return profiling_step
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["duration"] = duration_microseconds(instance.duration)
