@@ -29,7 +29,7 @@ class ImplicitBearerTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ImplicitBearerToken
-        fields = ["expires_at", "created_at", "token"]
+        fields = ["id", "expires_at", "created_at", "token"]
 
     def __init__(self, *args, **kwargs):
         include_payload = kwargs.pop("include_payload", False)

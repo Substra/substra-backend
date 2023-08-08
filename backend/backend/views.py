@@ -80,13 +80,11 @@ class ActiveBearerTokens(APIView):
         )
 
     def delete(self, request, *args, **kwargs):
-        try:
-            token = BearerToken.objects.get(id=request.GET.get("id"))
-            if request.user == token.user:
-                token.delete()
+        for model in [BearerToken, ImplicitBearerToken]:
+            tokens = model.objects.filter(id=request.GET.get("id"))
+            if len(tokens) == 1 and request.user == tokens[0].user:
+                tokens[0].delete()
                 return ApiResponse(data={"detail": "Token removed"}, status=status.HTTP_200_OK)
-        except BearerToken.ObjectDoesNotExist or BearerToken.MultipleObjectsReturned:
-            pass
         return ApiResponse(data={"detail": "Token not found"}, status=status.HTTP_404_NOT_FOUND)
 
 

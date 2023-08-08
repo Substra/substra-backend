@@ -28,6 +28,7 @@ class ImplicitBearerToken(Token):
     """
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="implicit_bearer_tokens", on_delete=models.CASCADE)
+    id = models.UUIDField(default=uuid.uuid4, editable=False)
 
     @property
     def expires_at(self) -> datetime:
