@@ -47,6 +47,7 @@ worker:
   concurrency: 3
 
 server:
+  allowImplicitLogin: true
   defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
   commonHostDomain: org-2.com
   ingress:
