@@ -79,7 +79,7 @@ curl \
   --header 'Content-Type: application/json' \
   --data '{"username":"org-1","password":"p@sswr0d44"}' \
   http://substra-backend.org-1.com/api-token-auth/
-{"expires_at":"<ISO timestamp>","created_at":"<ISO timestamp>","token":"<auth_token_value>"}
+{"expires_at":"<ISO timestamp>","created_at":"<ISO timestamp>","token":"<auth_token_value>","id":"<UUID>"}
 ```
 
 2. Show all existing token
@@ -90,7 +90,7 @@ curl \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Token <auth_token_value>' \
   'http://substra-backend.org-1.com:8000/active-api-tokens/'
-{"tokens": {"id": "<uuid4 id>", "note": "<string>", "expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}, "implicit_token":{"expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}}
+{"tokens": {"id": "<UUID>", "note": "<string>", "expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}, "implicit_tokens":[{"expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>","id":"<UUID>"}]}
 ```
 
 3. Create a new token using token authentication ("expires_at" must be null or DDDD-MM-YY)
@@ -105,7 +105,7 @@ curl --request POST \
   {"id": "<uuid4 id>", "note": "<string>", "expires_at":"<ISO timestamp or null>", "created_at":"<ISO timestamp>, "token":"<auth_token_value>}
 ```
 
-4. Fetch any asset with the authentication token in the header.
+4. Fetch any asset with the authentication token in the header
 
 ```bash
 curl \
@@ -113,6 +113,13 @@ curl \
   --header 'Authorization: Token <auth_token_value>' \
   http://substra-backend.org-1.com/info/
 {"host":"http://testserver","organization_id":"MyOrg1MSP","organization_name":"OrgTestSuite","config":{"model_export_enabled":false},"auth":{},"channel":"mychannel","version":"dev","orchestrator_version":null,"user":"org-1","user_role":"ADMIN"}
+```
+
+5. Delete a token
+
+``` bash
+curl -X DELETE --header 'Authorization: Token <auth_token_value>' http://substra-backend.org-1.com/active-api-tokens/?id=<UUID>
+{"message":"Token removed"}
 ```
 
 ### Bearer tokens when already authenticated
