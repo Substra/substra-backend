@@ -57,9 +57,9 @@ spec:
         imagePullPolicy: "{{ .Values.builder.image.pullPolicy }}"
         command: ["/bin/bash", "-c"]
         {{- if eq .Values.settings "prod" }}
-        args: ["celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
+        args: ["celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
         {{ else }}
-        args: ["watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
+        args: ["watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]
         {{ end }}
         envFrom:
           # TODO: Remove dependency for LDEGER_MSP_ID
