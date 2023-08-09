@@ -38,25 +38,16 @@ class ImplicitBearerToken(Token):
     def is_expired(self) -> bool:
         return self.expires_at < timezone.now()
 
-    @property
-    def is_young(self) -> bool:
-        """
-        Young enough to be issued
-        """
-        return self.created + (settings.EXPIRY_TOKEN_LIFETIME / 2) > timezone.now()
-
 
 @transaction.atomic
 def get_implicit_bearer_token(user) -> ImplicitBearerToken:
     """
-    rotates between ImplicitBearerTokens for a user
+    clean up expired tokens
     """
-    tokens = ImplicitBearerToken.objects.filter(user=user).order_by("created")
+    tokens = ImplicitBearerToken.objects.filter(user=user)
     to_delete = []
-    for token in tokens:  # this works thanks to the ordering
-        if token.is_young:
-            return token
-        elif token.is_expired:
+    for token in tokens:
+        if token.is_expired:
             to_delete.append(token)
     for token in to_delete:
         token.delete()
