@@ -121,6 +121,7 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     raise BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
+
 def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
     logs = ""
     if create_pod:
@@ -165,6 +166,8 @@ def _build_container_image(path: str, tag: str) -> None:
         logs = _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
         if isinstance(e, exceptions.PodTimeoutError):
+            raise BuildRetryError(logs) from e
+        elif "ConnectionResetError" in logs:  # retry when download failed
             raise BuildRetryError(logs) from e
         else:  # exceptions.PodError or other
             raise BuildError(logs) from e

@@ -431,7 +431,7 @@ The backend uses a PostgreSQL database. By default it will deploy one as a subch
 ```yaml
 database:
   host: my.database.host
-  
+
   auth:
     username: my-user
     password: aStrongPassword
