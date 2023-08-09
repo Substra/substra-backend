@@ -138,7 +138,7 @@ def _http_request(
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as exc:
-        status_code = exc.response.status_code if exc.response else None
+        status_code = response.status_code if exc.response else None
         raise OrganizationHttpError(url=url, status_code=status_code)
 
     return response
