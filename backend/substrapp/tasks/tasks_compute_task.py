@@ -55,7 +55,6 @@ from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.task_routing import get_builder_queue
 from substrapp.utils import Timer
 from substrapp.utils import list_dir
 from substrapp.utils import retry
