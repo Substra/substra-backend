@@ -85,25 +85,6 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
         )
         return
 
-    # add image build to the Celery queue
-    with get_orchestrator_client(channel_name) as client:
-        function = client.query_function(task.function_key)
-    builder_queue = get_builder_queue()
-
-    logger.info(
-        "Assigned function to builder queue",
-        function_key=function.key,
-        compute_task_key=task.key,
-        compute_plan_key=task.compute_plan_key,
-        queue=builder_queue,
-    )
-    # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
-    build_image.apply_async((function.json(), channel_name, task.key), queue=builder_queue, task_id=function.key)
-
-    with get_orchestrator_client(channel_name) as client:
-        if not task_utils.is_task_runnable(task.key, client):
-            return  # avoid creating a Celery task
-
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task.compute_plan_key)
     logger.info(
