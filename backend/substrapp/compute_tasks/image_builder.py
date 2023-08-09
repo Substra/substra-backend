@@ -4,6 +4,7 @@ import structlog
 from django.conf import settings
 
 import orchestrator
+
 from builder import exceptions
 from substrapp.compute_tasks import utils
 from substrapp.docker_registry import container_image_exists
@@ -19,9 +20,8 @@ def wait_for_image_built(function: orchestrator.Function) -> None:
     attempt = 0
     # with 60 attempts we wait max 2 min with a pending pod
     max_attempts = IMAGE_BUILD_TIMEOUT / IMAGE_BUILD_CHECK_DELAY
-    while (
-        attempt < max_attempts
-    ):  # Consider relying on celery task success so we can move `container_image_exists` in builder
+    while attempt < max_attempts:
+        # Consider relying on celery task success so we can move `container_image_exists` in builder
         if container_image_exists(container_image_tag):
             logger.info("Found existing image", image=container_image_tag)
             return
