@@ -58,6 +58,8 @@ spec:
               name: {{ include "substra.fullname" . }}-database
           - secretRef:
               name: {{ include "substra-backend.database.secret-name" . }}
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-server-key
           - configMapRef:
               name: {{ include "substra.fullname" . }}-oidc
           {{- if .Values.oidc.enabled }}
@@ -73,8 +75,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
-          - name: SECRET_KEY_LOAD_AND_STORE
-            value: "True"
           {{- if .Values.server.metrics.enabled }}
           - name: ENABLE_METRICS
             value: "True"
@@ -158,8 +158,6 @@ spec:
             value: {{ $metricsPath }}
           - name: CELERY_MONITORING_ENABLED
             value: "True"
-          - name: SECRET_KEY_LOAD_AND_STORE
-            value: "False" # This container doesn't generate secure data such as tokens
         ports:
           - name: metrics
             containerPort: 8001
@@ -213,8 +211,6 @@ spec:
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.settings }}
-        - name: SECRET_KEY_LOAD_AND_STORE
-          value: "False" # This container doesn't generate secure data such as tokens
       - name: init-collectstatic
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
@@ -226,8 +222,6 @@ spec:
         env:
           - name: DJANGO_SETTINGS_MODULE
             value: backend.settings.{{ .Values.settings }}
-          - name: SECRET_KEY_LOAD_AND_STORE
-            value: "False" # This container doesn't generate secure data such as tokens
         volumeMounts:
           - name: statics
             mountPath: /usr/src/app/backend/statics

@@ -72,8 +72,6 @@ spec:
                   fieldPath: spec.nodeName
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.settings }}
-            - name: SECRET_KEY_LOAD_AND_STORE
-              value: "False" # This container doesn't generate secure data such as tokens
           volumeMounts:
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs

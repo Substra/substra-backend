@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New UserAwaitingApproval (base user with no channel) ([#680](https://github.com/Substra/substra-backend/pull/680))
+- New `SECRET_KEY` optional environment variable ([#671](https://github.com/Substra/substra-backend/pull/671))
+
+### Removed
+
+- BREAKING: `SECRET_KEY_PATH` and `SECRET_KEY_LOAD_AND_STORE` environment variables ([#671](https://github.com/Substra/substra-backend/pull/671))
 
 ## [0.39.0](https://github.com/Substra/substra-backend/releases/tag/0.39.0) 2023-06-27
 
