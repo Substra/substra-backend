@@ -58,6 +58,8 @@ spec:
               name: {{ include "substra.fullname" . }}-database
           - secretRef:
               name: {{ include "substra-backend.database.secret-name" . }}
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-server-key
           - configMapRef:
               name: {{ include "substra.fullname" . }}-oidc
           {{- if .Values.oidc.enabled }}
@@ -96,6 +98,8 @@ spec:
             mountPath: /usr/src/app/uwsgi.ini
             subPath: uwsgi.ini
             readOnly: true
+          - name: runtime-secrets
+            mountPath: /var/substra/runtime-secrets
           {{- if .Values.privateCa.enabled }}
           - mountPath: /etc/ssl/certs
             name: ssl-certs
@@ -226,6 +230,8 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.server.persistence.servermedias.existingClaim | default (print (include "substra.fullname" $) "-servermedias") }}
       - name: statics
+        emptyDir: {}
+      - name: runtime-secrets
         emptyDir: {}
       - name: uwsgi
         configMap:

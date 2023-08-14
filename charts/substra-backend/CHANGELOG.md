@@ -1,5 +1,16 @@
 # Changelog
 
+## [22.7.0] - 2023-08-14
+
+### Changed
+
+- Components now avoid writing on the root file system, allowing this chart to run under `readOnlyRootFilesystem: true`
+- A secret formerly generated at runtime (`SECRET_KEY`) is now generated at install time and stored in a new secret, fixing issues where this secret would change on application restart
+
+### Fixed
+
+- Missing dash in some created Kubernetes objects
+
 ## [22.6.1] - 2023-07-25
 
 ### Changed

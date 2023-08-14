@@ -54,6 +54,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `REGISTRY_PULL_DOMAIN` | nil |  |
 | string | `REGISTRY_SCHEME` | nil |  |
 | string | `REGISTRY_SERVICE_NAME` | nil |  |
+| string | `SECRET_KEY` | `secrets.token_urlsafe()` | built in Django, but also used for signing JWTs |
 | string | `SUBPATH` | empty string | prefix for backend endpoints |
 | bool | `TASK_CACHE_DOCKER_IMAGES` | `False` |  |
 | bool | `TASK_CHAINKEYS_ENABLED` | `False` |  |
@@ -62,13 +63,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `WORKER_PVC_IS_HOSTPATH` | nil |  |
 | string | `WORKER_PVC_SUBTUPLE` | nil |  |
 | string | `WORKER_REPLICA_SET_NAME` | nil |  |
-
-## Secret key settings
-
-| Type | Setting | Default value | Comment |
-|------|---------|---------------|---------|
-| bool | `SECRET_KEY_LOAD_AND_STORE` | `True` | Whether to load the secret key from file (and write it there if it doesn't exist) |
-| string | `SECRET_KEY_PATH` | `path.PROJECT_ROOT / 'SECRET'` |  |
 
 ## JWT settings
 

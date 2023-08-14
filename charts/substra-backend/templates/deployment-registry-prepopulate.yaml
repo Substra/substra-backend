@@ -26,15 +26,19 @@ spec:
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
         image: {{ include "common.images.name" $.Values.kaniko.image }}
-        args: ["--context=/docker-context",
-                {{- if .dstImage }}
-                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}",
-                {{- else }}
-                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
-                {{ end }}
-                "--insecure",
-                "--verbosity=debug"]
+        args:
+          - "--context=/docker-context"
+          {{- if .dstImage }}
+          - "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}"
+          {{- else }}
+          - "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}"
+          {{- end }}
+          - "--insecure"
+          - "--verbosity=debug"
+          - "--kaniko-dir=/kaniko-dir"
         volumeMounts:
+          - name: kaniko-dir
+            mountPath: /kaniko-dir
           - name: dockerfile
             mountPath: /docker-context
           {{- if .dockerConfigSecretName }}
@@ -45,6 +49,8 @@ spec:
       - image: gcr.io/google-containers/pause:3.2
         name: pause
       volumes:
+      - name: kaniko-dir
+        emptyDir: {}
       - name: dockerfile
         configMap:
           name: {{ template "substra.fullname" $ }}-registry-prepopulate-dockerfile-{{ $index }}

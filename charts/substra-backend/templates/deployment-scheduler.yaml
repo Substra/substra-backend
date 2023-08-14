@@ -42,7 +42,7 @@ spec:
           image: {{ include "substra-backend.images.name" (dict "img" .Values.scheduler.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.scheduler.image.pullPolicy }}
           command: ["/bin/bash"]
-          args: ["-c", "celery -A backend beat -l debug"]
+          args: ["-c", "celery -A backend beat -l debug --schedule /var/substra/runtime-db/celerybeat-scheduler"]
           envFrom:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-orchestrator
@@ -70,6 +70,8 @@ spec:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.settings }}
           volumeMounts:
+            - name: runtime-db
+              mountPath: /var/substra/runtime-db
             {{ if .Values.orchestrator.tls.enabled }}
             - name: orchestrator-tls-cacert
               mountPath: /var/substra/orchestrator/tls/server
@@ -81,6 +83,8 @@ spec:
           resources:
             {{- toYaml .Values.scheduler.resources | nindent 12 }}
       volumes:
+      - name: runtime-db
+        emptyDir: {}
       {{ if.Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert
         configMap:

@@ -207,7 +207,6 @@ if __name__ == "__main__":
     args = parse_arguments()
     settings = {}
     settings["Global"] = load_settings_from_file(SETTINGS_FOLDER / "common.py")
-    settings["Secret key"] = load_settings_from_file(SETTINGS_FOLDER / "deps/secret_key.py")
     settings["JWT"] = load_settings_from_file(SETTINGS_FOLDER / "deps/jwt.py")
     settings["Orchestrator"] = load_settings_from_file(SETTINGS_FOLDER / "deps/orchestrator.py")
     settings["Task broker"] = load_settings_from_file(SETTINGS_FOLDER / "deps/celery.py")

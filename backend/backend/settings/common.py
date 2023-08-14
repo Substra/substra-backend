@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import json
 import os
+import secrets
 from datetime import timedelta
 
 import structlog
@@ -21,7 +22,6 @@ from .deps.celery import *
 from .deps.jwt import *
 from .deps.org import *
 from .deps.path import *
-from .deps.secret_key import *
 from .deps.utils import to_bool
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -37,6 +37,11 @@ if os.environ.get("HOST_IP"):
     ALLOWED_HOSTS.append(os.environ.get("HOST_IP"))
 if os.environ.get("POD_IP"):
     ALLOWED_HOSTS.append(os.environ.get("POD_IP"))
+
+
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", secrets.token_urlsafe()  # token_urlsafe uses a "reasonable default" length
+)  # built in Django, but also used for signing JWTs
 
 # Application definition
 
