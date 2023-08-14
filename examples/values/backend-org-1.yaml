@@ -52,8 +52,8 @@ server:
   ingress:
     enabled: true
     hostname: "substra-backend.org-1.com"
+    ingressClassName: nginx
     annotations:
-      kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
       nginx.ingress.kubernetes.io/proxy-body-size: 100m
       nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
