@@ -1,5 +1,10 @@
 # Changelog
 
+## [22.7.1] - 2023-08-16
+
+### Changed
+- Created role no longer request superfluous permissions
+
 ## [22.7.0] - 2023-08-14
 
 ### Changed
