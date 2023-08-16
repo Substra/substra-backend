@@ -32,9 +32,10 @@ logger = structlog.get_logger("worker")
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def save_image_task(self: ComputeTask, function_serialized: str, channel_name: str, function_key: str) -> None:
-    logger.info(f"Starting save_image_task")
+    logger.info("Starting save_image_task")
     logger.info(
-        f"Parameters: function_serialized {function_serialized}, channel_name {channel_name}, function_key {function_key}"
+        f"Parameters: function_serialized {function_serialized}, "
+        f"channel_name {channel_name}, function_key {function_key}"
     )
     # create serialized image
     function = orchestrator.Function.parse_raw(function_serialized)
@@ -56,6 +57,6 @@ def save_image_task(self: ComputeTask, function_serialized: str, channel_name: s
         logger.info("Start saving the serialized image")
         # save it
         FunctionImage.objects.create(
-            function_id=function.key, file=File(file=storage_path.open(mode="rb"), name=f"{container_image_tag}.zip")
+            function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
         )
         logger.info("Serialized image saved")

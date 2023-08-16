@@ -1,6 +1,7 @@
 import structlog
 from django.conf import settings
 from django.db import models
+from django.http import Http404
 from django.urls import reverse
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
@@ -19,16 +20,20 @@ from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import ProcessPermissionFilter
 from api.views.utils import ApiResponse
+from api.views.utils import CustomFileResponse
 from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
+from api.views.utils import to_string_uuid
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from substrapp.models import Function as FunctionFiles
+from substrapp.models import FunctionImage
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import FunctionSerializer as FunctionFilesSerializer
 from substrapp.utils import get_hash
+from substrapp.utils import get_owner
 
 logger = structlog.get_logger(__name__)
 
@@ -209,5 +214,20 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def image(self, request, *args, **kwargs):
-        # TODO fix url
-        return self.download_file(request, Function, "file", "function_address")
+        # TODO refactor the code duplication with api.views.utils.PermissionMixin.download_file
+        channel_name = get_channel_name(request)
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = to_string_uuid(self.kwargs[lookup_url_kwarg])
+        function = Function.objects.filter(channel=channel_name).get(key=key)
+
+        if get_owner() != function.get_owner():
+            return Http404("The function image is only available on the backend who owns the function.")
+
+        try:
+            function_image = FunctionImage.objects.get(function__key=function.key)
+        except FunctionImage.DoesNotExist:
+            return Http404(f"The function image asociated with key {key} is not found.")
+
+        # TODO we love hard-coded size, see also api.views.utils.PermissionMixin._download_remote_file
+        response = CustomFileResponse(streaming_content=(chunk for chunk in function_image.file.chunks(512 * 1024)))
+        return response
