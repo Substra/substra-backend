@@ -47,8 +47,9 @@ def wait_for_image_built(function: orchestrator.Function, channel: str) -> None:
             f"Initial function URI {function.function_address.uri}; "
             f"modified URI{function.function_address.uri.replace('file', 'image')}"
         )
+        # TODO remove hard-coded values
         attempt = 0
-        max_attempts = 10
+        max_attempts = 60
         while attempt < max_attempts:
             try:
                 function_image_content = organization_client.get(
@@ -58,15 +59,20 @@ def wait_for_image_built(function: orchestrator.Function, channel: str) -> None:
                     url=function.function_address.uri.replace("file", "image"),
                     checksum=None,
                 )
+                break
             except OrganizationHttpError:
                 attempt += 1
                 time.sleep(5)
+        else:
+            raise exceptions.PodTimeoutError(
+                f"Build for function {function.key} on backend {function.owner} didn't complete after 300 seconds"
+            )
 
-            os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
-            with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
-                storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
-                storage_path.write_bytes(function_image_content)
-                push_payload(storage_path, registry=REGISTRY, secure=False)
+        os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
+        with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
+            storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
+            storage_path.write_bytes(function_image_content)
+            push_payload(storage_path, registry=REGISTRY, secure=False)
 
             #
             # if exc.status_code == 404:

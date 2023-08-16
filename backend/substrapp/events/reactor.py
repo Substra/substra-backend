@@ -105,7 +105,7 @@ def on_function_event(payload):
             )
 
         else:
-            logger.debug("Function not belonging to this organization, skipping building", asset_key=function.key)
+            logger.debug("Function not belonging to this organization, skipping building", asset_key=orc_function.key)
 
 
 def on_model_event(payload):
