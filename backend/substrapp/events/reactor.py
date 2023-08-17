@@ -16,9 +16,11 @@ from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.task_routing import WORKER_QUEUE
 from substrapp.task_routing import get_builder_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
+from substrapp.tasks.tasks_save_image import save_image_task
 
 logger = structlog.get_logger("events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
@@ -86,8 +88,7 @@ def on_function_event(payload):
     logger.info("Processing function", asset_key=asset_key, kind=event_kind)
 
     if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_CREATED:
-        # TODO: To be replaced by `function.get("owner") == _MY_ORGANIZATION` when building only by owner
-        if True:
+        if orc_function.owner == _MY_ORGANIZATION:
             function_key = orc_function.key
             builder_queue = get_builder_queue()
             logger.info(
@@ -97,11 +98,14 @@ def on_function_event(payload):
             )
             # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
             build_image.apply_async(
-                (orc_function.json(), channel_name, function_key), queue=builder_queue, task_id=function_key
+                (orc_function.json(), channel_name),
+                queue=builder_queue,
+                task_id=function_key,
+                link=save_image_task.s(channel_name=channel_name, function_key=function_key).set(queue=WORKER_QUEUE),
             )
 
         else:
-            logger.debug("Function not belonging to this organization, skipping building", asset_key=function.key)
+            logger.debug("Function not belonging to this organization, skipping building", asset_key=orc_function.key)
 
 
 def on_model_event(payload):
