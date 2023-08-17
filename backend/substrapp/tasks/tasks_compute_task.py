@@ -251,7 +251,7 @@ def _run(
         # start build_image timer
         timer.start()
 
-        wait_for_image_built(ctx.function)
+        wait_for_image_built(ctx.function, channel_name)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())

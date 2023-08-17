@@ -10,6 +10,10 @@ def upload_to(instance, filename) -> str:
     return f"functions/{instance.key}/{filename}"
 
 
+def upload_to_function(instance, filename) -> str:
+    return upload_to(instance.function, filename)
+
+
 class Function(models.Model):
     """Storage Data table"""
 
@@ -30,3 +34,22 @@ class Function(models.Model):
 
     def __str__(self) -> str:
         return f"Function with key {self.key}"
+
+
+class FunctionImage(models.Model):
+    """Serialized Docker image"""
+
+    function = models.OneToOneField(Function, on_delete=models.CASCADE)
+    file = models.FileField(
+        storage=settings.FUNCTION_STORAGE, max_length=500, upload_to=upload_to_function
+    )  # path max length to 500 instead of default 100
+    checksum = models.CharField(max_length=64, blank=True)
+
+    def save(self, *args, **kwargs) -> None:
+        """Use hash of file as checksum"""
+        if not self.checksum and self.file:
+            self.checksum = get_hash(self.file)
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"Function image associated function key {self.function.key}"

@@ -1,12 +1,10 @@
 import structlog
-
-from builder.exceptions import CeleryNoRetryError
-
 from django.conf import settings
 
 import orchestrator
 from backend.celery import app
 from builder.exceptions import BuildRetryError
+from builder.exceptions import CeleryNoRetryError
 from builder.image_builder.image_builder import build_image_if_missing
 from builder.tasks.task import BuildTask
 
@@ -24,7 +22,7 @@ max_retries = settings.CELERY_TASK_MAX_RETRIES
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def build_image(task: BuildTask, function_serialized: str, channel: str, compute_task_key: str) -> None:
+def build_image(task: BuildTask, function_serialized: str, channel: str) -> str:
     function = orchestrator.Function.parse_raw(function_serialized)
 
     attempt = 0
@@ -45,4 +43,4 @@ def build_image(task: BuildTask, function_serialized: str, channel: str, compute
             else:
                 continue
         break
-
+    return function_serialized
