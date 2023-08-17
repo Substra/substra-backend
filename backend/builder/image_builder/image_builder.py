@@ -121,7 +121,6 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> list[str]:
     raise BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
-
 def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> str:
     logs = ""
     if create_pod:

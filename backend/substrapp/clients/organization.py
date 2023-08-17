@@ -178,13 +178,13 @@ def get(
     channel: str,
     organization_id: str,
     url: str,
-    checksum: str,
+    checksum: typing.Optional[str],
     salt: typing.Optional[str] = None,
 ) -> bytes:
     """Get asset data."""
     content = _http_request(_Method.GET, channel, organization_id, url).content
     new_checksum = compute_hash(content, key=salt)
-    if new_checksum != checksum:
+    if checksum is not None and new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
     return content
 
