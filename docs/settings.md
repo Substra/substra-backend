@@ -28,9 +28,11 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `DATABASE_USERNAME` | `backend` |  |
 | int | `DATA_UPLOAD_MAX_SIZE` | `1073741824` (`1024 * 1024 * 1024`) | bytes |
 | bool | `DEBUG_KEEP_POD_AND_DIRS` | `False` |  |
+| string | `DEFAULT_THROTTLE_RATES` | `40` |  |
 | bool | `DJANGO_LOG_SQL_QUERIES` | `True` |  |
 | bool | `ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS` | `False` |  |
 | bool | `ENABLE_METRICS` | `False` |  |
+| bool | `EXPIRY_TOKEN_ENABLED` | `True` |  |
 | int | `EXPIRY_TOKEN_LIFETIME` | `1440` (`24 * 60`) | minutes |
 | bool | `GZIP_MODELS` | `False` |  |
 | string | `HOSTNAME` | nil |  |

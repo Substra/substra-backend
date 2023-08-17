@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - New `SECRET_KEY` optional environment variable ([#671](https://github.com/Substra/substra-backend/pull/671))
+- `/api-token-auth/` and the associated tokens can now be disabled through the `EXPIRY_TOKEN_ENABLED` environment variable and `server.allowImplicitLogin` chart value ([#698](https://github.com/Substra/substra-backend/pull/698))
+- Tokens issued by `/api-token-auth/` can now be deleted like other API tokens, through a `DELETE` request on the `/active-api-tokens` endpoint ([#698](https://github.com/Substra/substra-backend/pull/698))
 
 ### Changed
 
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - BREAKING: `SECRET_KEY_PATH` and `SECRET_KEY_LOAD_AND_STORE` environment variables ([#671](https://github.com/Substra/substra-backend/pull/671))
 - Removed logic for storing `SECRET_KEY` at startup, in order to increase stability; it should be done at a higher level, i.e. the chart ([#671](https://github.com/Substra/substra-backend/pull/671))
+
+## Fixed
+- `/api-token-auth/` sometimes handing out tokens that are about to expire ([#698](https://github.com/Substra/substra-backend/pull/698))
 
 ## [0.40.0](https://github.com/Substra/substra-backend/releases/tag/0.40.0) 2023-07-25
 

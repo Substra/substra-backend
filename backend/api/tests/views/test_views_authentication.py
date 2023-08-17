@@ -113,41 +113,61 @@ class AuthenticationTests(APITestCase):
         endpoint = "/api-token-auth/"
         # clean use
         response = self.client.post(endpoint, {"username": "foo", "password": "baz"})
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
-        self.assertEqual(response.status_code, 200)
-        token_old = response.json()["token"]
-        self.assertTrue(token_old)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        token_old = response.json()
+        self.assertTrue(token_old["token"])
 
-        # token should be updated after a second post
         response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
-        self.assertEqual(response.status_code, 200)
-        token = response.json()["token"]
-        self.assertTrue(token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        token_new = response.json()
+        self.assertTrue(token_new["token"])
 
-        # tokens should be the same
-        self.assertEqual(token_old, token)
+        # tokens shouldn't be the same
+        self.assertNotEqual(token_old["token"], token_new["token"])
 
-        # token count should still be 1
-        tokens_count = ImplicitBearerToken.objects.count()
-        self.assertEqual(tokens_count, 1)
+        def _count_tokens(target):
+            tokens_count = ImplicitBearerToken.objects.count()
+            self.assertEqual(tokens_count, target)
 
-        # test tokens validity
+            # they are reported on the active-api-tokens enpoint
 
-        valid_auth_token_header = f"Token {token}"
-        self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
+            response = self.client.get("/active-api-tokens/")
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            reported_tokens = response.json()["implicit_tokens"]
+            self.assertEqual(len(reported_tokens), target)
 
-        with mock.patch("api.views.utils.get_owner", return_value="foo"):
-            response = self.client.get(self.function_url)
-            self.assertEqual(status.HTTP_200_OK, response.status_code)
+        def _use_token(token, target_code):
+            self.client.credentials(HTTP_AUTHORIZATION=f"Token {token['token']}")
+
+            with mock.patch("api.views.utils.get_owner", return_value="foo"):
+                response = self.client.get(self.function_url)
+                self.assertEqual(response.status_code, target_code)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token_new['token']}")
+        _count_tokens(2)
+
+        # test tokens work
+        _use_token(token_old, status.HTTP_200_OK)
+        _use_token(token_new, status.HTTP_200_OK)
+
+        # delete token
+        response = self.client.delete(f"/active-api-tokens/?id={token_old['id']}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        _count_tokens(1)
+
+        # deleted token doesn't work anymore
+        _use_token(token_new, status.HTTP_200_OK)
+        _use_token(token_old, status.HTTP_401_UNAUTHORIZED)
 
         # usage with an existing token
         # the token should be ignored since the purpose of the view is to authenticate via user/password
-        valid_auth_token_header = f"Token {token}"
-        self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token_new['token']}")
         response = self.client.post(endpoint, {"username": "foo", "password": "bar"})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)

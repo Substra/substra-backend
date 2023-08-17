@@ -24,6 +24,8 @@ data:
   WORKER_REPLICA_SET_NAME: {{ template "substra.fullname" . }}-worker
   ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS: {{ .Values.DataSampleStorageInServerMedia | quote }}
 
+  EXPIRY_TOKEN_ENABLED: {{ .Values.server.allowImplicitLogin | quote }}
+
   {{- range $key, $value := default dict .Values.config }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}

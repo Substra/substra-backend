@@ -46,6 +46,7 @@ psp:
 ## @param server.commonHostDomain The common host under which the backend and frontend are served
 ## @param server.uwsgiProcesses The number of uwsgi processes
 ## @param server.uwsgiThreads The number of uwsgi threads
+## @param server.allowImplicitLogin Allow clients to get API tokens directly with username+password on the `/api-token-auth/` endpoint (ie `Client.login` in the Substra SDK)
 ##
 server:
   replicaCount: 1
@@ -54,6 +55,7 @@ server:
   commonHostDomain: ""
   uwsgiProcesses: 20
   uwsgiThreads: 10
+  allowImplicitLogin: true
 
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry

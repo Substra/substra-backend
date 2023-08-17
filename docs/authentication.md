@@ -57,7 +57,7 @@ curl \
 {"host":"http://testserver","organization_id":"MyOrg1MSP","organization_name":"OrgTestSuite","config":{"model_export_enabled":false},"auth":{},"channel":"mychannel","version":"dev","orchestrator_version":null,"user":"org-1","user_role":"ADMIN"}
 ```
 
-## Bearer token
+## Bearer token (ImplicitBearerToken)
 
 - URL: `/api-token-auth/`
 - Implemented in `backend.views` [module](../backend/backend/views.py)
@@ -66,7 +66,9 @@ curl \
   - The token is stored on server side (in `authtoken_token` table), alongside a creation date and and the user ID.
   - The token is a random string encoded in hexadecimal format. [Source](https://github.com/encode/django-rest-framework/blob/master/rest_framework/authtoken/models.py)
   - The token should be included in the `Authorization` HTTP header
-- The API has a custom layer to handle the token expiration based on its expiry date. [Source](../backend/users/utils/bearer_token.py)
+- The API has a custom layer to handle the token expiration based on its expiry date. [Source](../backend/users/models/token.py)
+  - Expiry date controlled by `settings.EXPIRY_TOKEN_LIFETIME`
+- Only enabled if `settings.EXPIRY_TOKEN_ENABLED` is set
 
 1. Post the credentials using JSON data to download the authentication token (this is the legacy token named implicit in the code).
 
@@ -77,7 +79,7 @@ curl \
   --header 'Content-Type: application/json' \
   --data '{"username":"org-1","password":"p@sswr0d44"}' \
   http://substra-backend.org-1.com/api-token-auth/
-{"expires_at":"<ISO timestamp>","created_at":"<ISO timestamp>","token":"<auth_token_value>"}
+{"expires_at":"<ISO timestamp>","created_at":"<ISO timestamp>","token":"<auth_token_value>","id":"<UUID>"}
 ```
 
 2. Show all existing token
@@ -88,7 +90,7 @@ curl \
   --header 'Content-Type: application/json' \
   --header 'Authorization: Token <auth_token_value>' \
   'http://substra-backend.org-1.com:8000/active-api-tokens/'
-{"tokens": {"id": "<uuid4 id>", "note": "<string>", "expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}, "implicit_token":{"expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}}
+{"tokens": {"id": "<UUID>", "note": "<string>", "expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>"}, "implicit_tokens":[{"expires_at":"<ISO timestamp>", "created_at":"<ISO timestamp>","id":"<UUID>"}]}
 ```
 
 3. Create a new token using token authentication ("expires_at" must be null or DDDD-MM-YY)
@@ -103,7 +105,7 @@ curl --request POST \
   {"id": "<uuid4 id>", "note": "<string>", "expires_at":"<ISO timestamp or null>", "created_at":"<ISO timestamp>, "token":"<auth_token_value>}
 ```
 
-4. Fetch any asset with the authentication token in the header.
+4. Fetch any asset with the authentication token in the header
 
 ```bash
 curl \
@@ -111,6 +113,13 @@ curl \
   --header 'Authorization: Token <auth_token_value>' \
   http://substra-backend.org-1.com/info/
 {"host":"http://testserver","organization_id":"MyOrg1MSP","organization_name":"OrgTestSuite","config":{"model_export_enabled":false},"auth":{},"channel":"mychannel","version":"dev","orchestrator_version":null,"user":"org-1","user_role":"ADMIN"}
+```
+
+5. Delete a token
+
+``` bash
+curl -X DELETE --header 'Authorization: Token <auth_token_value>' http://substra-backend.org-1.com/active-api-tokens/?id=<UUID>
+{"message":"Token removed"}
 ```
 
 ### Bearer tokens when already authenticated

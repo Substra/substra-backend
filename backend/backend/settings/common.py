@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import json
 import os
 import secrets
-from datetime import timedelta
 
 import structlog
 from django.core.files.storage import FileSystemStorage
@@ -242,7 +241,6 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 # Uploaded file max size, in bytes
 DATA_UPLOAD_MAX_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_SIZE", 1024 * 1024 * 1024))  # bytes
 
-EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get("EXPIRY_TOKEN_LIFETIME", 24 * 60)))  # minutes
 
 GZIP_MODELS = to_bool(os.environ.get("GZIP_MODELS", False))
 

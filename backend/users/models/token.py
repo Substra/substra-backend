@@ -23,8 +23,12 @@ class BearerToken(Token):
 
 class ImplicitBearerToken(Token):
     """
-    Legacy token to make the endpoint api-token-auth/ work like it used to
+    Separate from frontend-visible BearerTokens,
+    so the behavior of /api-token-auth/ stays the same
     """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="implicit_bearer_tokens", on_delete=models.CASCADE)
+    id = models.UUIDField(default=uuid.uuid4, editable=False)
 
     @property
     def expires_at(self) -> datetime:
@@ -34,14 +38,17 @@ class ImplicitBearerToken(Token):
     def is_expired(self) -> bool:
         return self.expires_at < timezone.now()
 
-    @transaction.atomic
-    def handle_expiration(self) -> "ImplicitBearerToken":
-        """
-        If token is expired a new token will be created and the old one removed.
-        """
-        if self.is_expired:
-            user = self.user
-            self.delete()
-            token = ImplicitBearerToken.objects.create(user=user)
-            return token
-        return self
+
+@transaction.atomic
+def get_implicit_bearer_token(user) -> ImplicitBearerToken:
+    """
+    clean up expired tokens
+    """
+    tokens = ImplicitBearerToken.objects.filter(user=user)
+    to_delete = []
+    for token in tokens:
+        if token.is_expired:
+            to_delete.append(token)
+    for token in to_delete:
+        token.delete()
+    return ImplicitBearerToken.objects.create(user=user)
