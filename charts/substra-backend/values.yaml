@@ -55,7 +55,7 @@ server:
   commonHostDomain: ""
   uwsgiProcesses: 20
   uwsgiThreads: 10
-  allowImplicitLogin: false
+  allowImplicitLogin: true
 
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry
