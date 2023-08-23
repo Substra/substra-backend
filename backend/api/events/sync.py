@@ -92,6 +92,7 @@ def _update_function(key: str, data: dict) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
     function.name = data["name"]
+    function.status = data["status"]
     function.save()
 
 
