@@ -48,6 +48,7 @@ from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
 from substrapp.compute_tasks.execute import execute_compute_task
+from substrapp.compute_tasks.image_builder import load_remote_function_image
 from substrapp.compute_tasks.image_builder import wait_for_image_built
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
@@ -56,6 +57,7 @@ from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import Timer
+from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
 from substrapp.utils.errors import store_failure
@@ -266,6 +268,9 @@ def _run(
         timer.start()
 
         wait_for_image_built(ctx.function, channel_name)
+
+        if get_owner() != ctx.function.owner:
+            load_remote_function_image(ctx.function, channel_name)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
