@@ -8,6 +8,7 @@ from django.core.files import File
 
 import orchestrator
 from backend.celery import app
+from builder.tasks.task import SaveImageTask
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
@@ -26,17 +27,14 @@ logger = structlog.get_logger("worker")
     acks_late=True,
     reject_on_worker_lost=True,
     ignore_result=False,
-    base=ComputeTask,
+    base=SaveImageTask,
 )
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def save_image_task(self: ComputeTask, function_serialized: str, channel_name: str, function_key: str) -> None:
+def save_image_task(task: ComputeTask, function_serialized: str, channel_name: str) -> tuple[str, str]:
     logger.info("Starting save_image_task")
-    logger.info(
-        f"Parameters: function_serialized {function_serialized}, "
-        f"channel_name {channel_name}, function_key {function_key}"
-    )
+    logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
     # create serialized image
     function = orchestrator.Function.parse_raw(function_serialized)
     container_image_tag = utils.container_image_tag_from_function(function)
@@ -60,3 +58,5 @@ def save_image_task(self: ComputeTask, function_serialized: str, channel_name: s
             function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
         )
         logger.info("Serialized image saved")
+
+    return function_serialized, channel_name
