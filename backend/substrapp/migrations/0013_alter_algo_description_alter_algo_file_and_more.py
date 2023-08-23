@@ -4,7 +4,7 @@ import django.core.files.storage
 from django.db import migrations
 from django.db import models
 
-import substrapp.models.compute_task_failure_report
+import substrapp.models.celery_task_failure_report
 import substrapp.models.datamanager
 import substrapp.models.function
 
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 max_length=36,
                 storage=django.core.files.storage.FileSystemStorage(),
-                upload_to=substrapp.models.compute_task_failure_report._upload_to,
+                upload_to=substrapp.models.celery_task_failure_report._upload_to,
             ),
         ),
         migrations.AlterField(

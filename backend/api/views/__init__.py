@@ -1,8 +1,8 @@
+from .celery_task_logs import CeleryTaskLogsViewSet
 from .compute_plan_graph import get_cp_graph
 from .computeplan import ComputePlanViewSet
 from .computetask import ComputeTaskViewSet
 from .computetask import CPTaskViewSet
-from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
 from .datasample import DataSampleViewSet
@@ -31,7 +31,7 @@ __all__ = [
     "CPTaskViewSet",
     "CPFunctionViewSet",
     "NewsFeedViewSet",
-    "ComputeTaskLogsViewSet",
+    "CeleryTaskLogsViewSet",
     "CPPerformanceViewSet",
     "ComputePlanMetadataViewSet",
     "PerformanceViewSet",

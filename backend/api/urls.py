@@ -25,7 +25,7 @@ router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_pla
 router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, basename="compute_plan_metadata")
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
 router.register(r"performance", views.PerformanceViewSet, basename="performance")
-router.register(r"logs", views.ComputeTaskLogsViewSet, basename="logs")
+router.register(r"logs", views.CeleryTaskLogsViewSet, basename="logs")
 router.register(r"task_profiling", views.TaskProfilingViewSet, basename="task_profiling")
 
 task_profiling_router = routers.NestedDefaultRouter(router, r"task_profiling", lookup="task_profiling")
