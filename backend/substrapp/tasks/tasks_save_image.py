@@ -13,6 +13,7 @@ from django.urls import reverse
 import orchestrator
 from api.models import Function as ApiFunction
 from backend.celery import app
+from builder.tasks.task import SaveImageTask
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
