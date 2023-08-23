@@ -13,11 +13,11 @@ from api.tests import asset_factory as factory
 from api.views import utils as view_utils
 from organization import authentication as organization_auth
 from organization import models as organization_models
-from substrapp.models import ComputeTaskFailureReport
+from substrapp.models import CeleryTaskFailureReport
 
 
 @pytest.fixture
-def compute_task_failure_report() -> tuple[ComputeTask, ComputeTaskFailureReport]:
+def compute_task_failure_report() -> tuple[ComputeTask, CeleryTaskFailureReport]:
     compute_task = factory.create_computetask(
         factory.create_computeplan(),
         factory.create_function(),

@@ -2,6 +2,7 @@ import io
 
 import pytest
 
+from builder.exceptions import BuildError
 from orchestrator import failure_report_pb2
 from substrapp.compute_tasks import errors
 
@@ -19,7 +20,7 @@ class TestComputeTaskErrorType:
 @pytest.mark.parametrize(
     ("exc", "expected"),
     [
-        (errors.BuildError(logs="some build error"), failure_report_pb2.ERROR_TYPE_BUILD),
+        (BuildError(logs="some build error"), failure_report_pb2.ERROR_TYPE_BUILD),
         (errors.ExecutionError(logs=io.BytesIO()), failure_report_pb2.ERROR_TYPE_EXECUTION),
         (Exception(), failure_report_pb2.ERROR_TYPE_INTERNAL),
     ],

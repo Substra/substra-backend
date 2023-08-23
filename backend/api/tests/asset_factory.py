@@ -80,7 +80,7 @@ from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
 from api.models import TaskProfiling
-from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
+from substrapp.models import CeleryTaskFailureReport
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
 from substrapp.models import Function as FunctionFiles
@@ -537,17 +537,35 @@ def create_model_files(
 def create_computetask_logs(
     compute_task_key: uuid.UUID,
     logs: files.File = None,
-) -> ComputeTaskLogs:
+) -> CeleryTaskFailureReport:
     if logs is None:
         logs = files.base.ContentFile("dummy content")
 
-    compute_task_logs = ComputeTaskLogs.objects.create(
-        compute_task_key=compute_task_key,
+    compute_task_logs = CeleryTaskFailureReport.objects.create(
+        asset_key=compute_task_key,
+        asset_type="COMPUTE_TASK",
         logs_checksum=get_hash(logs),
         creation_date=timezone.now(),
     )
     compute_task_logs.logs.save("logs", logs)
     return compute_task_logs
+
+
+def create_function_build_logs(
+    function_key: uuid.UUID,
+    logs: files.File = None,
+) -> CeleryTaskFailureReport:
+    if logs is None:
+        logs = files.base.ContentFile("dummy content")
+
+    function_build_logs = CeleryTaskFailureReport.objects.create(
+        asset_key=function_key,
+        asset_type="FUNCTION",
+        logs_checksum=get_hash(logs),
+        creation_date=timezone.now(),
+    )
+    function_build_logs.logs.save("logs", logs)
+    return function_build_logs
 
 
 def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:

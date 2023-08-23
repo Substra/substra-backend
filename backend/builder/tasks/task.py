@@ -6,6 +6,7 @@ from celery import Task
 from django.conf import settings
 
 import orchestrator
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils.errors import store_failure
 
@@ -40,7 +41,7 @@ class BuildTask(Task):
         asset_type = "FUNCTION"
 
         failure_report = store_failure(exc=exc, asset_key=asset_key, asset_type=asset_type)
-        error_type = "Build Error"
+        error_type = compute_task_errors.get_error_type(exc)
 
         with get_orchestrator_client(channel_name) as client:
             # On the backend, only execution errors lead to the creation of compute task failure report instances
