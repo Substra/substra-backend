@@ -55,6 +55,7 @@ class Function(models.Model, AssetPermissionMixin):
     permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     owner = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
+    logs_address = models.URLField(validators=[URLValidatorWithOptionalTLD()], null=True)
     metadata = models.JSONField()
     channel = models.CharField(max_length=100)
 

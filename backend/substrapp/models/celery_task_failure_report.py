@@ -20,7 +20,7 @@ class CeleryTaskFailureReport(models.Model):
     """Store information relative to a celery task."""
 
     asset_key = models.UUIDField(primary_key=True, editable=False)
-    asset_type = models.CharField(max_length=_UUID_STRING_REPR_LENGTH)
+    asset_type = models.CharField(max_length=100)
     logs = models.FileField(
         storage=settings.COMPUTE_TASK_LOGS_STORAGE, max_length=_UUID_STRING_REPR_LENGTH, upload_to=_upload_to
     )
@@ -37,5 +37,5 @@ class CeleryTaskFailureReport(models.Model):
 
     @property
     def logs_address(self) -> str:
-        logs_path = f"{LOGS_BASE_PATH}/{self.asset_type}/{self.asset_key}/{LOGS_FILE_PATH}/"
+        logs_path = f"{LOGS_BASE_PATH}/{self.asset_key}/{LOGS_FILE_PATH}/"
         return urllib.parse.urljoin(settings.DEFAULT_DOMAIN, logs_path)

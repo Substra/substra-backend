@@ -106,9 +106,10 @@ class ComputeTask(Task):
         close_old_connections()
 
         channel_name, task = self.split_args(args)
-        compute_task_key = task.key
+        asset_key = task.key
+        asset_type = "COMPUTE_TASK"
 
-        failure_report = store_failure(exc, compute_task_key)
+        failure_report = store_failure(exc=exc, asset_key=asset_key, asset_type=asset_type)
         error_type = compute_task_errors.get_error_type(exc)
 
         with get_orchestrator_client(channel_name) as client:
@@ -123,7 +124,12 @@ class ComputeTask(Task):
                 logs_address = None
 
             client.register_failure_report(
-                {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
+                {
+                    "asset_key": asset_key,
+                    "asset_type": asset_type,
+                    "error_type": error_type,
+                    "logs_address": logs_address,
+                }
             )
 
     def split_args(self, celery_args: tuple) -> tuple[str, orchestrator.ComputeTask]:
