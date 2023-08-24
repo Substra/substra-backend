@@ -13,7 +13,7 @@ _SHA256_STRING_REPR_LENGTH: Final[int] = 256 // 4
 
 
 def _upload_to(instance: "CeleryTaskFailureReport", _filename: str) -> str:
-    return str(instance.compute_task_key)
+    return str(instance.asset_key)
 
 
 class CeleryTaskFailureReport(models.Model):

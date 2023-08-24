@@ -28,3 +28,5 @@ ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA = 0
 
 LEDGER_MSP_ID = "testOrgMSP"
 LEDGER_CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}}}
+
+IMAGE_BUILD_TIMEOUT = 3 * 60 * 60  # 3 hours
