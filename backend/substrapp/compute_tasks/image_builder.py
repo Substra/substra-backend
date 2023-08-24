@@ -4,6 +4,7 @@ import time
 from tempfile import TemporaryDirectory
 
 import structlog
+from django.conf import settings
 
 import orchestrator
 import substrapp.clients.organization as organization_client

@@ -26,9 +26,6 @@ from rest_framework import status
 
 import orchestrator
 from backend.celery import app
-from builder.tasks.tasks_build_image import build_image
-from substrapp import models
-from substrapp import utils
 from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
@@ -148,13 +145,6 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
             celery_task_key=task.key,
         )
         return
-
-    # add image build to the Celery queue
-    with get_orchestrator_client(channel_name) as client:
-        function = client.query_function(task.function_key)
-    builder_queue = get_builder_queue()
-    # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
-    build_image.apply_async((function.json(),), queue=builder_queue, task_id=function.key)
 
     with get_orchestrator_client(channel_name) as client:
         if not task_utils.is_task_runnable(task.key, client):
