@@ -415,15 +415,15 @@ class ApplyFunctionActionParam(google.protobuf.message.Message):
 
     FUNCTION_KEY_FIELD_NUMBER: builtins.int
     ACTION_FIELD_NUMBER: builtins.int
-    Function_key: builtins.str
+    function_key: builtins.str
     action: global___FunctionAction.ValueType
     def __init__(
         self,
         *,
-        Function_key: builtins.str = ...,
+        function_key: builtins.str = ...,
         action: global___FunctionAction.ValueType = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["Function_key", b"Function_key", "action", b"action"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["action", b"action", "function_key", b"function_key"]) -> None: ...
 
 global___ApplyFunctionActionParam = ApplyFunctionActionParam
 

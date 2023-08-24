@@ -38,7 +38,7 @@ class BaseBuilderTask(Task):
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:
             client.update_function_status(
-                {"function_key": function_key, "action": orchestrator.function_pb2.FUNCTION_ACTION_FAILED}
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_FAILED
             )
 
     # Returns (function key, channel)
@@ -56,7 +56,7 @@ class SaveImageTask(BaseBuilderTask):
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:
             client.update_function_status(
-                {"function_key": function_key, "action": orchestrator.function_pb2.FUNCTION_ACTION_READY}
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
             )
 
 
@@ -90,7 +90,7 @@ class BuildTask(BaseBuilderTask):
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:
             client.update_function_status(
-                {"function_key": function_key, "action": orchestrator.function_pb2.FUNCTION_ACTION_BUILDING}
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_BUILDING
             )
 
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
