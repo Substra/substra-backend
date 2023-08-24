@@ -61,7 +61,6 @@ class SaveImageTask(BaseBuilderTask):
 
 
 class BuildTask(BaseBuilderTask):
-
     #  def on_failure(
     #     self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
     # ) -> None:
