@@ -14,6 +14,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
+from api.errors import AssetPermissionError
 from api.models import Function
 from api.serializers import FunctionSerializer
 from api.views.filters_utils import CharInFilter
@@ -24,7 +25,6 @@ from api.views.utils import CustomFileResponse
 from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
-from api.views.utils import to_string_uuid
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
@@ -214,11 +214,10 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def image(self, request, *args, **kwargs):
-        # TODO refactor the code duplication with api.views.utils.PermissionMixin.download_file
-        channel_name = get_channel_name(request)
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = to_string_uuid(self.kwargs[lookup_url_kwarg])
-        function = Function.objects.filter(channel=channel_name).get(key=key)
+        try:
+            function = self.get_asset(request, asset_class=Function)
+        except AssetPermissionError as e:
+            return ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         if get_owner() != function.get_owner():
             return Http404("The function image is only available on the backend who owns the function.")
@@ -226,7 +225,10 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
         try:
             function_image = FunctionImage.objects.get(function__key=function.key)
         except FunctionImage.DoesNotExist:
-            return Http404(f"The function image asociated with key {key} is not found.")
+            return ApiResponse(
+                {"detail": f"The function image associated with key {function.key} is not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # TODO we love hard-coded size, see also api.views.utils.PermissionMixin._download_remote_file
         response = CustomFileResponse(streaming_content=(chunk for chunk in function_image.file.chunks(512 * 1024)))
