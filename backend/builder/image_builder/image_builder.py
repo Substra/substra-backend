@@ -10,6 +10,7 @@ from django.conf import settings
 import orchestrator
 from builder import docker
 from builder import exceptions
+from builder.docker import container_image_exists
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.kubernetes import get_pod_logs
