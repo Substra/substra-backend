@@ -85,14 +85,19 @@ def _create_function(channel: str, data: dict) -> None:
 def _on_update_function_event(event: dict) -> None:
     """Process update function event to update local database."""
     logger.debug("Syncing function update", asset_key=event["asset_key"], event_id=event["id"])
-    _update_function(key=event["asset_key"], data=event["function"])
+    function = event["function"]
+    _update_function(key=event["asset_key"], name=function["name"], status=function["status"])
 
 
-def _update_function(key: str, data: dict) -> None:
+def _update_function(key: str, *, name: Optional[str], status: Optional[str]) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
-    function.name = data["name"]
-    function.status = data["status"]
+
+    if name:
+        function.name = name
+    if status:
+        function.status = status
+
     function.save()
 
 

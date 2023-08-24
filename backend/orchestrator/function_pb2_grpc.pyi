@@ -24,9 +24,9 @@ class FunctionServiceStub:
         function_pb2.UpdateFunctionParam,
         function_pb2.UpdateFunctionResponse,
     ]
-    UpdateFunctionStatus: grpc.UnaryUnaryMultiCallable[
-        function_pb2.UpdateFunctionStatusParam,
-        function_pb2.UpdateFunctionStatusResponse,
+    ApplyFunctionAction: grpc.UnaryUnaryMultiCallable[
+        function_pb2.ApplyFunctionActionParam,
+        function_pb2.ApplyFunctionActionResponse,
     ]
 
 class FunctionServiceServicer(metaclass=abc.ABCMeta):
@@ -55,10 +55,10 @@ class FunctionServiceServicer(metaclass=abc.ABCMeta):
         context: grpc.ServicerContext,
     ) -> function_pb2.UpdateFunctionResponse: ...
     @abc.abstractmethod
-    def UpdateFunctionStatus(
+    def ApplyFunctionAction(
         self,
-        request: function_pb2.UpdateFunctionStatusParam,
+        request: function_pb2.ApplyFunctionActionParam,
         context: grpc.ServicerContext,
-    ) -> function_pb2.UpdateFunctionStatusResponse: ...
+    ) -> function_pb2.ApplyFunctionActionResponse: ...
 
 def add_FunctionServiceServicer_to_server(servicer: FunctionServiceServicer, server: grpc.Server) -> None: ...

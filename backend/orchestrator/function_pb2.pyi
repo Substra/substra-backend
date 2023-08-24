@@ -20,6 +20,27 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+class _FunctionAction:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _FunctionActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_FunctionAction.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    FUNCTION_ACTION_UNKNOWN: _FunctionAction.ValueType  # 0
+    FUNCTION_ACTION_BUILDING: _FunctionAction.ValueType  # 1
+    FUNCTION_ACTION_CANCELED: _FunctionAction.ValueType  # 2
+    FUNCTION_ACTION_FAILED: _FunctionAction.ValueType  # 3
+    FUNCTION_ACTION_READY: _FunctionAction.ValueType  # 4
+
+class FunctionAction(_FunctionAction, metaclass=_FunctionActionEnumTypeWrapper): ...
+
+FUNCTION_ACTION_UNKNOWN: FunctionAction.ValueType  # 0
+FUNCTION_ACTION_BUILDING: FunctionAction.ValueType  # 1
+FUNCTION_ACTION_CANCELED: FunctionAction.ValueType  # 2
+FUNCTION_ACTION_FAILED: FunctionAction.ValueType  # 3
+FUNCTION_ACTION_READY: FunctionAction.ValueType  # 4
+global___FunctionAction = FunctionAction
+
 class _FunctionStatus:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
@@ -389,29 +410,29 @@ class UpdateFunctionResponse(google.protobuf.message.Message):
 global___UpdateFunctionResponse = UpdateFunctionResponse
 
 @typing_extensions.final
-class UpdateFunctionStatusParam(google.protobuf.message.Message):
+class ApplyFunctionActionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    KEY_FIELD_NUMBER: builtins.int
-    STATUS_FIELD_NUMBER: builtins.int
-    key: builtins.str
-    status: global___FunctionStatus.ValueType
+    FUNCTION_KEY_FIELD_NUMBER: builtins.int
+    ACTION_FIELD_NUMBER: builtins.int
+    Function_key: builtins.str
+    action: global___FunctionAction.ValueType
     def __init__(
         self,
         *,
-        key: builtins.str = ...,
-        status: global___FunctionStatus.ValueType = ...,
+        Function_key: builtins.str = ...,
+        action: global___FunctionAction.ValueType = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "status", b"status"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["Function_key", b"Function_key", "action", b"action"]) -> None: ...
 
-global___UpdateFunctionStatusParam = UpdateFunctionStatusParam
+global___ApplyFunctionActionParam = ApplyFunctionActionParam
 
 @typing_extensions.final
-class UpdateFunctionStatusResponse(google.protobuf.message.Message):
+class ApplyFunctionActionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     def __init__(
         self,
     ) -> None: ...
 
-global___UpdateFunctionStatusResponse = UpdateFunctionStatusResponse
+global___ApplyFunctionActionResponse = ApplyFunctionActionResponse
