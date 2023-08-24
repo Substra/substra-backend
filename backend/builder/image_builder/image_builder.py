@@ -8,6 +8,7 @@ from django.conf import settings
 
 import orchestrator
 from builder import exceptions
+from builder.docker import container_image_exists
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.kubernetes import get_pod_logs
@@ -19,7 +20,6 @@ from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.datastore import Datastore
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
-from substrapp.docker_registry import container_image_exists
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_security_context
 from substrapp.lock_local import lock_resource
