@@ -230,6 +230,7 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # TODO we love hard-coded size, see also api.views.utils.PermissionMixin._download_remote_file
-        response = CustomFileResponse(streaming_content=(chunk for chunk in function_image.file.chunks(512 * 1024)))
+        response = CustomFileResponse(
+            streaming_content=(chunk for chunk in function_image.file.chunks(self.chunk_size))
+        )
         return response

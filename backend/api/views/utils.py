@@ -66,6 +66,7 @@ class CustomFileResponse(django.http.FileResponse):
 class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthorized]
+    chunk_size = 512 * 1024
 
     def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Returns true if API consumer is allowed to access data.
@@ -142,7 +143,7 @@ class PermissionMixin(object):
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
         )
         response = CustomFileResponse(
-            streaming_content=(chunk for chunk in proxy_response.iter_content(512 * 1024)),
+            streaming_content=(chunk for chunk in proxy_response.iter_content(self.chunk_size)),
             status=proxy_response.status_code,
         )
 
