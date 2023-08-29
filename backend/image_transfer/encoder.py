@@ -139,7 +139,7 @@ def create_zip_from_docker_images(
 def make_payload(
     zip_file: Union[IO, Path, str],
     docker_images_to_transfer: list[str],
-    docker_images_already_transferred: list[str] = [],
+    docker_images_already_transferred: Optional[list[str]] = None,
     registry: str = "registry-1.docker.io",
     secure: bool = True,
     username: Optional[str] = None,
@@ -169,6 +169,8 @@ def make_payload(
         password: The password to use for authentication to the registry. Optional if
             the registry doesn't require authentication.
     """
+    if docker_images_already_transferred is None:
+        docker_images_already_transferred = []
     authenticator = Authenticator(username, password)
 
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
