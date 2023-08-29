@@ -60,10 +60,3 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
         storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
         storage_path.write_bytes(function_image_content)
         push_payload(storage_path, registry=REGISTRY, secure=False)
-
-        #
-        # if exc.status_code == 404:
-        #     raise exceptions.CeleryRetryError(f"Function {function.key} was not found
-        #     on backend {function.owner}")
-        # else:
-        #     raise exceptions.CeleryNoRetryError("I've got a bad feeling about this.")

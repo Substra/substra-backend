@@ -36,6 +36,7 @@ class FunctionViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
+        self.maxDiff = None
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
@@ -104,6 +105,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "model": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_CREATED",
             },
             {
                 "key": str(aggregate_function.key),
@@ -135,6 +137,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "model": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_CREATED",
             },
             {
                 "key": str(composite_function.key),
@@ -170,6 +173,7 @@ class FunctionViewTests(APITestCase):
                     "local": {"kind": "ASSET_MODEL", "multiple": False},
                     "shared": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_CREATED",
             },
             {
                 "key": str(predict_function.key),
@@ -204,6 +208,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "predictions": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_CREATED",
             },
             {
                 "key": str(metric_function.key),
@@ -237,6 +242,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "performance": {"kind": "ASSET_PERFORMANCE", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_CREATED",
             },
         ]
 
@@ -448,6 +454,7 @@ class FunctionViewTests(APITestCase):
                 "function": data["function"],
                 "inputs": data["inputs"],
                 "outputs": data["outputs"],
+                "status": Function.Status.FUNCTION_STATUS_CREATED,
             }
 
         function_path = os.path.join(FIXTURE_PATH, filename)
@@ -477,6 +484,7 @@ class FunctionViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_function", side_effect=mock_orc_response):
             response = self.client.post(self.url, data=data, format="multipart")
+        print(response.data)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db

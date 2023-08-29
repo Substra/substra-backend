@@ -236,6 +236,7 @@ def create_function(
         creation_date=timezone.now(),
         owner=owner,
         channel=channel,
+        status=Function.Status.FUNCTION_STATUS_CREATED,
         **get_permissions(owner, public),
     )
 
