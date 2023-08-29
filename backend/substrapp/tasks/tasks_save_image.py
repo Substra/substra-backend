@@ -1,18 +1,21 @@
 import os
 import pathlib
 from tempfile import TemporaryDirectory
+from typing import Any
 
 import structlog
+from billiard.einfo import ExceptionInfo
+from celery import Task
 from django.conf import settings
 from django.core.files import File
 
 import orchestrator
 from backend.celery import app
-from builder.tasks.task import SaveImageTask
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.models import FunctionImage
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_task import ComputeTask
 
 REGISTRY = settings.REGISTRY
@@ -20,6 +23,45 @@ REGISTRY_SCHEME = settings.REGISTRY_SCHEME
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 
 logger = structlog.get_logger("worker")
+
+
+class SaveImageTask(Task):
+    autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
+    max_retries = settings.CELERY_TASK_MAX_RETRIES
+    retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
+    retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
+    retry_jitter = settings.CELERY_TASK_RETRY_JITTER
+    acks_late = True
+    reject_on_worker_lost = True
+    ignore_result = False
+
+    @property
+    def attempt(self) -> int:
+        return self.request.retries + 1  # type: ignore
+
+    def on_failure(
+        self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
+    ) -> None:
+        logger.error(exc)
+        logger.error(einfo)
+        function_key, channel_name = self.get_task_info(args, kwargs)
+        with get_orchestrator_client(channel_name) as client:
+            client.update_function_status(
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_FAILED
+            )
+
+    # Returns (function key, channel)
+    def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
+        function = orchestrator.Function.parse_raw(kwargs.get("function_serialized"))
+        channel_name = kwargs.get("channel_name")
+        return function.key, channel_name
+
+    def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
+        function_key, channel_name = self.get_task_info(args, kwargs)
+        with get_orchestrator_client(channel_name) as client:
+            client.update_function_status(
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
+            )
 
 
 @app.task(

@@ -13,10 +13,10 @@ from substrapp.orchestrator import get_orchestrator_client
 # from substrapp.utils.errors import store_failure
 
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger("builder")
 
 
-class BaseBuilderTask(Task):
+class BuildTask(Task):
     autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
     max_retries = settings.CELERY_TASK_MAX_RETRIES
     retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
@@ -41,26 +41,6 @@ class BaseBuilderTask(Task):
                 function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_FAILED
             )
 
-    # Returns (function key, channel)
-    def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        raise NotImplementedError
-
-
-class SaveImageTask(BaseBuilderTask):
-    def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        function = orchestrator.Function.parse_raw(args[0])
-        channel_name = kwargs.get("channel_name")
-        return function.key, channel_name
-
-    def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
-        function_key, channel_name = self.get_task_info(args, kwargs)
-        with get_orchestrator_client(channel_name) as client:
-            client.update_function_status(
-                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
-            )
-
-
-class BuildTask(BaseBuilderTask):
     #  def on_failure(
     #     self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
     # ) -> None:

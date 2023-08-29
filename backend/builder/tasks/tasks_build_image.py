@@ -1,10 +1,6 @@
 import structlog
 from django.conf import settings
 
-from builder.exceptions import CeleryNoRetryError
-
-from django.conf import settings
-
 import orchestrator
 from backend.celery import app
 from builder.exceptions import BuildRetryError
@@ -44,4 +40,3 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
             else:
                 continue
         break
-    return function_serialized

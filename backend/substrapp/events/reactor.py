@@ -97,12 +97,14 @@ def on_function_event(payload):
                 queue=builder_queue,
             )
 
+            building_params = {
+                "channel_name": channel_name,
+                "function_serialized": orc_function.json(),
+            }
             (
                 # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
-                build_image.s(channel_name=channel_name, function_serialized=orc_function.json()).set(
-                    queue=builder_queue, task_id=function_key
-                )
-                | save_image_task.s(channel_name=channel_name).set(queue=WORKER_QUEUE, task_id=function_key)
+                build_image.si(**building_params).set(queue=builder_queue, task_id=function_key)
+                | save_image_task.si(**building_params).set(queue=WORKER_QUEUE, task_id=function_key)
             ).apply_async()
 
         else:
