@@ -209,7 +209,7 @@ def _run(
                 raise compute_task_errors.CeleryRetryError() from e
 
         if get_owner() != ctx.function.owner:
-            load_remote_function_image(ctx.function, channel_name)
+            image_builder.load_remote_function_image(ctx.function, channel_name)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
