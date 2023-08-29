@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import structlog
+from billiard.einfo import ExceptionInfo
+from celery import Task
 from django.conf import settings
 from django.core.files import File
 from django.urls import reverse
@@ -13,7 +15,6 @@ from django.urls import reverse
 import orchestrator
 from api.models import Function as ApiFunction
 from backend.celery import app
-from builder.tasks.task import SaveImageTask
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY

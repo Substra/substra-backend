@@ -1,10 +1,6 @@
 import structlog
 from django.conf import settings
 
-from builder.exceptions import CeleryNoRetryError
-
-from django.conf import settings
-
 import orchestrator
 from backend.celery import app
 from builder.exceptions import BuildRetryError
