@@ -65,7 +65,7 @@ class BuildTask(Task):
     #         {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
     #     )
 
-    def before_start(self, task_id, args, kwargs):
+    def before_start(self, task_id: str, args: tuple, kwargs: dict) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:
             client.update_function_status(
@@ -73,6 +73,6 @@ class BuildTask(Task):
             )
 
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        function = orchestrator.Function.parse_raw(kwargs.get("function_serialized"))
-        channel_name = kwargs.get("channel_name")
+        function = orchestrator.Function.parse_raw(kwargs["function_serialized"])
+        channel_name = kwargs["channel_name"]
         return function.key, channel_name

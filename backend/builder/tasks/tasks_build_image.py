@@ -19,7 +19,7 @@ max_retries = settings.CELERY_TASK_MAX_RETRIES
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def build_image(task: BuildTask, function_serialized: str, channel_name: str) -> tuple[str, str]:
+def build_image(task: BuildTask, function_serialized: str, channel_name: str) -> None:
     function = orchestrator.Function.parse_raw(function_serialized)
 
     attempt = 0

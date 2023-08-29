@@ -1,6 +1,7 @@
 import json
 import os
 from tempfile import TemporaryDirectory
+from typing import Union
 
 import kubernetes
 import structlog
@@ -174,7 +175,7 @@ def _build_container_image(path: str, tag: str) -> None:
     _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
 
-def _assert_dockerfile_exist(dockerfile_path: os.PathLike) -> None:
+def _assert_dockerfile_exist(dockerfile_path: Union[str, os.PathLike]) -> None:
     dockerfile_fullpath = os.path.join(dockerfile_path, "Dockerfile")
     if not os.path.exists(dockerfile_fullpath):
         raise BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")

@@ -52,8 +52,8 @@ class SaveImageTask(Task):
 
     # Returns (function key, channel)
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        function = orchestrator.Function.parse_raw(kwargs.get("function_serialized"))
-        channel_name = kwargs.get("channel_name")
+        function = orchestrator.Function.parse_raw(kwargs["function_serialized"])
+        channel_name = kwargs["channel_name"]
         return function.key, channel_name
 
     def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
