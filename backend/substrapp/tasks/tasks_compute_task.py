@@ -29,6 +29,7 @@ from backend.celery import app
 from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks import image_builder
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
 from substrapp.compute_tasks.asset_buffer import clear_assets_buffer
@@ -45,8 +46,6 @@ from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
 from substrapp.compute_tasks.execute import execute_compute_task
-from substrapp.compute_tasks.image_builder import load_remote_function_image
-from substrapp.compute_tasks.image_builder import wait_for_image_built
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
@@ -257,10 +256,10 @@ def _run(
         # start build_image timer
         timer.start()
 
-        wait_for_image_built(ctx.function, channel_name)
+        image_builder.wait_for_image_built(ctx.function, channel_name)
 
         if get_owner() != ctx.function.owner:
-            load_remote_function_image(ctx.function, channel_name)
+            image_builder.load_remote_function_image(ctx.function, channel_name)
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
