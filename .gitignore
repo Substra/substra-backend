@@ -125,3 +125,7 @@ backend/node/nodes/*
 # charts tmp files
 charts/substra-backend/tmpcharts/*
 skaffold-overrides.yaml
+
+# Mac OS
+
+.DS_Store
