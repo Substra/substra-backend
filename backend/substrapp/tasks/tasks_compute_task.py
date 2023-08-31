@@ -135,7 +135,7 @@ class ComputeTask(Task):
 
     def split_args(self, celery_args: tuple) -> tuple[str, orchestrator.ComputeTask]:
         channel_name = celery_args[0]
-        task = orchestrator.ComputeTask.parse_raw(celery_args[1])
+        task = orchestrator.ComputeTask.model_validate(celery_args[1])
         return channel_name, task
 
 
@@ -178,7 +178,7 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, compute_plan_key: str) -> None:
-    task = orchestrator.ComputeTask.parse_raw(serialized_task)
+    task = orchestrator.ComputeTask.model_validate_json(serialized_task)
     datastore = get_datastore(channel=channel_name)
     try:
         _run(self, channel_name, task, compute_plan_key, datastore)
