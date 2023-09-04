@@ -71,11 +71,11 @@ kaniko:
 
 addAccountOperator:
   incomingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret2w1 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
+    - { name: MyOrg1, secret: organizationSecret2w1 }
+    - { name: MyOrg2, secret: selfSecret2 }
   outgoingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret1w2 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
+    - { name: MyOrg1, secret: organizationSecret1w2 }
+    - { name: MyOrg2, secret: selfSecret2 }
 
   users:
     - name: "org-2"
@@ -107,7 +107,7 @@ orchestrator:
     mtls:
       enabled: true
       clientCertificate: orchestrator-tls-client-pair
-  mspID: MyOrg2MSP
+  mspID: MyOrg2
   channels:
     - mychannel:
         restricted: false
