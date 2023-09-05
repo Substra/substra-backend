@@ -1,5 +1,11 @@
 # Changelog
 
+## [22.8.1] - 2023-09-07
+
+### Changed
+
+- Update substra-backend image to `0.41.0`
+
 ## [22.8.0] - 2023-08-16
 
 ## Added
@@ -9,6 +15,7 @@
 ## [22.7.1] - 2023-08-16
 
 ### Changed
+
 - Created role no longer request superfluous permissions
 
 ## [22.7.0] - 2023-08-14
