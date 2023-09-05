@@ -30,7 +30,7 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
         except BuildRetryError as e:
             logger.info(
                 "Retrying build",
-                celery_task_id=function.key,
+                function_id=function.key,
                 attempt=(task.attempt + 1),
                 max_attempts=(task.max_retries + 1),
             )
