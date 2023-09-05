@@ -19,13 +19,18 @@ privateCa:
   ## @param privateCa.image.repository Private CA injector image
   ## @param privateCa.image.tag Private CA injector tag
   ## @param privateCa.image.pullPolicy Private CA injector pull policy
-  ## @param privateCa.image.apkAdd Install the update-ca-certificates package
+  ## @param privateCa.image.pullSecrets Specify image pull secrets
+  ## @param privateCa.image.registry The registery to pull the CA Cert Injector image
   ##
   image:
-    repository: ubuntu
-    tag: latest
+    registry: ghcr.io
+    repository: substra-backend-ca-cert-injector
+    tag: null
     pullPolicy: IfNotPresent
-    apkAdd: true
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be created manually in the namespace.
+    ##
+    pullSecrets: []
   ## @param privateCa.configMap.name Name of the _ConfigMap_ containing the private CA certificate
   ## @param privateCa.configMap.data Certificate to add in the _ConfigMap_
   ## @param privateCa.configMap.fileName Certificate filename in the _ConfigMap_

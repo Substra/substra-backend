@@ -25,6 +25,13 @@ jobs:
       image: substra-backend
       force-publish: ${{ github.event.inputs.force-publish || false }}
   
+  ca-cert-injector:
+    uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
+    with:
+      image: substra-backend-ca-cert-injector
+      image-folder: ca-cert-injector
+      force-publish: ${{ github.event.inputs.force-publish || false }}
+
   metrics-exporter:
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
