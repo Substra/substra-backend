@@ -4,6 +4,7 @@ from typing import Final
 
 from django.conf import settings
 from django.db import models
+
 from orchestrator import failure_report_pb2
 
 LOGS_BASE_PATH: Final[str] = "logs"
@@ -24,6 +25,7 @@ FailedAssetKind = models.TextChoices(
 
 class AssetFailureReport(models.Model):
     """Store information relative to a compute task."""
+
     asset_key = models.UUIDField(primary_key=True, editable=False)
     asset_type = models.CharField(max_length=100, choices=FailedAssetKind.choices)
     logs = models.FileField(

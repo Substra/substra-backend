@@ -71,7 +71,7 @@ class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
 
     def __init__(self, logs: BinaryIO, *args, **kwargs):
         self.logs = logs
-        super().__init__(*args, **kwargs)
+        super().__init__(logs, *args, **kwargs)
 
 
 def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType:

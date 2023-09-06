@@ -202,7 +202,14 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, Function, "file", "function_address")
+        print("ok we are here")
+        return self.download_file(
+            request,
+            asset_class=Function,
+            local_file_class=FunctionFiles,
+            content_field="file",
+            address_field="function_address",
+        )
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -210,7 +217,13 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, Function, "description", "description_address")
+        return self.download_file(
+            request,
+            asset_class=Function,
+            local_file_class=FunctionFiles,
+            content_field="description",
+            address_field="description_address",
+        )
 
     @action(detail=True)
     def image(self, request, *args, **kwargs):

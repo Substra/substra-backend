@@ -33,6 +33,7 @@ from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
+from orchestrator import failure_report_pb2
 
 logger = structlog.get_logger(__name__)
 
@@ -89,7 +90,7 @@ def _on_update_function_event(event: dict) -> None:
     _update_function(key=event["asset_key"], name=function["name"], status=function["status"])
 
 
-def _update_function(key: str, *, name: Optional[str], status: Optional[str]) -> None:
+def _update_function(key: str, *, name: Optional[str] = None, status: Optional[str] = None) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
 
@@ -382,7 +383,17 @@ def _disable_model(key: str) -> None:
 def _on_create_failure_report(event: dict) -> None:
     """Process create failure report event to update local database."""
     logger.debug("Syncing failure report create", asset_key=event["asset_key"], event_id=event["id"])
-    _update_computetask(key=event["asset_key"], failure_report=event["failure_report"])
+
+    asset_key = event["asset_key"]
+    failure_report = event["failure_report"]
+    asset_type = failure_report_pb2.FailedAssetKind.Value(failure_report["asset_type"])
+
+    if asset_type == failure_report_pb2.FAILED_ASSET_FUNCTION:
+        # Needed as this field is only in ComputeTask
+        compute_task_key = ComputeTask.objects.values_list("key", flat=True).get(function_id=asset_key)
+        _update_computetask(key=str(compute_task_key), failure_report={"error_type": failure_report.get("error_type")})
+    else:
+        _update_computetask(key=asset_key, failure_report=failure_report)
 
 
 EVENT_CALLBACKS = {
