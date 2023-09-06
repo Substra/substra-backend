@@ -1,6 +1,18 @@
 # Changelog
 
-## [] - Unreleased
+## [24.2.0] - 2024-02-29
+
+## Added
+
+- `privateCa.image.pullSecrets` field added to precise secrets to pull the Docker image.
+
+## Changed
+
+- The default value of `privateCa.image.repository` is changed to the `substra/substra-backend-ca-cert-injector`
+
+## Removed
+
+- `privateCa.image.apkAdd` field removed
 
 ## [24.1.0] - 2024-02-29
 
