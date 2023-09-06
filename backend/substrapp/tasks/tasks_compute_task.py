@@ -135,7 +135,7 @@ class ComputeTask(Task):
 
     def split_args(self, celery_args: tuple) -> tuple[str, orchestrator.ComputeTask]:
         channel_name = celery_args[0]
-        task = orchestrator.ComputeTask.model_validate(celery_args[1])
+        task = orchestrator.ComputeTask.model_validate_json(celery_args[1])
         return channel_name, task
 
 
