@@ -40,9 +40,10 @@ class StoreAssetFailureReportTask(Task):
     ignore_result=False,
     base=StoreAssetFailureReportTask,
 )
-def store_asset_failure_report(task, *args, **kwargs) -> None:
-    asset_key, asset_type, channel_name = task.get_task_info(args, kwargs)
-    exception = pickle.loads(kwargs["exception_pickled"])  # nosec B301
+def store_asset_failure_report(
+    task: StoreAssetFailureReportTask, *, asset_key: str, asset_type: str, channel_name: str, exception_pickled: bytes
+) -> None:
+    exception = pickle.loads(exception_pickled)  # nosec B301
 
     if asset_type == FailedAssetKind.FAILED_ASSET_FUNCTION:
         error_type = compute_task_errors.ComputeTaskErrorType.BUILD_ERROR.value

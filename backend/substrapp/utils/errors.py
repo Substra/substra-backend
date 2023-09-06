@@ -8,7 +8,10 @@ from substrapp import utils
 
 
 def store_failure(
-    exception, asset_key: str, asset_type: models.FailedAssetKind, error_type: failure_report_pb2.ErrorType
+    exception: Exception,
+    asset_key: str,
+    asset_type: models.FailedAssetKind,
+    error_type: failure_report_pb2.ErrorType.ValueType,
 ) -> Optional[models.AssetFailureReport]:
     """If the provided exception is a `BuildError` or an `ExecutionError`, store its logs in the Django storage and
     in the database. Otherwise, do nothing.

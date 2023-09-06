@@ -74,7 +74,7 @@ class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
         super().__init__(logs, *args, **kwargs)
 
 
-def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType:
+def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType.ValueType:
     """From a given exception, return an error type safe to store and to advertise to the user.
 
     Args:
