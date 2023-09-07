@@ -31,6 +31,7 @@ logger = structlog.get_logger(__name__)
 class FailableTask(Task):
     asset_type: FailedAssetKind
 
+    # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def on_failure(
         self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
     ) -> None:
@@ -71,11 +72,13 @@ class ComputeTask(FailableTask):
     def attempt(self) -> int:
         return self.request.retries + 1  # type: ignore
 
+    # Celery does not provide unpacked arguments
     def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         from django.db import close_old_connections
 
         close_old_connections()
 
+    # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources

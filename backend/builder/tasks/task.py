@@ -25,6 +25,7 @@ class BuildTask(FailableTask):
     def attempt(self) -> int:
         return self.request.retries + 1  # type: ignore
 
+    # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def before_start(self, task_id: str, args: tuple, kwargs: dict) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:

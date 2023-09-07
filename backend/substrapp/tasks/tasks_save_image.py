@@ -48,6 +48,7 @@ class SaveImageTask(FailableTask):
         channel_name = kwargs["channel_name"]
         return function.key, channel_name
 
+    # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
         with get_orchestrator_client(channel_name) as client:
