@@ -139,6 +139,7 @@ class FunctionOutput(pydantic.BaseModel):
 
 
 class FunctionStatus(AutoNameEnum):
+    FUNCTION_STATUS_UNKNOWN = enum.auto()
     FUNCTION_STATUS_CREATED = enum.auto()
     FUNCTION_STATUS_BUILDING = enum.auto()
     FUNCTION_STATUS_READY = enum.auto()

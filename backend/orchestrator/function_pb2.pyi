@@ -47,19 +47,21 @@ class _FunctionStatus:
 
 class _FunctionStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_FunctionStatus.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
-    FUNCTION_STATUS_CREATED: _FunctionStatus.ValueType  # 0
-    FUNCTION_STATUS_BUILDING: _FunctionStatus.ValueType  # 1
-    FUNCTION_STATUS_READY: _FunctionStatus.ValueType  # 2
-    FUNCTION_STATUS_CANCELED: _FunctionStatus.ValueType  # 3
-    FUNCTION_STATUS_FAILED: _FunctionStatus.ValueType  # 4
+    FUNCTION_STATUS_UNKNOWN: _FunctionStatus.ValueType  # 0
+    FUNCTION_STATUS_CREATED: _FunctionStatus.ValueType  # 1
+    FUNCTION_STATUS_BUILDING: _FunctionStatus.ValueType  # 2
+    FUNCTION_STATUS_READY: _FunctionStatus.ValueType  # 3
+    FUNCTION_STATUS_CANCELED: _FunctionStatus.ValueType  # 4
+    FUNCTION_STATUS_FAILED: _FunctionStatus.ValueType  # 5
 
 class FunctionStatus(_FunctionStatus, metaclass=_FunctionStatusEnumTypeWrapper): ...
 
-FUNCTION_STATUS_CREATED: FunctionStatus.ValueType  # 0
-FUNCTION_STATUS_BUILDING: FunctionStatus.ValueType  # 1
-FUNCTION_STATUS_READY: FunctionStatus.ValueType  # 2
-FUNCTION_STATUS_CANCELED: FunctionStatus.ValueType  # 3
-FUNCTION_STATUS_FAILED: FunctionStatus.ValueType  # 4
+FUNCTION_STATUS_UNKNOWN: FunctionStatus.ValueType  # 0
+FUNCTION_STATUS_CREATED: FunctionStatus.ValueType  # 1
+FUNCTION_STATUS_BUILDING: FunctionStatus.ValueType  # 2
+FUNCTION_STATUS_READY: FunctionStatus.ValueType  # 3
+FUNCTION_STATUS_CANCELED: FunctionStatus.ValueType  # 4
+FUNCTION_STATUS_FAILED: FunctionStatus.ValueType  # 5
 global___FunctionStatus = FunctionStatus
 
 @typing_extensions.final
