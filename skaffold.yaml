@@ -16,7 +16,7 @@ build:
             strip: backend/
       docker:
         dockerfile: docker/substra-backend/Dockerfile
-    - image: substra/ca-cert-injector
+    - image: substra/substra-backend-ca-cert-injector
       context: .
       docker:
         dockerfile: docker/ca-cert-injector/Dockerfile
