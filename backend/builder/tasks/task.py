@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import Any
 
+if TYPE_CHECKING:
+    from billiard.einfo import ExceptionInfo
+
 import structlog
-from billiard.einfo import ExceptionInfo
 from celery import Task
 from django.conf import settings
 
