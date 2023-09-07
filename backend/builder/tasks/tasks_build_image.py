@@ -25,6 +25,7 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
     attempt = 0
     while attempt <= task.max_retries:
         try:
+            # TODO refactor
             build_image_if_missing(channel_name, function)
         except BuildRetryError as e:
             logger.info(
