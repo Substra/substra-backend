@@ -15,14 +15,14 @@ class Migration(migrations.Migration):
             name="status",
             field=models.CharField(
                 choices=[
-                    ("FUNCTION_STATUS_UNKONWN", "Function Status Unkonwn"),
+                    ("FUNCTION_STATUS_UNKNOWN", "Function Status Unknown"),
                     ("FUNCTION_STATUS_CREATED", "Function Status Created"),
                     ("FUNCTION_STATUS_BUILDING", "Function Status Building"),
                     ("FUNCTION_STATUS_READY", "Function Status Ready"),
                     ("FUNCTION_STATUS_CANCELED", "Function Status Canceled"),
                     ("FUNCTION_STATUS_FAILED", "Function Status Failed"),
                 ],
-                default="FUNCTION_STATUS_UNKONWN",
+                default="FUNCTION_STATUS_UNKNOWN",
                 max_length=64,
             ),
             preserve_default=False,
