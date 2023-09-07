@@ -55,7 +55,7 @@ def container_image_tag_from_function(function: orchestrator.Function) -> str:
 
 
 # main entrypoint
-# inputs: channel + function
+# TODO refactor
 def build_image_if_missing(channel: str, function: orchestrator.Function) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
