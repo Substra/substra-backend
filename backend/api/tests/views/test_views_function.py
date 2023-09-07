@@ -36,7 +36,6 @@ class FunctionViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
-        self.maxDiff = None
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
@@ -484,7 +483,6 @@ class FunctionViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_function", side_effect=mock_orc_response):
             response = self.client.post(self.url, data=data, format="multipart")
-        print(response.data)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # asset created in local db
