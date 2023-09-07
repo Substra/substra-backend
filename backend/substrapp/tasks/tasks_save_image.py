@@ -3,10 +3,14 @@ from __future__ import annotations
 import os
 import pathlib
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 from typing import Any
 
 import structlog
-from billiard.einfo import ExceptionInfo
+
+if TYPE_CHECKING:
+    from billiard.einfo import ExceptionInfo
+
 from celery import Task
 from django.conf import settings
 from django.core.files import File
