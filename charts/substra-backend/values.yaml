@@ -24,7 +24,7 @@ privateCa:
   ##
   image:
     registry: ghcr.io
-    repository: substra-backend-ca-cert-injector
+    repository: substra/substra-backend-ca-cert-injector
     tag: null
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
