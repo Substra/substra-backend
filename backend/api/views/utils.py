@@ -116,9 +116,7 @@ class PermissionMixin(object):
         except AssetPermissionError as e:
             return ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-        print("ok we got the asset")
         url = getattr(asset, address_field)
-        print("ok we got the url")
         if not url:
             return ApiResponse({"detail": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 

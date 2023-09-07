@@ -202,7 +202,6 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        print("ok we are here")
         return self.download_file(
             request,
             asset_class=Function,
