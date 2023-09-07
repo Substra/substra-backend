@@ -10,7 +10,7 @@ import substrapp.models.function
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("substrapp", "0017_rename_computetaskfailurereport_and_more"),
+        ("substrapp", "0018_rename_computetaskfailurereport_and_more"),
     ]
 
     operations = [
