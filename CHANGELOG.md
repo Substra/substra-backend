@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Remove pagination on `get_performances` to remove limitation on 1000 first points ([#690](https://github.com/Substra/substra-backend/pull/690))
-  - - Update or create the step profiling, instead of raising an error if already exists ([#691](https://github.com/Substra/substra-backend/pull/691))
+- Update or create the step profiling, instead of raising an error if already exists ([#691](https://github.com/Substra/substra-backend/pull/691))
 
 ### Added
 
