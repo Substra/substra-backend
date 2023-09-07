@@ -92,7 +92,7 @@ class FailureReport(google.protobuf.message.Message):
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     owner: builtins.str
-    """In the case of a compute task fialure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
+    """In the case of a compute task failure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
     the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
     to another user.
     In the case of a function, the owner will be the owner of the function (which builds the function).
