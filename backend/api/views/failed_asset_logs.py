@@ -33,7 +33,7 @@ class FailedAssetLogsViewSet(view_utils.PermissionMixin, viewsets.GenericViewSet
             content_field="logs",
             channel_name=channel_name,
             url=report.logs_address,
-            owner=asset.get_owner(),
+            asset_owner=asset.get_owner(),
         )
 
         response.headers["Content-Type"] = "text/plain; charset=utf-8"

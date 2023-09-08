@@ -123,7 +123,7 @@ class PermissionMixin(object):
         return get_file_response(
             key=key,
             local_file_class=local_file_class,
-            owner=asset.get_owner(),
+            asset_owner=asset.get_owner(),
             content_field=content_field,
             channel_name=channel_name,
             url=url,
