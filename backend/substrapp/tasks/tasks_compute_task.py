@@ -16,18 +16,13 @@ import datetime
 import enum
 import errno
 import os
-from typing import TYPE_CHECKING
 from typing import Any
 
 import celery.exceptions
 import structlog
-from celery import Task
 from celery.result import AsyncResult
 from django.conf import settings
 from rest_framework import status
-
-if TYPE_CHECKING:
-    from billiard.einfo import ExceptionInfo
 
 import orchestrator
 from backend.celery import app
@@ -40,7 +35,6 @@ from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
 from substrapp.compute_tasks.asset_buffer import clear_assets_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
-from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.datastore import Datastore
 from substrapp.compute_tasks.datastore import get_datastore
@@ -57,11 +51,11 @@ from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.tasks.task import ComputeTask
 from substrapp.utils import Timer
 from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
-from substrapp.utils.errors import store_failure
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
@@ -75,67 +69,6 @@ class ComputeTaskSteps(enum.Enum):
     PREPARE_INPUTS = "prepare_inputs"
     TASK_EXECUTION = "task_execution"
     SAVE_OUTPUTS = "save_outputs"
-
-
-class ComputeTask(Task):
-    autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
-    max_retries = settings.CELERY_TASK_MAX_RETRIES
-    retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
-    retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
-    retry_jitter = settings.CELERY_TASK_RETRY_JITTER
-
-    @property
-    def attempt(self) -> int:
-        return self.request.retries + 1  # type: ignore
-
-    def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
-        from django.db import close_old_connections
-
-        close_old_connections()
-
-    def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
-        _, task = self.split_args(args)
-        # delete compute pod to reset hardware ressources
-        delete_compute_plan_pods(task.compute_plan_key)
-        logger.info(
-            "Retrying task",
-            celery_task_id=task_id,
-            attempt=(self.attempt + 1),
-            max_attempts=(settings.CELERY_TASK_MAX_RETRIES + 1),
-        )
-
-    def on_failure(
-        self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
-    ) -> None:
-        from django.db import close_old_connections
-
-        close_old_connections()
-
-        channel_name, task = self.split_args(args)
-        compute_task_key = task.key
-
-        failure_report = store_failure(exc, compute_task_key)
-        error_type = compute_task_errors.get_error_type(exc)
-
-        with get_orchestrator_client(channel_name) as client:
-            # On the backend, only execution errors lead to the creation of compute task failure report instances
-            # to store the execution logs.
-            if failure_report:
-                logs_address = {
-                    "checksum": failure_report.logs_checksum,
-                    "storage_address": failure_report.logs_address,
-                }
-            else:
-                logs_address = None
-
-            client.register_failure_report(
-                {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
-            )
-
-    def split_args(self, celery_args: tuple) -> tuple[str, orchestrator.ComputeTask]:
-        channel_name = celery_args[0]
-        task = orchestrator.ComputeTask.parse_raw(celery_args[1])
-        return channel_name, task
 
 
 def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> None:
@@ -163,7 +96,10 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
         worker_queue=worker_queue,
     )
 
-    compute_task.apply_async((channel_name, task, task.compute_plan_key), queue=worker_queue, task_id=task.key)
+    compute_task.apply_async(
+        (channel_name, task, task.compute_plan_key),
+        queue=worker_queue,
+    )
 
 
 @app.task(

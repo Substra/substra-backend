@@ -140,4 +140,10 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
     @if_true(gzip.gzip_page, settings.GZIP_MODELS)
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, Model, "file", "model_address")
+        return self.download_file(
+            request,
+            asset_class=Model,
+            local_file_class=ModelFiles,
+            content_field="file",
+            address_field="model_address",
+        )
