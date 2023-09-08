@@ -78,7 +78,7 @@ class ComputeTask(FailableTask):
 
         close_old_connections()
 
-    # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
+    # Celery does not provide unpacked arguments, we are doing it in `split_args`
     def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources

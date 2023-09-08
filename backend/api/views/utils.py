@@ -131,13 +131,19 @@ class PermissionMixin(object):
 
 
 def get_file_response(
-    *, local_file_class: Type[LocalFileType], content_field: str, key: str, owner: str, channel_name: str, url: str
+    *,
+    local_file_class: Type[LocalFileType],
+    content_field: str,
+    key: str,
+    asset_owner: str,
+    channel_name: str,
+    url: str,
 ) -> django.http.FileResponse:
-    if get_owner() == owner:
+    if get_owner() == asset_owner:
         local_file = local_file_class.objects.get(pk=key)
         response = _get_local_file_response(local_file, key, content_field)
     else:
-        response = _download_remote_file(channel_name, owner, url)
+        response = _download_remote_file(channel_name, asset_owner, url)
 
     return response
 
