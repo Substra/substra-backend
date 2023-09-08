@@ -16,7 +16,6 @@ import datetime
 import enum
 import errno
 import os
-from typing import TYPE_CHECKING
 from typing import Any
 
 import celery.exceptions
@@ -24,9 +23,6 @@ import structlog
 from celery.result import AsyncResult
 from django.conf import settings
 from rest_framework import status
-
-if TYPE_CHECKING:
-    from billiard.einfo import ExceptionInfo
 
 import orchestrator
 from backend.celery import app
