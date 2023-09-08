@@ -208,9 +208,9 @@ class ComputeTaskOutput(_Base):
 
 class ComputeTaskInput(pydantic.BaseModel):
     identifier: str
-    asset_key: Optional[str]
-    parent_task_key: Optional[str]
-    parent_task_output_identifier: Optional[str]
+    asset_key: Optional[str] = None
+    parent_task_key: Optional[str] = None
+    parent_task_output_identifier: Optional[str] = None
 
     @classmethod
     def from_grpc(cls, i: computetask_pb2.ComputeTaskInput) -> ComputeTaskInput:
@@ -299,8 +299,8 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
 class ComputePlan(_Base):
     key: str
     tag: str
-    cancelation_date: Optional[datetime.datetime]
-    failure_date: Optional[datetime.datetime]
+    cancelation_date: Optional[datetime.datetime] = None
+    failure_date: Optional[datetime.datetime] = None
 
     @classmethod
     def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> ComputePlan:

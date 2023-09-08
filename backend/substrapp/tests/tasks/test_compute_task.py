@@ -57,7 +57,7 @@ def test_compute_task_exception(mocker: MockerFixture):
 
     mock_ctx_from_task = mocker.patch("substrapp.tasks.tasks_compute_task.Context.from_task", return_value=ctx)
 
-    compute_task(CHANNEL, task.json(), None)
+    compute_task(CHANNEL, task.model_dump_json(), None)
 
     assert mock_raise_if_not_runnable.call_count == 2
     mock_ctx_from_task.assert_called_once()
@@ -79,26 +79,26 @@ def test_compute_task_exception(mocker: MockerFixture):
 
     saver.save_outputs.side_effect = error
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
     assert str(excinfo.value.__cause__.details) == "OE0000"
 
     # test compute error
     mock_execute_compute_task.side_effect = Exception("Test")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
 
     assert str(excinfo.value.__cause__) == "Test"
 
     # test not enough space on disk error
     mock_execute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
     assert "No space left on device" in str(excinfo.value.__cause__)
 
     # test other OS error
     mock_execute_compute_task.side_effect = OSError(errno.EACCES, "Dummy error")
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
     assert "Dummy error" in str(excinfo.value.__cause__)
 
 
@@ -156,7 +156,7 @@ def test_celery_retry(mocker: MockerFixture):
     mock_execute_compute_task.side_effect = Exception(exception_message)
 
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
 
     assert str(excinfo.value.__cause__) == exception_message
     mock_retry.assert_called_once()
@@ -165,7 +165,7 @@ def test_celery_retry(mocker: MockerFixture):
     mock_execute_compute_task.side_effect = IOError(errno.ENOSPC, "no file left on device")
 
     with pytest.raises(errors.CeleryRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
 
     assert "no file left on device" in str(excinfo.value.__cause__)
     assert mock_retry.call_count == 2
@@ -175,7 +175,7 @@ def test_celery_retry(mocker: MockerFixture):
     mock_execute_compute_task.side_effect = errors.ExecutionError("python not found", "Error while running command")
 
     with pytest.raises(errors.CeleryNoRetryError) as excinfo:
-        compute_task(CHANNEL, task.json(), None)
+        compute_task(CHANNEL, task.model_dump_json(), None)
 
     assert "Error while running command" in str(excinfo.value)
     assert mock_retry.call_count == 2
