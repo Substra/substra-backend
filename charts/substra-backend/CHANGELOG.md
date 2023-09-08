@@ -1,5 +1,11 @@
 # Changelog
 
+## [22.8.2] - 2023-09-08
+
+### Changed
+
+- Update substra-backend image to `0.42.0`
+
 ## [22.8.1] - 2023-09-07
 
 ### Changed
