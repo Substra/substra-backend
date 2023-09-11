@@ -22,7 +22,7 @@ minio==7.1.14
 django-prometheus==2.3.1
 django-filter==23.2
 pydantic==2.3.0
-redis==4.5.4
+redis==5.0.0
 mozilla-django-oidc==3.0.0
 # Dependencies used in local dev mode
 argh==0.26.2
