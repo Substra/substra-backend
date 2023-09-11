@@ -25,7 +25,7 @@ privateCa:
   image:
     registry: ghcr.io
     repository: substra/substra-backend-ca-cert-injector
-    tag: latest
+    tag: null
     pullPolicy: IfNotPresent
     ## Optionally specify an array of imagePullSecrets.
     ## Secrets must be created manually in the namespace.
