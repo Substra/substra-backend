@@ -42,6 +42,10 @@ deploy:
           worker.events.image: *image-params
           worker.image: *image-params
           builder.image: *image-params
+          privateCa.image:
+            registry: '{{.IMAGE_DOMAIN_substra_substra_backend_ca_cert_injector}}'
+            repository: '{{.IMAGE_REPO_NO_DOMAIN_substra_substra_backend_ca_cert_injector}}'
+            tag: '{{.IMAGE_TAG_substra_substra_backend_ca_cert_injector}}'
         createNamespace: true
 
       - name: backend-org-2
