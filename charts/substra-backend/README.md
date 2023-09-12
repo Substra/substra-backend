@@ -34,7 +34,6 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `privateCa.configMap.name`       | Name of the _ConfigMap_ containing the private CA certificate                                                                                                                      | `substra-private-ca`                       |
 | `privateCa.configMap.data`       | Certificate to add in the _ConfigMap_                                                                                                                                              | `nil`                                      |
 | `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                                                                                                                                            | `private-ca.crt`                           |
-| `psp.create`                     | Create a _Pod Security Policy_ in the cluster. WARNING: PodSecurityPolicy is deprecated in Kubernetes 1.21 or later and unavailable in Kubernetes 1.25 or later                    | `true`                                     |
 
 ### Server settings
 
