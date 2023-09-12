@@ -1,13 +1,13 @@
 settings: dev
 config:
-  CORS_ORIGIN_WHITELIST: '["http://substra-frontend.org-2.com", "http://substra-frontend.org-2.com:3000", "http://substra-frontend.org-2.com:3001"]'
-  CSRF_TRUSTED_ORIGINS: '["http://substra-frontend.org-2.com", "http://substra-frontend.org-2.com:3000", "http://substra-frontend.org-2.com:3001"]'
+  CORS_ORIGIN_WHITELIST: '["http://substra-frontend.org-3.com", "http://substra-frontend.org-3.com:3000", "http://substra-frontend.org-3.com:3001"]'
+  CSRF_TRUSTED_ORIGINS: '["http://substra-frontend.org-3.com", "http://substra-frontend.org-3.com:3000", "http://substra-frontend.org-3.com:3001"]'
   CORS_ALLOW_CREDENTIALS: "true"
-  ALLOWED_HOSTS: '[".org-2.com", ".org-2", ".org-2.svc.cluster.local"]'
+  ALLOWED_HOSTS: '[".org-3.com", ".org-3", ".org-3.svc.cluster.local"]'
   DEFAULT_THROTTLE_RATES: "120"
   TASK_CACHE_DOCKER_IMAGES: "False"
   LOG_LEVEL: DEBUG
-organizationName: MyOrg2
+organizationName: MyOrg3
 
 # set the same creds as in localdev so they're the same everywhere in dev
 database:
@@ -48,11 +48,11 @@ worker:
 
 server:
   allowImplicitLogin: true
-  defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
-  commonHostDomain: org-2.com
+  defaultDomain: http://backend-org-3-substra-backend-server.org-3:8000
+  commonHostDomain: org-3.com
   ingress:
     enabled: true
-    hostname: "substra-backend.org-2.com"
+    hostname: "substra-backend.org-3.com"
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
@@ -71,20 +71,20 @@ kaniko:
 
 addAccountOperator:
   incomingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret2w1 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
-    - { name: MyOrg3MSP, secret: organizationSecret3w1 }
+    - { name: MyOrg1MSP, secret: organizationSecret3w1 }
+    - { name: MyOrg2MSP, secret: organizationSecret3w2 }
+    - { name: MyOrg3MSP, secret: selfSecret3 }
   outgoingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret1w2 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
-    - { name: MyOrg3MSP, secret: organizationSecret1w3 }
+    - { name: MyOrg1MSP, secret: organizationSecret1w3 }
+    - { name: MyOrg2MSP, secret: organizationSecret2w3 }
+    - { name: MyOrg3MSP, secret: selfSecret3 }
 
   users:
-    - name: "org-2"
-      secret: "p@sswr0d45"
+    - name: "org-3"
+      secret: "p@sswr0d46"
       channel: "mychannel"
-    - name: "org-2-yourchannel"
-      secret: "p@sswr0d45"
+    - name: "org-3-yourchannel"
+      secret: "p@sswr0d46"
       channel: "yourchannel"
 
 hooks:
@@ -109,7 +109,7 @@ orchestrator:
     mtls:
       enabled: true
       clientCertificate: orchestrator-tls-client-pair
-  mspID: MyOrg2MSP
+  mspID: MyOrg3MSP
   channels:
     - mychannel:
         restricted: false

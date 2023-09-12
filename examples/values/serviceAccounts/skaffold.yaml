@@ -1,9 +1,17 @@
-apiVersion: skaffold/v2beta11
+apiVersion: skaffold/v4beta2
 kind: Config
 metadata:
   name: setup-service-accounts
 deploy:
   kubectl:
     manifests:
-    - ./serviceAccount-org-1.yaml
-    - ./serviceAccount-org-2.yaml
+      - ./serviceAccount-org-1.yaml
+      - ./serviceAccount-org-2.yaml
+
+profiles:
+  - name: temp-three-orgs
+    patches:
+      - op: add
+        path: /deploy/kubectl/manifests/-
+        value:
+          - ./serviceAccount-org-3.yaml
