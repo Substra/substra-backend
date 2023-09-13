@@ -186,18 +186,18 @@ profiles:
       - op: add
         path: /deploy/helm/releases/0/setValues/server.metrics.enabled
         value: True
-  - name: temp-three-orgs
+  - name: three-orgs
     patches:
       - op: add
         path: /deploy/helm/releases/-
         value:
-          - name: backend-org-3
-            chartPath: charts/substra-backend
-            valuesFiles:
-              - examples/values/backend-org-3.yaml
-            namespace: org-3
-            setValues:
-              _: _
-            setValueTemplates: *image-tags
-            createNamespace: true
-            skipBuildDependencies: true
+          name: backend-org-3
+          chartPath: charts/substra-backend
+          valuesFiles:
+            - examples/values/backend-org-3.yaml
+          namespace: org-3
+          setValues:
+            _: _
+          setValueTemplates: *image-tags
+          createNamespace: true
+          skipBuildDependencies: true
