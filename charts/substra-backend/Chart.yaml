@@ -33,3 +33,5 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 12.8.12
     condition: minio.enabled
+annotations:
+  artifacthub.io/prerelease: "true"
