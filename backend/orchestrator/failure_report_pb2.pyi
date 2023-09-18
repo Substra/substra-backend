@@ -75,7 +75,7 @@ global___FailedAssetKind = FailedAssetKind
 
 @typing_extensions.final
 class FailureReport(google.protobuf.message.Message):
-    """FailureReport is used to store information related to a failed ComputeTask."""
+    """FailureReport is used to store information related to a failed ComputeTask or Function builds."""
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
