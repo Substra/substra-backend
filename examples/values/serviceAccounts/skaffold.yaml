@@ -5,5 +5,12 @@ metadata:
 deploy:
   kubectl:
     manifests:
-    - ./serviceAccount-org-1.yaml
-    - ./serviceAccount-org-2.yaml
+      - ./serviceAccount-org-1.yaml
+      - ./serviceAccount-org-2.yaml
+
+profiles:
+  - name: three-orgs
+    patches:
+      - op: add
+        path: /deploy/kubectl/-
+        value: "./serviceAccount-org-3.yaml"

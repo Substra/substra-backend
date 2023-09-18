@@ -73,9 +73,11 @@ addAccountOperator:
   incomingOrganizations:
     - { name: MyOrg1MSP, secret: selfSecret1 }
     - { name: MyOrg2MSP, secret: organizationSecret1w2 }
+    - { name: MyOrg3MSP, secret: organizationSecret1w3 }
   outgoingOrganizations:
     - { name: MyOrg1MSP, secret: selfSecret1 }
     - { name: MyOrg2MSP, secret: organizationSecret2w1 }
+    - { name: MyOrg3MSP, secret: organizationSecret3w1 }
 
   users:
     - name: "org-1"
