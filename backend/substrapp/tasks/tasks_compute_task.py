@@ -57,7 +57,6 @@ from substrapp.utils import Timer
 from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
-from substrapp.utils.errors import store_failure
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
@@ -84,6 +83,10 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
             celery_task_key=task.key,
         )
         return
+
+    with get_orchestrator_client(channel_name) as client:
+        if not task_utils.is_task_runnable(task.key, client):
+            return  # avoid creating a Celery task
 
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task.compute_plan_key)
