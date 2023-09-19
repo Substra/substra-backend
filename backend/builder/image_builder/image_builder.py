@@ -1,12 +1,14 @@
 import json
 import os
 from tempfile import TemporaryDirectory
+from typing import Union
 
 import kubernetes
 import structlog
 from django.conf import settings
 
 import orchestrator
+from builder import docker
 from builder import exceptions
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
@@ -14,12 +16,11 @@ from builder.kubernetes import get_pod_logs
 from builder.kubernetes import pod_exists
 from builder.kubernetes import watch_pod
 from builder.volumes import get_docker_cache_pvc_name
+from substrapp.compute_tasks import datastore as ds
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import Label
-from substrapp.compute_tasks.datastore import Datastore
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
-from substrapp.docker_registry import container_image_exists
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_security_context
 from substrapp.lock_local import lock_resource
@@ -54,15 +55,15 @@ def container_image_tag_from_function(function: orchestrator.Function) -> str:
 
 
 # main entrypoint
-# inputs: channel + function
+# TODO refactor
 def build_image_if_missing(channel: str, function: orchestrator.Function) -> None:
     """
     Build the container image and the ImageEntryPoint entry if they don't exist already
     """
-    datastore = Datastore(channel=channel)
+    datastore = ds.Datastore(channel=channel)
     container_image_tag = utils.container_image_tag_from_function(function)
     with lock_resource("image-build", container_image_tag, ttl=IMAGE_BUILD_TIMEOUT, timeout=IMAGE_BUILD_TIMEOUT):
-        if container_image_exists(container_image_tag):
+        if docker.container_image_exists(container_image_tag):
             logger.info("Reusing existing image", image=container_image_tag)
         else:
             asset_content = datastore.get_function(function)
@@ -155,7 +156,7 @@ def _build_container_image(path: str, tag: str) -> None:
 
     except Exception as e:
         # In case of concurrent builds, it may fail. Check if the image exists.
-        if container_image_exists(tag):
+        if docker.container_image_exists(tag):
             logger.warning(
                 f"Build of container image {tag} failed, probably because it was done by a concurrent build",
                 exc_info=True,
@@ -174,7 +175,7 @@ def _build_container_image(path: str, tag: str) -> None:
     _delete_kaniko_pod(create_pod, k8s_client, pod_name)
 
 
-def _assert_dockerfile_exist(dockerfile_path: os.PathLike) -> None:
+def _assert_dockerfile_exist(dockerfile_path: Union[str, os.PathLike]) -> None:
     dockerfile_fullpath = os.path.join(dockerfile_path, "Dockerfile")
     if not os.path.exists(dockerfile_fullpath):
         raise BuildError(f"Dockerfile does not exist : {dockerfile_fullpath}")

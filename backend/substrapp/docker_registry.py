@@ -97,15 +97,6 @@ def _retrieve_image_digest(image_tag: str) -> str:
     return response.headers["Docker-Content-Digest"]
 
 
-def container_image_exists(image_name: str) -> bool:
-    try:
-        get_container_image(image_name)
-    except ImageNotFoundError:
-        return False
-    else:
-        return True
-
-
 def get_container_image(image_name: str) -> dict:
     response = requests.get(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",

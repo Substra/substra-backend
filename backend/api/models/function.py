@@ -4,6 +4,7 @@ from django.db import models
 import orchestrator.common_pb2 as common_pb2
 from api.models.utils import AssetPermissionMixin
 from api.models.utils import URLValidatorWithOptionalTLD
+from orchestrator import function_pb2
 
 
 class FunctionInput(models.Model):
@@ -43,6 +44,10 @@ class FunctionOutput(models.Model):
 class Function(models.Model, AssetPermissionMixin):
     """Function represent a function and its associated metadata"""
 
+    Status = models.TextChoices(
+        "Status", [(status_name, status_name) for status_name in function_pb2.FunctionStatus.keys()]
+    )
+
     key = models.UUIDField(primary_key=True)
     name = models.CharField(max_length=100)
     description_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
@@ -57,6 +62,7 @@ class Function(models.Model, AssetPermissionMixin):
     creation_date = models.DateTimeField()
     metadata = models.JSONField()
     channel = models.CharField(max_length=100)
+    status = models.CharField(max_length=64, choices=Status.choices)
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations

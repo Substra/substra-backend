@@ -40,11 +40,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `SECRET_KEY` optional environment variable ([#671](https://github.com/Substra/substra-backend/pull/671))
 - `/api-token-auth/` and the associated tokens can now be disabled through the `EXPIRY_TOKEN_ENABLED` environment variable and `server.allowImplicitLogin` chart value ([#698](https://github.com/Substra/substra-backend/pull/698))
 - Tokens issued by `/api-token-auth/` can now be deleted like other API tokens, through a `DELETE` request on the `/active-api-tokens` endpoint ([#698](https://github.com/Substra/substra-backend/pull/698))
+- Field `asset_type` on `AssetFailureReport` (based on protobuf enum `orchestrator.FailedAssetKind`) ([#727](https://github.com/Substra/substra-backend/pull/727))
+- Celery task `FailableTask` that contains the logic to store the failure report, that can be re-used in different assets. ([#727](https://github.com/Substra/substra-backend/pull/727))
+- Add `FunctionStatus` enum ([#263](https://github.com/Substra/orchestrator/pull/263))
+- BREAKING: Add `status` on `api.Function` (type `FunctionStatus`) ([#714](https://github.com/Substra/substra-backend/pull/714))
+
 
 ### Changed
 
 - Increase the number of tasks displayable in frontend workflow [#697](https://github.com/Substra/substra-backend/pull/697)
 - BREAKING: Change the format of many API responses from `{"message":...}` to `{"detail":...}` ([#705](https://github.com/Substra/substra-backend/pull/705))
+- `ComputeTaskFailureReport` renamed in `AssetFailureReport` ([#727](https://github.com/Substra/substra-backend/pull/727))
+- Field `AssetFailureReport.compute_task_key` renamed to `asset_key` ([#727](https://github.com/Substra/substra-backend/pull/727))
 
 ### Removed
 

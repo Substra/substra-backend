@@ -83,6 +83,13 @@ check_untyped_defs = true
 ignore_missing_imports = true
 cache_dir = "/dev/null"
 follow_imports = "silent"
+packages = [
+    "builder",
+    "substrapp.tasks",
+]
+exclude = [
+    "tests/*",
+]
 
 [tool.django-stubs]
 django_settings_module = "backend.settings.test"

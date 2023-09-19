@@ -62,6 +62,7 @@ Customized example:
 
 import datetime
 import uuid
+from typing import Optional
 
 from django.core import files
 from django.utils import timezone
@@ -80,9 +81,10 @@ from api.models import FunctionOutput
 from api.models import Model
 from api.models import Performance
 from api.models import TaskProfiling
-from substrapp.models import ComputeTaskFailureReport as ComputeTaskLogs
+from substrapp.models import AssetFailureReport
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.models import DataSample as DataSampleFiles
+from substrapp.models import FailedAssetKind
 from substrapp.models import Function as FunctionFiles
 from substrapp.models import Model as ModelFiles
 from substrapp.utils import get_hash
@@ -236,6 +238,7 @@ def create_function(
         creation_date=timezone.now(),
         owner=owner,
         channel=channel,
+        status=Function.Status.FUNCTION_STATUS_CREATED,
         **get_permissions(owner, public),
     )
 
@@ -534,20 +537,36 @@ def create_model_files(
     return model_files
 
 
-def create_computetask_logs(
-    compute_task_key: uuid.UUID,
-    logs: files.File = None,
-) -> ComputeTaskLogs:
+def create_asset_logs(
+    asset_key: uuid.UUID,
+    asset_type: FailedAssetKind,
+    logs: Optional[files.File] = None,
+) -> AssetFailureReport:
     if logs is None:
         logs = files.base.ContentFile("dummy content")
 
-    compute_task_logs = ComputeTaskLogs.objects.create(
-        compute_task_key=compute_task_key,
+    asset_logs = AssetFailureReport.objects.create(
+        asset_key=asset_key,
+        asset_type=asset_type,
         logs_checksum=get_hash(logs),
         creation_date=timezone.now(),
     )
-    compute_task_logs.logs.save("logs", logs)
-    return compute_task_logs
+    asset_logs.logs.save("logs", logs)
+    return asset_logs
+
+
+def create_computetask_logs(
+    compute_task_key: uuid.UUID,
+    logs: Optional[files.File] = None,
+) -> AssetFailureReport:
+    return create_asset_logs(compute_task_key, FailedAssetKind.FAILED_ASSET_COMPUTE_TASK, logs)
+
+
+def create_function_logs(
+    function_key: uuid.UUID,
+    logs: Optional[files.File] = None,
+) -> AssetFailureReport:
+    return create_asset_logs(function_key, FailedAssetKind.FAILED_ASSET_FUNCTION, logs)
 
 
 def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:

@@ -259,7 +259,6 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
         super().setUp()
         self.url = reverse("api:task-list")
-        self.maxDiff = None
 
         todo_task = self.compute_tasks[ComputeTask.Status.STATUS_TODO]
         waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING]

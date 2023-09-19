@@ -182,4 +182,4 @@ roleRef:
   kind: Role
   name: {{ template "substra.fullname" . }}-builder
   apiGroup: rbac.authorization.k8s.io
-{{- end }}
+{{- end -}}
