@@ -53,6 +53,7 @@ class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "permissions",
             "inputs",
             "outputs",
+            "status",
         ]
 
     def to_representation(self, instance):
