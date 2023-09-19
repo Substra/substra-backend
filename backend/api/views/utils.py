@@ -1,10 +1,13 @@
 import os
 import uuid
 from typing import Callable
+from typing import Type
+from typing import TypeVar
 from wsgiref.util import is_hop_by_hop
 
 import django.http
 from django.conf import settings
+from django.db import models
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import SAFE_METHODS
@@ -25,6 +28,9 @@ from substrapp.utils import get_owner
 CP_BASENAME_PREFIX = "compute_plan_"
 
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
+
+AssetType = TypeVar("AssetType", bound=models.Model)
+LocalFileType = TypeVar("LocalFileType", bound=models.Model)
 
 
 class ApiResponse(Response):
@@ -80,18 +86,33 @@ class PermissionMixin(object):
         if not asset.is_public("process") and organization_id not in asset.get_authorized_ids("process"):
             raise AssetPermissionError()
 
-    def download_file(self, request, asset_class, content_field, address_field):
-        if settings.ISOLATED:
-            return ApiResponse({"detail": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
+    def get_key(self, request) -> str:
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
+        return validate_key(key)
+
+    def get_asset(self, request, key: str, channel_name: str, asset_class: Type[AssetType]) -> AssetType:
+        asset = asset_class.objects.filter(channel=channel_name).get(key=key)
+        self.check_access(channel_name, request.user, asset, is_proxied_request(request))
+
+        return asset
+
+    def download_file(
+        self,
+        request,
+        *,
+        asset_class: Type[AssetType],
+        local_file_class: Type[LocalFileType],
+        content_field: str,
+        address_field: str,
+    ):
+        if settings.ISOLATED:
+            return ApiResponse({"detail": "Asset not available in isolated mode"}, status=status.HTTP_410_GONE)
+
+        key = self.get_key(request)
         channel_name = get_channel_name(request)
-
-        validated_key = validate_key(key)
-        asset = asset_class.objects.filter(channel=channel_name).get(key=validated_key)
-
         try:
-            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
+            asset = self.get_asset(request, key, channel_name, asset_class)
         except AssetPermissionError as e:
             return ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
@@ -99,49 +120,70 @@ class PermissionMixin(object):
         if not url:
             return ApiResponse({"detail": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 
-        if get_owner() == asset.get_owner():
-            response = self._get_local_file_response(content_field)
-        else:
-            response = self._download_remote_file(channel_name, asset.get_owner(), url)
-
-        return response
-
-    def _get_local_file_response(self, content_field):
-        obj = self.get_object()
-        data = getattr(obj, content_field)
-
-        if isinstance(data.storage, MinioStorage):
-            filename = str(obj.key)
-        else:
-            filename = os.path.basename(data.path)
-            data = open(data.path, "rb")
-
-        response = CustomFileResponse(
-            data,
-            as_attachment=True,
-            filename=filename,
-        )
-        return response
-
-    def _download_remote_file(self, channel_name: str, owner: str, url: str) -> django.http.FileResponse:
-        proxy_response = organization_client.streamed_get(
-            channel=channel_name,
-            organization_id=owner,
+        return get_file_response(
+            key=key,
+            local_file_class=local_file_class,
+            asset_owner=asset.get_owner(),
+            content_field=content_field,
+            channel_name=channel_name,
             url=url,
-            headers={HTTP_HEADER_PROXY_ASSET: "True"},
-        )
-        response = CustomFileResponse(
-            streaming_content=(chunk for chunk in proxy_response.iter_content(512 * 1024)),
-            status=proxy_response.status_code,
         )
 
-        for header in proxy_response.headers:
-            # We don't use hop_by_hop headers since they are incompatible
-            # with WSGI
-            if not is_hop_by_hop(header):
-                response[header] = proxy_response.headers.get(header)
 
-        return response
+def get_file_response(
+    *,
+    local_file_class: Type[LocalFileType],
+    content_field: str,
+    key: str,
+    asset_owner: str,
+    channel_name: str,
+    url: str,
+) -> django.http.FileResponse:
+    if get_owner() == asset_owner:
+        local_file = local_file_class.objects.get(pk=key)
+        response = _get_local_file_response(local_file, key, content_field)
+    else:
+        response = _download_remote_file(channel_name, asset_owner, url)
+
+    return response
+
+
+def _get_local_file_response(local_file: LocalFileType, key: str, content_field: str):
+    data = getattr(local_file, content_field)
+
+    if isinstance(data.storage, MinioStorage):
+        filename = key
+    else:
+        filename = os.path.basename(data.path)
+        data = open(data.path, "rb")
+
+    response = CustomFileResponse(
+        data,
+        as_attachment=True,
+        filename=filename,
+    )
+    return response
+
+
+def _download_remote_file(channel_name: str, owner: str, url: str) -> django.http.FileResponse:
+    proxy_response = organization_client.streamed_get(
+        channel=channel_name,
+        organization_id=owner,
+        url=url,
+        headers={HTTP_HEADER_PROXY_ASSET: "True"},
+    )
+    response = CustomFileResponse(
+        streaming_content=(chunk for chunk in proxy_response.iter_content(512 * 1024)),
+        status=proxy_response.status_code,
+    )
+
+    for header in proxy_response.headers:
+        # We don't use hop_by_hop headers since they are incompatible
+        # with WSGI
+        if not is_hop_by_hop(header):
+            response[header] = proxy_response.headers.get(header)
+
+    return response
 
 
 def validate_key(key) -> str:

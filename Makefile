@@ -32,7 +32,7 @@ format:  ## Format code
 lint:  ## Perform a static analysis of the code
 	flake8 $(SRC_DIRS)
 	bandit --ini=.bandit
-	mypy backend/substrapp/tasks/
+	mypy
 
 .PHONY: shell
 shell:	## Start a Python shell for the Django project
