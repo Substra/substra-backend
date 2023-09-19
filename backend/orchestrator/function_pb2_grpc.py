@@ -34,6 +34,11 @@ class FunctionServiceStub(object):
                 request_serializer=function__pb2.UpdateFunctionParam.SerializeToString,
                 response_deserializer=function__pb2.UpdateFunctionResponse.FromString,
                 )
+        self.ApplyFunctionAction = channel.unary_unary(
+                '/orchestrator.FunctionService/ApplyFunctionAction',
+                request_serializer=function__pb2.ApplyFunctionActionParam.SerializeToString,
+                response_deserializer=function__pb2.ApplyFunctionActionResponse.FromString,
+                )
 
 
 class FunctionServiceServicer(object):
@@ -63,6 +68,12 @@ class FunctionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ApplyFunctionAction(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FunctionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +96,11 @@ def add_FunctionServiceServicer_to_server(servicer, server):
                     servicer.UpdateFunction,
                     request_deserializer=function__pb2.UpdateFunctionParam.FromString,
                     response_serializer=function__pb2.UpdateFunctionResponse.SerializeToString,
+            ),
+            'ApplyFunctionAction': grpc.unary_unary_rpc_method_handler(
+                    servicer.ApplyFunctionAction,
+                    request_deserializer=function__pb2.ApplyFunctionActionParam.FromString,
+                    response_serializer=function__pb2.ApplyFunctionActionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -161,5 +177,22 @@ class FunctionService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/UpdateFunction',
             function__pb2.UpdateFunctionParam.SerializeToString,
             function__pb2.UpdateFunctionResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ApplyFunctionAction(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.FunctionService/ApplyFunctionAction',
+            function__pb2.ApplyFunctionActionParam.SerializeToString,
+            function__pb2.ApplyFunctionActionResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

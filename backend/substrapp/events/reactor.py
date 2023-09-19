@@ -96,13 +96,16 @@ def on_function_event(payload):
                 asset_key=function_key,
                 queue=builder_queue,
             )
-            # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
-            build_image.apply_async(
-                (orc_function.json(), channel_name),
-                queue=builder_queue,
-                task_id=function_key,
-                link=save_image_task.s(channel_name=channel_name, function_key=function_key).set(queue=WORKER_QUEUE),
-            )
+
+            building_params = {
+                "channel_name": channel_name,
+                "function_serialized": orc_function.json(),
+            }
+            (
+                # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
+                build_image.si(**building_params).set(queue=builder_queue)
+                | save_image_task.si(**building_params).set(queue=WORKER_QUEUE)
+            ).apply_async()
 
         else:
             logger.debug("Function not belonging to this organization, skipping building", asset_key=orc_function.key)

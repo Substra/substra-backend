@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                     models.FileField(
                         max_length=36,
                         storage=django.core.files.storage.FileSystemStorage(),
-                        upload_to=substrapp.models.compute_task_failure_report._upload_to,
+                        upload_to=substrapp.models.asset_failure_report._upload_to,
                     ),
                 ),
                 ("logs_checksum", models.CharField(max_length=64)),

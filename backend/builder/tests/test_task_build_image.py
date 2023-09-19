@@ -1,6 +1,7 @@
 import pytest
 
 from builder.exceptions import BuildError
+from substrapp.models import FailedAssetKind
 from substrapp.utils.errors import store_failure
 
 
@@ -10,8 +11,10 @@ def test_store_failure_build_error():
     msg = "Error building image"
     exc = BuildError(msg)
 
-    failure_report = store_failure(exc, compute_task_key)
+    failure_report = store_failure(
+        exc, compute_task_key, FailedAssetKind.FAILED_ASSET_FUNCTION, error_type=BuildError.error_type.value
+    )
     failure_report.refresh_from_db()
 
-    assert str(failure_report.compute_task_key) == compute_task_key
+    assert str(failure_report.asset_key) == compute_task_key
     assert failure_report.logs.read() == str.encode(msg)

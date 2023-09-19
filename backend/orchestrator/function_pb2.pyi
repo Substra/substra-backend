@@ -7,16 +7,62 @@ import collections.abc
 import common_pb2
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
+import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.timestamp_pb2
 import sys
+import typing
 
-if sys.version_info >= (3, 8):
+if sys.version_info >= (3, 10):
     import typing as typing_extensions
 else:
     import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+
+class _FunctionAction:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _FunctionActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_FunctionAction.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    FUNCTION_ACTION_UNKNOWN: _FunctionAction.ValueType  # 0
+    FUNCTION_ACTION_BUILDING: _FunctionAction.ValueType  # 1
+    FUNCTION_ACTION_CANCELED: _FunctionAction.ValueType  # 2
+    FUNCTION_ACTION_FAILED: _FunctionAction.ValueType  # 3
+    FUNCTION_ACTION_READY: _FunctionAction.ValueType  # 4
+
+class FunctionAction(_FunctionAction, metaclass=_FunctionActionEnumTypeWrapper): ...
+
+FUNCTION_ACTION_UNKNOWN: FunctionAction.ValueType  # 0
+FUNCTION_ACTION_BUILDING: FunctionAction.ValueType  # 1
+FUNCTION_ACTION_CANCELED: FunctionAction.ValueType  # 2
+FUNCTION_ACTION_FAILED: FunctionAction.ValueType  # 3
+FUNCTION_ACTION_READY: FunctionAction.ValueType  # 4
+global___FunctionAction = FunctionAction
+
+class _FunctionStatus:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _FunctionStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_FunctionStatus.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    FUNCTION_STATUS_UNKNOWN: _FunctionStatus.ValueType  # 0
+    FUNCTION_STATUS_WAITING: _FunctionStatus.ValueType  # 1
+    FUNCTION_STATUS_BUILDING: _FunctionStatus.ValueType  # 2
+    FUNCTION_STATUS_READY: _FunctionStatus.ValueType  # 3
+    FUNCTION_STATUS_CANCELED: _FunctionStatus.ValueType  # 4
+    FUNCTION_STATUS_FAILED: _FunctionStatus.ValueType  # 5
+
+class FunctionStatus(_FunctionStatus, metaclass=_FunctionStatusEnumTypeWrapper): ...
+
+FUNCTION_STATUS_UNKNOWN: FunctionStatus.ValueType  # 0
+FUNCTION_STATUS_WAITING: FunctionStatus.ValueType  # 1
+FUNCTION_STATUS_BUILDING: FunctionStatus.ValueType  # 2
+FUNCTION_STATUS_READY: FunctionStatus.ValueType  # 3
+FUNCTION_STATUS_CANCELED: FunctionStatus.ValueType  # 4
+FUNCTION_STATUS_FAILED: FunctionStatus.ValueType  # 5
+global___FunctionStatus = FunctionStatus
 
 @typing_extensions.final
 class FunctionInput(google.protobuf.message.Message):
@@ -127,6 +173,7 @@ class Function(google.protobuf.message.Message):
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
+    STATUS_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
     @property
@@ -144,6 +191,7 @@ class Function(google.protobuf.message.Message):
     def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionInput]: ...
     @property
     def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionOutput]: ...
+    status: global___FunctionStatus.ValueType
     def __init__(
         self,
         *,
@@ -157,9 +205,10 @@ class Function(google.protobuf.message.Message):
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
+        status: global___FunctionStatus.ValueType = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "permissions", b"permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "description", b"description", "function", b"function", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "outputs", b"outputs", "owner", b"owner", "permissions", b"permissions", "status", b"status"]) -> None: ...
 
 global___Function = Function
 
@@ -361,3 +410,31 @@ class UpdateFunctionResponse(google.protobuf.message.Message):
     ) -> None: ...
 
 global___UpdateFunctionResponse = UpdateFunctionResponse
+
+@typing_extensions.final
+class ApplyFunctionActionParam(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    FUNCTION_KEY_FIELD_NUMBER: builtins.int
+    ACTION_FIELD_NUMBER: builtins.int
+    function_key: builtins.str
+    action: global___FunctionAction.ValueType
+    def __init__(
+        self,
+        *,
+        function_key: builtins.str = ...,
+        action: global___FunctionAction.ValueType = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["action", b"action", "function_key", b"function_key"]) -> None: ...
+
+global___ApplyFunctionActionParam = ApplyFunctionActionParam
+
+@typing_extensions.final
+class ApplyFunctionActionResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    def __init__(
+        self,
+    ) -> None: ...
+
+global___ApplyFunctionActionResponse = ApplyFunctionActionResponse

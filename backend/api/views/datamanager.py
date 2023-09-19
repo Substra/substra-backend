@@ -212,8 +212,20 @@ class DataManagerPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True, url_path="description", url_name="description")
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, DataManager, "description", "description_address")
+        return self.download_file(
+            request,
+            asset_class=DataManager,
+            local_file_class=DataManagerFiles,
+            content_field="description",
+            address_field="description_address",
+        )
 
     @action(detail=True)
     def opener(self, request, *args, **kwargs):
-        return self.download_file(request, DataManager, "data_opener", "opener_address")
+        return self.download_file(
+            request,
+            asset_class=DataManager,
+            local_file_class=DataManagerFiles,
+            content_field="data_opener",
+            address_field="opener_address",
+        )

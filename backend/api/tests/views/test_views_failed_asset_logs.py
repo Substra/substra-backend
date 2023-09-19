@@ -13,11 +13,11 @@ from api.tests import asset_factory as factory
 from api.views import utils as view_utils
 from organization import authentication as organization_auth
 from organization import models as organization_models
-from substrapp.models import ComputeTaskFailureReport
+from substrapp.models import AssetFailureReport
 
 
 @pytest.fixture
-def compute_task_failure_report() -> tuple[ComputeTask, ComputeTaskFailureReport]:
+def asset_failure_report() -> tuple[ComputeTask, AssetFailureReport]:
     compute_task = factory.create_computetask(
         factory.create_computeplan(),
         factory.create_function(),
@@ -41,12 +41,12 @@ def test_download_logs_failure_unauthenticated(api_client: test.APIClient):
 
 @pytest.mark.django_db
 def test_download_local_logs_success(
-    compute_task_failure_report,
+    asset_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authorized user download logs located on the organization."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
     assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
 
@@ -60,12 +60,12 @@ def test_download_local_logs_success(
 
 @pytest.mark.django_db
 def test_download_logs_failure_forbidden(
-    compute_task_failure_report,
+    asset_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authenticated user cannot download logs if he is not authorized."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
     compute_task.logs_permission_authorized_ids = []  # not allowed
     compute_task.save()
@@ -77,12 +77,12 @@ def test_download_logs_failure_forbidden(
 
 @pytest.mark.django_db
 def test_download_local_logs_failure_not_found(
-    compute_task_failure_report,
+    asset_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authorized user attempt to download logs that are not referenced in the database."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
     assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
     failure_report.delete()  # not found
@@ -94,12 +94,12 @@ def test_download_local_logs_failure_not_found(
 
 @pytest.mark.django_db
 def test_download_remote_logs_success(
-    compute_task_failure_report,
+    asset_failure_report,
     authenticated_client: test.APIClient,
 ):
     """An authorized user download logs on a remote organization by using his organization as proxy."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     outgoing_organization = "outgoing-organization"
     compute_task.logs_owner = outgoing_organization  # remote
     compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_organization]  # allowed
@@ -139,13 +139,13 @@ def get_proxy_headers(channel_name: str) -> dict[str, str]:
 
 @pytest.mark.django_db
 def test_organization_download_logs_success(
-    compute_task_failure_report,
+    asset_failure_report,
     api_client: test.APIClient,
     incoming_organization_user: organization_auth.OrganizationUser,
 ):
     """An authorized organization can download logs from another organization."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
     compute_task.logs_permission_authorized_ids = [
         conf.settings.LEDGER_MSP_ID,
@@ -166,13 +166,13 @@ def test_organization_download_logs_success(
 
 @pytest.mark.django_db
 def test_organization_download_logs_forbidden(
-    compute_task_failure_report,
+    asset_failure_report,
     api_client: test.APIClient,
     incoming_organization_user: organization_auth.OrganizationUser,
 ):
     """An unauthorized organization cannot download logs from another organization."""
 
-    compute_task, failure_report = compute_task_failure_report
+    compute_task, failure_report = asset_failure_report
     compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
     compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID]  # incoming user not allowed
     compute_task.channel = incoming_organization_user.username
