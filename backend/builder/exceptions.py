@@ -23,7 +23,7 @@ class BuildRetryError(_ComputeTaskError, CeleryRetryError):
 
     error_type = ComputeTaskErrorType.BUILD_ERROR
 
-    def __init__(self, logs: str, *args, **kwargs):
+    def __init__(self, logs: str, *args: list, **kwargs: dict):
         self.logs = BytesIO(str.encode(logs))
         super().__init__(logs, *args, **kwargs)
 
@@ -37,6 +37,6 @@ class BuildError(_ComputeTaskError, CeleryNoRetryError):
 
     error_type = ComputeTaskErrorType.BUILD_ERROR
 
-    def __init__(self, logs: str, *args, **kwargs):
+    def __init__(self, logs: str, *args: list, **kwargs: dict):
         self.logs = BytesIO(str.encode(logs))
         super().__init__(logs, *args, **kwargs)

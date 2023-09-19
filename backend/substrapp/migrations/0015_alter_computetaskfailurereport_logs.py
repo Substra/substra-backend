@@ -3,7 +3,7 @@
 from django.db import migrations
 from django.db import models
 
-import substrapp.models.compute_task_failure_report
+import substrapp.models.asset_failure_report
 import substrapp.storages.minio
 
 
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 max_length=36,
                 storage=substrapp.storages.minio.MinioStorage("substra-compute-task-logs"),
-                upload_to=substrapp.models.compute_task_failure_report._upload_to,
+                upload_to=substrapp.models.asset_failure_report._upload_to,
             ),
         ),
     ]

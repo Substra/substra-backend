@@ -1,9 +1,7 @@
 import datetime
 import errno
-import io
 import tempfile
 from functools import wraps
-from typing import Type
 from unittest.mock import MagicMock
 
 import pytest
@@ -19,7 +17,6 @@ from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
-from substrapp.utils.errors import store_failure
 
 CHANNEL = "mychannel"
 
@@ -32,7 +29,8 @@ def test_compute_task_exception(mocker: MockerFixture):
     mock_init_task_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.init_task_dirs")
     mock_add_asset_to_buffer = mocker.patch("substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer")
     mock_add_asset_to_task_dir = mocker.patch("substrapp.tasks.tasks_compute_task.add_assets_to_taskdir")
-    mock_build_image_if_missing = mocker.patch("substrapp.tasks.tasks_compute_task.build_image_if_missing")
+    mock_load_remote_function_image = mocker.patch("substrapp.compute_tasks.image_builder.load_remote_function_image")
+    mock_wait_for_image_built = mocker.patch("substrapp.compute_tasks.image_builder.wait_for_image_built")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
     saver = mocker.MagicMock()
     mock_output_saver = mocker.patch("substrapp.tasks.tasks_compute_task.OutputSaver", return_value=saver)
@@ -67,7 +65,8 @@ def test_compute_task_exception(mocker: MockerFixture):
     mock_init_task_dirs.assert_called_once()
     mock_add_asset_to_buffer.assert_called_once()
     mock_add_asset_to_task_dir.assert_called_once()
-    mock_build_image_if_missing.assert_called_once()
+    mock_load_remote_function_image.assert_called_once()
+    mock_wait_for_image_built.assert_called_once()
     mock_execute_compute_task.assert_called_once()
     saver.save_outputs.assert_called_once()
     mock_output_saver.assert_called_once()
@@ -136,7 +135,8 @@ def test_celery_retry(mocker: MockerFixture):
     mocker.patch("substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer")
     mocker.patch("substrapp.tasks.tasks_compute_task.add_assets_to_taskdir")
     mocker.patch("substrapp.tasks.tasks_compute_task.restore_dir")
-    mocker.patch("substrapp.tasks.tasks_compute_task.build_image_if_missing")
+    mocker.patch("substrapp.compute_tasks.image_builder.load_remote_function_image")
+    mocker.patch("substrapp.compute_tasks.image_builder.wait_for_image_built")
     mock_execute_compute_task = mocker.patch("substrapp.tasks.tasks_compute_task.execute_compute_task")
     mocker.patch("substrapp.tasks.tasks_compute_task.teardown_task_dirs")
     mock_retry = mocker.patch("substrapp.tasks.tasks_compute_task.ComputeTask.retry")
@@ -180,24 +180,6 @@ def test_celery_retry(mocker: MockerFixture):
 
     assert "Error while running command" in str(excinfo.value)
     assert mock_retry.call_count == 2
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("logs", [b"", b"Hello, World!"])
-def test_store_failure_execution_error(logs: bytes):
-    compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
-    exc = errors.ExecutionError(logs=io.BytesIO(logs))
-
-    failure_report = store_failure(exc, compute_task_key)
-    failure_report.refresh_from_db()
-
-    assert str(failure_report.compute_task_key) == compute_task_key
-    assert failure_report.logs.read() == logs
-
-
-@pytest.mark.parametrize("exc_class", [Exception])
-def test_store_failure_ignored_exception(exc_class: Type[Exception]):
-    assert store_failure(exc_class(), "uuid") is None
 
 
 @pytest.mark.django_db

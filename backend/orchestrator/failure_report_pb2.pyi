@@ -56,40 +56,62 @@ It is likely to be caused by a fault in the system. It would require the action 
 """
 global___ErrorType = ErrorType
 
+class _FailedAssetKind:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _FailedAssetKindEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_FailedAssetKind.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    FAILED_ASSET_UNKNOWN: _FailedAssetKind.ValueType  # 0
+    FAILED_ASSET_COMPUTE_TASK: _FailedAssetKind.ValueType  # 1
+    FAILED_ASSET_FUNCTION: _FailedAssetKind.ValueType  # 2
+
+class FailedAssetKind(_FailedAssetKind, metaclass=_FailedAssetKindEnumTypeWrapper): ...
+
+FAILED_ASSET_UNKNOWN: FailedAssetKind.ValueType  # 0
+FAILED_ASSET_COMPUTE_TASK: FailedAssetKind.ValueType  # 1
+FAILED_ASSET_FUNCTION: FailedAssetKind.ValueType  # 2
+global___FailedAssetKind = FailedAssetKind
+
 @typing_extensions.final
 class FailureReport(google.protobuf.message.Message):
-    """FailureReport is used to store information related to a failed ComputeTask."""
+    """FailureReport is used to store information related to a failed ComputeTask or Function builds."""
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    ASSET_KEY_FIELD_NUMBER: builtins.int
     ERROR_TYPE_FIELD_NUMBER: builtins.int
     LOGS_ADDRESS_FIELD_NUMBER: builtins.int
     CREATION_DATE_FIELD_NUMBER: builtins.int
     OWNER_FIELD_NUMBER: builtins.int
-    compute_task_key: builtins.str
+    ASSET_TYPE_FIELD_NUMBER: builtins.int
+    asset_key: builtins.str
     error_type: global___ErrorType.ValueType
     @property
     def logs_address(self) -> common_pb2.Addressable: ...
     @property
     def creation_date(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     owner: builtins.str
-    """The owner of a failure report matches the 'worker' field of the associated compute task but can differ from
+    """In the case of a compute task failure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
     the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
-    to another user. The failure report generated will be located on the execution organization and belong to the owner
+    to another user.
+    In the case of a function, the owner will be the owner of the function (which builds the function).
+    The failure report generated will be located on the execution organization and belong to the owner
     of this organization.
     """
+    asset_type: global___FailedAssetKind.ValueType
     def __init__(
         self,
         *,
-        compute_task_key: builtins.str = ...,
+        asset_key: builtins.str = ...,
         error_type: global___ErrorType.ValueType = ...,
         logs_address: common_pb2.Addressable | None = ...,
         creation_date: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         owner: builtins.str = ...,
+        asset_type: global___FailedAssetKind.ValueType = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["creation_date", b"creation_date", "logs_address", b"logs_address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "creation_date", b"creation_date", "error_type", b"error_type", "logs_address", b"logs_address", "owner", b"owner"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset_key", b"asset_key", "asset_type", b"asset_type", "creation_date", b"creation_date", "error_type", b"error_type", "logs_address", b"logs_address", "owner", b"owner"]) -> None: ...
 
 global___FailureReport = FailureReport
 
@@ -101,22 +123,25 @@ class NewFailureReport(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
+    ASSET_KEY_FIELD_NUMBER: builtins.int
     ERROR_TYPE_FIELD_NUMBER: builtins.int
     LOGS_ADDRESS_FIELD_NUMBER: builtins.int
-    compute_task_key: builtins.str
+    ASSET_TYPE_FIELD_NUMBER: builtins.int
+    asset_key: builtins.str
     error_type: global___ErrorType.ValueType
     @property
     def logs_address(self) -> common_pb2.Addressable: ...
+    asset_type: global___FailedAssetKind.ValueType
     def __init__(
         self,
         *,
-        compute_task_key: builtins.str = ...,
+        asset_key: builtins.str = ...,
         error_type: global___ErrorType.ValueType = ...,
         logs_address: common_pb2.Addressable | None = ...,
+        asset_type: global___FailedAssetKind.ValueType = ...,
     ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["logs_address", b"logs_address"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key", "error_type", b"error_type", "logs_address", b"logs_address"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset_key", b"asset_key", "asset_type", b"asset_type", "error_type", b"error_type", "logs_address", b"logs_address"]) -> None: ...
 
 global___NewFailureReport = NewFailureReport
 
@@ -126,13 +151,13 @@ class GetFailureReportParam(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    COMPUTE_TASK_KEY_FIELD_NUMBER: builtins.int
-    compute_task_key: builtins.str
+    ASSET_KEY_FIELD_NUMBER: builtins.int
+    asset_key: builtins.str
     def __init__(
         self,
         *,
-        compute_task_key: builtins.str = ...,
+        asset_key: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["compute_task_key", b"compute_task_key"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset_key", b"asset_key"]) -> None: ...
 
 global___GetFailureReportParam = GetFailureReportParam
