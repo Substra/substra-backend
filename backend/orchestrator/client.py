@@ -209,6 +209,14 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
+    def update_function_status(self, function_key, action):
+        data = self._function_client.ApplyFunctionAction(
+            function_pb2.ApplyFunctionActionParam(function_key=function_key, action=action),
+            metadata=self._metadata,
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
     def query_function(self, key) -> Function:
         data = self._function_client.GetFunction(function_pb2.GetFunctionParam(key=key), metadata=self._metadata)
         return Function.from_grpc(data)
