@@ -1,5 +1,9 @@
 ## unreleased
 
+## 25.0.0
+
+If you have set `worker.rbac.create=false`, you now need to also set `worker.serviceAccount.create=false` to preserve the same behavior.
+
 ## 23.0.0
 
 Database should be dumped and restored as the `postgresql` sub-chart version incremented. You can follow [Upgrading a PostgreSQL Cluster](https://www.postgresql.org/docs/16/upgrading.html) documentation for further detail
