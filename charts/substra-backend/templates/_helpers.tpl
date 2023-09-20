@@ -140,6 +140,18 @@ Return the user list
 {{- end }}
 {{- end -}}
 
+
+{{/*
+    Create the name fo the service account to use for the worker
+*/}}
+{{- define "substra.worker.serviceAccountName" -}}
+{{- if .Values.worker.serviceAccount.create -}}
+    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.worker.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
 {{/*
     Create the name fo the service account to use for the worker event app
 */}}

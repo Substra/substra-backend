@@ -66,6 +66,11 @@
 
 - Update substra-backend image to `0.43.0`
 
+## [25.0.0] - 2024-01-03
+
+- BREAKING: Remove ServiceAccount creation from `worker.rbac.create`, putting it in a new `worker.serviceAccount.create` option
+- Add a new `worker.serviceAccount.name` option
+
 ## [24.0.1] - 2023-12-15
 
 ### Changed

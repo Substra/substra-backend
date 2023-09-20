@@ -319,6 +319,14 @@ worker:
   ##
   rbac:
     create: true
+  serviceAccount:
+    ## @param worker.serviceAccount.create Create a service account for the worker
+    ##
+    create: true
+    ## @param worker.serviceAccount.name The name of the ServiceAccount to use
+    ## If not set and create is true, a name is generated using the substra.fullname template
+    ##
+    name: ""
   ## @param worker.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
   ## @param worker.persistence.size The size of the volume. The size of this volume should be sufficient to store many assets.
   ##
