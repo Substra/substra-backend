@@ -33,8 +33,3 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 12.8.12
     condition: minio.enabled
-annotations:
-  # This avoids the chart being tagged as latest release on artifacthub
-  # see https://artifacthub.io/docs/topics/annotations/helm/
-  # REMOVE BEFORE MERGING INTO MAIN!
-  artifacthub.io/prerelease: "true"
