@@ -39,9 +39,9 @@ containerRegistry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: substra/substra-tools:latest-minimal
+    - image: substra/substra-tools:latest
       sourceRegistry: ghcr.io
-      dstImage: substra/substra-tools:latest-minimal
+      dstImage: substra/substra-tools:latest
 
 worker:
   concurrency: 3
