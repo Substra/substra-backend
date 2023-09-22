@@ -51,7 +51,7 @@ def _register_in_orchestrator(request, basename, instance):
             "checksum": get_hash(instance.description),
             "storage_address": current_site + reverse("api:function-description", args=[instance.key]),
         },
-        "function": {
+        "archive": {
             "checksum": instance.checksum,
             "storage_address": current_site + reverse("api:function-file", args=[instance.key]),
         },
@@ -238,7 +238,7 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
         try:
             function_image = FunctionImage.objects.get(function__key=function.key)
         except FunctionImage.DoesNotExist:
-            return Http404(f"The function image asociated with key {key} is not found.")
+            return Http404(f"The function image associated with key {key} is not found.")
 
         # TODO we love hard-coded size, see also api.views.utils.PermissionMixin._download_remote_file
         response = CustomFileResponse(streaming_content=(chunk for chunk in function_image.file.chunks(512 * 1024)))
