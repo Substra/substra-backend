@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 from django.conf import settings
 from django.core.files import File
+from django.urls import reverse
 
 import orchestrator
 from backend.celery import app
@@ -51,7 +52,19 @@ class SaveImageTask(FailableTask):
     # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
+
+        function_image = FunctionImage.objects.get(function=function_key)
+        orc_function = {
+            "key": str(function_key),
+            "image": {
+                "checksum": function_image.checksum,
+                # TODO check url
+                "storage_address": settings.DEFAULT_DOMAIN + reverse("api:function-image", args=[function_key]),
+            },
+        }
         with get_orchestrator_client(channel_name) as client:
+            # TODO atomicity?
+            client.update_function(orc_function)
             client.update_function_status(
                 function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
             )
