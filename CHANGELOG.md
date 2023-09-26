@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Celery task `FailableTask` that contains the logic to store the failure report, that can be re-used in different assets. ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Add `FunctionStatus` enum ([#714](https://github.com/Substra/orchestrator/pull/714))
 - BREAKING: Add `status` on `api.Function` (type `FunctionStatus`) ([#714](https://github.com/Substra/substra-backend/pull/714))
+- Tests to ensure build order is made in order of submission (including retries) ([#740](https://github.com/Substra/substra-backend/pull/740))
 
 ### Changed
 
