@@ -817,6 +817,17 @@ postgresql:
     username: *psql-username
     password: *psql-password
     database: *psql-database
+  ## @skip postgresql.primary
+  primary:
+    podSecurityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
 
 ## @skip redis
 ##
