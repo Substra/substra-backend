@@ -30,7 +30,7 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
       - name: Set up python
@@ -55,7 +55,7 @@ jobs:
           python manage.py generate_fixtures
           echo fixture generated
       - name: Checkout local branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Update requirements
         run: |
           pip install --upgrade --upgrade-strategy eager -r backend/dev-requirements.txt
