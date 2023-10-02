@@ -17,13 +17,15 @@ import secrets
 import structlog
 from django.core.files.storage import FileSystemStorage
 
+# isort: off
+from .deps.image_build import *
 from .deps.celery import *
+
+# isort: on
 from .deps.jwt import *
 from .deps.org import *
 from .deps.path import *
 from .deps.utils import to_bool
-
-from .deps.image_build import *  # isort: skip
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
