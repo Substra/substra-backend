@@ -206,7 +206,7 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
             asset_class=Function,
             local_file_class=FunctionFiles,
             content_field="file",
-            address_field="function_address",
+            address_field="archive_address",
         )
 
     # actions cannot be named "description"

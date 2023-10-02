@@ -42,17 +42,13 @@ def wait_for_image_built(function: orchestrator.Function, channel: str) -> None:
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
     container_image_tag = utils.container_image_tag_from_function(function)
     # Ask the backend owner of the function if it's available
-    logger.info(
-        f"Initial function URI {function.function_address.uri}; "
-        f"modified URI{function.function_address.uri.replace('file', 'image')}"
-    )
 
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
         # TODO create a clean Address for function image
-        url=function.function_address.uri.replace("file", "image"),
-        checksum=None,
+        url=function.archive_address.uri.replace("file", "image"),
+        checksum=function.image.checksum,
     )
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
