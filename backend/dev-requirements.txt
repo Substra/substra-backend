@@ -20,4 +20,4 @@ factory-boy==3.2.1
 mypy==1.4.1
 djangorestframework-stubs==1.8.0
 django-stubs==1.14.0
-celery-types==0.14.0
+celery-types==0.20.0
