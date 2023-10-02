@@ -46,8 +46,7 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
-        # TODO create a clean Address for function image
-        url=function.archive_address.uri.replace("file", "image"),
+        url=function.image.uri,
         checksum=function.image.checksum,
     )
 

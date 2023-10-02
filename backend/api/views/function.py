@@ -1,7 +1,6 @@
 import structlog
 from django.conf import settings
 from django.db import models
-from django.http import Http404
 from django.urls import reverse
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import DateTimeFromToRangeFilter
@@ -20,7 +19,6 @@ from api.views.filters_utils import CharInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import ProcessPermissionFilter
 from api.views.utils import ApiResponse
-from api.views.utils import CustomFileResponse
 from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
@@ -32,7 +30,6 @@ from substrapp.models import FunctionImage
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import FunctionSerializer as FunctionFilesSerializer
 from substrapp.utils import get_hash
-from substrapp.utils import get_owner
 
 logger = structlog.get_logger(__name__)
 
@@ -225,19 +222,10 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @action(detail=True)
     def image(self, request, *args, **kwargs):
-        # TODO refactor the code duplication with api.views.utils.PermissionMixin.download_file
-        channel_name = get_channel_name(request)
-        key = self.get_key(request)
-        function = self.get_asset(request, key, channel_name, Function)
-
-        if get_owner() != function.get_owner():
-            return Http404("The function image is only available on the backend who owns the function.")
-
-        try:
-            function_image = FunctionImage.objects.get(function__key=function.key)
-        except FunctionImage.DoesNotExist:
-            return Http404(f"The function image associated with key {key} is not found.")
-
-        # TODO we love hard-coded size, see also api.views.utils.PermissionMixin._download_remote_file
-        response = CustomFileResponse(streaming_content=(chunk for chunk in function_image.file.chunks(512 * 1024)))
-        return response
+        return self.download_file(
+            request,
+            asset_class=Function,
+            local_file_class=FunctionImage,
+            content_field="file",
+            address_field="image_address",
+        )

@@ -40,6 +40,8 @@ class Function(models.Model):
 class FunctionImage(models.Model):
     """Serialized Docker image"""
 
+    key_identifier = "function_id"
+
     function = models.OneToOneField(APIFunction, on_delete=models.CASCADE, primary_key=True)
     file = models.FileField(
         storage=settings.FUNCTION_STORAGE, max_length=500, upload_to=upload_to_function
