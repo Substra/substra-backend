@@ -24,7 +24,6 @@ from api.views.utils import CustomFileResponse
 from api.views.utils import PermissionMixin
 from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
-from api.views.utils import to_string_uuid
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
@@ -228,9 +227,8 @@ class FunctionPermissionViewSet(PermissionMixin, GenericViewSet):
     def image(self, request, *args, **kwargs):
         # TODO refactor the code duplication with api.views.utils.PermissionMixin.download_file
         channel_name = get_channel_name(request)
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = to_string_uuid(self.kwargs[lookup_url_kwarg])
-        function = Function.objects.filter(channel=channel_name).get(key=key)
+        key = self.get_key(request)
+        function = self.get_asset(request, key, channel_name, Function)
 
         if get_owner() != function.get_owner():
             return Http404("The function image is only available on the backend who owns the function.")
