@@ -39,7 +39,7 @@ class AuthenticationTests(APITestCase):
             file=self.function_file, description=self.function_description_file
         )
         metadata = factory.create_function(key=self.function.key, public=True, owner="foo")
-        metadata.function_address = "http://fake_address.com"
+        metadata.archive_address = "http://fake_address.com"
         metadata.save()
         self.function_url = reverse("api:function-file", kwargs={"pk": self.function.key})
 

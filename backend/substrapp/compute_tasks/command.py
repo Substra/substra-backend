@@ -25,7 +25,7 @@ class Filenames:
 
 
 def get_exec_command(ctx: Context) -> list[str]:
-    entrypoint = ImageEntrypoint.objects.get(function_checksum=ctx.function.function_address.checksum)
+    entrypoint = ImageEntrypoint.objects.get(archive_checksum=ctx.function.archive_address.checksum)
 
     command = entrypoint.entrypoint_json
 

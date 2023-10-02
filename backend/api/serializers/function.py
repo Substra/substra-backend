@@ -32,7 +32,7 @@ class FunctionOutputSerializer(serializers.ModelSerializer, SafeSerializerMixin)
 
 
 class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-    function = make_addressable_serializer("function")(source="*")
+    archive = make_addressable_serializer("archive")(source="*")
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     description = make_addressable_serializer("description")(source="*")
     permissions = make_download_process_permission_serializer()(source="*")
@@ -42,7 +42,7 @@ class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     class Meta:
         model = Function
         fields = [
-            "function",
+            "archive",
             "channel",
             "creation_date",
             "description",
@@ -63,7 +63,7 @@ class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             res["description"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-description", args=[res["key"]])
             )
-            res["function"]["storage_address"] = request.build_absolute_uri(
+            res["archive"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[res["key"]])
             )
         # from list to dict, to align with the orchestrator format

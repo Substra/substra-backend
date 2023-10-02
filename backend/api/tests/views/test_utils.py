@@ -88,12 +88,12 @@ class PermissionMixinDownloadFileTests(APITestCase):
         ), responses.RequestsMock() as mocked_responses:
             mocked_responses.add(
                 responses.GET,
-                metadata.function_address,
+                metadata.archive_address,
                 body=self.function_content,
                 content_type="text/plain; charset=utf-8",
             )
             response = self.client.get(self.function_url)
-            mocked_responses.assert_call_count(metadata.function_address, 1)
+            mocked_responses.assert_call_count(metadata.archive_address, 1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.getvalue(), self.function_content)

@@ -154,7 +154,7 @@ class FunctionStatus(AutoNameEnum):
 class Function(pydantic.BaseModel):
     key: str
     owner: str
-    function_address: Address
+    archive_address: Address
     inputs: dict[str, FunctionInput]
     outputs: dict[str, FunctionOutput]
     status: FunctionStatus
@@ -164,7 +164,7 @@ class Function(pydantic.BaseModel):
         return cls(
             key=a.key,
             owner=a.owner,
-            function_address=Address.from_grpc(a.function),
+            archive_address=Address.from_grpc(a.archive),
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
             status=FunctionStatus.from_grpc(a.status),

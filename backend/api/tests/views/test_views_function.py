@@ -280,7 +280,7 @@ class FunctionViewTests(APITestCase):
     def test_function_list_storage_addresses_update(self):
         for function in Function.objects.all():
             function.description_address.replace("http://testserver", "http://remotetestserver")
-            function.function_address.replace("http://testserver", "http://remotetestserver")
+            function.archive_address.replace("http://testserver", "http://remotetestserver")
             function.save()
 
         response = self.client.get(self.url)
@@ -587,7 +587,7 @@ class FunctionViewTests(APITestCase):
     def test_function_retrieve_storage_addresses_update(self):
         function = Function.objects.get(key=self.expected_functions[0]["key"])
         function.description_address.replace("http://testserver", "http://remotetestserver")
-        function.function_address.replace("http://testserver", "http://remotetestserver")
+        function.archive_address.replace("http://testserver", "http://remotetestserver")
         function.save()
 
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
