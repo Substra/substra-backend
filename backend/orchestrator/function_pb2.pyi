@@ -387,25 +387,28 @@ class QueryFunctionsParam(google.protobuf.message.Message):
 
 global___QueryFunctionsParam = QueryFunctionsParam
 
-@typing_extensions.final
 class UpdateFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     KEY_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
+    IMAGE_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
+    @property
+    def image(self) -> common_pb2.Addressable: ...
     def __init__(
         self,
         *,
         key: builtins.str = ...,
         name: builtins.str = ...,
+        image: common_pb2.Addressable | None = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key", b"key", "name", b"name"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["image", b"image"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["image", b"image", "key", b"key", "name", b"name"]) -> None: ...
 
 global___UpdateFunctionParam = UpdateFunctionParam
 
-@typing_extensions.final
 class UpdateFunctionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
