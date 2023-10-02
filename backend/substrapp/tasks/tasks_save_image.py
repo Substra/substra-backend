@@ -11,6 +11,7 @@ from django.core.files import File
 from django.urls import reverse
 
 import orchestrator
+from api.models import Function as ApiFunction
 from backend.celery import app
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
@@ -102,9 +103,15 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
 
         logger.info("Start saving the serialized image")
         # save it
-        FunctionImage.objects.create(
+        image = FunctionImage.objects.create(
             function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
         )
+        # update APIFunction image-related fields
+        ApiFunction.objects.get(key=function.key).update(
+            image_address=image.file.url,
+            image_checksum=image.checksum,
+        )
+
         logger.info("Serialized image saved")
 
     return function_serialized, channel_name

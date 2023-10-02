@@ -158,6 +158,7 @@ class Function(pydantic.BaseModel):
     inputs: dict[str, FunctionInput]
     outputs: dict[str, FunctionOutput]
     status: FunctionStatus
+    image: Address
 
     @classmethod
     def from_grpc(cls, a: function_pb2.Function) -> Function:
@@ -168,6 +169,7 @@ class Function(pydantic.BaseModel):
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
             status=FunctionStatus.from_grpc(a.status),
+            image=Address.from_grpc(a.image),
         )
 
 

@@ -54,6 +54,8 @@ class Function(models.Model, AssetPermissionMixin):
     description_checksum = models.CharField(max_length=64)
     archive_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
     archive_checksum = models.CharField(max_length=64)
+    image_address = models.URLField(validators=[URLValidatorWithOptionalTLD()], null=True)
+    image_checksum = models.CharField(max_length=64, null=True)
     permissions_download_public = models.BooleanField()
     permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     permissions_process_public = models.BooleanField()
