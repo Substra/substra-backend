@@ -140,7 +140,8 @@ def get_file_response(
     url: str,
 ) -> django.http.FileResponse:
     if get_owner() == asset_owner:
-        local_file = local_file_class.objects.get(pk=key)
+        key_identifier = getattr(local_file_class, "key_identifier", "key")
+        local_file = local_file_class.objects.get(**{key_identifier: key})
         response = _get_local_file_response(local_file, key, content_field)
     else:
         response = _download_remote_file(channel_name, asset_owner, url)
