@@ -23,6 +23,8 @@ from .deps.org import *
 from .deps.path import *
 from .deps.utils import to_bool
 
+from .deps.image_build import *  # isort: skip
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
