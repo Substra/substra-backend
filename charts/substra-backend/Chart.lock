@@ -4,12 +4,12 @@ dependencies:
   version: 17.0.7
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 11.6.2
+  version: 13.0.0
 - name: docker-registry
   repository: https://helm.twun.io
   version: 1.13.0
 - name: minio
   repository: https://charts.bitnami.com/bitnami
   version: 11.6.5
-digest: sha256:b561368b783d0059338aded55c7649355a5f341d8d61e72bfcd63b757371e561
-generated: "2022-08-03T14:41:27.225387+02:00"
+digest: sha256:5273ecaa8bad1e86d03b1e643348aae20a606ebf4afbe4edb643288406a947e9
+generated: "2023-10-04T20:24:48.463913+02:00"

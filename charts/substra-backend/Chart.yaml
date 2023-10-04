@@ -19,7 +19,7 @@ dependencies:
     version: 17.0.7
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 11.6.2
+    version: 13.0.0
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
