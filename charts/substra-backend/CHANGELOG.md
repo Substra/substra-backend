@@ -1,8 +1,14 @@
 # Changelog
 
+## [] - Unrelease
+
+### Fixed
+
+- Use the SA ` xxx-builder` instead of `xxx-worker` in `builder` 
+
 ## [22.8.0] - 2023-08-16
 
-## Added
+### Added
 
 - New `server.allowImplicitLogin` field, controlling whether "implicit login" (`Client.login` in the Substra SDK) is enabled
 
