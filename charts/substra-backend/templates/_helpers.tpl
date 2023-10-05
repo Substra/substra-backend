@@ -205,3 +205,13 @@ The hostname we should connect to (external is defined, otherwise integrated)
   image: jwilder/dockerize:0.6.1
   command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
 {{- end -}}
+
+
+{{/*
+`wait-postgresql` container initialisation used inside of `initContainers`
+*/}}
+{{- define "common.waitPostgresqlInitContainer" -}}
+- name: wait-postgresql
+  image: jwilder/dockerize:0.6.1
+  command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.database.host" . }}:{{ .Values.database.port }}']
+{{- end -}}
