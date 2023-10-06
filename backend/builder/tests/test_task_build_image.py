@@ -37,8 +37,12 @@ def test_order_building_success(celery_app, celery_worker, mocker, execution_num
     mocker.patch("builder.tasks.task.get_orchestrator_client")
     mocker.patch("builder.tasks.tasks_build_image.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5))
 
-    result_1 = build_image.apply_async(kwargs={"function_serialized": function_1.json(), "channel_name": CHANNEL})
-    result_2 = build_image.apply_async(kwargs={"function_serialized": function_2.json(), "channel_name": CHANNEL})
+    result_1 = build_image.apply_async(
+        kwargs={"function_serialized": function_1.model_dump_json(), "channel_name": CHANNEL}
+    )
+    result_2 = build_image.apply_async(
+        kwargs={"function_serialized": function_2.model_dump_json(), "channel_name": CHANNEL}
+    )
     # get waits for the completion
     result_1.get()
 
@@ -70,10 +74,10 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
     mocker.patch("builder.tasks.tasks_build_image.build_image_if_missing", side_effect=side_effect_creator())
 
     result_retry = build_image.apply_async(
-        kwargs={"function_serialized": function_retry.json(), "channel_name": CHANNEL}
+        kwargs={"function_serialized": function_retry.model_dump_json(), "channel_name": CHANNEL}
     )
     result_other = build_image.apply_async(
-        kwargs={"function_serialized": function_other.json(), "channel_name": CHANNEL}
+        kwargs={"function_serialized": function_other.model_dump_json(), "channel_name": CHANNEL}
     )
 
     result_retry.get()
