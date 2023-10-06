@@ -6,6 +6,12 @@
 
 - `wait-minio` container definition moved to the Helm helper templates
 
+## [22.8.3] - 2023-10-06
+
+### Changed
+
+- Update substra-backend image to `0.42.1`
+
 ## [22.8.2] - 2023-09-08
 
 ### Changed
