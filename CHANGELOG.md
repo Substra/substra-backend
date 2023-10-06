@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pre-populate Skaffold deployment with substra-tools base docker image (not minimal) ([#736](https://github.com/Substra/substra-backend/pull/736))
 
+### Fixed
+
+- `settings.DEBUG` is not `True` by default.
+
 ## [0.42.0](https://github.com/Substra/substra-backend/releases/tag/0.42.0) 2023-09-08
 
 ## Changed
