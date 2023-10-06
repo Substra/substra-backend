@@ -1,10 +1,16 @@
 # Changelog
 
+## [] - Unreleased
+
+### Fixed
+
+- Use the SA ` xxx-builder` instead of `xxx-worker` in `builder`
+
 ## [23.0.0] - 2023-10-10
 
 ## Added
 
-- `bitnami/common` dependency added 
+- `bitnami/common` dependency added
 
 ## Changed
 
@@ -51,7 +57,7 @@
 
 ## [22.8.0] - 2023-08-16
 
-## Added
+### Added
 
 - New `server.allowImplicitLogin` field, controlling whether "implicit login" (`Client.login` in the Substra SDK) is enabled
 

@@ -50,7 +50,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ template "substra.fullname" . }}-worker
+      serviceAccountName: {{ template "substra.fullname" . }}-builder
       containers:
       - name: builder
         image: {{ include "substra-backend.images.name" (dict "img" .Values.builder.image "defaultTag" $.Chart.AppVersion) }}
