@@ -8,6 +8,10 @@
 
 - Builder service
 
+### Fixed
+
+- Use the SA ` xxx-builder` instead of `xxx-worker` in `builder`
+
 ## [23.0.2] - 2023-10-18
 
 ### Changed
