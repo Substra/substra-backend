@@ -195,3 +195,13 @@ The hostname we should connect to (external is defined, otherwise integrated)
         {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
+
+
+{{/*
+`wait-minio` container initialisation used inside of `initContainers`
+*/}}
+{{- define "common.waitMinIOContainer" -}}
+- name: wait-minio
+  image: jwilder/dockerize:0.6.1
+  command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
+{{- end -}}

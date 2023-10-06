@@ -1,5 +1,11 @@
 # Changelog
 
+## [22.8.4] - 2023-10-06
+
+## Changed
+
+- `wait-minio` container definition moved to the Helm helper templates
+
 ## [22.8.2] - 2023-09-08
 
 ### Changed
