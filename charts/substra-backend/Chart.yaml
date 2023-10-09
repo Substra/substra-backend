@@ -16,16 +16,20 @@ dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-    version: 17.0.7
+    version: 18.1.2
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+    version: 2.13.2
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 11.6.2
+    version: 13.1.0
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
-    version: 1.13.0
+    version: 2.2.2
     condition: docker-registry.enabled
   - name: minio
     repository: https://charts.bitnami.com/bitnami
-    version: 11.6.5
+    version: 12.8.12  
     condition: minio.enabled

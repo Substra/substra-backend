@@ -90,6 +90,8 @@ Usage:
 {{ include "common.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
 */}}
 {{- define "common.tplvalues.render" -}}
+    {{ printf "Value: %v" .value | indent 2 }}
+    {{ printf "Context: %v" .context | indent 2 }}
     {{- if typeIs "string" .value }}
         {{- tpl .value .context }}
     {{- else }}
@@ -192,7 +194,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
     {{- if .Values.database.host }}
         {{- .Values.database.host }}
     {{- else }}
-        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
+        {{- template "postgresql.v1.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
 
