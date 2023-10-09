@@ -1,6 +1,8 @@
 from .mods.oidc import *
 from .test import *
 
+DEBUG = True
+
 # Enable Browsable API
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ("rest_framework.renderers.BrowsableAPIRenderer",)
 REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
