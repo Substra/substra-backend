@@ -1,5 +1,18 @@
 # Changelog
 
+## [22.8.5] - 2023-10-09
+
+## Added
+
+- `bitnami/common` dependency added 
+
+## Changed
+
+- `redis` subchart version incremented to `18.1.2`
+- `postgresql` subchart version incremented to `13.1.0`
+- `docker-registry` subchart version incremented to `2.2.2`
+- `minio` subchart version incremented to `12.0.12`
+
 ## [22.8.4] - 2023-10-06
 
 ## Changed
