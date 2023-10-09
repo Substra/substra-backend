@@ -74,46 +74,25 @@ def get_blob_with_same_digest(list_of_blobs: list[Blob], digest: str) -> Optiona
             return blob
 
 
-def get_manifest_and_list_of_blobs_to_pull(dxf_base: DXFBase, docker_image: str) -> tuple[Manifest, list[Blob]]:
-    manifest = Manifest(dxf_base, docker_image, PayloadSide.ENCODER)
+def get_manifest_and_list_of_blobs_to_pull(
+    dxf_base: DXFBase,
+    docker_image: str,
+    platform: Optional[str] = None,
+) -> tuple[Manifest, list[Blob]]:
+    manifest = Manifest(dxf_base, docker_image, PayloadSide.ENCODER, platform=platform)
     return manifest, manifest.get_list_of_blobs()
 
 
 def get_manifests_and_list_of_all_blobs(
-    dxf_base: DXFBase, docker_images: Iterator[str]
+    dxf_base: DXFBase, docker_images: Iterator[str], platform: Optional[str] = None
 ) -> tuple[list[Manifest], list[Blob]]:
     manifests = []
     blobs_to_pull = []
     for docker_image in docker_images:
-        manifest, blobs = get_manifest_and_list_of_blobs_to_pull(dxf_base, docker_image)
+        manifest, blobs = get_manifest_and_list_of_blobs_to_pull(dxf_base, docker_image, platform)
         manifests.append(manifest)
         blobs_to_pull += blobs
     return manifests, blobs_to_pull
-
-
-def uniquify_blobs(blobs: list[Blob]) -> list[Blob]:
-    result = []
-    for blob in blobs:
-        if blob.digest not in [x.digest for x in result]:
-            result.append(blob)
-    return result
-
-
-def separate_images_to_transfer_and_images_to_skip(
-    docker_images_to_transfer: list[str], docker_images_already_transferred: list[str]
-) -> tuple[list[str], list[str]]:
-    docker_images_to_transfer_with_blobs = []
-    docker_images_to_skip = []
-    for docker_image in docker_images_to_transfer:
-        if docker_image not in docker_images_already_transferred:
-            docker_images_to_transfer_with_blobs.append(docker_image)
-        else:
-            print(
-                f"Skipping {docker_image} as it has already been transferred",
-                file=sys.stderr,
-            )
-            docker_images_to_skip.append(docker_image)
-    return docker_images_to_transfer_with_blobs, docker_images_to_skip
 
 
 def create_zip_from_docker_images(
@@ -121,18 +100,23 @@ def create_zip_from_docker_images(
     docker_images_to_transfer: list[str],
     docker_images_already_transferred: list[str],
     zip_file: ZipFile,
+    platform: Optional[str] = None,
 ) -> None:
     payload_descriptor = PayloadDescriptor.from_images(docker_images_to_transfer, docker_images_already_transferred)
 
     manifests, blobs_to_pull = get_manifests_and_list_of_all_blobs(
-        dxf_base, payload_descriptor.get_images_not_transferred_yet()
+        dxf_base, payload_descriptor.get_images_not_transferred_yet(), platform=platform
     )
-    _, blobs_already_transferred = get_manifests_and_list_of_all_blobs(dxf_base, docker_images_already_transferred)
+    _, blobs_already_transferred = get_manifests_and_list_of_all_blobs(
+        dxf_base, docker_images_already_transferred, platform=platform
+    )
     payload_descriptor.blobs_paths = add_blobs_to_zip(dxf_base, zip_file, blobs_to_pull, blobs_already_transferred)
     for manifest in manifests:
         dest = payload_descriptor.manifests_paths[manifest.docker_image_name]
         zip_file.writestr(dest, manifest.content)
 
+    # Replace for Pydantic v2:
+    # zip_file.writestr("payload_descriptor.json", payload_descriptor.model_dump_json(indent=4))
     zip_file.writestr("payload_descriptor.json", payload_descriptor.json(indent=4))
 
 
@@ -142,17 +126,15 @@ def make_payload(
     docker_images_already_transferred: Optional[list[str]] = None,
     registry: str = "registry-1.docker.io",
     secure: bool = True,
+    platform: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
 ) -> None:
     """
     Creates a payload from a list of docker images
     All the docker images must be in the same registry.
-    This is currently a limitation of the docker-charon package.
 
-    If you are interested in multi-registries, please open an issue.
-
-    # Arguments
+    Args:
         zip_file: The path to the zip file to create. It can be a `pathlib.Path` or
             a `str`. It's also possible to pass a file-like object. The payload with
             all the docker images is a single zip file.
@@ -164,6 +146,7 @@ def make_payload(
         registry: the registry to push to. It defaults to `registry-1.docker.io` (dockerhub).
         secure: Set to `False` if the registry doesn't support HTTPS (TLS). Default
             is `True`.
+        platform: In case of multi platform images, you can precise which one you want to pull.
         username: The username to use for authentication to the registry. Optional if
             the registry doesn't require authentication.
         password: The password to use for authentication to the registry. Optional if
@@ -171,6 +154,7 @@ def make_payload(
     """
     if docker_images_already_transferred is None:
         docker_images_already_transferred = []
+
     authenticator = Authenticator(username, password)
 
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
@@ -180,4 +164,5 @@ def make_payload(
                 docker_images_to_transfer,
                 docker_images_already_transferred,
                 zip_file_opened,
+                platform=platform,
             )

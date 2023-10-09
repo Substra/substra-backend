@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from enum import Enum
-from pathlib import Path
 from typing import IO
 from typing import Dict
 from typing import Iterator
@@ -13,6 +12,8 @@ import requests
 from dxf import DXF
 from dxf import DXFBase
 from pydantic import BaseModel
+
+from image_transfer.exceptions import ManifestContentError
 
 
 class PayloadSide(Enum):
@@ -39,11 +40,13 @@ class Manifest:
         dxf_base: DXFBase,
         docker_image_name: str,
         payload_side: PayloadSide,
+        platform: Optional[str] = None,
         content: Optional[str] = None,
     ):
         self.dxf_base = dxf_base
         self.docker_image_name = docker_image_name
         self.payload_side = payload_side
+        self.platform = platform
         self._content = content
 
     @property
@@ -62,11 +65,18 @@ class Manifest:
                     "This makes no sense to fetch the manifest from " "the registry if you're decoding the zip"
                 )
             dxf = DXF.from_base(self.dxf_base, self.repository)
-            self._content = dxf.get_manifest(self.tag)
+            self._content = dxf.get_manifest(self.tag, platform=self.platform)
         return self._content
 
     def get_list_of_blobs(self) -> list[Blob]:
-        manifest_dict = json.loads(self.content)
+        try:
+            manifest_dict = json.loads(self.content)
+        except TypeError:
+            raise ManifestContentError(
+                "The Manifest content must be str, bytes or bytearray. "
+                "Is there several platform available in the manifest ? "
+                "If yes, please specify it."
+            )
         result: list[Blob] = [Blob(self.dxf_base, manifest_dict["config"]["digest"], self.repository)]
         for layer in manifest_dict["layers"]:
             result.append(Blob(self.dxf_base, layer["digest"], self.repository))
@@ -120,9 +130,6 @@ def file_to_generator(file_like: IO) -> Iterator[bytes]:
         if not chunk:
             break
         yield chunk
-
-
-PROJECT_ROOT = Path(__file__).parents[1]
 
 
 def get_repo_and_tag(docker_image_name: str) -> (str, str):
