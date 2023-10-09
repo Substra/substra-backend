@@ -2,9 +2,9 @@
 
 ## [22.8.5] - 2023-10-09
 
-### Chagned
+### Changed
 
-- initContainer `wait-postgresql` refactored to Helm Helper templates 
+- initContainer `wait-postgresql` refactored to Helm Helper templates
 
 ## [22.8.4] - 2023-10-06
 
