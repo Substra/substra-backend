@@ -23,8 +23,7 @@ from .deps.org import *
 from .deps.path import *
 from .deps.utils import to_bool
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 SUBPATH = os.environ.get("SUBPATH", "")  # prefix for backend endpoints

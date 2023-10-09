@@ -8,6 +8,8 @@ from .mods.oidc import *
 
 logging.disable(logging.CRITICAL)
 
+DEBUG = True
+
 ORG_NAME = "OrgTestSuite"
 DEFAULT_DOMAIN = "http://testserver"
 ALLOWED_HOSTS = ["testserver"]
