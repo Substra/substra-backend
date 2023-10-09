@@ -155,6 +155,4 @@ def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: ZipFile, strict: bo
 
 
 def get_payload_descriptor(zip_file: ZipFile) -> PayloadDescriptor:
-    # Replace for Pydantic v2:
-    # PayloadDescriptor.model_validate_json( zip_file.read("payload_descriptor.json").decode())
-    return PayloadDescriptor.parse_raw(zip_file.read("payload_descriptor.json").decode())
+    return PayloadDescriptor.model_validate_json(zip_file.read("payload_descriptor.json").decode())
