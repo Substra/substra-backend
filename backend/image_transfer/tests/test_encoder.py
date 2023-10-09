@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from dxf import DXFBase
 
 from image_transfer.decoder import push_payload
@@ -54,6 +55,7 @@ def test_get_manifest_and_list_of_all_blob(base_registry_local_port, ubuntu_base
         assert blob.digest in manifest.content
 
 
+@pytest.mark.serial
 def test_make_payload_from_path(tmp_path, ubuntu_base_image, base_registry_local_port):
     zip_path = tmp_path / "test.zip"
 
@@ -68,6 +70,7 @@ def test_make_payload_from_path(tmp_path, ubuntu_base_image, base_registry_local
     assert zip_path.stat().st_size > 1024
 
 
+@pytest.mark.serial
 def test_make_payload_from_str(tmp_path, ubuntu_base_image, base_registry_local_port):
     zip_path = tmp_path / "test.zip"
 
@@ -81,6 +84,7 @@ def test_make_payload_from_str(tmp_path, ubuntu_base_image, base_registry_local_
     assert zip_path.stat().st_size > 1024
 
 
+@pytest.mark.serial
 def test_make_payload_from_opened_file(tmp_path, ubuntu_base_image, base_registry_local_port):
     zip_path = tmp_path / "test.zip"
     with open(zip_path, "wb") as f:

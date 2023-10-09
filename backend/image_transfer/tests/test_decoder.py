@@ -26,6 +26,7 @@ def add_destination_registry(docker_client, destination_registry_local_port):
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_single_image(
     docker_client, tmp_path, ubuntu_base_image, base_registry_local_port, destination_registry_local_port
 ):
@@ -50,6 +51,7 @@ def test_end_to_end_single_image(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_multiple_images(
     tmp_path,
     docker_client,
@@ -90,6 +92,7 @@ def test_end_to_end_multiple_images(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_single_image_from_dockerhub_no_platform(
     tmp_path,
     ubuntu_base_image,
@@ -100,6 +103,7 @@ def test_end_to_end_single_image_from_dockerhub_no_platform(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_single_image_from_dockerhub(
     tmp_path,
     docker_client,
@@ -123,6 +127,7 @@ def test_end_to_end_single_image_from_dockerhub(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_only_necessary_layers(
     tmp_path,
     docker_client,
@@ -185,6 +190,7 @@ def test_end_to_end_only_necessary_layers(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_image_skipped_is_still_declared_in_the_payload(
     tmp_path,
     ubuntu_base_image,
@@ -227,6 +233,7 @@ def test_image_skipped_is_still_declared_in_the_payload(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_raise_error_if_image_is_not_here_and_strict(
     tmp_path, tag_ubuntu_custom_image, base_registry_local_port, destination_registry_local_port
 ):
@@ -246,6 +253,7 @@ def test_raise_error_if_image_is_not_here_and_strict(
 
 
 @pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_warning_if_image_is_not_here(
     tmp_path, tag_ubuntu_custom_image, base_registry_local_port, destination_registry_local_port
 ):
