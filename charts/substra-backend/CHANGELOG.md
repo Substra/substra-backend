@@ -1,6 +1,6 @@
 # Changelog
 
-## [22.8.5] - 2023-10-09
+## [23.0.0] - 2023-10-09
 
 ## Added
 
@@ -9,7 +9,7 @@
 ## Changed
 
 - `redis` subchart version incremented to `18.1.2`
-- `postgresql` subchart version incremented to `13.1.0`
+- BREAKING: `postgresql` subchart version incremented to `13.1.0`
 - `docker-registry` subchart version incremented to `2.2.2`
 - `minio` subchart version incremented to `12.0.12`
 
