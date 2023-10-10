@@ -23,7 +23,7 @@ dependencies:
     version: 2.13.2
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 13.1.0
+    version: 13.1.2
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
@@ -31,5 +31,5 @@ dependencies:
     condition: docker-registry.enabled
   - name: minio
     repository: https://charts.bitnami.com/bitnami
-    version: 12.8.12  
+    version: 12.8.12
     condition: minio.enabled

@@ -9,7 +9,7 @@
 ## Changed
 
 - `redis` subchart version incremented to `18.1.2`
-- BREAKING: `postgresql` subchart version incremented to `13.1.0`
+- BREAKING: `postgresql` subchart version incremented to `13.1.2`
 - `docker-registry` subchart version incremented to `2.2.2`
 - `minio` subchart version incremented to `12.0.12`
 
