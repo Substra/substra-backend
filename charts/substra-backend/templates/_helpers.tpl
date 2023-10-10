@@ -212,6 +212,6 @@ The hostname we should connect to (external is defined, otherwise integrated)
 */}}
 {{- define "common.waitPostgresqlInitContainer" -}}
 - name: wait-postgresql
-  image: jwilder/dockerize:0.6.1
-  command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.database.host" . }}:{{ .Values.database.port }}']
+  image: postgres
+  command: ['sh', '-c', 'until pg_isready --host={{ template "substra-backend.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
 {{- end -}}
