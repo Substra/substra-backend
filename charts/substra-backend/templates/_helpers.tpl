@@ -90,8 +90,6 @@ Usage:
 {{ include "common.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
 */}}
 {{- define "common.tplvalues.render" -}}
-    {{ printf "Value: %v" .value | indent 2 }}
-    {{ printf "Context: %v" .context | indent 2 }}
     {{- if typeIs "string" .value }}
         {{- tpl .value .context }}
     {{- else }}
