@@ -1,11 +1,23 @@
 # Changelog
 
+## [23.0.0] - 2023-10-10
+
+## Added
+
+- `bitnami/common` dependency added 
+
+## Changed
+
+- `redis` subchart version incremented to `18.1.2`
+- BREAKING: `postgresql` subchart version incremented to `13.1.2`
+- `docker-registry` subchart version incremented to `2.2.2`
+- `minio` subchart version incremented to `12.0.12`
+
 ## [22.8.6] - 2023-10-10
 
 ## Added
 
 - Environment variables added to the `wait-postgresql` Helm helper template
-
 
 ## [22.8.5] - 2023-10-09
 

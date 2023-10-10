@@ -192,7 +192,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
     {{- if .Values.database.host }}
         {{- .Values.database.host }}
     {{- else }}
-        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
+        {{- template "postgresql.v1.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
 

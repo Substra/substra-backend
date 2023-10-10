@@ -1,5 +1,9 @@
 ## unreleased
 
+## 23.0.0
+
+Database should be dumped and restored as the `postgresql` sub-chart version incremented. You can follow [Upgrading a PostgreSQL Cluster](https://www.postgresql.org/docs/16/upgrading.html) documentation for further detail
+
 ## 21.0.0
 
 If you want to keep persistence disabled for postgresql you will need to set the key `postgresql.primary.persistence.enabled` to `false` in your values.
