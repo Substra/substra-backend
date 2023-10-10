@@ -213,5 +213,12 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.waitPostgresqlInitContainer" -}}
 - name: wait-postgresql
   image: postgres
+  env:
+   - name: PGUSER
+     value: {{ .Values.database.auth.username }}
+   - name: PGPASSWORD
+     value: {{ .Values.database.auth.password }}
+   - name: PGDATABASE
+     value: {{ .Values.database.auth.database }}
   command: ['sh', '-c', 'until pg_isready --host={{ template "substra-backend.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
 {{- end -}}
