@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `SECRET_KEY` optional environment variable ([#671](https://github.com/Substra/substra-backend/pull/671))
 - `/api-token-auth/` and the associated tokens can now be disabled through the `EXPIRY_TOKEN_ENABLED` environment variable and `server.allowImplicitLogin` chart value ([#698](https://github.com/Substra/substra-backend/pull/698))
 - Tokens issued by `/api-token-auth/` can now be deleted like other API tokens, through a `DELETE` request on the `/active-api-tokens` endpoint ([#698](https://github.com/Substra/substra-backend/pull/698))
-- A standalone Docker image for updating Private CA Certificates. ([726](https://github.com/Substra/substra-backend/pull/726))
+- A standalone Docker image for updating Private CA Certificates. ([#726](https://github.com/Substra/substra-backend/pull/726))
   
 ### Changed
 
