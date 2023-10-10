@@ -188,9 +188,7 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      - name: wait-postgresql
-        image: jwilder/dockerize:0.6.1
-        command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.database.host" . }}:{{ .Values.database.port }}']
+      {{- include "common.waitPostgresqlInitContainer" . | nindent 6 }}
       {{- include "common.waitMinIOContainer" . | nindent 6 }}
       - name: init-migrate
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
