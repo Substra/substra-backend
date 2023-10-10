@@ -1,6 +1,6 @@
 # Changelog
 
-## [23.0.0] - 2023-10-09
+## [23.0.0] - 2023-10-10
 
 ## Added
 
@@ -12,6 +12,12 @@
 - BREAKING: `postgresql` subchart version incremented to `13.1.0`
 - `docker-registry` subchart version incremented to `2.2.2`
 - `minio` subchart version incremented to `12.0.12`
+
+## [22.8.5] - 2023-10-09
+
+### Changed
+
+- initContainer `wait-postgresql` refactored to Helm Helper templates
 
 ## [22.8.4] - 2023-10-06
 
