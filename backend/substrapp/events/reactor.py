@@ -99,7 +99,7 @@ def on_function_event(payload):
 
             building_params = {
                 "channel_name": channel_name,
-                "function_serialized": orc_function.json(),
+                "function_serialized": orc_function.model_dump_json(),
             }
             (
                 # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
