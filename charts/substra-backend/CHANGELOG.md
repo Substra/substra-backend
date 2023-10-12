@@ -1,5 +1,12 @@
 # Changelog
 
+## [23.0.1] - 2023-10-11
+
+### Changed
+
+- `add-ca-cert` `initContainer`  refactored as Helm helper template
+- `wait-init-migrations` `initContainer` refactored to Helm helper template
+
 ## [23.0.0] - 2023-10-10
 
 ## Added
