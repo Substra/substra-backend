@@ -1,10 +1,10 @@
 # Changelog
 
-## [] - Unreleased
+## [24.0.0] - 2023-10-16
 
-### Fixed
+### Added
 
-- Use the SA ` xxx-builder` instead of `xxx-worker` in `builder`
+- Builder service
 
 ## [23.0.0] - 2023-10-10
 
