@@ -222,3 +222,30 @@ The hostname we should connect to (external is defined, otherwise integrated)
      value: {{ .Values.database.auth.database }}
   command: ['sh', '-c', 'until pg_isready --host={{ template "substra-backend.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
 {{- end -}}
+
+{{/*
+'add-cert' container initialisation used inside of 'initContainers'
+*/}}
+{{- define "common.addCertInitContainer" -}}
+{{- if .Values.privateCa.enabled }}
+- name: add-cert
+  image: {{ .Values.privateCa.image.repository }}
+  imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+  securityContext:
+    runAsUser: 0
+  command: ['sh', '-c']
+  args:
+  - |
+    {{- if .Values.privateCa.image.apkAdd }}
+    apt update
+    apt install -y ca-certificates openssl
+    {{- end }}
+    update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+  volumeMounts:
+    - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+      name: private-ca
+      subPath: {{ .Values.privateCa.configMap.fileName }}
+    - mountPath: /tmp/certs/
+      name: ssl-certs
+{{- end }}
+{{- end -}}
