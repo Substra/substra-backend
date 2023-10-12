@@ -133,7 +133,7 @@ def create_zip_from_docker_images(
         dest = payload_descriptor.manifests_paths[manifest.docker_image_name]
         zip_file.writestr(dest, manifest.content)
 
-    zip_file.writestr("payload_descriptor.json", payload_descriptor.json(indent=4))
+    zip_file.writestr("payload_descriptor.json", payload_descriptor.model_dump_json(indent=4))
 
 
 def make_payload(
