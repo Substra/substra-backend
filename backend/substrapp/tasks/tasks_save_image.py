@@ -57,6 +57,8 @@ class SaveImageTask(FailableTask):
         function_image = FunctionImage.objects.get(function=function_key)
         orc_function = {
             "key": str(function_key),
+            # TODO find a way to propagate the name or make it optional at update
+            "name": "function name",
             "image": {
                 "checksum": function_image.checksum,
                 # TODO check url
@@ -107,10 +109,11 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
             function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
         )
         # update APIFunction image-related fields
-        ApiFunction.objects.get(key=function.key).update(
-            image_address=image.file.url,
-            image_checksum=image.checksum,
-        )
+        api_function = ApiFunction.objects.get(key=function.key)
+        # TODO get full url cf https://github.com/Substra/substra-backend/backend/api/serializers/function.py#L66
+        api_function.image_address = settings.DEFAULT_DOMAIN + reverse("api:function-image", args=[function.key])
+        api_function.image_checksum = image.checksum
+        api_function.save()
 
         logger.info("Serialized image saved")
 
