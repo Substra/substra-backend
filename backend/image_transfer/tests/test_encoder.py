@@ -8,6 +8,7 @@ from image_transfer.encoder import get_manifest_and_list_of_blobs_to_pull
 from image_transfer.encoder import make_payload
 
 
+@pytest.mark.serial
 def test_end_to_end_single_image(tmp_path, docker_client, ubuntu_base_image, base_registry_local_port):
     payload_path = tmp_path / "payload.zip"
     make_payload(
@@ -29,6 +30,7 @@ def test_end_to_end_single_image(tmp_path, docker_client, ubuntu_base_image, bas
     )
 
 
+@pytest.mark.serial
 def test_get_manifest_and_list_of_all_blob(base_registry_local_port, ubuntu_base_image):
     dxf_base = DXFBase(f"localhost:{base_registry_local_port}", insecure=True)
     manifest, blobs = get_manifest_and_list_of_blobs_to_pull(dxf_base, ubuntu_base_image)
