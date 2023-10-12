@@ -249,3 +249,27 @@ The hostname we should connect to (external is defined, otherwise integrated)
       name: ssl-certs
 {{- end }}
 {{- end -}}
+{{/*
+  'wait-init-migrations' container initialisation used inside of 'initContainers'
+*/}}
+{{- define "common.waitInitMigrationsInitContainer" -}}
+- name: wait-init-migrations
+  image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
+  command: ['bash', '/usr/src/app/wait-init-migration.sh']
+  volumeMounts:
+  - name: volume-wait-init-migrations
+    mountPath: /usr/src/app/wait-init-migration.sh
+    subPath: wait-init-migration.sh
+  envFrom:
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-orchestrator
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-database
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-settings
+  - secretRef:
+      name: {{ include "substra-backend.database.secret-name" . }}
+  env:
+  - name: DJANGO_SETTINGS_MODULE
+    value: backend.settings.{{ .Values.settings }}
+{{- end -}}
