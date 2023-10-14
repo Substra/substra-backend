@@ -80,27 +80,7 @@ spec:
           resources:
             {{- toYaml .Values.schedulerWorker.resources | nindent 12 }}
       initContainers:
-      {{- if .Values.privateCa.enabled }}
-      - name: add-cert
-        image: {{ include "common.images.name" .Values.privateCa.image }}
-        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
-        securityContext:
-          runAsUser: 0
-        command: ['sh', '-c']
-        args:
-        - |
-          {{- if .Values.privateCa.image.apkAdd }}
-          apt update
-          apt install -y ca-certificates openssl
-          {{- end }}
-          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
-        volumeMounts:
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-            name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
-          - mountPath: /tmp/certs/
-            name: ssl-certs
-      {{- end }}
+        {{- include "common.addCertInitContainer" . | nindent 8 }}
       volumes:
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs

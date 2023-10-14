@@ -222,3 +222,54 @@ The hostname we should connect to (external is defined, otherwise integrated)
      value: {{ .Values.database.auth.database }}
   command: ['sh', '-c', 'until pg_isready --host={{ template "substra-backend.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
 {{- end -}}
+
+{{/*
+'add-cert' container initialisation used inside of 'initContainers'
+*/}}
+{{- define "common.addCertInitContainer" -}}
+{{- if .Values.privateCa.enabled }}
+- name: add-cert
+  image: {{ .Values.privateCa.image.repository }}
+  imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+  securityContext:
+    runAsUser: 0
+  command: ['sh', '-c']
+  args:
+  - |
+    {{- if .Values.privateCa.image.apkAdd }}
+    apt update
+    apt install -y ca-certificates openssl
+    {{- end }}
+    update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+  volumeMounts:
+    - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+      name: private-ca
+      subPath: {{ .Values.privateCa.configMap.fileName }}
+    - mountPath: /tmp/certs/
+      name: ssl-certs
+{{- end }}
+{{- end -}}
+{{/*
+  'wait-init-migrations' container initialisation used inside of 'initContainers'
+*/}}
+{{- define "common.waitInitMigrationsInitContainer" -}}
+- name: wait-init-migrations
+  image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
+  command: ['bash', '/usr/src/app/wait-init-migration.sh']
+  volumeMounts:
+  - name: volume-wait-init-migrations
+    mountPath: /usr/src/app/wait-init-migration.sh
+    subPath: wait-init-migration.sh
+  envFrom:
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-orchestrator
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-database
+  - configMapRef:
+      name: {{ include "substra.fullname" . }}-settings
+  - secretRef:
+      name: {{ include "substra-backend.database.secret-name" . }}
+  env:
+  - name: DJANGO_SETTINGS_MODULE
+    value: backend.settings.{{ .Values.settings }}
+{{- end -}}
