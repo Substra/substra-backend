@@ -231,7 +231,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.addCertInitContainer" -}}
 {{- if .Values.privateCa.enabled }}
 - name: add-cert
-  image: {{ include "common.images.name" .Values.privateCa.image.repository }}
+  image: {{ include "common.images.name" .Values.privateCa.image }}
   imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
   securityContext:
     runAsUser: 0
