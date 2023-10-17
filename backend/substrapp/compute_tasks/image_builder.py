@@ -43,11 +43,15 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
     container_image_tag = utils.container_image_tag_from_function(function)
     # Ask the backend owner of the function if it's available
 
+    # Necessary to query the DB again to get an updated Function object
+    # Else the image URI is not available
+    api_function = ApiFunction.objects.get(key=function.key)
+
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
-        url=function.image.uri,
-        checksum=function.image.checksum,
+        url=api_function.image_address,
+        checksum=api_function.image_checksum,
     )
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
