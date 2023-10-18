@@ -50,6 +50,15 @@ jobs:
             echo "Validation failed, you should upgrade the chart version in Chart.yaml"
             exit 1
           fi
+      - name: Validate Chart.lock changes
+        run: |
+          CHART_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep Chart.yaml)
+          for chart in $CHART_FILES; do
+            DIR=$(dirname $chart)
+            helm dependency update $DIR
+            git diff --exit-code $DIR/Chart.lock || echo "$DIR/Chart.lock needs to be updated!" >&2
+          done
+
 
   generate-chart-readme:
     runs-on: ubuntu-latest
