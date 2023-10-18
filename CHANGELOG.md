@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- BREAKING: remove `distributed` Skaffold profile [#768](https://github.com/Substra/substra-backend/pull/768)
+
 ## [0.42.2](https://github.com/Substra/substra-backend/releases/tag/0.42.2) 2023-10-18
 
 ### Changed
