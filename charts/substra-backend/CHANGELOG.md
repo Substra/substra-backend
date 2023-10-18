@@ -1,6 +1,12 @@
 # Changelog
 
-## [23.0.1] - 2023-10-11
+## [23.0.2] - 2023-10-18
+
+### Changed
+
+- Update substra-backend image to `0.42.2`
+
+##  [23.0.1] - 2023-10-11
 
 ### Changed
 
@@ -11,7 +17,7 @@
 
 ## Added
 
-- `bitnami/common` dependency added 
+- `bitnami/common` dependency added
 
 ## Changed
 
