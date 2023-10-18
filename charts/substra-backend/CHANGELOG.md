@@ -2,9 +2,11 @@
 
 ## [] - Unreleased
 
-### Fixed
+## [24.0.0] - 2023-10-16
 
-- Use the SA ` xxx-builder` instead of `xxx-worker` in `builder`
+### Added
+
+- Builder service
 
 ## [23.0.2] - 2023-10-18
 
