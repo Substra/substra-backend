@@ -23,11 +23,11 @@ jobs:
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
       image: substra-backend
-      force-publish: ${{ github.event.inputs.force-publish }}
+      force-publish: ${{ github.event.inputs.force-publish || false }}
   
   metrics-exporter:
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
       image: substra-backend-metrics-exporter
       image-folder: metrics-exporter
-      force-publish: ${{ github.event.inputs.force-publish }}
+      force-publish: ${{ github.event.inputs.force-publish || false }}
