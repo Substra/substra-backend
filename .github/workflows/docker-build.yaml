@@ -5,6 +5,8 @@ on:
       force-publish:
         description: Force publishing the image
         type: boolean
+        default: false
+        required: false
   push:
     branches: [main]
   release:
@@ -21,9 +23,11 @@ jobs:
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
       image: substra-backend
+      force-publish: ${{ github.event.inputs.force-publish }}
   
   metrics-exporter:
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
       image: substra-backend-metrics-exporter
       image-folder: metrics-exporter
+      force-publish: ${{ github.event.inputs.force-publish }}
