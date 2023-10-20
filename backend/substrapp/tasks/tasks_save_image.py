@@ -55,18 +55,21 @@ class SaveImageTask(FailableTask):
         function_key, channel_name = self.get_task_info(args, kwargs)
 
         function_image = FunctionImage.objects.get(function=function_key)
+        # needed because the name is not an optional parameter
+        api_function = ApiFunction.objects.get(key=function_key)
         orc_function = {
             "key": str(function_key),
             # TODO find a way to propagate the name or make it optional at update
-            "name": "function name",
+            "name": api_function.name,
             "image": {
                 "checksum": function_image.checksum,
                 # TODO check url
                 "storage_address": settings.DEFAULT_DOMAIN + reverse("api:function-image", args=[function_key]),
             },
         }
+
         with get_orchestrator_client(channel_name) as client:
-            # TODO atomicity?
+            # TODO atomiticy
             client.update_function(orc_function)
             client.update_function_status(
                 function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
