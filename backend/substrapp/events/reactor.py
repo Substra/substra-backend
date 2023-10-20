@@ -102,7 +102,6 @@ def on_function_event(payload):
                 "function_serialized": orc_function.model_dump_json(),
             }
             (
-                # TODO switch to function.model_dump_json() as soon as pydantic is updated to > 2.0
                 build_image.si(**building_params).set(queue=builder_queue)
                 | save_image_task.si(**building_params).set(queue=WORKER_QUEUE)
             ).apply_async()
