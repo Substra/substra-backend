@@ -121,3 +121,6 @@ orchestrator:
         model_export_enabled: true
         chaincode:
           name: yourcc
+
+builder:
+  enabled: false
