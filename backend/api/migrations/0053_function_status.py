@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("FUNCTION_STATUS_UNKNOWN", "Function Status Unknown"),
-                    ("FUNCTION_STATUS_CREATED", "Function Status Created"),
+                    ("FUNCTION_STATUS_WAITING", "Function Status Waiting"),
                     ("FUNCTION_STATUS_BUILDING", "Function Status Building"),
                     ("FUNCTION_STATUS_READY", "Function Status Ready"),
                     ("FUNCTION_STATUS_CANCELED", "Function Status Canceled"),

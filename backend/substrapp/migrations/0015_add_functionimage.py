@@ -6,12 +6,11 @@ from django.db import models
 
 import substrapp.models.datamanager
 import substrapp.models.function
-import substrapp.storages.minio
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("substrapp", "0015_alter_computetaskfailurereport_logs"),
+        ("substrapp", "0014_rename_algo_to_function"),
     ]
 
     operations = [
@@ -23,7 +22,7 @@ class Migration(migrations.Migration):
                     "file",
                     models.FileField(
                         max_length=500,
-                        storage=substrapp.storages.minio.MinioStorage("substra-function"),
+                        storage=django.core.files.storage.FileSystemStorage(),
                         upload_to=substrapp.models.function.upload_to_function,
                     ),
                 ),

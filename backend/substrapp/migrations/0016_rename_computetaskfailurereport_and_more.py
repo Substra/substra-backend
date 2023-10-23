@@ -6,7 +6,7 @@ from django.db import models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("substrapp", "0017_alter_computetaskfailurereport_logs_and_more"),
+        ("substrapp", "0015_add_functionimage"),
     ]
 
     operations = [
