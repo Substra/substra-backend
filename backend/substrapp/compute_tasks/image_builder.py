@@ -50,8 +50,10 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
-        url=api_function.image_address,
-        checksum=api_function.image_checksum,
+        url=function.image.uri,
+        checksum=function.image.checksum,
+        # url=api_function.image_address,
+        # checksum=api_function.image_checksum,
     )
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
