@@ -46,7 +46,7 @@ class SaveImageTask(FailableTask):
 
     # Returns (function key, channel)
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        function = orchestrator.Function.parse_raw(kwargs["function_serialized"])
+        function = orchestrator.Function.model_validate_json(kwargs["function_serialized"])
         channel_name = kwargs["channel_name"]
         return function.key, channel_name
 
@@ -75,7 +75,7 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
     logger.info("Starting save_image_task")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
     # create serialized image
-    function = orchestrator.Function.parse_raw(function_serialized)
+    function = orchestrator.Function.model_validate_json(function_serialized)
     container_image_tag = utils.container_image_tag_from_function(function)
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)

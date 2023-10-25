@@ -20,7 +20,7 @@ max_retries = settings.CELERY_TASK_MAX_RETRIES
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def build_image(task: BuildTask, function_serialized: str, channel_name: str) -> None:
-    function = orchestrator.Function.parse_raw(function_serialized)
+    function = orchestrator.Function.model_validate_json(function_serialized)
 
     attempt = 0
     while attempt <= task.max_retries:
