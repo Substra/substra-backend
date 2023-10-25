@@ -11,8 +11,6 @@ on:
       - "main"
     paths:
       - "charts/**"
-  release:
-    types: [published, edited]
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
@@ -87,7 +85,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'release'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs:
       - test
       - generate-chart-readme
