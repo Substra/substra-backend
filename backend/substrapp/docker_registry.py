@@ -44,6 +44,11 @@ def get_container_image_name(image_name: str) -> str:
     return f"{pull_domain}/{USER_IMAGE_REPOSITORY}:{image_name}"
 
 
+def get_entrypoint(image_tag: str) -> str:
+    d = get_container_image(image_tag)
+    return json.loads(d["history"][0]["v1Compatibility"])["config"]["Entrypoint"]
+
+
 def delete_container_image_safe(image_tag: str) -> None:
     """deletes a container image from the docker registry but will fail silently"""
     try:
@@ -90,15 +95,6 @@ def _retrieve_image_digest(image_tag: str) -> str:
         raise RetrieveDigestError()
 
     return response.headers["Docker-Content-Digest"]
-
-
-def container_image_exists(image_name: str) -> bool:
-    try:
-        get_container_image(image_name)
-    except ImageNotFoundError:
-        return False
-    else:
-        return True
 
 
 def get_container_image(image_name: str) -> dict:

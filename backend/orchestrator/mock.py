@@ -11,6 +11,7 @@ from .resources import DataManager
 from .resources import DataSample
 from .resources import Function
 from .resources import FunctionInput
+from .resources import FunctionStatus
 from .resources import Model
 from .resources import Permission
 from .resources import Permissions
@@ -94,6 +95,7 @@ class FunctionFactory(factory.Factory):
     function_address = factory.SubFactory(AddressFactory)
     inputs = {}
     outputs = {}
+    status = FunctionStatus.FUNCTION_STATUS_WAITING
 
 
 class ComputePlanFactory(factory.Factory):

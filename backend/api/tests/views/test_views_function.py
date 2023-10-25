@@ -104,6 +104,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "model": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_WAITING",
             },
             {
                 "key": str(aggregate_function.key),
@@ -135,6 +136,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "model": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_WAITING",
             },
             {
                 "key": str(composite_function.key),
@@ -170,6 +172,7 @@ class FunctionViewTests(APITestCase):
                     "local": {"kind": "ASSET_MODEL", "multiple": False},
                     "shared": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_WAITING",
             },
             {
                 "key": str(predict_function.key),
@@ -204,6 +207,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "predictions": {"kind": "ASSET_MODEL", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_WAITING",
             },
             {
                 "key": str(metric_function.key),
@@ -237,6 +241,7 @@ class FunctionViewTests(APITestCase):
                 "outputs": {
                     "performance": {"kind": "ASSET_PERFORMANCE", "multiple": False},
                 },
+                "status": "FUNCTION_STATUS_WAITING",
             },
         ]
 
@@ -448,6 +453,7 @@ class FunctionViewTests(APITestCase):
                 "function": data["function"],
                 "inputs": data["inputs"],
                 "outputs": data["outputs"],
+                "status": Function.Status.FUNCTION_STATUS_WAITING,
             }
 
         function_path = os.path.join(FIXTURE_PATH, filename)

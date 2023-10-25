@@ -33,6 +33,7 @@ from api.serializers import ModelSerializer
 from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
+from orchestrator import failure_report_pb2
 
 logger = structlog.get_logger(__name__)
 
@@ -85,13 +86,19 @@ def _create_function(channel: str, data: dict) -> None:
 def _on_update_function_event(event: dict) -> None:
     """Process update function event to update local database."""
     logger.debug("Syncing function update", asset_key=event["asset_key"], event_id=event["id"])
-    _update_function(key=event["asset_key"], data=event["function"])
+    function = event["function"]
+    _update_function(key=event["asset_key"], name=function["name"], status=function["status"])
 
 
-def _update_function(key: str, data: dict) -> None:
+def _update_function(key: str, *, name: Optional[str] = None, status: Optional[str] = None) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
-    function.name = data["name"]
+
+    if name:
+        function.name = name
+    if status:
+        function.status = status
+
     function.save()
 
 
@@ -376,7 +383,22 @@ def _disable_model(key: str) -> None:
 def _on_create_failure_report(event: dict) -> None:
     """Process create failure report event to update local database."""
     logger.debug("Syncing failure report create", asset_key=event["asset_key"], event_id=event["id"])
-    _update_computetask(key=event["asset_key"], failure_report=event["failure_report"])
+
+    asset_key = event["asset_key"]
+    failure_report = event["failure_report"]
+    asset_type = failure_report_pb2.FailedAssetKind.Value(failure_report["asset_type"])
+
+    if asset_type == failure_report_pb2.FAILED_ASSET_FUNCTION:
+        # Needed as this field is only in ComputeTask
+        compute_task_keys = ComputeTask.objects.values_list("key", flat=True).filter(
+            function_id=asset_key,
+            status__in=[ComputeTask.Status.STATUS_TODO.value, ComputeTask.Status.STATUS_DOING.value],
+        )
+
+        for task_key in compute_task_keys:
+            _update_computetask(key=str(task_key), failure_report={"error_type": failure_report.get("error_type")})
+    else:
+        _update_computetask(key=asset_key, failure_report=failure_report)
 
 
 EVENT_CALLBACKS = {

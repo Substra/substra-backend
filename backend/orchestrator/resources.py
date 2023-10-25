@@ -19,7 +19,7 @@ from orchestrator import model_pb2
 TAG_KEY = "__tag__"
 
 
-class AutoNameEnum(enum.Enum):
+class AutoNameEnum(str, enum.Enum):
     def _generate_next_value_(name, start, count, last_values):  # noqa: N805
         return name
 
@@ -138,12 +138,26 @@ class FunctionOutput(pydantic.BaseModel):
         return cls(kind=AssetKind.from_grpc(o.kind), multiple=o.multiple)
 
 
+class FunctionStatus(AutoNameEnum):
+    FUNCTION_STATUS_UNKNOWN = enum.auto()
+    FUNCTION_STATUS_WAITING = enum.auto()
+    FUNCTION_STATUS_BUILDING = enum.auto()
+    FUNCTION_STATUS_READY = enum.auto()
+    FUNCTION_STATUS_CANCELED = enum.auto()
+    FUNCTION_STATUS_FAILED = enum.auto()
+
+    @classmethod
+    def from_grpc(cls, s: function_pb2.FunctionStatus.ValueType) -> FunctionStatus:
+        return cls(function_pb2.FunctionStatus.Name(s))
+
+
 class Function(pydantic.BaseModel):
     key: str
     owner: str
     function_address: Address
     inputs: dict[str, FunctionInput]
     outputs: dict[str, FunctionOutput]
+    status: FunctionStatus
 
     @classmethod
     def from_grpc(cls, a: function_pb2.Function) -> Function:
@@ -153,6 +167,7 @@ class Function(pydantic.BaseModel):
             function_address=Address.from_grpc(a.function),
             inputs={k: FunctionInput.from_grpc(i) for k, i in a.inputs.items()},
             outputs={k: FunctionOutput.from_grpc(o) for k, o in a.outputs.items()},
+            status=FunctionStatus.from_grpc(a.status),
         )
 
 

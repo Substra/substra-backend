@@ -138,7 +138,7 @@ def _http_request(
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as exc:
-        status_code = exc.response.status_code if exc.response else None
+        status_code = response.status_code if exc.response else None
         raise OrganizationHttpError(url=url, status_code=status_code)
 
     return response
@@ -178,13 +178,13 @@ def get(
     channel: str,
     organization_id: str,
     url: str,
-    checksum: str,
+    checksum: typing.Optional[str],
     salt: typing.Optional[str] = None,
 ) -> bytes:
     """Get asset data."""
     content = _http_request(_Method.GET, channel, organization_id, url).content
     new_checksum = compute_hash(content, key=salt)
-    if new_checksum != checksum:
+    if checksum is not None and new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
     return content
 

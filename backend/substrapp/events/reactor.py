@@ -9,13 +9,18 @@ import orchestrator
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
+from builder.tasks.tasks_build_image import build_image
+from orchestrator import function_pb2
 from orchestrator import model_pb2
 from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.task_routing import WORKER_QUEUE
+from substrapp.task_routing import get_builder_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
+from substrapp.tasks.tasks_save_image import save_image_task
 
 logger = structlog.get_logger("events")
 _MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
@@ -72,6 +77,39 @@ def on_computetask_event(payload):
     queue_compute_task(channel_name, task=orc_task)
 
 
+def on_function_event(payload):
+    asset_key = payload["asset_key"]
+    channel_name = payload["channel"]
+    event_kind = payload["event_kind"]
+    function = payload["function"]
+    grpc_function = function_pb2.Function()
+    json_format.ParseDict(function, grpc_function)
+    orc_function = orchestrator.Function.from_grpc(grpc_function)
+    logger.info("Processing function", asset_key=asset_key, kind=event_kind)
+
+    if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_CREATED:
+        if orc_function.owner == _MY_ORGANIZATION:
+            function_key = orc_function.key
+            builder_queue = get_builder_queue()
+            logger.info(
+                "Assigned function to builder queue",
+                asset_key=function_key,
+                queue=builder_queue,
+            )
+
+            building_params = {
+                "channel_name": channel_name,
+                "function_serialized": orc_function.model_dump_json(),
+            }
+            (
+                build_image.si(**building_params).set(queue=builder_queue)
+                | save_image_task.si(**building_params).set(queue=WORKER_QUEUE)
+            ).apply_async()
+
+        else:
+            logger.debug("Function not belonging to this organization, skipping building", asset_key=orc_function.key)
+
+
 def on_model_event(payload):
     event_kind = payload["event_kind"]
     channel_name = payload["channel"]
@@ -93,6 +131,9 @@ def on_message_compute_engine(payload):
         on_computetask_event(payload)
     elif asset_kind == common_pb2.ASSET_MODEL:
         on_model_event(payload)
+    elif asset_kind == common_pb2.ASSET_FUNCTION:
+        logger.info("Processing function", asset_kind=payload["asset_kind"])
+        on_function_event(payload)
     else:
         logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [] - Unreleased
+
+## [24.0.0] - 2023-10-16
+
+### Added
+
+- Builder service
+
 ## [23.0.2] - 2023-10-18
 
 ### Changed
@@ -64,7 +72,7 @@
 
 ## [22.8.0] - 2023-08-16
 
-## Added
+### Added
 
 - New `server.allowImplicitLogin` field, controlling whether "implicit login" (`Client.login` in the Substra SDK) is enabled
 

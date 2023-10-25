@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "api",
     "drf_spectacular",
     "django_filters",
+    "builder",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -208,7 +209,7 @@ HOSTNAME = os.getenv("HOSTNAME")
 # Used by the Secure aggregation mechanism to retrieve chainkeys
 K8S_SECRET_NAMESPACE = os.getenv("K8S_SECRET_NAMESPACE", "default")
 
-REGISTRY = os.getenv("REGISTRY")
+REGISTRY = os.getenv("REGISTRY", "")
 REGISTRY_SCHEME = os.getenv("REGISTRY_SCHEME")
 REGISTRY_PULL_DOMAIN = os.getenv("REGISTRY_PULL_DOMAIN")
 REGISTRY_IS_LOCAL = to_bool(os.environ.get("REGISTRY_IS_LOCAL"))
@@ -299,6 +300,11 @@ LOGGING = {
             "propagate": False,
         },
         "events": {
+            "level": LOG_LEVEL,
+            "handlers": ["console"],
+            "propagate": False,
+        },
+        "builder": {
             "level": LOG_LEVEL,
             "handlers": ["console"],
             "propagate": False,

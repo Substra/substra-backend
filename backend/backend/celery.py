@@ -23,7 +23,7 @@ app = Celery("backend")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.steps["worker"].add(DjangoStructLogInitStep)
-
+app.steps["builder"].add(DjangoStructLogInitStep)
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()

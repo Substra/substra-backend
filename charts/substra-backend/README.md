@@ -187,6 +187,31 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `scheduler.podSecurityContext.runAsGroup` | Group ID for the pod                                               | `1001`                    |
 | `scheduler.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                    | `1001`                    |
 
+### Builder settings
+
+| Name                                    | Description                                                                                                                                        | Value                     |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `builder.replicaCount`                  | Number of builder replicas                                                                                                                         | `1`                       |
+| `builder.enabled`                       | Enable worker service                                                                                                                              | `true`                    |
+| `builder.replicaCount`                  | Replica count for the worker service                                                                                                               | `1`                       |
+| `builder.concurrency`                   | Maximum amount of tasks to process in parallel                                                                                                     | `1`                       |
+| `builder.image.registry`                | Substra backend server image registry                                                                                                              | `ghcr.io`                 |
+| `builder.image.repository`              | Substra backend server image repository                                                                                                            | `substra/substra-backend` |
+| `builder.image.tag`                     | Substra backend server image tag (defaults to AppVersion)                                                                                          | `nil`                     |
+| `builder.image.pullPolicy`              | Substra backend server image pull policy                                                                                                           | `IfNotPresent`            |
+| `builder.image.pullSecrets`             | Specify image pull secrets                                                                                                                         | `[]`                      |
+| `builder.podSecurityContext.enabled`    | Enable security context                                                                                                                            | `true`                    |
+| `builder.podSecurityContext.runAsUser`  | User ID for the pod                                                                                                                                | `1001`                    |
+| `builder.podSecurityContext.runAsGroup` | Group ID for the pod                                                                                                                               | `1001`                    |
+| `builder.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                                                                                                    | `1001`                    |
+| `builder.resources`                     | Builder container resources requests and limits                                                                                                    | `{}`                      |
+| `builder.nodeSelector`                  | Node labels for pod assignment                                                                                                                     | `{}`                      |
+| `builder.tolerations`                   | Toleration labels for pod assignment                                                                                                               | `[]`                      |
+| `builder.affinity`                      | Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`                                                        | `{}`                      |
+| `builder.persistence.storageClass`      | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                      |
+| `builder.persistence.size`              | The size of the volume.                                                                                                                            | `10Gi`                    |
+| `builder.rbac.create`                   | Create a role and service account for the builder                                                                                                  | `true`                    |
+
 ### Substra container registry settings
 
 | Name                            | Description                                                                                     | Value       |
@@ -406,7 +431,7 @@ The backend uses a PostgreSQL database. By default it will deploy one as a subch
 ```yaml
 database:
   host: my.database.host
-  
+
   auth:
     username: my-user
     password: aStrongPassword

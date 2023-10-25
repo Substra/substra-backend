@@ -4,8 +4,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 import orchestrator
-from substrapp.compute_tasks import errors as compute_task_errors
-from substrapp.compute_tasks import image_builder
+from builder.exceptions import BuildError
+from builder.image_builder import image_builder
 from substrapp.compute_tasks import utils
 
 _VALID_DOCKERFILE = """
@@ -23,27 +23,24 @@ ENTRYPOINT python3 myfunction.py
 
 
 def test_build_image_if_missing_image_already_exists(mocker: MockerFixture, function: orchestrator.Function):
-    ds = mocker.Mock()
-    m_container_image_exists = mocker.patch(
-        "substrapp.compute_tasks.image_builder.container_image_exists", return_value=True
-    )
+    m_container_image_exists = mocker.patch("builder.docker.container_image_exists", return_value=True)
     function_image_tag = utils.container_image_tag_from_function(function)
 
-    image_builder.build_image_if_missing(datastore=ds, function=function)
+    image_builder.build_image_if_missing(channel="channel", function=function)
 
     m_container_image_exists.assert_called_once_with(function_image_tag)
 
 
+@pytest.mark.django_db
 def test_build_image_if_missing_image_build_needed(mocker: MockerFixture, function: orchestrator.Function):
-    ds = mocker.Mock()
-    m_container_image_exists = mocker.patch(
-        "substrapp.compute_tasks.image_builder.container_image_exists", return_value=False
-    )
-    m_build_function_image = mocker.patch("substrapp.compute_tasks.image_builder._build_function_image")
+    m_container_image_exists = mocker.patch("builder.docker.container_image_exists", return_value=False)
+    m_datastore = mocker.patch("substrapp.compute_tasks.datastore.Datastore")
+    m_build_function_image = mocker.patch("builder.image_builder.image_builder._build_function_image")
     function_image_tag = utils.container_image_tag_from_function(function)
 
-    image_builder.build_image_if_missing(datastore=ds, function=function)
+    image_builder.build_image_if_missing(channel="channel", function=function)
 
+    m_datastore.assert_called_once()
     m_container_image_exists.assert_called_once_with(function_image_tag)
     m_build_function_image.assert_called_once()
     assert m_build_function_image.call_args.args[1] == function
@@ -70,7 +67,7 @@ def test_get_entrypoint_from_dockerfile_invalid_dockerfile(
     dockerfile_path = tmp_path / "Dockerfile"
     dockerfile_path.write_text(dockerfile)
 
-    with pytest.raises(compute_task_errors.BuildError) as exc:
+    with pytest.raises(BuildError) as exc:
         image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
 
     assert expected_exc_content in bytes.decode(exc.value.logs.read())

@@ -34,30 +34,3 @@ def test_get_service_node_port():
         service.spec.ports[0].node_port = 9000
         port = substrapp.kubernetes_utils.get_service_node_port("my_service")
         assert port == 9000
-
-
-def test_get_pod_logs(mocker):
-    mocker.patch("kubernetes.client.CoreV1Api.read_namespaced_pod_log", return_value="Super great logs")
-    k8s_client = kubernetes.client.CoreV1Api()
-    logs = substrapp.kubernetes_utils.get_pod_logs(k8s_client, "pod_name", "container_name", ignore_pod_not_found=True)
-    assert logs == "Super great logs"
-
-
-def test_get_pod_logs_not_found():
-    with mock.patch("kubernetes.client.CoreV1Api.read_namespaced_pod_log") as read_pod:
-        read_pod.side_effect = kubernetes.client.ApiException(404, "Not Found")
-        k8s_client = kubernetes.client.CoreV1Api()
-        logs = substrapp.kubernetes_utils.get_pod_logs(
-            k8s_client, "pod_name", "container_name", ignore_pod_not_found=True
-        )
-        assert "Pod not found" in logs
-
-
-def test_get_pod_logs_bad_request():
-    with mock.patch("kubernetes.client.CoreV1Api.read_namespaced_pod_log") as read_pod:
-        read_pod.side_effect = kubernetes.client.ApiException(400, "Bad Request")
-        k8s_client = kubernetes.client.CoreV1Api()
-        logs = substrapp.kubernetes_utils.get_pod_logs(
-            k8s_client, "pod_name", "container_name", ignore_pod_not_found=True
-        )
-        assert "pod_name" in logs
