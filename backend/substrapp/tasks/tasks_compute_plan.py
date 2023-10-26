@@ -1,16 +1,12 @@
-import typing
-
 import structlog
 from django.conf import settings
 
 import orchestrator
 from backend.celery import app
-from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
-from substrapp.docker_registry import delete_container_image_safe
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import release_worker
 
@@ -39,11 +35,11 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, comput
         )
         return
 
-    delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan_key), queue=worker_queue)
+    delete_cp_pod_and_dirs.apply_async((channel_name, compute_plan_key), queue=worker_queue)
 
 
 @app.task(ignore_result=False)
-def delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, compute_plan_key: str) -> None:
+def delete_cp_pod_and_dirs(channel_name: str, compute_plan_key: str) -> None:
     with get_orchestrator_client(channel_name) as client:
         _teardown_compute_plan_resources(client, compute_plan_key)
 
@@ -57,15 +53,8 @@ def _teardown_compute_plan_resources(orc_client: orchestrator.Client, compute_pl
             return
         _teardown_pods_and_dirs(compute_plan_key)
 
-    _delete_compute_plan_functions_images(orc_client.query_functions(compute_plan_key))
-
 
 def _teardown_pods_and_dirs(compute_plan_key: str) -> None:
     release_worker(compute_plan_key)
     delete_compute_plan_pods(compute_plan_key)
     teardown_compute_plan_dir(Directories(compute_plan_key))
-
-
-def _delete_compute_plan_functions_images(functions: typing.Iterable[orchestrator.Function]) -> None:
-    for function in functions:
-        delete_container_image_safe(utils.container_image_tag_from_function(function))
