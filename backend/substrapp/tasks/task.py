@@ -38,8 +38,7 @@ class FailableTask(Task):
         asset_key, channel_name = self.get_task_info(args, kwargs)
         exception_pickled = pickle.dumps(exc)
         store_asset_failure_report.apply_async(
-            args,
-            {
+            kwargs={
                 "asset_key": asset_key,
                 "asset_type": self.asset_type,
                 "channel_name": channel_name,
