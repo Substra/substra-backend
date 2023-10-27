@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("api", "0054_alter_function_status"),
+        ("api", "0053_function_status"),
     ]
 
     operations = [

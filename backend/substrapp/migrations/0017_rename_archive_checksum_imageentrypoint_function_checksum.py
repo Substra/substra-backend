@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("substrapp", "0019_alter_assetfailurereport_logs_and_more"),
+        ("substrapp", "0016_rename_computetaskfailurereport_and_more"),
     ]
 
     operations = [
