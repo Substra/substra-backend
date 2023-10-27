@@ -8,7 +8,7 @@ import api.models.utils
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("api", "0055_rename_function_address_function_archive_address"),
+        ("api", "0054_rename_function_address_function_archive_address"),
     ]
 
     operations = [

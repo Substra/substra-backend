@@ -7,8 +7,8 @@ from django.db import models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("api", "0056_function_image_address_function_image_checksum"),
-        ("substrapp", "0020_rename_archive_checksum_imageentrypoint_function_checksum"),
+        ("api", "0055_function_image_address_function_image_checksum"),
+        ("substrapp", "0017_rename_archive_checksum_imageentrypoint_function_checksum"),
     ]
 
     operations = [
