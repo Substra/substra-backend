@@ -18,6 +18,7 @@ import structlog
 from django.core.files.storage import FileSystemStorage
 
 from .deps.celery import *
+from .deps.image_build import *
 from .deps.jwt import *
 from .deps.org import *
 from .deps.path import *
