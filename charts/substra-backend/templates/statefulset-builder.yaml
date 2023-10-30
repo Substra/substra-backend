@@ -74,9 +74,7 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      - name: wait-minio
-        image: jwilder/dockerize:0.6.1
-        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
+      {{- include "common.waitMinIOContainer" . | nindent 6 }}
       {{- if .Values.kaniko.cache.warmer.cachedImages }}
       - name: kaniko-cache-warmer
         image: {{ include "common.images.name" .Values.kaniko.cache.warmer.image }}
