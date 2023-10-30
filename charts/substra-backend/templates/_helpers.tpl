@@ -201,9 +201,11 @@ The hostname we should connect to (external is defined, otherwise integrated)
 `wait-minio` container initialisation used inside of `initContainers`
 */}}
 {{- define "common.waitMinIOContainer" -}}
+{{- if .Values.minio.enabled }}
 - name: wait-minio
   image: jwilder/dockerize:0.6.1
   command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
+{{- end }}
 {{- end -}}
 
 
