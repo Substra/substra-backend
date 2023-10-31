@@ -16,7 +16,6 @@ from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.task_routing import WORKER_QUEUE
 from substrapp.task_routing import get_builder_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
@@ -103,7 +102,7 @@ def on_function_event(payload):
             }
             (
                 build_image.si(**building_params).set(queue=builder_queue)
-                | save_image_task.si(**building_params).set(queue=WORKER_QUEUE)
+                | save_image_task.si(**building_params).set(queue="scheduler")
             ).apply_async()
 
         else:
