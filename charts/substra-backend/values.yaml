@@ -854,7 +854,7 @@ docker-registry:
 ## @skip minio
 ##
 minio:
-  enabled: true
+  enabled: false
   auth:
     rootUser: minio
     rootPassword: minio1234
@@ -862,7 +862,30 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
-
+localstack:
+  enabled: true
+  service:
+    edgeService:
+      nodePort: ""
+  environment:
+    - name: SERVICES
+      value: s3
+    - name: DEBUG
+      value: "1"
+    - name: DATA_DIR
+      value: "/tmp/localstack/data"
+    - name: PORT_WEB_UI
+      value: "8080"
+    - name: LAMBDA_EXECUTOR
+      value: "local"
+    - name: KINESIS_ERROR_PROBABILITY
+      value: "0.0"
+    - name: DOCKER_HOST
+      value: "unix:///var/run/docker.sock"
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
 ## @section Helm hooks
 ##
 hooks:

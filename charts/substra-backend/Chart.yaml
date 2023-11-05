@@ -33,3 +33,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 12.8.12
     condition: minio.enabled
+  - name: localstack
+    repository: https://helm.localstack.cloud
+    version: 0.6.5
+    condition: localstack.enabled

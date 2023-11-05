@@ -14,5 +14,8 @@ dependencies:
 - name: minio
   repository: https://charts.bitnami.com/bitnami
   version: 12.8.12
-digest: sha256:f7f76249b4efc0de4514cdc62dbd91e8bc48769b996c9b277568fb85d7ce5683
-generated: "2023-10-10T12:10:32.20442+02:00"
+- name: localstack
+  repository: https://helm.localstack.cloud
+  version: 0.6.5
+digest: sha256:191299e835d909667c2914ca24845932e6b8def96223a512360171e1c3fbae62
+generated: "2023-10-30T15:39:06.403078+01:00"
