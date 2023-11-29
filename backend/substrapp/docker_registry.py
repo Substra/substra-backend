@@ -1,4 +1,3 @@
-import datetime
 import json
 
 import kubernetes
@@ -6,7 +5,6 @@ import requests
 import structlog
 from django.conf import settings
 
-from substrapp.exceptions import ImageDeletionError
 from substrapp.kubernetes_utils import get_pod_by_label_selector
 from substrapp.kubernetes_utils import get_service_node_port
 
@@ -49,54 +47,6 @@ def get_entrypoint(image_tag: str) -> str:
     return json.loads(d["history"][0]["v1Compatibility"])["config"]["Entrypoint"]
 
 
-def delete_container_image_safe(image_tag: str) -> None:
-    """deletes a container image from the docker registry but will fail silently"""
-    try:
-        delete_container_image(image_tag)
-    except ImageDeletionError as exception:
-        logger.exception("Deletion of the container image failed", exc=exception, image_tag=image_tag)
-
-
-def delete_container_image(image_tag: str) -> None:
-    """deletes a container image from the docker registry"""
-    logger.info("Deleting image", image=image_tag)
-    try:
-        digest = _retrieve_image_digest(image_tag)
-        response = requests.delete(
-            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{digest}",
-            headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-            timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-        )
-    except ImageDigestNotFound:
-        # Image does not exist
-        return
-    except (requests.exceptions.RequestException, RetrieveDigestError) as exception:
-        raise ImageDeletionError(image_tag=image_tag) from exception
-
-    if response.status_code != requests.status_codes.codes.accepted:
-        raise ImageDeletionError(image_tag=image_tag, status_code=response.status_code)
-
-
-def _retrieve_image_digest(image_tag: str) -> str:
-    try:
-        response = requests.get(
-            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_tag}",
-            headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-            timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-        )
-
-    except requests.exceptions.RequestException as exception:
-        raise RetrieveDigestError() from exception
-
-    if response.status_code == 404:
-        raise ImageDigestNotFound()
-
-    if response.status_code != requests.status_codes.codes.ok:
-        raise RetrieveDigestError()
-
-    return response.headers["Docker-Content-Digest"]
-
-
 def get_container_image(image_name: str) -> dict:
     response = requests.get(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
@@ -132,37 +82,6 @@ def get_container_images() -> list[dict]:
             return response.json()
 
     return None
-
-
-def fetch_old_function_image_names(max_duration: int) -> list[str]:
-    logger.info("Fetch old image names", max_duration=f"{max_duration}s")
-
-    images = get_container_images()
-
-    old_images = []
-    if images:
-        for image in images["tags"]:
-            response = requests.get(
-                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image}",
-                timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-            )
-
-            response.raise_for_status()
-
-            # take the most recent date as creation date
-            created_date = max(
-                [
-                    datetime.datetime.strptime(
-                        json.loads(e["v1Compatibility"])["created"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
-                    )
-                    for e in response.json()["history"]
-                ]
-            )
-
-            if (datetime.datetime.now() - created_date).total_seconds() >= max_duration:
-                old_images.append(image["name"])
-
-    return old_images
 
 
 def run_garbage_collector() -> None:

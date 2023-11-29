@@ -62,7 +62,6 @@ def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pr
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks.tasks_docker_registry import clean_old_images_task
     from substrapp.tasks.tasks_docker_registry import docker_registry_garbage_collector_task
     from users.tasks import flush_expired_tokens
 
@@ -72,15 +71,6 @@ def setup_periodic_tasks(sender, **kwargs):
     # Launch docker-registry garbage-collector to really remove images
     sender.add_periodic_task(
         1800, docker_registry_garbage_collector_task.s(), queue="scheduler", name="garbage collect docker registry"
-    )
-
-    max_images_ttl = int(settings.CELERYBEAT_MAXIMUM_IMAGES_TTL)
-    sender.add_periodic_task(
-        3600,
-        clean_old_images_task.s(),
-        queue="scheduler",
-        args=[max_images_ttl],
-        name="remove old images from docker registry",
     )
 
 
