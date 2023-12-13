@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t\x12\x11\n\tchaincode\x18\x02 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ninfo.proto\x12\x0corchestrator\"\x13\n\x11QueryVersionParam\"?\n\x14QueryVersionResponse\x12\x14\n\x0corchestrator\x18\x01 \x01(\t2b\n\x0bInfoService\x12S\n\x0cQueryVersion\x12\x1f.orchestrator.QueryVersionParam\x1a\".orchestrator.QueryVersionResponseB+Z)github.com/substra/orchestrator/lib/assetb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'info_pb2', globals())
