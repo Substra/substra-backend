@@ -137,13 +137,6 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `CORS_ALLOW_CREDENTIALS` | `False` | If True cookies can be included in cross site requests. Set this to `True` for frontend auth. |
 | json | `CORS_ORIGIN_WHITELIST` | `[]` | A list of origins that are authorized to make cross-site HTTP requests (e.g.the frontend url). |
 
-## Ledger settings
-
-| Type | Setting | Default value | Comment |
-|------|---------|---------------|---------|
-| json | `LEDGER_CHANNELS` | `[]` |  |
-| string | `LEDGER_MSP_ID` | nil |  |
-
 ## Worker event app settings
 
 | Type | Setting | Default value | Comment |

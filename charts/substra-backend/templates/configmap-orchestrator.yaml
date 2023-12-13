@@ -13,8 +13,3 @@ data:
   ORCHESTRATOR_TLS_SERVER_CACERT_PATH: "/var/substra/orchestrator/tls/server/ca.crt"
   ORCHESTRATOR_TLS_CLIENT_CERT_PATH: "/var/substra/orchestrator/tls/client/tls.crt"
   ORCHESTRATOR_TLS_CLIENT_KEY_PATH: "/var/substra/orchestrator/tls/client/tls.key"
-
-  # Organization identity
-  LEDGER_MSP_ID: {{ .Values.orchestrator.mspID | quote }}
-  # Orchestrator channels configuration
-  LEDGER_CHANNELS: {{ .Values.orchestrator.channels | toJson | quote }}
