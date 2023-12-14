@@ -48,7 +48,8 @@ from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
-from substrapp.exceptions import OrganizationHttpError, OrganizationError
+from substrapp.exceptions import OrganizationError
+from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import ComputeTask
@@ -206,7 +207,6 @@ def _run(
                 raise compute_task_errors.CeleryNoRetryError() from e
             except OrganizationError as e:
                 raise compute_task_errors.CeleryRetryError() from e
-
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
