@@ -30,8 +30,8 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-    LEDGER_MSP_ID=TEST_ORG,
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    MSP_ID=TEST_ORG,
 )
 class ModelViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -293,7 +293,7 @@ class ModelViewTests(APITestCase):
             is_proxied_request=False,
         )
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {"model_export_enabled": True}})
+    @override_settings(CHANNELS={CHANNEL: {"model_export_enabled": True}})
     def test_model_export_proxied(self):
         """Model export (proxied) with option enabled"""
         pvs = ModelPermissionViewSet()
@@ -320,7 +320,7 @@ class ModelViewTests(APITestCase):
             is_proxied_request=True,
         )
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {"model_export_enabled": False}})
+    @override_settings(CHANNELS={CHANNEL: {"model_export_enabled": False}})
     def test_model_download_by_organization_proxied_option_disabled(self):
         """Model export (proxied) with option disabled"""
         pvs = ModelPermissionViewSet()
@@ -333,7 +333,7 @@ class ModelViewTests(APITestCase):
                 is_proxied_request=True,
             )
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {"model_export_enabled": True}})
+    @override_settings(CHANNELS={CHANNEL: {"model_export_enabled": True}})
     def test_model_download_by_classic_user_enabled(self):
         """Model export (by end-user, not proxied) with option enabled"""
         pvs = ModelPermissionViewSet()
@@ -353,7 +353,7 @@ class ModelViewTests(APITestCase):
                 is_proxied_request=False,
             )
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {"model_export_enabled": False}})
+    @override_settings(CHANNELS={CHANNEL: {"model_export_enabled": False}})
     def test_model_download_by_classic_user_disabled(self):
         """Model export (by end-user, not proxied) with option disabled"""
         pvs = ModelPermissionViewSet()
@@ -366,7 +366,7 @@ class ModelViewTests(APITestCase):
                 is_proxied_request=False,
             )
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {}})
+    @override_settings(CHANNELS={CHANNEL: {}})
     def test_model_download_by_classic_user_default(self):
         pvs = ModelPermissionViewSet()
 

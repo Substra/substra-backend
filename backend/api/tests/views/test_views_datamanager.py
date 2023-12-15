@@ -29,8 +29,8 @@ FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datamanage
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-    LEDGER_MSP_ID="MyTestOrg",
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    MSP_ID="MyTestOrg",
 )
 class DataManagerViewTests(APITestCase):
     client_class = AuthenticatedClient

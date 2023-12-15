@@ -27,7 +27,7 @@ class _Method(enum.Enum):
     PUT = enum.auto()
 
 
-_LEDGER_MSP_ID: str = settings.LEDGER_MSP_ID
+_MSP_ID: str = settings.MSP_ID
 _HTTP_VERIFY: bool = not settings.DEBUG
 _HTTP_TIMEOUT: int = settings.HTTP_CLIENT_TIMEOUT_SECONDS
 _HTTP_STREAM_CHUNK_SIZE: int = 1024 * 1024  # in bytes, equivalent to 1 megabyte
@@ -127,7 +127,7 @@ def _http_request(
         response = _HTTP_METHOD_TO_FUNC[method](
             url,
             headers=_add_mandatory_headers(headers, channel),
-            auth=HTTPBasicAuth(_LEDGER_MSP_ID, secret),
+            auth=HTTPBasicAuth(_MSP_ID, secret),
             verify=_HTTP_VERIFY,
             timeout=_HTTP_TIMEOUT,
             **_http_request_kwargs(data, stream),

@@ -141,8 +141,8 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 
 | Type | Setting | Default value | Comment |
 |------|---------|---------------|---------|
-| json | `LEDGER_CHANNELS` | `[]` |  |
-| string | `LEDGER_MSP_ID` | nil |  |
+| json | `CHANNELS` | `[]` |  |
+| string | `MSP_ID` | nil |  |
 
 ## Worker event app settings
 

@@ -102,7 +102,7 @@ class Info(APIView):
 
         if request.user.is_authenticated:
             channel_name = get_channel_name(request)
-            channel = settings.LEDGER_CHANNELS[channel_name]
+            channel = settings.CHANNELS[channel_name]
 
             orchestrator_versions = None
 

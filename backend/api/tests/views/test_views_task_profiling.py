@@ -12,8 +12,8 @@ CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
 
 ORG_SETTINGS = {
-    "LEDGER_CHANNELS": {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
-    "LEDGER_MSP_ID": TEST_ORG,
+    "CHANNELS": {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    "MSP_ID": TEST_ORG,
 }
 
 EXTRA = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
@@ -189,7 +189,7 @@ def test_step_update(authenticated_backend_client, task_profiling):
 
 @override_settings(**EXTRA)
 @override_settings(
-    LEDGER_MSP_ID="other_org",
+    MSP_ID="other_org",
 )
 @pytest.mark.django_db()
 def test_task_profiling_create_fail_other_backend(authenticated_client, create_compute_task):

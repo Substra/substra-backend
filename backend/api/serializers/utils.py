@@ -83,4 +83,4 @@ def get_channel_choices() -> list[str]:
     """
     Get serializer choices from channels settings.
     """
-    return list(settings.LEDGER_CHANNELS.keys())
+    return list(settings.CHANNELS.keys())

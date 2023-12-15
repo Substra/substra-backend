@@ -133,10 +133,10 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
 
 def _send_profiling_event(*, channel_name: str, url_create: str, url_update: str, data: dict[str, Any]) -> bytes:
     try:
-        return organization_client.post(channel_name, settings.LEDGER_MSP_ID, url_create, data)
+        return organization_client.post(channel_name, settings.MSP_ID, url_create, data)
     except OrganizationHttpError as e:
         if e.status_code == status.HTTP_409_CONFLICT:
-            return organization_client.put(channel_name, settings.LEDGER_MSP_ID, url_update, data)
+            return organization_client.put(channel_name, settings.MSP_ID, url_update, data)
         else:
             raise e
 

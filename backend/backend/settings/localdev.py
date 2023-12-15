@@ -15,6 +15,6 @@ CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = ALLOWED_HOSTS + ["127.0.0.1", ".org-1.com"]
 COMMON_HOST_DOMAIN = "org-1.com"
 
-LEDGER_MSP_ID = os.environ.get("LEDGER_MSP_ID", "MyOrg1MSP")
+MSP_ID = os.environ.get("MSP_ID", "MyOrg1MSP")
 
-LEDGER_CHANNELS["mychannel"]["model_export_enabled"] = False
+CHANNELS["mychannel"]["model_export_enabled"] = False

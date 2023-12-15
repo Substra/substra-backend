@@ -53,7 +53,7 @@ class AuthenticatedAPITestCase(APITestCase):
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={
+    CHANNELS={
         "mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True},
         "yourchannel": {"chaincode": {"name": "yourcc"}, "model_export_enabled": True},
     },
