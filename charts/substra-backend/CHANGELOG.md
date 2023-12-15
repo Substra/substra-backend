@@ -2,6 +2,12 @@
 
 ## [] - Unreleased
 
+## [24.0.1] - 2023-12-15
+
+### Changed
+
+- Rename `LEDGER_CHANNEL` to `CHANNELS` and `LEDGER_MSP_ID` to `MSP_ID`
+
 ## [24.0.0] - 2023-10-16
 
 ### Added
