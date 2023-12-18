@@ -22,7 +22,7 @@ def asset_failure_report() -> tuple[ComputeTask, AssetFailureReport]:
         factory.create_computeplan(),
         factory.create_function(),
         public=False,
-        owner=conf.settings.LEDGER_MSP_ID,
+        owner=conf.settings.MSP_ID,
     )
     failure_report = factory.create_computetask_logs(compute_task.key)
     return compute_task, failure_report
@@ -47,8 +47,8 @@ def test_download_local_logs_success(
     """An authorized user download logs located on the organization."""
 
     compute_task, failure_report = asset_failure_report
-    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
-    assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
+    assert compute_task.owner == conf.settings.MSP_ID  # local
+    assert conf.settings.MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
 
     res = get_logs(key=compute_task.key, client=authenticated_client)
 
@@ -66,7 +66,7 @@ def test_download_logs_failure_forbidden(
     """An authenticated user cannot download logs if he is not authorized."""
 
     compute_task, failure_report = asset_failure_report
-    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
+    assert compute_task.owner == conf.settings.MSP_ID  # local
     compute_task.logs_permission_authorized_ids = []  # not allowed
     compute_task.save()
 
@@ -83,8 +83,8 @@ def test_download_local_logs_failure_not_found(
     """An authorized user attempt to download logs that are not referenced in the database."""
 
     compute_task, failure_report = asset_failure_report
-    assert compute_task.owner == conf.settings.LEDGER_MSP_ID  # local
-    assert conf.settings.LEDGER_MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
+    assert compute_task.owner == conf.settings.MSP_ID  # local
+    assert conf.settings.MSP_ID in compute_task.logs_permission_authorized_ids  # allowed
     failure_report.delete()  # not found
 
     res = get_logs(key=compute_task.key, client=authenticated_client)
@@ -102,7 +102,7 @@ def test_download_remote_logs_success(
     compute_task, failure_report = asset_failure_report
     outgoing_organization = "outgoing-organization"
     compute_task.logs_owner = outgoing_organization  # remote
-    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID, outgoing_organization]  # allowed
+    compute_task.logs_permission_authorized_ids = [conf.settings.MSP_ID, outgoing_organization]  # allowed
     compute_task.save()
     organization_models.OutgoingOrganization.objects.create(
         organization_id=outgoing_organization, secret=organization_models.Organization.generate_password()
@@ -129,7 +129,7 @@ def test_download_remote_logs_success(
 @pytest.fixture
 def incoming_organization_user(settings: conf.Settings) -> organization_auth.OrganizationUser:
     incoming_organization = "incoming-organization"
-    settings.LEDGER_CHANNELS.update({incoming_organization: {"chaincode": {"name": "mycc2"}}})
+    settings.CHANNELS.update({incoming_organization: {"chaincode": {"name": "mycc2"}}})
     return organization_auth.OrganizationUser(username=incoming_organization)
 
 
@@ -146,9 +146,9 @@ def test_organization_download_logs_success(
     """An authorized organization can download logs from another organization."""
 
     compute_task, failure_report = asset_failure_report
-    compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
+    compute_task.logs_owner = conf.settings.MSP_ID  # local (incoming request from remote)
     compute_task.logs_permission_authorized_ids = [
-        conf.settings.LEDGER_MSP_ID,
+        conf.settings.MSP_ID,
         incoming_organization_user.username,
     ]  # incoming user allowed
     compute_task.channel = incoming_organization_user.username
@@ -173,8 +173,8 @@ def test_organization_download_logs_forbidden(
     """An unauthorized organization cannot download logs from another organization."""
 
     compute_task, failure_report = asset_failure_report
-    compute_task.logs_owner = conf.settings.LEDGER_MSP_ID  # local (incoming request from remote)
-    compute_task.logs_permission_authorized_ids = [conf.settings.LEDGER_MSP_ID]  # incoming user not allowed
+    compute_task.logs_owner = conf.settings.MSP_ID  # local (incoming request from remote)
+    compute_task.logs_permission_authorized_ids = [conf.settings.MSP_ID]  # incoming user not allowed
     compute_task.channel = incoming_organization_user.username
     compute_task.save()
 

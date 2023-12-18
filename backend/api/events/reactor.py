@@ -59,7 +59,7 @@ def consume(health_service: health.HealthService):
                 exception_raised,
             ),
         )
-        for channel_name in settings.LEDGER_CHANNELS.keys()
+        for channel_name in settings.CHANNELS.keys()
     ]
 
     for consumer in consumers:

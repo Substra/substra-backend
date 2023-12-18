@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ComputeTaskFailureReport` renamed in `AssetFailureReport` ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Field `AssetFailureReport.compute_task_key` renamed to `asset_key` ([#727](https://github.com/Substra/substra-backend/pull/727))
-- Docker images are no longer removed at the end of a compute plan ([#777](https://github.com/Substra/substra-backend/pull/777)
+- Docker images are no longer removed at the end of a compute plan ([#777](https://github.com/Substra/substra-backend/pull/777))
+- Rename `LEDGER_CHANNEL` to `CHANNELS` and `LEDGER_MSP_ID` to `MSP_ID` ([#794](https://github.com/Substra/substra-backend/pull/794))
 
 ### Removed
 

@@ -18,10 +18,10 @@ def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:
         client_key = settings.ORCHESTRATOR_TLS_CLIENT_KEY_PATH
         client_cert = settings.ORCHESTRATOR_TLS_CLIENT_CERT_PATH
 
-    mspid = settings.LEDGER_MSP_ID
+    mspid = settings.MSP_ID
 
     if channel_name is not None:
-        chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
+        chaincode = settings.CHANNELS[channel_name]["chaincode"]["name"]
 
     opts = (
         ("grpc.keepalive_time_ms", settings.ORCHESTRATOR_GRPC_KEEPALIVE_TIME_MS),

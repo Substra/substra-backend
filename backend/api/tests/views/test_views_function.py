@@ -30,7 +30,7 @@ FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/functions/
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class FunctionViewTests(APITestCase):
     client_class = AuthenticatedClient

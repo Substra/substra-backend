@@ -97,7 +97,7 @@ def create_compute_graph():
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT, CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
 )
 class ComputePlanGraphViewTests(APITestCase):
     client_class = AuthenticatedClient

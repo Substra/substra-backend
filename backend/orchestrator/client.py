@@ -378,7 +378,7 @@ class OrchestratorClient:
             metadata = (
                 ("mspid", self._mspid),
                 ("channel", channel_name),
-                ("chaincode", settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]),
+                ("chaincode", settings.CHANNELS[channel_name]["chaincode"]["name"]),
             )
         else:
             metadata = self._metadata

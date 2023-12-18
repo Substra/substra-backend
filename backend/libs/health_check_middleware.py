@@ -45,14 +45,14 @@ class HealthCheckMiddleware(object):
 def validate_connections():
     if not settings.ISOLATED:
         # Check orchestrator connection for each channel
-        for channel_name, _ in settings.LEDGER_CHANNELS.items():
+        for channel_name, _ in settings.CHANNELS.items():
             with get_orchestrator_client(channel_name) as client:
                 client.query_version()
 
 
 def validate_channels():
     # Check channel restrictions
-    for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
+    for channel_name, channel_settings in settings.CHANNELS.items():
         organizations = ChannelOrganizationRep.objects.filter(channel=channel_name).values_list(
             "organization_id", flat=True
         )
@@ -65,5 +65,5 @@ def validate_channels():
                 )
 
         # throw an Exception if the organization is not in the list
-        if settings.LEDGER_MSP_ID not in organizations:
-            raise Exception(f'Organization {settings.LEDGER_MSP_ID} is not registered in channel "{channel_name}"')
+        if settings.MSP_ID not in organizations:
+            raise Exception(f'Organization {settings.MSP_ID} is not registered in channel "{channel_name}"')

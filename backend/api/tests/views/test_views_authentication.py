@@ -24,7 +24,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AuthenticationTests(APITestCase):
     def setUp(self):

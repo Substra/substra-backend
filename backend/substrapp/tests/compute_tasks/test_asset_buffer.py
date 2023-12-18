@@ -127,7 +127,7 @@ class MockDataSampleSavedByFile(MockDataSample):
 
 @override_settings(
     ASSET_BUFFER_DIR=ASSET_BUFFER_DIR,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AssetBufferTests(APITestCase):
     def setUp(self):

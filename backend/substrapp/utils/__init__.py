@@ -55,7 +55,7 @@ def get_hash(file, key=None):
 
 
 def get_owner() -> str:
-    return settings.LEDGER_MSP_ID
+    return settings.MSP_ID
 
 
 def compute_hash(bytes, key=None):

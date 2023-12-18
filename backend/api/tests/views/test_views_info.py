@@ -10,7 +10,7 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.resources import OrchestratorVersion
 
 
-@override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
+@override_settings(CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
 class InfoViewTests(APITestCase):
     url = "/info/"
 

@@ -155,7 +155,7 @@ class ComputeTaskViewTests(APITestCase):
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TaskBulkCreateViewTests(ComputeTaskViewTests):
     def test_task_bulk_create(self):
@@ -253,7 +253,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):

@@ -23,7 +23,7 @@ from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_save_image import save_image_task
 
 logger = structlog.get_logger("events")
-_MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
+_MY_ORGANIZATION: str = settings.MSP_ID
 
 
 def on_computetask_event(payload):
@@ -184,7 +184,7 @@ def consume(health_service: health.HealthService):
                 exception_raised,
             ),
         )
-        for channel_name in settings.LEDGER_CHANNELS.keys()
+        for channel_name in settings.CHANNELS.keys()
     ]
 
     for consumer in consumers:

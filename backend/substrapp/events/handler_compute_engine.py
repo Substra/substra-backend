@@ -7,7 +7,7 @@ from substrapp.tasks.tasks_outputs import queue_disable_transient_outputs
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_model_from_db
 from substrapp.tasks.tasks_remove_intermediary_models import queue_remove_intermediary_models_from_buffer
 
-_MY_ORGANIZATION: str = settings.LEDGER_MSP_ID
+_MY_ORGANIZATION: str = settings.MSP_ID
 
 
 def _filter_parent_task_outputs_refs(

@@ -104,7 +104,7 @@ class OutputSaver:
     def _register_models_in_api(self, registered_models: dict):
         return organization_client.post(
             self._ctx.channel_name,
-            settings.LEDGER_MSP_ID,
+            settings.MSP_ID,
             settings.DEFAULT_DOMAIN + reverse("api:model-list"),
             data={"metadata": json.dumps(registered_models)},
         )

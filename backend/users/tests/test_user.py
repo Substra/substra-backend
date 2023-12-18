@@ -108,7 +108,7 @@ class TestUserEndpoints:
 
     @pytest.fixture(autouse=True)
     def use_dummy_channels(self, settings):
-        settings.LEDGER_CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+        settings.CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
 
     @classmethod
     def setup_class(cls):

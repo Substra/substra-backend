@@ -15,6 +15,6 @@ data:
   ORCHESTRATOR_TLS_CLIENT_KEY_PATH: "/var/substra/orchestrator/tls/client/tls.key"
 
   # Organization identity
-  LEDGER_MSP_ID: {{ .Values.orchestrator.mspID | quote }}
+  MSP_ID: {{ .Values.orchestrator.mspID | quote }}
   # Orchestrator channels configuration
-  LEDGER_CHANNELS: {{ .Values.orchestrator.channels | toJson | quote }}
+  CHANNELS: {{ .Values.orchestrator.channels | toJson | quote }}

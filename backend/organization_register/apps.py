@@ -39,5 +39,5 @@ class OrganizationRegisterConfig(AppConfig):
 
     def ready(self) -> None:
         if not settings.ISOLATED:
-            for channel_name in settings.LEDGER_CHANNELS.keys():
+            for channel_name in settings.CHANNELS.keys():
                 self.register_organization(channel_name)

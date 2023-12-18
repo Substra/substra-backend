@@ -41,7 +41,7 @@ def _xor_secrets(secret1, secret2):
 
 
 def _validate_channel(name):
-    if name not in settings.LEDGER_CHANNELS:
+    if name not in settings.CHANNELS:
         raise ValidationError({"channel": "Channel does not exist"})
 
 

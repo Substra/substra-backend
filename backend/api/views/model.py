@@ -133,9 +133,9 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
 
     @staticmethod
     def _check_export_enabled(channel_name):
-        channel = settings.LEDGER_CHANNELS[channel_name]
+        channel = settings.CHANNELS[channel_name]
         if not channel.get("model_export_enabled", False):
-            raise AssetPermissionError(f"Disabled: model_export_enabled is disabled on {settings.LEDGER_MSP_ID}")
+            raise AssetPermissionError(f"Disabled: model_export_enabled is disabled on {settings.MSP_ID}")
 
     @if_true(gzip.gzip_page, settings.GZIP_MODELS)
     @action(detail=True)
