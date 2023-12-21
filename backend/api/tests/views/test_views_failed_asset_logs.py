@@ -129,7 +129,6 @@ def test_download_remote_logs_success(
 @pytest.fixture
 def incoming_organization_user(settings: conf.Settings) -> organization_auth.OrganizationUser:
     incoming_organization = "incoming-organization"
-    settings.CHANNELS.update({incoming_organization: {"chaincode": {"name": "mycc2"}}})
     return organization_auth.OrganizationUser(username=incoming_organization)
 
 

@@ -114,10 +114,6 @@ orchestrator:
     - mychannel:
         restricted: false
         model_export_enabled: true
-        chaincode:
-          name: mycc
     - yourchannel:
         restricted: false
         model_export_enabled: true
-        chaincode:
-          name: yourcc

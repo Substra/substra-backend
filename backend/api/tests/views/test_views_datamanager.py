@@ -29,7 +29,7 @@ FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datamanage
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"model_export_enabled": True}},
     MSP_ID="MyTestOrg",
 )
 class DataManagerViewTests(APITestCase):

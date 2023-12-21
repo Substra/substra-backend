@@ -30,4 +30,4 @@ ORCHESTRATOR_GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS = False
 ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA = 0
 
 MSP_ID = "testOrgMSP"
-CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}}}
+CHANNELS = {"mychannel": {"model_export_enabled": False}}

@@ -10,7 +10,7 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.resources import OrchestratorVersion
 
 
-@override_settings(CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
+@override_settings(CHANNELS={"mychannel": {"model_export_enabled": True}})
 class InfoViewTests(APITestCase):
     url = "/info/"
 
@@ -29,9 +29,7 @@ class InfoViewTests(APITestCase):
     def test_authenticated(self):
         client = AuthenticatedClient()
 
-        with mock.patch.object(
-            OrchestratorClient, "query_version", return_value=OrchestratorVersion(server="foo", chaincode="bar")
-        ):
+        with mock.patch.object(OrchestratorClient, "query_version", return_value=OrchestratorVersion(server="foo")):
             response = client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -44,4 +42,3 @@ class InfoViewTests(APITestCase):
         assert "model_export_enabled" in data["config"]
         assert "version" in data
         assert data["orchestrator_version"] == "foo"
-        assert data["chaincode_version"] == "bar"

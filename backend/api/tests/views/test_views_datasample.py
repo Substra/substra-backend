@@ -51,7 +51,7 @@ def mock_register_datasamples(orc_request):
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    CHANNELS={"mychannel": {"model_export_enabled": True}},
 )
 @override_settings(DEFAULT_DOMAIN="https://localhost")
 class DataSampleViewTests(APITestCase):

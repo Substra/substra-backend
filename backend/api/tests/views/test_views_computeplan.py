@@ -54,8 +54,8 @@ class AuthenticatedAPITestCase(APITestCase):
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
     CHANNELS={
-        "mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True},
-        "yourchannel": {"chaincode": {"name": "yourcc"}, "model_export_enabled": True},
+        "mychannel": {"model_export_enabled": True},
+        "yourchannel": {"model_export_enabled": True},
     },
 )
 class ComputePlanViewTests(AuthenticatedAPITestCase):
