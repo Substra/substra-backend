@@ -284,6 +284,7 @@ class NewFunction(google.protobuf.message.Message):
     METADATA_FIELD_NUMBER: builtins.int
     INPUTS_FIELD_NUMBER: builtins.int
     OUTPUTS_FIELD_NUMBER: builtins.int
+    IMAGE_FIELD_NUMBER: builtins.int
     key: builtins.str
     name: builtins.str
     @property
@@ -298,6 +299,8 @@ class NewFunction(google.protobuf.message.Message):
     def inputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionInput]: ...
     @property
     def outputs(self) -> google.protobuf.internal.containers.MessageMap[builtins.str, global___FunctionOutput]: ...
+    @property
+    def image(self) -> common_pb2.Addressable: ...
     def __init__(
         self,
         *,
@@ -309,9 +312,10 @@ class NewFunction(google.protobuf.message.Message):
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
         inputs: collections.abc.Mapping[builtins.str, global___FunctionInput] | None = ...,
         outputs: collections.abc.Mapping[builtins.str, global___FunctionOutput] | None = ...,
+        image: common_pb2.Addressable | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["archive", b"archive", "description", b"description", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["archive", b"archive", "description", b"description", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["archive", b"archive", "description", b"description", "image", b"image", "new_permissions", b"new_permissions"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["archive", b"archive", "description", b"description", "image", b"image", "inputs", b"inputs", "key", b"key", "metadata", b"metadata", "name", b"name", "new_permissions", b"new_permissions", "outputs", b"outputs"]) -> None: ...
 
 global___NewFunction = NewFunction
 
@@ -387,6 +391,7 @@ class QueryFunctionsParam(google.protobuf.message.Message):
 
 global___QueryFunctionsParam = QueryFunctionsParam
 
+@typing_extensions.final
 class UpdateFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -409,6 +414,7 @@ class UpdateFunctionParam(google.protobuf.message.Message):
 
 global___UpdateFunctionParam = UpdateFunctionParam
 
+@typing_extensions.final
 class UpdateFunctionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 

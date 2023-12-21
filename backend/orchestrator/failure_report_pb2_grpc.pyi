@@ -3,11 +3,22 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import failure_report_pb2
 import grpc
+import grpc.aio
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class FailureReportServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     RegisterFailureReport: grpc.UnaryUnaryMultiCallable[
         failure_report_pb2.NewFailureReport,
         failure_report_pb2.FailureReport,
@@ -17,18 +28,28 @@ class FailureReportServiceStub:
         failure_report_pb2.FailureReport,
     ]
 
+class FailureReportServiceAsyncStub:
+    RegisterFailureReport: grpc.aio.UnaryUnaryMultiCallable[
+        failure_report_pb2.NewFailureReport,
+        failure_report_pb2.FailureReport,
+    ]
+    GetFailureReport: grpc.aio.UnaryUnaryMultiCallable[
+        failure_report_pb2.GetFailureReportParam,
+        failure_report_pb2.FailureReport,
+    ]
+
 class FailureReportServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterFailureReport(
         self,
         request: failure_report_pb2.NewFailureReport,
-        context: grpc.ServicerContext,
-    ) -> failure_report_pb2.FailureReport: ...
+        context: _ServicerContext,
+    ) -> typing.Union[failure_report_pb2.FailureReport, collections.abc.Awaitable[failure_report_pb2.FailureReport]]: ...
     @abc.abstractmethod
     def GetFailureReport(
         self,
         request: failure_report_pb2.GetFailureReportParam,
-        context: grpc.ServicerContext,
-    ) -> failure_report_pb2.FailureReport: ...
+        context: _ServicerContext,
+    ) -> typing.Union[failure_report_pb2.FailureReport, collections.abc.Awaitable[failure_report_pb2.FailureReport]]: ...
 
-def add_FailureReportServiceServicer_to_server(servicer: FailureReportServiceServicer, server: grpc.Server) -> None: ...
+def add_FailureReportServiceServicer_to_server(servicer: FailureReportServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

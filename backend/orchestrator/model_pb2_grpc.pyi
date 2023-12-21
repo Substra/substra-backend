@@ -3,11 +3,22 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import grpc
+import grpc.aio
 import model_pb2
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class ModelServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     RegisterModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.NewModel,
         model_pb2.Model,
@@ -25,30 +36,48 @@ class ModelServiceStub:
         model_pb2.GetComputeTaskModelsResponse,
     ]
 
+class ModelServiceAsyncStub:
+    RegisterModel: grpc.aio.UnaryUnaryMultiCallable[
+        model_pb2.NewModel,
+        model_pb2.Model,
+    ]
+    RegisterModels: grpc.aio.UnaryUnaryMultiCallable[
+        model_pb2.RegisterModelsParam,
+        model_pb2.RegisterModelsResponse,
+    ]
+    GetModel: grpc.aio.UnaryUnaryMultiCallable[
+        model_pb2.GetModelParam,
+        model_pb2.Model,
+    ]
+    GetComputeTaskOutputModels: grpc.aio.UnaryUnaryMultiCallable[
+        model_pb2.GetComputeTaskModelsParam,
+        model_pb2.GetComputeTaskModelsResponse,
+    ]
+
 class ModelServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterModel(
         self,
         request: model_pb2.NewModel,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.Model: ...
+        context: _ServicerContext,
+    ) -> typing.Union[model_pb2.Model, collections.abc.Awaitable[model_pb2.Model]]: ...
     @abc.abstractmethod
     def RegisterModels(
         self,
         request: model_pb2.RegisterModelsParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.RegisterModelsResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[model_pb2.RegisterModelsResponse, collections.abc.Awaitable[model_pb2.RegisterModelsResponse]]: ...
     @abc.abstractmethod
     def GetModel(
         self,
         request: model_pb2.GetModelParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.Model: ...
+        context: _ServicerContext,
+    ) -> typing.Union[model_pb2.Model, collections.abc.Awaitable[model_pb2.Model]]: ...
     @abc.abstractmethod
     def GetComputeTaskOutputModels(
         self,
         request: model_pb2.GetComputeTaskModelsParam,
-        context: grpc.ServicerContext,
-    ) -> model_pb2.GetComputeTaskModelsResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[model_pb2.GetComputeTaskModelsResponse, collections.abc.Awaitable[model_pb2.GetComputeTaskModelsResponse]]: ...
 
-def add_ModelServiceServicer_to_server(servicer: ModelServiceServicer, server: grpc.Server) -> None: ...
+def add_ModelServiceServicer_to_server(servicer: ModelServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

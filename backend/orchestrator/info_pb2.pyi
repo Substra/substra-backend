@@ -29,15 +29,12 @@ class QueryVersionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     ORCHESTRATOR_FIELD_NUMBER: builtins.int
-    CHAINCODE_FIELD_NUMBER: builtins.int
     orchestrator: builtins.str
-    chaincode: builtins.str
     def __init__(
         self,
         *,
         orchestrator: builtins.str = ...,
-        chaincode: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["chaincode", b"chaincode", "orchestrator", b"orchestrator"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["orchestrator", b"orchestrator"]) -> None: ...
 
 global___QueryVersionResponse = QueryVersionResponse
