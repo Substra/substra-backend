@@ -148,7 +148,11 @@ Return the user list
 {{- if .Values.worker.serviceAccount.create -}}
     {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.worker.serviceAccount.name }}
+    {{- if .Values.worker.serviceAccount.name -}}
+        {{ .Values.worker.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if worker.serviceAccount.create is false, worker.serviceAccount.name must be given" }}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -159,7 +163,11 @@ Return the user list
 {{- if .Values.worker.events.serviceAccount.create -}}
     {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.events.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.worker.events.serviceAccount.name }}
+    {{- if .Values.worker.events.serviceAccount.name -}}
+        {{ .Values.worker.events.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if worker.events.serviceAccount.create is false, worker.events.serviceAccount.name must be given" }}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -170,7 +178,11 @@ Return the user list
 {{- if .Values.api.events.serviceAccount.create -}}
     {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.api.events.serviceAccount.name }}
+    {{- if .Values.api.events.serviceAccount.name -}}
+        {{ .Values.api.events.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if api.events.serviceAccount.create is false, api.events.serviceAccount.name must be given" }}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
