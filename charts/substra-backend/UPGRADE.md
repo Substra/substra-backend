@@ -4,6 +4,8 @@
 
 If you have set `worker.rbac.create=false`, you now need to also set `worker.serviceAccount.create=false` to preserve the same behavior.
 
+If you have set any of `worker.serviceAccount.create`, `worker.events.serviceAccount.create`, or `api.events.serviceAccount.create` to `false` without explicitely telling Substra how the corresponding externally-created ServiceAccount is named (this is very unlikely), it defaulted to `default`, which you now need to set by hand through `{...}.serviceAccount.name`.
+
 ## 23.0.0
 
 Database should be dumped and restored as the `postgresql` sub-chart version incremented. You can follow [Upgrading a PostgreSQL Cluster](https://www.postgresql.org/docs/16/upgrading.html) documentation for further detail
