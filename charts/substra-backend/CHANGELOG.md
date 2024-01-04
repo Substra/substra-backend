@@ -66,7 +66,7 @@
 
 - Update substra-backend image to `0.43.0`
 
-## [25.0.0] - 2024-01-03
+## [25.0.0] - 2024-01-04
 
 - BREAKING: Remove ServiceAccount creation from `worker.rbac.create`, putting it in a new `worker.serviceAccount.create` option
 - BREAKING: Some options that would result in service account names defaulting to "default" now raise an error at rendering time. Set the name to "default" by hand to reproduce the old behavior.

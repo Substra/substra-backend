@@ -142,7 +142,7 @@ Return the user list
 
 
 {{/*
-    Create the name fo the service account to use for the worker
+    Create the name for the service account to use for the worker
 */}}
 {{- define "substra.worker.serviceAccountName" -}}
 {{- if .Values.worker.serviceAccount.create -}}
@@ -157,7 +157,7 @@ Return the user list
 {{- end -}}
 
 {{/*
-    Create the name fo the service account to use for the worker event app
+    Create the name for the service account to use for the worker event app
 */}}
 {{- define "substra.worker.events.serviceAccountName" -}}
 {{- if .Values.worker.events.serviceAccount.create -}}
@@ -172,7 +172,7 @@ Return the user list
 {{- end -}}
 
 {{/*
-    Create the name fo the service account to use for the api event app
+    Create the name for the service account to use for the api event app
 */}}
 {{- define "substra.api.events.serviceAccountName" -}}
 {{- if .Values.api.events.serviceAccount.create -}}
