@@ -661,13 +661,10 @@ orchestrator:
   channels:
     ## @param orchestrator.channels[0].mychannel.restricted Make this channel restricted to a single organization. The server will fail if there is more than one instance in this channel
     ## @param orchestrator.channels[0].mychannel.model_export_enabled Allow logged-in users to download models trained on this organization
-    ## @param orchestrator.channels[0].mychannel.chaincode.name The name of the chaincode instantiated on this channel
     ##
     - mychannel:
         restricted: false
         model_export_enabled: false
-        chaincode:
-          name: mycc
 
 ## @section Kaniko settings
 ##

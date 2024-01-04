@@ -119,9 +119,6 @@ class Info(APIView):
             if hasattr(request.user, "channel"):
                 res["user_role"] = request.user.channel.role
 
-            if orchestrator_versions and orchestrator_versions.chaincode:
-                res["chaincode_version"] = orchestrator_versions.chaincode
-
         if settings.OIDC["ENABLED"]:
             res["auth"]["oidc"] = {
                 "name": settings.OIDC["OP"]["DISPLAY_NAME"],

@@ -25,7 +25,7 @@ from substrapp.tests.common import get_sample_function
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
+@override_settings(CHANNELS={"mychannel": {"model_export_enabled": True}})
 class PermissionMixinDownloadFileTests(APITestCase):
     client_class = AuthenticatedClient
 

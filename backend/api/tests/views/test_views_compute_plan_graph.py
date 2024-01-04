@@ -96,9 +96,7 @@ def create_compute_graph():
     return compute_plan, train_task, predict_task, test_task, composite_task, aggregate_task
 
 
-@override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
-)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT, CHANNELS={"model_export_enabled": True})
 class ComputePlanGraphViewTests(APITestCase):
     client_class = AuthenticatedClient
 

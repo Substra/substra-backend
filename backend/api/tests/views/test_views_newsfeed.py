@@ -15,9 +15,7 @@ from api.tests.common import AuthenticatedClient
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
-)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT, CHANNELS={"mychannel": {"model_export_enabled": True}})
 class NewsFeedViewTests(APITestCase):
     client_class = AuthenticatedClient
 

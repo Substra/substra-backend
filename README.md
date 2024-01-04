@@ -204,13 +204,13 @@ Provided you have correctly setup your [network configuration](https://doc.subst
 
 ## Compatibility
 
-Make sure you deploy this backend with a compatible ecosystem (chaincode, hlf-k8s, etc).
-Always refer to the [compatibility table](https://github.com/SubstraFoundation/substra#compatibility-table).
+Make sure you deploy this backend with a compatible ecosystem.
+Always refer to the [compatibility table](https://docs.substra.org/en/stable/additional/release.html).
 
-The recommended way to run a specific version (0.1.6) of substra-backend is to execute:
+The recommended way to run a specific version (X.Y.Z) of substra-backend is to execute:
 
 ```bash
-SUBSTRA_BACKEND_VERSION=0.1.6
+SUBSTRA_BACKEND_VERSION=X.Y.Z
 git checkout $SUBSTRA_BACKEND_VERSION
 skaffold deploy --images substrafoundation/substra-backend:$SUBSTRA_BACKEND_VERSION
 ```

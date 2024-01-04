@@ -12,7 +12,7 @@ CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
 
 ORG_SETTINGS = {
-    "CHANNELS": {"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    "CHANNELS": {"mychannel": {"model_export_enabled": True}},
     "MSP_ID": TEST_ORG,
 }
 

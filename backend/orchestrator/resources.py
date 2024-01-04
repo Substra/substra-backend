@@ -349,8 +349,7 @@ class InvalidInputAsset(Exception):
 
 class OrchestratorVersion(pydantic.BaseModel):
     server: str
-    chaincode: str
 
     @classmethod
     def from_grpc(cls, orc_version: info_pb2.QueryVersionResponse) -> OrchestratorVersion:
-        return cls(server=orc_version.orchestrator, chaincode=orc_version.chaincode)
+        return cls(server=orc_version.orchestrator)
