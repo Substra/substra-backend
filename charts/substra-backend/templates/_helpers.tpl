@@ -146,7 +146,7 @@ Return the user list
 */}}
 {{- define "substra.worker.serviceAccountName" -}}
 {{- if .Values.worker.serviceAccount.create -}}
-    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.serviceAccount.name }}
+    {{ default (printf "%s-worker" ( include "substra.fullname" .)) .Values.worker.serviceAccount.name }}
 {{- else -}}
     {{- if .Values.worker.serviceAccount.name -}}
         {{ .Values.worker.serviceAccount.name }}
@@ -176,7 +176,7 @@ Return the user list
 */}}
 {{- define "substra.api.events.serviceAccountName" -}}
 {{- if .Values.api.events.serviceAccount.create -}}
-    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
+    {{ default (printf "%s-api-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
 {{- else -}}
     {{- if .Values.api.events.serviceAccount.name -}}
         {{ .Values.api.events.serviceAccount.name }}
