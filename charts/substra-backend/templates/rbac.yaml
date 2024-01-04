@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ template "substra.fullname" . }}-worker
+  name: {{ include "substra.worker.serviceAccountName" . }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
@@ -53,7 +53,7 @@ roleRef:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ template "substra.fullname" . }}-event
+  name: {{ include "substra.worker.events.serviceAccountName" . }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
@@ -105,7 +105,7 @@ metadata:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "substra.fullname" . }}-api-event
+  name: {{ include "substra.api.events.serviceAccountName" . }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
