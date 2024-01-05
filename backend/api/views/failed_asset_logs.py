@@ -22,14 +22,15 @@ class FailedAssetLogsViewSet(view_utils.PermissionMixin, viewsets.GenericViewSet
         else:
             asset_class = ComputeTask
 
+        key = str(report.key)
         try:
-            asset = self.get_asset(request, report.key, channel_name, asset_class)
+            asset = self.get_asset(request, key, channel_name, asset_class)
         except AssetPermissionError as e:
             return view_utils.ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         response = view_utils.get_file_response(
             local_file_class=asset_failure_report.AssetFailureReport,
-            key=report.key,
+            key=key,
             content_field="logs",
             channel_name=channel_name,
             url=report.logs_address,
