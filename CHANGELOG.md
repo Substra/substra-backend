@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove mention of `chaincode` after `distributed mode` deprecation ([#795](https://github.com/Substra/substra-backend/pull/795))
 - BREAKING: remove `distributed` Skaffold profile [#768](https://github.com/Substra/substra-backend/pull/768)
 
+### Fixed
+
+- Convert asset uuid to str in `FailedAssetLogsViewSet` [#804](https://github.com/Substra/substra-backend/pull/804)
+
 ## [0.42.2](https://github.com/Substra/substra-backend/releases/tag/0.42.2) 2023-10-18
 
 ### Changed
