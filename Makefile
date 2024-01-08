@@ -17,7 +17,9 @@ db:  ## Set up test database
 
 .PHONY: test
 test:  ## Run tests
-	cd backend && pytest --cov-report=
+	cd backend && \
+		pytest -n auto --cov-report= -m "not serial" && \
+		pytest --cov-report= -m "serial"
 
 .PHONY: coverage
 coverage: test  ## Report test coverage

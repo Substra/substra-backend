@@ -23,14 +23,7 @@ from image_transfer.common import PayloadSide
 from image_transfer.common import file_to_generator
 from image_transfer.common import get_repo_and_tag
 from image_transfer.common import progress_as_string
-
-
-class ManifestNotFound(Exception):
-    pass
-
-
-class BlobNotFound(Exception):
-    pass
+from image_transfer.exceptions import ManifestNotFoundError
 
 
 def push_payload(
@@ -45,7 +38,7 @@ def push_payload(
 
     It will iterate over the docker images and push the blobs and the manifests.
 
-    # Arguments
+    Args:
         zip_file: the zip file containing the payload. It can be a `pathlib.Path`, a `str`
             or a file-like object.
         strict: `False` by default. If True, it will raise an error if the
@@ -61,12 +54,12 @@ def push_payload(
         password: the password to use to connect to the registry. Optional
             if the registry does not require authentication.
 
-    # Returns
+    Returns:
         The list of docker images loaded in the registry
         It also includes the list of docker images that were already present
         in the registry and were not included in the payload to optimize the size.
         In other words, it's the argument `docker_images_to_transfer` that you passed
-        to the function `docker_charon.make_payload(...)`.
+        to the function `image_transfer.make_payload(...)`.
     """
     authenticator = Authenticator(username, password)
 
@@ -129,11 +122,11 @@ def check_if_the_docker_image_is_in_the_registry(dxf_base: DXFBase, docker_image
             raise
         error_message = (
             f"The docker image {docker_image} is not present in the "
-            f"registry. But when making the payload, it was specified in "
-            f"`docker_images_already_transferred`."
+            "registry. But when making the payload, it was specified in "
+            "`docker_images_already_transferred`."
         )
         if strict:
-            raise ManifestNotFound(
+            raise ManifestNotFoundError(
                 f"{error_message}\n" f"If you still want to unpack your payload, set `strict=False`."
             )
         else:

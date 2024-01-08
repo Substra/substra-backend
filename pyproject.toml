@@ -16,9 +16,12 @@ src_paths = ["backend", "metrics-exporter/metrics_exporter"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend"]
+markers = [
+    "serial", # no compatibility with xdist.
+    ]
 DJANGO_SETTINGS_MODULE = "backend.settings.test"
 # we set no:unraisableexception because we have a lot of files left open due to Django models FileFields
-addopts = "-n auto --cov=. --cov-config=../pyproject.toml -p no:unraisableexception"
+addopts = "--cov=. --cov-config=../pyproject.toml -p no:unraisableexception"
 filterwarnings = [
     "error",
     "ignore:(?s).*Implementing implicit namespace package:DeprecationWarning:pkg_resources",
