@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
-RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
+RUN pip3 install --upgrade --no-cache-dir pip==23.3.2 \
     && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
@@ -32,7 +32,7 @@ FROM build AS arm64
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # libpq is a required dependency to build psycopg2 from source (support for arm64 platform)
     libpq-dev
-RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
+RUN pip3 install --upgrade --no-cache-dir pip==23.3.2 \
     && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.3
 
 ARG USER_ID=1001
@@ -68,6 +68,6 @@ RUN find /usr/src/app -type d -name tests -prune -exec rm -rf {} \;
 WORKDIR /usr/src/app
 
 RUN mkdir -p /var/substra/ /tmp/django_cache \
-  && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
+    && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
 
 USER ${USER_ID}:${GROUP_ID}
