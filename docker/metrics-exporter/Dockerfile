@@ -9,7 +9,7 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 
 COPY ./metrics-exporter/requirements.txt /usr/src/app/.
-RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
+RUN pip3 install --upgrade --no-cache-dir pip==23.3.2 \
     && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./metrics-exporter/ /usr/src/app/
