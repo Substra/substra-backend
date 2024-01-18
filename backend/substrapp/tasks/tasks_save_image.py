@@ -4,6 +4,7 @@ import os
 import pathlib
 from tempfile import TemporaryDirectory
 from typing import Any
+import time
 
 import structlog
 from django.conf import settings
@@ -71,6 +72,7 @@ class SaveImageTask(FailableTask):
         with get_orchestrator_client(channel_name) as client:
             # TODO atomiticy
             client.update_function(orc_function)
+            time.sleep(5)
             client.update_function_status(
                 function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
             )
