@@ -6,9 +6,19 @@ import abc
 import collections.abc
 import event_pb2
 import grpc
+import grpc.aio
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class EventServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     QueryEvents: grpc.UnaryUnaryMultiCallable[
         event_pb2.QueryEventsParam,
         event_pb2.QueryEventsResponse,
@@ -18,18 +28,28 @@ class EventServiceStub:
         event_pb2.Event,
     ]
 
+class EventServiceAsyncStub:
+    QueryEvents: grpc.aio.UnaryUnaryMultiCallable[
+        event_pb2.QueryEventsParam,
+        event_pb2.QueryEventsResponse,
+    ]
+    SubscribeToEvents: grpc.aio.UnaryStreamMultiCallable[
+        event_pb2.SubscribeToEventsParam,
+        event_pb2.Event,
+    ]
+
 class EventServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def QueryEvents(
         self,
         request: event_pb2.QueryEventsParam,
-        context: grpc.ServicerContext,
-    ) -> event_pb2.QueryEventsResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[event_pb2.QueryEventsResponse, collections.abc.Awaitable[event_pb2.QueryEventsResponse]]: ...
     @abc.abstractmethod
     def SubscribeToEvents(
         self,
         request: event_pb2.SubscribeToEventsParam,
-        context: grpc.ServicerContext,
-    ) -> collections.abc.Iterator[event_pb2.Event]: ...
+        context: _ServicerContext,
+    ) -> typing.Union[collections.abc.Iterator[event_pb2.Event], collections.abc.AsyncIterator[event_pb2.Event]]: ...
 
-def add_EventServiceServicer_to_server(servicer: EventServiceServicer, server: grpc.Server) -> None: ...
+def add_EventServiceServicer_to_server(servicer: EventServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

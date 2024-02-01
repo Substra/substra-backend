@@ -3,11 +3,22 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import computetask_pb2
 import grpc
+import grpc.aio
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class ComputeTaskServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     RegisterTasks: grpc.UnaryUnaryMultiCallable[
         computetask_pb2.RegisterTasksParam,
         computetask_pb2.RegisterTasksResponse,
@@ -33,42 +44,68 @@ class ComputeTaskServiceStub:
         computetask_pb2.DisableOutputResponse,
     ]
 
+class ComputeTaskServiceAsyncStub:
+    RegisterTasks: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.RegisterTasksParam,
+        computetask_pb2.RegisterTasksResponse,
+    ]
+    QueryTasks: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.QueryTasksParam,
+        computetask_pb2.QueryTasksResponse,
+    ]
+    GetTask: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.GetTaskParam,
+        computetask_pb2.ComputeTask,
+    ]
+    ApplyTaskAction: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.ApplyTaskActionParam,
+        computetask_pb2.ApplyTaskActionResponse,
+    ]
+    GetTaskInputAssets: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.GetTaskInputAssetsParam,
+        computetask_pb2.GetTaskInputAssetsResponse,
+    ]
+    DisableOutput: grpc.aio.UnaryUnaryMultiCallable[
+        computetask_pb2.DisableOutputParam,
+        computetask_pb2.DisableOutputResponse,
+    ]
+
 class ComputeTaskServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterTasks(
         self,
         request: computetask_pb2.RegisterTasksParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.RegisterTasksResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.RegisterTasksResponse, collections.abc.Awaitable[computetask_pb2.RegisterTasksResponse]]: ...
     @abc.abstractmethod
     def QueryTasks(
         self,
         request: computetask_pb2.QueryTasksParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.QueryTasksResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.QueryTasksResponse, collections.abc.Awaitable[computetask_pb2.QueryTasksResponse]]: ...
     @abc.abstractmethod
     def GetTask(
         self,
         request: computetask_pb2.GetTaskParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.ComputeTask: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.ComputeTask, collections.abc.Awaitable[computetask_pb2.ComputeTask]]: ...
     @abc.abstractmethod
     def ApplyTaskAction(
         self,
         request: computetask_pb2.ApplyTaskActionParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.ApplyTaskActionResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.ApplyTaskActionResponse, collections.abc.Awaitable[computetask_pb2.ApplyTaskActionResponse]]: ...
     @abc.abstractmethod
     def GetTaskInputAssets(
         self,
         request: computetask_pb2.GetTaskInputAssetsParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.GetTaskInputAssetsResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.GetTaskInputAssetsResponse, collections.abc.Awaitable[computetask_pb2.GetTaskInputAssetsResponse]]: ...
     @abc.abstractmethod
     def DisableOutput(
         self,
         request: computetask_pb2.DisableOutputParam,
-        context: grpc.ServicerContext,
-    ) -> computetask_pb2.DisableOutputResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[computetask_pb2.DisableOutputResponse, collections.abc.Awaitable[computetask_pb2.DisableOutputResponse]]: ...
 
-def add_ComputeTaskServiceServicer_to_server(servicer: ComputeTaskServiceServicer, server: grpc.Server) -> None: ...
+def add_ComputeTaskServiceServicer_to_server(servicer: ComputeTaskServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

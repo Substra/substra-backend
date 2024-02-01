@@ -387,6 +387,7 @@ class QueryFunctionsParam(google.protobuf.message.Message):
 
 global___QueryFunctionsParam = QueryFunctionsParam
 
+@typing_extensions.final
 class UpdateFunctionParam(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -409,6 +410,7 @@ class UpdateFunctionParam(google.protobuf.message.Message):
 
 global___UpdateFunctionParam = UpdateFunctionParam
 
+@typing_extensions.final
 class UpdateFunctionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
