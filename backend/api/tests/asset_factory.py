@@ -231,8 +231,8 @@ def create_function(
         key=key,
         name=name,
         metadata=metadata or {},
-        function_address=get_storage_address("function", key, "file"),
-        function_checksum=DUMMY_CHECKSUM,
+        archive_address=get_storage_address("function", key, "file"),
+        archive_checksum=DUMMY_CHECKSUM,
         description_address=get_storage_address("function", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
         creation_date=timezone.now(),
@@ -475,7 +475,7 @@ def create_function_files(
         key=key,
         checksum=get_hash(file),
     )
-    function_files.file.save("function", file)
+    function_files.file.save("archive", file)
     function_files.description.save("description", description)
     return function_files
 
