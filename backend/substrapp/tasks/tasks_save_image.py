@@ -54,9 +54,11 @@ class SaveImageTask(FailableTask):
     def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
 
-        function_image = FunctionImage.objects.get(function=function_key)
         # needed because the name is not an optional parameter
         api_function = ApiFunction.objects.get(key=function_key)
+
+        function_image = FunctionImage.objects.get(function=api_function)
+
         orc_function = {
             "key": str(function_key),
             # TODO find a way to propagate the name or make it optional at update
