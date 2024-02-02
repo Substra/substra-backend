@@ -396,7 +396,7 @@ def _disable_model(key: str) -> None:
     model.save()
 
 
-def _on_create_failure_report(event: dict) -> None:
+def _on_create_failure_report_event(event: dict) -> None:
     """Process create failure report event to update local database."""
     logger.debug(
         "Syncing failure report create",
@@ -469,7 +469,7 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_performance_event,
     },
     common_pb2.ASSET_FAILURE_REPORT: {
-        event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report,
+        event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report_event,
     },
 }
 
