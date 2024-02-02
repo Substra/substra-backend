@@ -10,7 +10,6 @@ from .resources import ComputeTaskOutput
 from .resources import ComputeTaskStatus
 from .resources import DataManager
 from .resources import DataSample
-from .resources import FailureReport
 from .resources import Function
 from .resources import FunctionInput
 from .resources import FunctionOutput
@@ -41,5 +40,4 @@ __all__ = (
     "FunctionInput",
     "FunctionOutput",
     "FunctionStatus",
-    "FailureReport",
 )

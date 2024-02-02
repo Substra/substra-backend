@@ -120,25 +120,6 @@ class DataManager(pydantic.BaseModel):
         return cls(key=m.key, opener=Address.from_grpc(m.opener))
 
 
-class FailureReport(pydantic.BaseModel):
-    asset_key: str
-    asset_type: AssetKind
-    error_type: str
-    logs_address: Address
-    creation_date: datetime.datetime
-
-    @classmethod
-    def from_grpc(cls, f: failure_report_pb2.FailureReport) -> FailureReport:
-        """Creates a FailureReport from grpc message"""
-        return cls(
-            asset_key=f.asset_key,
-            asset_type=AssetKind.from_grpc(f.asset_type),
-            error_type=f.error_type,
-            logs_address=Address.from_grpc(f.logs_address),
-            creation_date=f.creation_date.ToDatetime(tzinfo=datetime.timezone.utc),
-        )
-
-
 class FunctionInput(pydantic.BaseModel):
     kind: AssetKind
     multiple: bool
