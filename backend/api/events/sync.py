@@ -34,6 +34,7 @@ from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
 from orchestrator import failure_report_pb2
+from substrapp.serializers.asset_failure_report import AssetFailureReportSerializer
 
 logger = structlog.get_logger(__name__)
 
@@ -397,7 +398,13 @@ def _disable_model(key: str) -> None:
 
 def _on_create_failure_report(event: dict) -> None:
     """Process create failure report event to update local database."""
-    logger.debug("Syncing failure report create", asset_key=event["asset_key"], event_id=event["id"])
+    logger.debug(
+        "Syncing failure report create",
+        asset_key=event["asset_key"],
+        event_id=event["id"],
+        failure_report=event["failure_report"],
+    )
+    _create_failure_report(data=event["failure_report"])
 
     asset_key = event["asset_key"]
     failure_report = event["failure_report"]
@@ -411,9 +418,20 @@ def _on_create_failure_report(event: dict) -> None:
         )
 
         for task_key in compute_task_keys:
-            _update_computetask(key=str(task_key), failure_report={"error_type": failure_report.get("error_type")})
+            _update_computetask(key=str(task_key), failure_report=failure_report)
     else:
         _update_computetask(key=asset_key, failure_report=failure_report)
+
+
+def _create_failure_report(data: dict) -> None:
+    logger.info("Creating failure report", data=data)
+    logger.debug("data", data=data)
+    serializer = AssetFailureReportSerializer(data=data)
+    logger.debug("serializer", serializer=serializer)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("FailureReport already exists", asset_key=data["asset_key"])
 
 
 EVENT_CALLBACKS = {
