@@ -7,10 +7,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
-from google.protobuf import json_format
 from rest_framework.exceptions import ValidationError
 
-import orchestrator
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
 from api.errors import AlreadyExistsError
@@ -36,7 +34,6 @@ from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
 from orchestrator import failure_report_pb2
-from orchestrator import function_pb2
 
 logger = structlog.get_logger(__name__)
 
@@ -90,14 +87,22 @@ def _on_update_function_event(event: dict) -> None:
     """Process update function event to update local database."""
     logger.debug("Syncing function update", asset_key=event["asset_key"], event_id=event["id"])
     function = event["function"]
-    grpc_function = function_pb2.Function()
-    json_format.ParseDict(function, grpc_function)
-    orc_function = orchestrator.Function.from_grpc(grpc_function)
-    _update_function(key=event["asset_key"], name=function["name"], status=function["status"], image=orc_function.image)
+    _update_function(
+        key=event["asset_key"],
+        name=function["name"],
+        status=function["status"],
+        image_address=function["image"].get("storageAddress"),
+        image_checksum=function["image"].get("checksum"),
+    )
 
 
 def _update_function(
-    key: str, *, name: Optional[str] = None, status: Optional[str] = None, image: Optional[orchestrator.Address] = None
+    key: str,
+    *,
+    name: Optional[str] = None,
+    status: Optional[str] = None,
+    image_address: Optional[str] = None,
+    image_checksum: Optional[str] = None,
 ) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
@@ -106,9 +111,9 @@ def _update_function(
         function.name = name
     if status:
         function.status = status
-    if image:
-        function.image_address = image.uri
-        function.image_checksum = image.checksum
+    if image_address and image_checksum:
+        function.image_address = image_address
+        function.image_checksum = image_checksum
     function.save()
 
 

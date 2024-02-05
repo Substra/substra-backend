@@ -186,6 +186,8 @@ def _run(
     dirs = None
 
     try:
+        image_builder.wait_for_image_built(task.function_key, channel_name)
+
         # Create context
         ctx = Context.from_task(channel_name, task)
         dirs = ctx.directories
@@ -197,8 +199,6 @@ def _run(
 
         # start build_image timer
         timer.start()
-
-        image_builder.wait_for_image_built(ctx.function, channel_name)
 
         if get_owner() != ctx.function.owner:
             try:

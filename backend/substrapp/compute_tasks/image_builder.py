@@ -21,8 +21,8 @@ REGISTRY = settings.REGISTRY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 
 
-def wait_for_image_built(function: orchestrator.Function, channel: str) -> None:
-    api_function = ApiFunction.objects.get(key=function.key)
+def wait_for_image_built(function_key: str, channel: str) -> None:
+    api_function = ApiFunction.objects.get(key=function_key)
 
     attempt = 0
     # with 60 attempts we wait max 2 min with a pending pod
@@ -35,23 +35,19 @@ def wait_for_image_built(function: orchestrator.Function, channel: str) -> None:
         api_function.refresh_from_db()
 
     raise exceptions.PodTimeoutError(
-        f"Build for function {function.key} didn't complete after {IMAGE_BUILD_TIMEOUT} seconds"
+        f"Build for function {function_key} didn't complete after {IMAGE_BUILD_TIMEOUT} seconds"
     )
 
 
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
-    container_image_tag = utils.container_image_tag_from_function(function)
     # Ask the backend owner of the function if it's available
-
-    # Necessary to query the DB again to get an updated Function object
-    # Else the image URI is not available
-    api_function = ApiFunction.objects.get(key=function.key)
+    container_image_tag = utils.container_image_tag_from_function(function)
 
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
-        url=api_function.image_address,
-        checksum=api_function.image_checksum,
+        url=function.image.uri,
+        checksum=function.image.checksum,
     )
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
