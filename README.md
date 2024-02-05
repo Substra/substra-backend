@@ -231,7 +231,6 @@ pre-commit install
 
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
 
-- [hlf-k8s](https://github.com/Substra/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
 - [orchestrator](https://github.com/Substra/orchestrator) contains the orchestration logic of a federated learning deployment
 - [substra-frontend](https://github.com/Substra/substra-frontend) is the frontend consuming the API exposed by the backend
 - [substra-tests](https://github.com/Substra/substra-tests) is the Substra end to end test suite
