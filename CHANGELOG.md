@@ -7,12 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Refactor  image transfer and add tests ([#775](https://github.com/Substra/substra-backend/pull/775))
-
 ### Added
 
+- Add `Image checksum` and `Image storage address` to `Function` ([#739](https://github.com/Substra/substra-backend/pull/739))
+- Add checks on built `Image checksum` ([#739](https://github.com/Substra/substra-backend/pull/739))
 - Field `asset_type` on `AssetFailureReport` (based on protobuf enum `orchestrator.FailedAssetKind`) ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Celery task `FailableTask` that contains the logic to store the failure report, that can be re-used in different assets. ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Add `FunctionStatus` enum ([#714](https://github.com/Substra/orchestrator/pull/714))
@@ -20,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rename `function.function` to `function.archive` ([#739](https://github.com/Substra/substra-backend/pull/739))
+- Refactor  image transfer and add tests ([#775](https://github.com/Substra/substra-backend/pull/775))
 - `ComputeTaskFailureReport` renamed in `AssetFailureReport` ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Field `AssetFailureReport.compute_task_key` renamed to `asset_key` ([#727](https://github.com/Substra/substra-backend/pull/727))
 - Docker images are no longer removed at the end of a compute plan ([#777](https://github.com/Substra/substra-backend/pull/777))
