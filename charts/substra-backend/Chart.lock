@@ -1,10 +1,10 @@
 dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 18.1.2
+  version: 18.17.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 2.13.2
+  version: 2.16.1
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 13.1.2
@@ -17,5 +17,5 @@ dependencies:
 - name: localstack
   repository: https://localstack.github.io/helm-charts
   version: 0.6.9
-digest: sha256:5f78a36fc3eed5d0f7fe40c86d18993d16494a87ced2c78e4dfb79f63e79a3f6
-generated: "2024-02-16T17:47:16.781406+01:00"
+digest: sha256:42c8f0dba9b2ab0b04533af995c5fb55fdb424fec68f9ce93ff697d861e84ac6
+generated: "2024-03-01T14:53:20.819977+01:00"
