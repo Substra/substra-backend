@@ -16,11 +16,11 @@ dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-    version: 18.1.2
+    version: 18.17.0
   - name: common
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled,postgresql.enabled,minio.enabled
-    version: 2.13.2
+    version: 2.16.1
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 13.1.2
