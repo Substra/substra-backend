@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from api.serializers.utils import SafeSerializerMixin, URLFieldWithOptionalTLD
+from api.serializers.utils import SafeSerializerMixin
+from api.serializers.utils import URLFieldWithOptionalTLD
 from substrapp.models import AssetFailureReport
 
 
@@ -25,6 +26,6 @@ class AssetFailureReportSerializer(serializers.ModelSerializer, SafeSerializerMi
         logs = failure_report.pop("logs_address", {})
         failure_report["logs_checksum"] = logs.get("checksum")
         failure_report["logs_address"] = logs.get("storage_address")
-        owner = failure_report.pop("owner", '')
+        owner = failure_report.pop("owner", "")
         failure_report["logs_owner"] = owner
         return super().to_internal_value(failure_report)

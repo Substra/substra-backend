@@ -1,4 +1,3 @@
-import urllib.parse
 import uuid
 from typing import Final
 
