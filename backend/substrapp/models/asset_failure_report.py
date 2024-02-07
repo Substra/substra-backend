@@ -5,6 +5,7 @@ from typing import Final
 from django.conf import settings
 from django.db import models
 
+from api.models.utils import URLValidatorWithOptionalTLD
 from orchestrator import failure_report_pb2
 
 LOGS_BASE_PATH: Final[str] = "logs"
@@ -32,7 +33,7 @@ class AssetFailureReport(models.Model):
         storage=settings.COMPUTE_TASK_LOGS_STORAGE, max_length=_UUID_STRING_REPR_LENGTH, upload_to=_upload_to, null=True
     )
     logs_checksum = models.CharField(max_length=_SHA256_STRING_REPR_LENGTH)
-    logs_address = models.URLField()
+    logs_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])
     logs_owner = models.CharField(max_length=100)
     creation_date = models.DateTimeField(auto_now_add=True)
 

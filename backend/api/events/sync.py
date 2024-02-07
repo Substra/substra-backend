@@ -404,17 +404,18 @@ def _on_create_failure_report_event(event: dict) -> None:
         event_id=event["id"],
         failure_report=event["failure_report"],
     )
-    _create_failure_report(data=event["failure_report"])
 
     asset_key = event["asset_key"]
     failure_report = event["failure_report"]
+
+    _create_failure_report(data=failure_report)
+
     asset_type = failure_report_pb2.FailedAssetKind.Value(failure_report["asset_type"])
 
     if asset_type == failure_report_pb2.FAILED_ASSET_FUNCTION:
         # Needed as this field is only in ComputeTask
         compute_task_keys = ComputeTask.objects.values_list("key", flat=True).filter(
             function_id=asset_key,
-            status__in=[ComputeTask.Status.STATUS_TODO.value, ComputeTask.Status.STATUS_DOING.value],
         )
 
         for task_key in compute_task_keys:
