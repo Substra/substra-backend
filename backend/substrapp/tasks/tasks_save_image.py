@@ -51,7 +51,7 @@ class SaveImageTask(FailableTask):
         return function.key, channel_name
 
     # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
-    def on_success(self, retval: tuple[str, str], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
+    def on_success(self, retval: tuple[dict, str], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         orc_update_function_param, channel_name = retval
 
         with get_orchestrator_client(channel_name) as client:
@@ -71,7 +71,7 @@ class SaveImageTask(FailableTask):
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[str, str]:
+def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[dict, str]:
     logger.info("Starting save_image_task")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
     # create serialized image
@@ -111,7 +111,6 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
             "name": api_function.name,
             "image": {
                 "checksum": api_function.image_checksum,
-                # TODO check url
                 "storage_address": api_function.image_address,
             },
         }
