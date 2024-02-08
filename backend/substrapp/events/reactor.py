@@ -16,8 +16,8 @@ from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.task_routing import get_generic_worker_queue
 from substrapp.task_routing import get_builder_queue
+from substrapp.task_routing import get_generic_worker_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_save_image import save_image_task
