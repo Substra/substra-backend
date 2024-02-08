@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove mention of `chaincode` after `distributed mode` deprecation ([#795](https://github.com/Substra/substra-backend/pull/795))
 - BREAKING: remove `distributed` Skaffold profile [#768](https://github.com/Substra/substra-backend/pull/768)
+- Remove `wait_for_image_built` as he logic for changing status to `TODO` has been moved to the orchestrator and set only when the function is built ([#819](https://github.com/Substra/substra-backend/pull/819))
 
 ### Fixed
 
