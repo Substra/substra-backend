@@ -34,6 +34,8 @@ class AssetFailureReport(models.Model):
     logs_checksum = models.CharField(max_length=_SHA256_STRING_REPR_LENGTH)
     creation_date = models.DateTimeField(auto_now_add=True)
 
+    key_identifier = "asset_key"
+
     @property
     def key(self) -> uuid.UUID:
         return self.asset_key

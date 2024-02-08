@@ -92,7 +92,7 @@ class FunctionViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{simple_function.key}/description/",
                 },
-                "function": {
+                "archive": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{simple_function.key}/file/",
                 },
@@ -126,7 +126,7 @@ class FunctionViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{aggregate_function.key}/description/",
                 },
-                "function": {
+                "archive": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{aggregate_function.key}/file/",
                 },
@@ -158,7 +158,7 @@ class FunctionViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{composite_function.key}/description/",
                 },
-                "function": {
+                "archive": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{composite_function.key}/file/",
                 },
@@ -194,7 +194,7 @@ class FunctionViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{predict_function.key}/description/",
                 },
-                "function": {
+                "archive": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{predict_function.key}/file/",
                 },
@@ -229,7 +229,7 @@ class FunctionViewTests(APITestCase):
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{metric_function.key}/description/",
                 },
-                "function": {
+                "archive": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/function/{metric_function.key}/file/",
                 },
@@ -280,13 +280,13 @@ class FunctionViewTests(APITestCase):
     def test_function_list_storage_addresses_update(self):
         for function in Function.objects.all():
             function.description_address.replace("http://testserver", "http://remotetestserver")
-            function.function_address.replace("http://testserver", "http://remotetestserver")
+            function.archive_address.replace("http://testserver", "http://remotetestserver")
             function.save()
 
         response = self.client.get(self.url)
         self.assertEqual(response.data["count"], len(self.expected_functions))
         for result, function in zip(response.data["results"], self.expected_functions):
-            for field in ("description", "function"):
+            for field in ("description", "archive"):
                 self.assertEqual(result[field]["storage_address"], function[field]["storage_address"])
 
     def test_function_list_filter(self):
@@ -450,7 +450,7 @@ class FunctionViewTests(APITestCase):
                 "metadata": {},
                 "creation_date": "2021-11-04T13:54:09.882662Z",
                 "description": data["description"],
-                "function": data["function"],
+                "archive": data["archive"],
                 "inputs": data["inputs"],
                 "outputs": data["outputs"],
                 "status": Function.Status.FUNCTION_STATUS_WAITING,
@@ -587,12 +587,12 @@ class FunctionViewTests(APITestCase):
     def test_function_retrieve_storage_addresses_update(self):
         function = Function.objects.get(key=self.expected_functions[0]["key"])
         function.description_address.replace("http://testserver", "http://remotetestserver")
-        function.function_address.replace("http://testserver", "http://remotetestserver")
+        function.archive_address.replace("http://testserver", "http://remotetestserver")
         function.save()
 
         url = reverse("api:function-detail", args=[self.expected_functions[0]["key"]])
         response = self.client.get(url)
-        for field in ("description", "function"):
+        for field in ("description", "archive"):
             self.assertEqual(
                 response.data[field]["storage_address"], self.expected_functions[0][field]["storage_address"]
             )

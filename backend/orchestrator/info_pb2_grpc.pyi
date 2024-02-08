@@ -3,12 +3,29 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import grpc
+import grpc.aio
 import info_pb2
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class InfoServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     QueryVersion: grpc.UnaryUnaryMultiCallable[
+        info_pb2.QueryVersionParam,
+        info_pb2.QueryVersionResponse,
+    ]
+
+class InfoServiceAsyncStub:
+    QueryVersion: grpc.aio.UnaryUnaryMultiCallable[
         info_pb2.QueryVersionParam,
         info_pb2.QueryVersionResponse,
     ]
@@ -18,7 +35,7 @@ class InfoServiceServicer(metaclass=abc.ABCMeta):
     def QueryVersion(
         self,
         request: info_pb2.QueryVersionParam,
-        context: grpc.ServicerContext,
-    ) -> info_pb2.QueryVersionResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[info_pb2.QueryVersionResponse, collections.abc.Awaitable[info_pb2.QueryVersionResponse]]: ...
 
-def add_InfoServiceServicer_to_server(servicer: InfoServiceServicer, server: grpc.Server) -> None: ...
+def add_InfoServiceServicer_to_server(servicer: InfoServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

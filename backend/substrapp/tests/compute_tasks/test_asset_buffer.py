@@ -205,7 +205,7 @@ class AssetBufferTests(APITestCase):
             function = {
                 "key": str(uuid.uuid4()),
                 "owner": "test",
-                "function": {"storage_address": "test", "checksum": "check"},
+                "archive": {"storage_address": "test", "checksum": "check"},
             }
 
         self.ctx = FakeContext()

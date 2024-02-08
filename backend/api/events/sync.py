@@ -87,10 +87,23 @@ def _on_update_function_event(event: dict) -> None:
     """Process update function event to update local database."""
     logger.debug("Syncing function update", asset_key=event["asset_key"], event_id=event["id"])
     function = event["function"]
-    _update_function(key=event["asset_key"], name=function["name"], status=function["status"])
+    _update_function(
+        key=event["asset_key"],
+        name=function["name"],
+        status=function["status"],
+        image_address=function["image"].get("storageAddress"),
+        image_checksum=function["image"].get("checksum"),
+    )
 
 
-def _update_function(key: str, *, name: Optional[str] = None, status: Optional[str] = None) -> None:
+def _update_function(
+    key: str,
+    *,
+    name: Optional[str] = None,
+    status: Optional[str] = None,
+    image_address: Optional[str] = None,
+    image_checksum: Optional[str] = None,
+) -> None:
     """Process update function event to update local database."""
     function = Function.objects.get(key=key)
 
@@ -98,7 +111,9 @@ def _update_function(key: str, *, name: Optional[str] = None, status: Optional[s
         function.name = name
     if status:
         function.status = status
-
+    if image_address and image_checksum:
+        function.image_address = image_address
+        function.image_checksum = image_checksum
     function.save()
 
 

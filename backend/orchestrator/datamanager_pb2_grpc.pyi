@@ -3,11 +3,22 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import datamanager_pb2
 import grpc
+import grpc.aio
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class DataManagerServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     RegisterDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.NewDataManager,
         datamanager_pb2.DataManager,
@@ -25,30 +36,48 @@ class DataManagerServiceStub:
         datamanager_pb2.UpdateDataManagerResponse,
     ]
 
+class DataManagerServiceAsyncStub:
+    RegisterDataManager: grpc.aio.UnaryUnaryMultiCallable[
+        datamanager_pb2.NewDataManager,
+        datamanager_pb2.DataManager,
+    ]
+    GetDataManager: grpc.aio.UnaryUnaryMultiCallable[
+        datamanager_pb2.GetDataManagerParam,
+        datamanager_pb2.DataManager,
+    ]
+    QueryDataManagers: grpc.aio.UnaryUnaryMultiCallable[
+        datamanager_pb2.QueryDataManagersParam,
+        datamanager_pb2.QueryDataManagersResponse,
+    ]
+    UpdateDataManager: grpc.aio.UnaryUnaryMultiCallable[
+        datamanager_pb2.UpdateDataManagerParam,
+        datamanager_pb2.UpdateDataManagerResponse,
+    ]
+
 class DataManagerServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterDataManager(
         self,
         request: datamanager_pb2.NewDataManager,
-        context: grpc.ServicerContext,
-    ) -> datamanager_pb2.DataManager: ...
+        context: _ServicerContext,
+    ) -> typing.Union[datamanager_pb2.DataManager, collections.abc.Awaitable[datamanager_pb2.DataManager]]: ...
     @abc.abstractmethod
     def GetDataManager(
         self,
         request: datamanager_pb2.GetDataManagerParam,
-        context: grpc.ServicerContext,
-    ) -> datamanager_pb2.DataManager: ...
+        context: _ServicerContext,
+    ) -> typing.Union[datamanager_pb2.DataManager, collections.abc.Awaitable[datamanager_pb2.DataManager]]: ...
     @abc.abstractmethod
     def QueryDataManagers(
         self,
         request: datamanager_pb2.QueryDataManagersParam,
-        context: grpc.ServicerContext,
-    ) -> datamanager_pb2.QueryDataManagersResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[datamanager_pb2.QueryDataManagersResponse, collections.abc.Awaitable[datamanager_pb2.QueryDataManagersResponse]]: ...
     @abc.abstractmethod
     def UpdateDataManager(
         self,
         request: datamanager_pb2.UpdateDataManagerParam,
-        context: grpc.ServicerContext,
-    ) -> datamanager_pb2.UpdateDataManagerResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[datamanager_pb2.UpdateDataManagerResponse, collections.abc.Awaitable[datamanager_pb2.UpdateDataManagerResponse]]: ...
 
-def add_DataManagerServiceServicer_to_server(servicer: DataManagerServiceServicer, server: grpc.Server) -> None: ...
+def add_DataManagerServiceServicer_to_server(servicer: DataManagerServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

@@ -3,11 +3,22 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import grpc
+import grpc.aio
 import performance_pb2
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class PerformanceServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     RegisterPerformance: grpc.UnaryUnaryMultiCallable[
         performance_pb2.NewPerformance,
         performance_pb2.Performance,
@@ -17,18 +28,28 @@ class PerformanceServiceStub:
         performance_pb2.QueryPerformancesResponse,
     ]
 
+class PerformanceServiceAsyncStub:
+    RegisterPerformance: grpc.aio.UnaryUnaryMultiCallable[
+        performance_pb2.NewPerformance,
+        performance_pb2.Performance,
+    ]
+    QueryPerformances: grpc.aio.UnaryUnaryMultiCallable[
+        performance_pb2.QueryPerformancesParam,
+        performance_pb2.QueryPerformancesResponse,
+    ]
+
 class PerformanceServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def RegisterPerformance(
         self,
         request: performance_pb2.NewPerformance,
-        context: grpc.ServicerContext,
-    ) -> performance_pb2.Performance: ...
+        context: _ServicerContext,
+    ) -> typing.Union[performance_pb2.Performance, collections.abc.Awaitable[performance_pb2.Performance]]: ...
     @abc.abstractmethod
     def QueryPerformances(
         self,
         request: performance_pb2.QueryPerformancesParam,
-        context: grpc.ServicerContext,
-    ) -> performance_pb2.QueryPerformancesResponse: ...
+        context: _ServicerContext,
+    ) -> typing.Union[performance_pb2.QueryPerformancesResponse, collections.abc.Awaitable[performance_pb2.QueryPerformancesResponse]]: ...
 
-def add_PerformanceServiceServicer_to_server(servicer: PerformanceServiceServicer, server: grpc.Server) -> None: ...
+def add_PerformanceServiceServicer_to_server(servicer: PerformanceServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

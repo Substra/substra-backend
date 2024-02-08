@@ -92,7 +92,8 @@ class FunctionFactory(factory.Factory):
 
     key = factory.Faker("uuid4")
     owner = "OrgA"
-    function_address = factory.SubFactory(AddressFactory)
+    archive_address = factory.SubFactory(AddressFactory)
+    image = factory.SubFactory(AddressFactory)
     inputs = {}
     outputs = {}
     status = FunctionStatus.FUNCTION_STATUS_WAITING

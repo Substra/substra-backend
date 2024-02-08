@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from api.models import Function as APIFunction
 from substrapp.utils import get_hash
 
 
@@ -39,7 +40,9 @@ class Function(models.Model):
 class FunctionImage(models.Model):
     """Serialized Docker image"""
 
-    function = models.OneToOneField(Function, on_delete=models.CASCADE)
+    key_identifier = "function_id"
+
+    function = models.OneToOneField(APIFunction, on_delete=models.CASCADE, primary_key=True)
     file = models.FileField(
         storage=settings.FUNCTION_STORAGE, max_length=500, upload_to=upload_to_function
     )  # path max length to 500 instead of default 100

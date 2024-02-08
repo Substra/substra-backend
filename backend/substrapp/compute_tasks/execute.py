@@ -54,7 +54,7 @@ def execute_compute_task(ctx: Context) -> None:
     # save entrypoint to DB
     entrypoint = get_entrypoint(container_image_tag)
     ImageEntrypoint.objects.get_or_create(
-        function_checksum=ctx.function.function_address.checksum, entrypoint_json=entrypoint
+        archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
     )
 
     k8s_client = _get_k8s_client()

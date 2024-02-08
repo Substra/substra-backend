@@ -3,12 +3,29 @@
 isort:skip_file
 """
 import abc
+import collections.abc
 import dataset_pb2
 import grpc
+import grpc.aio
+import typing
+
+_T = typing.TypeVar('_T')
+
+class _MaybeAsyncIterator(collections.abc.AsyncIterator[_T], collections.abc.Iterator[_T], metaclass=abc.ABCMeta):
+    ...
+
+class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type: ignore
+    ...
 
 class DatasetServiceStub:
-    def __init__(self, channel: grpc.Channel) -> None: ...
+    def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     GetDataset: grpc.UnaryUnaryMultiCallable[
+        dataset_pb2.GetDatasetParam,
+        dataset_pb2.Dataset,
+    ]
+
+class DatasetServiceAsyncStub:
+    GetDataset: grpc.aio.UnaryUnaryMultiCallable[
         dataset_pb2.GetDatasetParam,
         dataset_pb2.Dataset,
     ]
@@ -18,7 +35,7 @@ class DatasetServiceServicer(metaclass=abc.ABCMeta):
     def GetDataset(
         self,
         request: dataset_pb2.GetDatasetParam,
-        context: grpc.ServicerContext,
-    ) -> dataset_pb2.Dataset: ...
+        context: _ServicerContext,
+    ) -> typing.Union[dataset_pb2.Dataset, collections.abc.Awaitable[dataset_pb2.Dataset]]: ...
 
-def add_DatasetServiceServicer_to_server(servicer: DatasetServiceServicer, server: grpc.Server) -> None: ...
+def add_DatasetServiceServicer_to_server(servicer: DatasetServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

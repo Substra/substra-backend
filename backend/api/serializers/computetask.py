@@ -183,7 +183,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             task["function"]["description"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-description", args=[task["function"]["key"]])
             )
-            task["function"]["function"]["storage_address"] = request.build_absolute_uri(
+            task["function"]["archive"]["storage_address"] = request.build_absolute_uri(
                 reverse("api:function-file", args=[task["function"]["key"]])
             )
 

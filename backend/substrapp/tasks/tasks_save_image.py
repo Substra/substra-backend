@@ -8,8 +8,10 @@ from typing import Any
 import structlog
 from django.conf import settings
 from django.core.files import File
+from django.urls import reverse
 
 import orchestrator
+from api.models import Function as ApiFunction
 from backend.celery import app
 from image_transfer import make_payload
 from substrapp.compute_tasks import utils
@@ -49,11 +51,13 @@ class SaveImageTask(FailableTask):
         return function.key, channel_name
 
     # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
-    def on_success(self, retval: dict[str, Any], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
-        function_key, channel_name = self.get_task_info(args, kwargs)
+    def on_success(self, retval: tuple[dict, str], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
+        orc_update_function_param, channel_name = retval
+
         with get_orchestrator_client(channel_name) as client:
+            client.update_function(orc_update_function_param)
             client.update_function_status(
-                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
+                function_key=orc_update_function_param["key"], action=orchestrator.function_pb2.FUNCTION_ACTION_READY
             )
 
 
@@ -67,7 +71,7 @@ class SaveImageTask(FailableTask):
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[str, str]:
+def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[dict, str]:
     logger.info("Starting save_image_task")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
     # create serialized image
@@ -89,9 +93,26 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
 
         logger.info("Start saving the serialized image")
         # save it
-        FunctionImage.objects.create(
+        image = FunctionImage.objects.create(
             function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
         )
+        # update APIFunction image-related fields
+        api_function = ApiFunction.objects.get(key=function.key)
+        # TODO get full url cf https://github.com/Substra/substra-backend/backend/api/serializers/function.py#L66
+        api_function.image_address = settings.DEFAULT_DOMAIN + reverse("api:function-image", args=[function.key])
+        api_function.image_checksum = image.checksum
+        api_function.save()
+
         logger.info("Serialized image saved")
 
-    return function_serialized, channel_name
+        orc_update_function_param = {
+            "key": str(api_function.key),
+            # TODO find a way to propagate the name or make it optional at update
+            "name": api_function.name,
+            "image": {
+                "checksum": api_function.image_checksum,
+                "storage_address": api_function.image_address,
+            },
+        }
+
+        return orc_update_function_param, channel_name

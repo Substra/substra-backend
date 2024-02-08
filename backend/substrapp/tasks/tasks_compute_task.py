@@ -48,6 +48,7 @@ from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
+from substrapp.exceptions import OrganizationError
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
@@ -185,6 +186,8 @@ def _run(
     dirs = None
 
     try:
+        image_builder.wait_for_image_built(task.function_key, channel_name)
+
         # Create context
         ctx = Context.from_task(channel_name, task)
         dirs = ctx.directories
@@ -197,10 +200,13 @@ def _run(
         # start build_image timer
         timer.start()
 
-        image_builder.wait_for_image_built(ctx.function, channel_name)
-
         if get_owner() != ctx.function.owner:
-            image_builder.load_remote_function_image(ctx.function, channel_name)
+            try:
+                image_builder.load_remote_function_image(ctx.function, channel_name)
+            except OrganizationHttpError as e:
+                raise compute_task_errors.CeleryNoRetryError() from e
+            except OrganizationError as e:
+                raise compute_task_errors.CeleryRetryError() from e
 
         # stop build_image timer
         _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
