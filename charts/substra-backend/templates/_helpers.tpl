@@ -140,25 +140,49 @@ Return the user list
 {{- end }}
 {{- end -}}
 
+
 {{/*
-    Create the name fo the service account to use for the worker event app
+    Create the name for the service account to use for the worker
+*/}}
+{{- define "substra.worker.serviceAccountName" -}}
+{{- if .Values.worker.serviceAccount.create -}}
+    {{ default (printf "%s-worker" ( include "substra.fullname" .)) .Values.worker.serviceAccount.name }}
+{{- else -}}
+    {{- if .Values.worker.serviceAccount.name -}}
+        {{ .Values.worker.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if worker.serviceAccount.create is false, worker.serviceAccount.name must be given" }}
+    {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+    Create the name for the service account to use for the worker event app
 */}}
 {{- define "substra.worker.events.serviceAccountName" -}}
 {{- if .Values.worker.events.serviceAccount.create -}}
     {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.worker.events.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.worker.events.serviceAccount.name }}
+    {{- if .Values.worker.events.serviceAccount.name -}}
+        {{ .Values.worker.events.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if worker.events.serviceAccount.create is false, worker.events.serviceAccount.name must be given" }}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-    Create the name fo the service account to use for the api event app
+    Create the name for the service account to use for the api event app
 */}}
 {{- define "substra.api.events.serviceAccountName" -}}
 {{- if .Values.api.events.serviceAccount.create -}}
-    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
+    {{ default (printf "%s-api-event" ( include "substra.fullname" .)) .Values.api.events.serviceAccount.name }}
 {{- else -}}
-    {{ default "default" .Values.api.events.serviceAccount.name }}
+    {{- if .Values.api.events.serviceAccount.name -}}
+        {{ .Values.api.events.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if api.events.serviceAccount.create is false, api.events.serviceAccount.name must be given" }}
+    {{- end -}}
 {{- end -}}
 {{- end -}}
 
