@@ -402,9 +402,7 @@ def _on_create_failure_report_event(event: dict) -> None:
         "Syncing failure report create",
         asset_key=event["asset_key"],
         event_id=event["id"],
-        failure_report=event["failure_report"],
     )
-
     asset_key = event["asset_key"]
     failure_report = event["failure_report"]
 
@@ -425,10 +423,7 @@ def _on_create_failure_report_event(event: dict) -> None:
 
 
 def _create_failure_report(data: dict) -> None:
-    logger.info("Creating failure report", data=data)
-    logger.debug("data", data=data)
     serializer = AssetFailureReportSerializer(data=data)
-    logger.debug("serializer", serializer=serializer)
     try:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
