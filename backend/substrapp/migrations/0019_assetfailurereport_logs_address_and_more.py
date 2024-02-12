@@ -26,7 +26,7 @@ def reverse_func(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("substrapp", "0016_rename_computetaskfailurereport_and_more"),
+        ("substrapp", "0018_alter_functionimage_fk"),
     ]
 
     operations = [
