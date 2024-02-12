@@ -7,6 +7,7 @@ from api.errors import AssetPermissionError
 from api.models import ComputeTask
 from api.models import Function
 from api.views import utils as view_utils
+from api.views.utils import ApiResponse
 from substrapp.models import asset_failure_report
 
 
@@ -28,12 +29,16 @@ class FailedAssetLogsViewSet(view_utils.PermissionMixin, viewsets.GenericViewSet
         except AssetPermissionError as e:
             return view_utils.ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
+        url = report.logs_address
+        if not url:
+            return ApiResponse({"detail": "Asset not available anymore"}, status=status.HTTP_410_GONE)
+
         response = view_utils.get_file_response(
             local_file_class=asset_failure_report.AssetFailureReport,
             key=key,
             content_field="logs",
             channel_name=channel_name,
-            url=report.logs_address,
+            url=url,
             asset_owner=asset.get_owner(),
         )
 

@@ -18,13 +18,14 @@ from substrapp.models import AssetFailureReport
 
 @pytest.fixture
 def asset_failure_report() -> tuple[ComputeTask, AssetFailureReport]:
+    owner = conf.settings.MSP_ID
     compute_task = factory.create_computetask(
         factory.create_computeplan(),
         factory.create_function(),
         public=False,
-        owner=conf.settings.MSP_ID,
+        owner=owner,
     )
-    failure_report = factory.create_computetask_logs(compute_task.key)
+    failure_report = factory.create_computetask_logs(compute_task.key, owner=owner)
     return compute_task, failure_report
 
 

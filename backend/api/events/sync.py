@@ -34,6 +34,7 @@ from api.serializers import PerformanceSerializer
 from orchestrator import client as orc_client
 from orchestrator import computetask
 from orchestrator import failure_report_pb2
+from substrapp.serializers.asset_failure_report import AssetFailureReportSerializer
 
 logger = structlog.get_logger(__name__)
 
@@ -395,25 +396,38 @@ def _disable_model(key: str) -> None:
     model.save()
 
 
-def _on_create_failure_report(event: dict) -> None:
+def _on_create_failure_report_event(event: dict) -> None:
     """Process create failure report event to update local database."""
-    logger.debug("Syncing failure report create", asset_key=event["asset_key"], event_id=event["id"])
-
+    logger.debug(
+        "Syncing failure report create",
+        asset_key=event["asset_key"],
+        event_id=event["id"],
+    )
     asset_key = event["asset_key"]
     failure_report = event["failure_report"]
+
+    _create_failure_report(data=failure_report)
+
     asset_type = failure_report_pb2.FailedAssetKind.Value(failure_report["asset_type"])
 
     if asset_type == failure_report_pb2.FAILED_ASSET_FUNCTION:
         # Needed as this field is only in ComputeTask
         compute_task_keys = ComputeTask.objects.values_list("key", flat=True).filter(
             function_id=asset_key,
-            status__in=[ComputeTask.Status.STATUS_TODO.value, ComputeTask.Status.STATUS_DOING.value],
         )
 
         for task_key in compute_task_keys:
-            _update_computetask(key=str(task_key), failure_report={"error_type": failure_report.get("error_type")})
+            _update_computetask(key=str(task_key), failure_report=failure_report)
     else:
         _update_computetask(key=asset_key, failure_report=failure_report)
+
+
+def _create_failure_report(data: dict) -> None:
+    serializer = AssetFailureReportSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("FailureReport already exists", asset_key=data["asset_key"])
 
 
 EVENT_CALLBACKS = {
@@ -451,7 +465,7 @@ EVENT_CALLBACKS = {
         event_pb2.EVENT_ASSET_CREATED: _on_create_performance_event,
     },
     common_pb2.ASSET_FAILURE_REPORT: {
-        event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report,
+        event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report_event,
     },
 }
 

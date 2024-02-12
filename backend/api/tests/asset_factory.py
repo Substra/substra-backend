@@ -541,6 +541,7 @@ def create_asset_logs(
     asset_key: uuid.UUID,
     asset_type: FailedAssetKind,
     logs: Optional[files.File] = None,
+    owner: str = "",
 ) -> AssetFailureReport:
     if logs is None:
         logs = files.base.ContentFile("dummy content")
@@ -550,6 +551,8 @@ def create_asset_logs(
         asset_type=asset_type,
         logs_checksum=get_hash(logs),
         creation_date=timezone.now(),
+        logs_address=get_storage_address("logs", asset_key, "file"),
+        logs_owner=owner,
     )
     asset_logs.logs.save("logs", logs)
     return asset_logs
@@ -558,15 +561,17 @@ def create_asset_logs(
 def create_computetask_logs(
     compute_task_key: uuid.UUID,
     logs: Optional[files.File] = None,
+    owner: str = "",
 ) -> AssetFailureReport:
-    return create_asset_logs(compute_task_key, FailedAssetKind.FAILED_ASSET_COMPUTE_TASK, logs)
+    return create_asset_logs(compute_task_key, FailedAssetKind.FAILED_ASSET_COMPUTE_TASK, logs, owner=owner)
 
 
 def create_function_logs(
     function_key: uuid.UUID,
     logs: Optional[files.File] = None,
+    owner: str = "",
 ) -> AssetFailureReport:
-    return create_asset_logs(function_key, FailedAssetKind.FAILED_ASSET_FUNCTION, logs)
+    return create_asset_logs(function_key, FailedAssetKind.FAILED_ASSET_FUNCTION, logs, owner=owner)
 
 
 def create_computetask_profiling(compute_task: ComputeTask) -> TaskProfiling:
