@@ -31,3 +31,7 @@ ORCHESTRATOR_GRPC_KEEPALIVE_MAX_PINGS_WITHOUT_DATA = 0
 
 MSP_ID = "testOrgMSP"
 CHANNELS = {"mychannel": {"model_export_enabled": False}}
+
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_TASK_ALWAYS_EAGER = False

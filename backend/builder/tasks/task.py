@@ -34,6 +34,6 @@ class BuildTask(FailableTask):
             )
 
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
-        function = orchestrator.Function.parse_raw(kwargs["function_serialized"])
+        function = orchestrator.Function.model_validate_json(kwargs["function_serialized"])
         channel_name = kwargs["channel_name"]
         return function.key, channel_name
