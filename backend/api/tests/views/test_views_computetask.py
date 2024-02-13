@@ -33,6 +33,8 @@ class ComputeTaskViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
+        self.MaxDiff = None
+
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
@@ -158,6 +160,10 @@ class ComputeTaskViewTests(APITestCase):
     CHANNELS={"mychannel": {"model_export_enabled": True}},
 )
 class TaskBulkCreateViewTests(ComputeTaskViewTests):
+    def setUp(self):
+        self.maxDiff = None
+        super().setUp()
+
     def test_task_bulk_create(self):
         def mock_register_compute_task(orc_request):
             """Build orchestrator register response from request data."""
@@ -257,6 +263,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
 )
 class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
+        self.maxDiff = None
         super().setUp()
         self.url = reverse("api:task-list")
 
@@ -278,7 +285,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             "rank": 1,
             "tag": "",
             "creation_date": todo_task.creation_date.isoformat().replace("+00:00", "Z"),
-            "start_date": None,
+            "start_date": todo_task.start_date.isoformat().replace("+00:00", "Z"),
             "end_date": None,
             "error_type": None,
             "logs_permission": {
@@ -302,7 +309,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "rank": 1,
                 "tag": "",
                 "creation_date": todo_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
+                "start_date": todo_task.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": None,
                 "error_type": None,
                 "logs_permission": {
@@ -324,7 +331,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "rank": 1,
                 "tag": "",
                 "creation_date": waiting_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
+                "start_date": waiting_task.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": None,
                 "error_type": None,
                 "logs_permission": {
@@ -429,12 +436,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
     def test_task_list_success(self):
         response = self.client.get(self.url)
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
-        self.assertEqual(
+        assert_eq_except_durations(
             response.json(),
             {
                 "count": len(self.list_expected_results),
@@ -460,7 +462,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         key = self.list_expected_results[0]["key"]
         params = urlencode({"key": key})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(
+
+        assert_eq_except_durations(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
@@ -469,7 +472,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         key, owner = self.list_expected_results[0]["key"], self.list_expected_results[0]["owner"]
         params = urlencode({"key": key, "owner": owner})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(
+
+        assert_eq_except_durations(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
@@ -479,7 +483,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         key_1 = self.list_expected_results[1]["key"]
         params = urlencode({"key": ",".join([key_0, key_1])})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(
+        assert_eq_except_durations(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.list_expected_results[:2]}
         )
 
@@ -501,13 +505,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}")
 
         if t_status != "STATUS_XXX":
-            if t_status == ComputeTask.Status.STATUS_DOING:
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTask.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
+            assert_eq_except_durations(
                 response.json(),
                 {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
             )
@@ -516,6 +514,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
+            (["STATUS_WAITING_FOR_BUILDER_SLOT", "STATUS_BUILDING"],),
             (["STATUS_WAITING_FOR_PARENT_TASKS", "STATUS_WAITING_FOR_EXECUTOR_SLOT"],),
             (["STATUS_DOING", "STATUS_DONE"],),
             (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
@@ -528,13 +527,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}")
 
         if "STATUS_XXX" not in t_statuses:
-            if ComputeTask.Status.STATUS_DOING in t_statuses:
-                # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-                # couldn't be properly mocked
-                for task in response.json().get("results"):
-                    if task["status"] == ComputeTask.Status.STATUS_DOING:
-                        task["duration"] = 3600
-            self.assertEqual(
+            assert_eq_except_durations(
                 response.json(),
                 {
                     "count": len(filtered_train_tasks),
@@ -554,7 +547,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         # this should be enough to guarantee that there will only be one matching task
         params = urlencode({"match": key[19:]})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertDictEqual(
+
+        assert_eq_except_durations(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
@@ -569,7 +563,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             }
         )
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(
+
+        assert_eq_except_durations(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.list_expected_results[:1]}
         )
 
@@ -584,31 +579,24 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         params = urlencode({"page_size": page_size, "page": page})
         response = self.client.get(f"{self.url}?{params}")
         r = response.json()
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in r["results"]:
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
+
         self.assertEqual(r["count"], len(self.list_expected_results))
         offset = (page - 1) * page_size
-        self.assertEqual(r["results"], self.list_expected_results[offset : offset + page_size])
+        assert_eq_except_durations(r["results"], self.list_expected_results[offset : offset + page_size])
 
     def test_task_cp_list_success(self):
         """List tasks for a specific compute plan (CPTaskViewSet)."""
         url = reverse("api:compute_plan_task-list", args=[self.compute_plan.key])
         response = self.client.get(url)
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
-
-        assert response.json() == {
-            "count": len(self.list_expected_results),
-            "next": None,
-            "previous": None,
-            "results": self.list_expected_results,
-        }
+        assert_eq_except_durations(
+            response.json(),
+            {
+                "count": len(self.list_expected_results),
+                "next": None,
+                "previous": None,
+                "results": self.list_expected_results,
+            },
+        )
 
     def test_task_list_cross_assets_filters(self):
         """Filter task on other asset key such as compute_plan_key and function_key"""
@@ -620,12 +608,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
         for params in params_list:
             response = self.client.get(f"{self.url}?{params}")
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
-        self.assertEqual(response.json().get("results"), self.list_expected_results)
+        assert_eq_except_durations(response.json().get("results"), self.list_expected_results)
 
         # filter on wrong key
         params = urlencode({"function_key": self.data_manager.key})
@@ -635,26 +618,16 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def test_task_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}")
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
-        self.assertEqual(response.json().get("results"), self.list_expected_results),
+        assert_eq_except_durations(response.json().get("results"), self.list_expected_results),
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}")
-        # manually overriding duration for doing tasks as "now" is taken from db and not timezone.now(),
-        # couldn't be properly mocked
-        for task in response.json().get("results"):
-            if task["status"] == ComputeTask.Status.STATUS_DOING:
-                task["duration"] = 3600
-        self.assertEqual(response.json().get("results"), self.list_expected_results[::-1])
+        assert_eq_except_durations(response.json().get("results"), self.list_expected_results[::-1])
 
     def test_task_retrieve(self):
         url = reverse("api:task-detail", args=[self.detail_expected_results["key"]])
         response = self.client.get(url)
-        self.assertEqual(response.json(), self.detail_expected_results)
+        assert_eq_except_durations(response.json(), self.detail_expected_results)
 
     def test_task_retrieve_wrong_channel(self):
         url = reverse("api:task-detail", args=[self.detail_expected_results["key"]])
@@ -844,3 +817,26 @@ def test_n_plus_one_queries_compute_task_list(authenticated_client, create_compu
 
     assert abs(queries_for_60_tasks - queries_for_10_tasks) < 6
     assert queries_for_60_tasks < 15
+
+
+# Filter an object and returns the nested dictionary without the key in parameter `removed_key`
+def filter_dict(d: dict, removed_key: str) -> dict:
+    if isinstance(d, dict):
+        return {
+            key: value
+            for key, value in ((key, filter_dict(value, removed_key)) for key, value in d.items())
+            if key != removed_key
+        }
+    elif isinstance(d, list):
+        return [filter_dict(item, removed_key) for item in d]
+    else:
+        return d
+
+
+# Removing checks for duration because "now" is taken from db and not timezone.now(),
+# couldn't be properly mocked. It would create functions with start_date but no end_date to have
+# a duration of -3599. For tasks with an end_date, it would give a wrong duration too.
+def assert_eq_except_durations(dict_1: dict, dict_2: dict) -> None:
+    dict_1_filtered = filter_dict(dict_1, "duration")
+    dict_2_filtered = filter_dict(dict_2, "duration")
+    assert dict_1_filtered == dict_2_filtered
