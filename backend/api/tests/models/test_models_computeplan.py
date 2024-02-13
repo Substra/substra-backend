@@ -8,6 +8,8 @@ from api.tests import asset_factory as factory
 @pytest.mark.parametrize(
     "status,has_start_date,has_end_date",
     (
+        (ComputeTask.Status.STATUS_WAITING_FOR_BUILDER_SLOT, False, False),
+        (ComputeTask.Status.STATUS_BUILDING, True, False),
         (ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS, True, False),
         (ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT, True, False),
         (ComputeTask.Status.STATUS_DOING, True, False),
@@ -55,7 +57,7 @@ def test_update_dates_ended_cp_with_ongoing_task(status, has_start_date, has_end
     function = factory.create_function()
     compute_plan = factory.create_computeplan()
     factory.create_computetask(compute_plan, function, status=status)
-    factory.create_computetask(compute_plan, function, status=ComputeTask.Status.STATUS_WAITING)
+    factory.create_computetask(compute_plan, function, status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS)
 
     compute_plan.update_dates()
     # validate outputs

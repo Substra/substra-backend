@@ -13,6 +13,8 @@ from substrapp.compute_tasks import compute_task as task_utils
 
 RUNNABLE_TASK_STATUSES = task_utils._RUNNABLE_TASK_STATUSES
 NON_RUNNABLE_TASK_STATUSES = [
+    orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_BUILDER_SLOT,
+    orchestrator.ComputeTaskStatus.STATUS_BUILDING,
     orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_PARENT_TASKS,
     orchestrator.ComputeTaskStatus.STATUS_DONE,
     orchestrator.ComputeTaskStatus.STATUS_FAILED,
@@ -107,7 +109,7 @@ def is_task_runnable(_raise_if_task_not_runnable: mock.Mock, exception: Optional
 @pytest.mark.parametrize(
     "status, should_update",
     [
-        (orchestrator.ComputeTaskStatus.STATUS_TODO, True),
+        (orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT, True),
         (orchestrator.ComputeTaskStatus.STATUS_DOING, False),
     ],
 )
