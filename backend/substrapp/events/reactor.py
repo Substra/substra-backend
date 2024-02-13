@@ -16,8 +16,8 @@ from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.task_routing import WORKER_QUEUE
 from substrapp.task_routing import get_builder_queue
+from substrapp.task_routing import get_generic_worker_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_compute_task import queue_compute_task
 from substrapp.tasks.tasks_save_image import save_image_task
@@ -91,10 +91,12 @@ def on_function_event(payload):
         if orc_function.owner == _MY_ORGANIZATION:
             function_key = orc_function.key
             builder_queue = get_builder_queue()
+            worker_queue = get_generic_worker_queue()
             logger.info(
-                "Assigned function to builder queue",
+                "Assigned function to queues",
                 asset_key=function_key,
-                queue=builder_queue,
+                builder_queue=builder_queue,
+                worker_queue=worker_queue,
             )
 
             building_params = {
@@ -103,7 +105,7 @@ def on_function_event(payload):
             }
             (
                 build_image.si(**building_params).set(queue=builder_queue)
-                | save_image_task.si(**building_params).set(queue=WORKER_QUEUE)
+                | save_image_task.si(**building_params).set(queue=worker_queue)
             ).apply_async()
 
         else:

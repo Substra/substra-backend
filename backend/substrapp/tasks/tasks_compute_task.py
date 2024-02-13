@@ -186,8 +186,6 @@ def _run(
     dirs = None
 
     try:
-        image_builder.wait_for_image_built(task.function_key, channel_name)
-
         # Create context
         ctx = Context.from_task(channel_name, task)
         dirs = ctx.directories

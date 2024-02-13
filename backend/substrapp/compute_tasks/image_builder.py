@@ -1,6 +1,5 @@
 import os
 import pathlib
-import time
 from tempfile import TemporaryDirectory
 
 import structlog
@@ -8,8 +7,6 @@ from django.conf import settings
 
 import orchestrator
 import substrapp.clients.organization as organization_client
-from api.models import Function as ApiFunction
-from builder import exceptions
 from image_transfer import push_payload
 from substrapp.compute_tasks import utils
 
@@ -19,24 +16,6 @@ IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 IMAGE_BUILD_CHECK_DELAY = settings.IMAGE_BUILD_CHECK_DELAY
 REGISTRY = settings.REGISTRY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
-
-
-def wait_for_image_built(function_key: str, channel: str) -> None:
-    api_function = ApiFunction.objects.get(key=function_key)
-
-    attempt = 0
-    # with 60 attempts we wait max 2 min with a pending pod
-    max_attempts = IMAGE_BUILD_TIMEOUT / IMAGE_BUILD_CHECK_DELAY
-    while attempt < max_attempts:
-        if api_function.status == ApiFunction.Status.FUNCTION_STATUS_READY:
-            return
-        attempt += 1
-        time.sleep(IMAGE_BUILD_CHECK_DELAY)
-        api_function.refresh_from_db()
-
-    raise exceptions.PodTimeoutError(
-        f"Build for function {function_key} didn't complete after {IMAGE_BUILD_TIMEOUT} seconds"
-    )
 
 
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
