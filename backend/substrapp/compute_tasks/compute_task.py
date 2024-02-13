@@ -9,7 +9,7 @@ from orchestrator.error import OrcError
 from orchestrator.resources import ComputeTask
 from orchestrator.resources import ComputeTaskStatus
 
-_RUNNABLE_TASK_STATUSES = [ComputeTaskStatus.STATUS_TODO]
+_RUNNABLE_TASK_STATUSES = [ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT]
 
 logger = structlog.get_logger(__name__)
 
@@ -148,7 +148,7 @@ def start_task_if_not_started(task: ComputeTask, client: orchestrator.Client) ->
     Raises:
         OrcError: if the status can't be updated to DOING
     """
-    if task.status == ComputeTaskStatus.STATUS_TODO:
+    if task.status == ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT:
         try:
             logger.info("Updating task status to STATUS_DOING", task_key=task.key)
             client.update_task_status(task.key, computetask_pb2.TASK_ACTION_DOING)

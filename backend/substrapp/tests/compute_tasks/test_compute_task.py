@@ -13,7 +13,7 @@ from substrapp.compute_tasks import compute_task as task_utils
 
 RUNNABLE_TASK_STATUSES = task_utils._RUNNABLE_TASK_STATUSES
 NON_RUNNABLE_TASK_STATUSES = [
-    orchestrator.ComputeTaskStatus.STATUS_WAITING,
+    orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_PARENT_TASKS,
     orchestrator.ComputeTaskStatus.STATUS_DONE,
     orchestrator.ComputeTaskStatus.STATUS_FAILED,
     orchestrator.ComputeTaskStatus.STATUS_CANCELED,

@@ -8,8 +8,8 @@ from api.tests import asset_factory as factory
 @pytest.mark.parametrize(
     "status,has_start_date,has_end_date",
     (
-        (ComputeTask.Status.STATUS_WAITING, False, False),
-        (ComputeTask.Status.STATUS_TODO, False, False),
+        (ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS, True, False),
+        (ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT, True, False),
         (ComputeTask.Status.STATUS_DOING, True, False),
         (ComputeTask.Status.STATUS_DONE, True, True),
         (ComputeTask.Status.STATUS_FAILED, True, True),

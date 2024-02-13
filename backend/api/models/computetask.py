@@ -56,8 +56,8 @@ class ComputeTask(models.Model, AssetPermissionMixin):
     """ComputeTask represent a computetask and its associated metadata"""
 
     class Status(models.TextChoices):
-        STATUS_WAITING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_WAITING)
-        STATUS_TODO = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_TODO)
+        STATUS_WAITING_FOR_PARENT_TASKS = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_WAITING_FOR_PARENT_TASKS)
+        STATUS_WAITING_FOR_EXECUTOR_SLOT = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_WAITING_FOR_EXECUTOR_SLOT)
         STATUS_DOING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING)
         STATUS_DONE = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE)
         STATUS_CANCELED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_CANCELED)

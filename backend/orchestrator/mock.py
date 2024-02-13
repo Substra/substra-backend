@@ -36,7 +36,7 @@ class ComputeTaskFactory(factory.Factory):
     compute_plan_key = factory.Faker("uuid4")
     function_key = factory.Faker("uuid4")
     rank = 0
-    status = ComputeTaskStatus.STATUS_TODO
+    status = ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT
     worker = "OrgA"
     metadata = {}
     inputs = []

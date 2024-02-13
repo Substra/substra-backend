@@ -79,8 +79,8 @@ class ComputePlan(models.Model):
         return ComputeTask.objects.filter(compute_plan__key=str(self.key)).aggregate(
             task_count=Count("key"),
             done_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DONE)),
-            waiting_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING)),
-            todo_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_TODO)),
+            waiting_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS)),
+            todo_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)),
             doing_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DOING)),
             canceled_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_CANCELED)),
             failed_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_FAILED)),
@@ -107,13 +107,7 @@ class ComputePlan(models.Model):
         logger.debug(
             "update cp status",
             status=compute_plan_status,
-            task_count=stats["task_count"],
-            done_count=stats["task_count"],
-            waiting_count=stats["waiting_count"],
-            todo_count=stats["todo_count"],
-            doing_count=stats["done_count"],
-            canceled_count=stats["canceled_count"],
-            failed_count=stats["doing_count"],
+            **stats,
         )
 
         self.status = compute_plan_status

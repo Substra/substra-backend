@@ -69,7 +69,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         function = factory.create_function()
 
         todo_cp = factory.create_computeplan(name="To do", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_TODO)
+        factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
 
         doing_cp = factory.create_computeplan(name="Doing", status=ComputePlan.Status.PLAN_STATUS_DOING)
         factory.create_computetask(doing_cp, function, status=ComputeTask.Status.STATUS_DOING)

@@ -56,8 +56,8 @@ class ComputeTaskViewTests(APITestCase):
         }
 
         for _status in (
-            ComputeTask.Status.STATUS_TODO,
-            ComputeTask.Status.STATUS_WAITING,
+            ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
+            ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
             ComputeTask.Status.STATUS_DOING,
             ComputeTask.Status.STATUS_DONE,
             ComputeTask.Status.STATUS_FAILED,
@@ -168,7 +168,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                     "function_key": in_data["function_key"],
                     "compute_plan_key": in_data["compute_plan_key"],
                     "rank": 0,
-                    "status": "STATUS_WAITING",
+                    "status": "STATUS_WAITING_FOR_PARENT_TASKS",
                     "owner": "MyOrg1MSP",
                     "worker": "MyOrg1MSP",
                     "inputs": in_data["inputs"],
@@ -228,7 +228,7 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
                 "owner": "MyOrg1MSP",
                 "rank": 0,
                 "start_date": None,
-                "status": "STATUS_WAITING",
+                "status": "STATUS_WAITING_FOR_PARENT_TASKS",
                 "tag": None,
                 "worker": "MyOrg1MSP",
                 "inputs": [
@@ -260,8 +260,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         super().setUp()
         self.url = reverse("api:task-list")
 
-        todo_task = self.compute_tasks[ComputeTask.Status.STATUS_TODO]
-        waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING]
+        todo_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT]
+        waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS]
         doing_task = self.compute_tasks[ComputeTask.Status.STATUS_DOING]
         done_task = self.compute_tasks[ComputeTask.Status.STATUS_DONE]
         failed_task = self.compute_tasks[ComputeTask.Status.STATUS_FAILED]
@@ -273,7 +273,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
             "owner": "MyOrg1MSP",
             "compute_plan_key": str(self.compute_plan.key),
             "metadata": {},
-            "status": "STATUS_TODO",
+            "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
             "worker": "MyOrg1MSP",
             "rank": 1,
             "tag": "",
@@ -297,7 +297,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
-                "status": "STATUS_TODO",
+                "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
@@ -319,7 +319,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
-                "status": "STATUS_WAITING",
+                "status": "STATUS_WAITING_FOR_PARENT_TASKS",
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
@@ -485,8 +485,8 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            ("STATUS_WAITING",),
-            ("STATUS_TODO",),
+            ("STATUS_WAITING_FOR_PARENT_TASKS",),
+            ("STATUS_WAITING_FOR_EXECUTOR_SLOT",),
             ("STATUS_DOING",),
             ("STATUS_DONE",),
             ("STATUS_CANCELED",),
@@ -516,7 +516,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
-            (["STATUS_WAITING", "STATUS_TODO"],),
+            (["STATUS_WAITING_FOR_PARENT_TASKS", "STATUS_WAITING_FOR_EXECUTOR_SLOT"],),
             (["STATUS_DOING", "STATUS_DONE"],),
             (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
         ]
@@ -564,7 +564,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         params = urlencode({"match": key[19:]})
         params = urlencode(
             {
-                "status": "STATUS_TODO",
+                "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                 "match": key[19:],
             }
         )

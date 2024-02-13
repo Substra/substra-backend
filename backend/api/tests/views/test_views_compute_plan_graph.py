@@ -138,7 +138,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "rank": 1,
                     "worker": "MyOrg1MSP",
                     "function_name": "function",
-                    "status": "STATUS_TODO",
+                    "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                     "inputs_specs": [
                         {"kind": "ASSET_DATA_SAMPLE", "identifier": "datasamples"},
                         {"kind": "ASSET_DATA_MANAGER", "identifier": "opener"},
@@ -150,7 +150,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "rank": 2,
                     "worker": "MyOrg1MSP",
                     "function_name": "function",
-                    "status": "STATUS_TODO",
+                    "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "model"},
                     ],
@@ -161,7 +161,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "rank": 3,
                     "worker": "MyOrg1MSP",
                     "function_name": "function",
-                    "status": "STATUS_TODO",
+                    "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "predictions"},
                     ],
@@ -172,7 +172,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "rank": 10,
                     "worker": "MyOrg1MSP",
                     "function_name": "function",
-                    "status": "STATUS_TODO",
+                    "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                     "inputs_specs": [
                         {"kind": "ASSET_DATA_SAMPLE", "identifier": "datasamples"},
                         {"kind": "ASSET_DATA_MANAGER", "identifier": "opener"},
@@ -184,7 +184,7 @@ class ComputePlanGraphViewTests(APITestCase):
                     "rank": 11,
                     "worker": "MyOrg1MSP",
                     "function_name": "function",
-                    "status": "STATUS_TODO",
+                    "status": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
                     "inputs_specs": [
                         {"kind": "ASSET_MODEL", "identifier": "model"},
                     ],

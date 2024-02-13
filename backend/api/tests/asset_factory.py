@@ -338,7 +338,7 @@ def create_computetask(
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
     key: uuid.UUID = None,
-    status: int = ComputeTask.Status.STATUS_TODO,
+    status: int = ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
     rank: int = 1,
     worker: str = DEFAULT_WORKER,
     tag: str = "",
