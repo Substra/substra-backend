@@ -18,11 +18,13 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 
 from api.errors import AlreadyExistsError
+from api.errors import AssetPermissionError
 from api.errors import BadRequestError
 from api.models import ComputePlan
 from api.models import ComputeTask
 from api.models import ComputeTaskInputAsset
 from api.models import ComputeTaskOutputAsset
+from api.models.function import Function
 from api.models.function import FunctionInput
 from api.models.function import FunctionOutput
 from api.serializers import ComputeTaskInputAssetSerializer
@@ -33,12 +35,15 @@ from api.views.filters_utils import ChoiceInFilter
 from api.views.filters_utils import MatchFilter
 from api.views.filters_utils import MetadataFilterBackend
 from api.views.utils import ApiResponse
+from api.views.utils import PermissionMixin
 from api.views.utils import get_channel_name
+from api.views.utils import get_file_response
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from orchestrator import computetask
 from orchestrator.resources import TAG_KEY
+from substrapp.models import AssetFailureReport
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -278,6 +283,44 @@ class ComputeTaskViewSet(ComputeTaskViewSetConfig, mixins.RetrieveModelMixin, mi
                 )
             )
         )
+
+
+class ComputeTaskPermissionViewSet(PermissionMixin, GenericViewSet):
+    queryset = ComputeTask.objects.all()
+    serializer_class = ComputeTaskSerializer
+
+    @action(detail=True)
+    def logs(self, request, pk):
+        task = self.get_object()
+        channel_name = get_channel_name(request)
+        if task.error_type == ComputeTask.ErrorType.ERROR_TYPE_BUILD:
+            asset_class = Function
+            key = str(task.function.key)
+        else:
+            asset_class = ComputeTask
+            key = str(task.key)
+
+        try:
+            asset = self.get_asset(request, key, channel_name, asset_class)
+        except AssetPermissionError as e:
+            return ApiResponse({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+        url = task.logs_address
+        if not url:
+            return ApiResponse({"detail": "Asset not available anymore"}, status=status.HTTP_410_GONE)
+
+        response = get_file_response(
+            local_file_class=AssetFailureReport,
+            key=key,
+            content_field="logs",
+            channel_name=channel_name,
+            url=url,
+            asset_owner=asset.get_owner(),
+        )
+
+        response.headers["Content-Type"] = "text/plain; charset=utf-8"
+        response.headers["Content-Disposition"] = f'attachment; filename="tuple_logs_{pk}.txt"'
+        return response
 
 
 class CPTaskViewSet(ComputeTaskViewSetConfig, mixins.ListModelMixin, GenericViewSet):

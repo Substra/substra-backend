@@ -1,5 +1,6 @@
 from .compute_plan_graph import get_cp_graph
 from .computeplan import ComputePlanViewSet
+from .computetask import ComputeTaskPermissionViewSet
 from .computetask import ComputeTaskViewSet
 from .computetask import CPTaskViewSet
 from .datamanager import DataManagerPermissionViewSet
@@ -28,6 +29,7 @@ __all__ = [
     "FunctionViewSet",
     "FunctionPermissionViewSet",
     "ComputeTaskViewSet",
+    "ComputeTaskPermissionViewSet",
     "ComputePlanViewSet",
     "CPTaskViewSet",
     "CPFunctionViewSet",
