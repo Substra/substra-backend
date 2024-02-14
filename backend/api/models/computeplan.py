@@ -79,8 +79,16 @@ class ComputePlan(models.Model):
         return ComputeTask.objects.filter(compute_plan__key=str(self.key)).aggregate(
             task_count=Count("key"),
             done_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DONE)),
-            waiting_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS)),
-            todo_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)),
+            waiting_builder_slot_count=Count(
+                "key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_BUILDER_SLOT)
+            ),
+            building_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_BUILDING)),
+            waiting_parent_tasks_count=Count(
+                "key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS)
+            ),
+            waiting_executor_slot_count=Count(
+                "key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
+            ),
             doing_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DOING)),
             canceled_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_CANCELED)),
             failed_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_FAILED)),
@@ -97,9 +105,13 @@ class ComputePlan(models.Model):
             compute_plan_status = self.Status.PLAN_STATUS_FAILED
         elif self.cancelation_date or stats["canceled_count"] > 0:
             compute_plan_status = self.Status.PLAN_STATUS_CANCELED
-        elif stats["waiting_count"] == stats["task_count"]:
+        elif stats["waiting_builder_slot_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_WAITING
-        elif stats["waiting_count"] < stats["task_count"] and stats["doing_count"] == 0 and stats["done_count"] == 0:
+        elif (
+            stats["waiting_builder_slot_count"] < stats["task_count"]
+            and stats["doing_count"] == 0
+            and stats["done_count"] == 0
+        ):
             compute_plan_status = self.Status.PLAN_STATUS_TODO
         else:
             compute_plan_status = self.Status.PLAN_STATUS_DOING
