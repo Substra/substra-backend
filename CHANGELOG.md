@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `FunctionStatus` enum ([#714](https://github.com/Substra/orchestrator/pull/714))
 - BREAKING: Add `status` on `api.Function` (type `FunctionStatus`) ([#714](https://github.com/Substra/substra-backend/pull/714))
 - Tests to ensure build order is made in order of submission (including retries) ([#740](https://github.com/Substra/substra-backend/pull/740))
+- BREAKING: Added compute task statuses `STATUS_WAITING_FOR_BUILDER_SLOT` and `STATUS_BUILDING` in `STATUS_WAITING_FOR_PARENT_TASKS` reflecting current task status ([#823](https://github.com/Substra/substra-backend/pull/823))
 
 ### Changed
 
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker images are no longer removed at the end of a compute plan ([#777](https://github.com/Substra/substra-backend/pull/777))
 - Rename `LEDGER_CHANNEL` to `CHANNELS` and `LEDGER_MSP_ID` to `MSP_ID` ([#794](https://github.com/Substra/substra-backend/pull/794))
 - Propagate the creation of `AssetFailureReport` to all backends, so that logs are accessible from all backends ([#807](https://github.com/Substra/substra-backend/pull/807))
+- BREAKING: Rename `STATUS_WAITING` and `STATUS_TODO` in `STATUS_WAITING_FOR_PARENT_TASKS` and `STATUS_WAITING_FOR_EXECUTOR_SLOT` ([#823](https://github.com/Substra/substra-backend/pull/823))
 
 ### Removed
 
