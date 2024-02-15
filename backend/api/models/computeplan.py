@@ -107,11 +107,7 @@ class ComputePlan(models.Model):
             compute_plan_status = self.Status.PLAN_STATUS_CANCELED
         elif stats["waiting_builder_slot_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_WAITING
-        elif (
-            stats["waiting_builder_slot_count"] < stats["task_count"]
-            and stats["doing_count"] == 0
-            and stats["done_count"] == 0
-        ):
+        elif stats["doing_count"] == 0 and stats["done_count"] == 0:
             compute_plan_status = self.Status.PLAN_STATUS_TODO
         else:
             compute_plan_status = self.Status.PLAN_STATUS_DOING
