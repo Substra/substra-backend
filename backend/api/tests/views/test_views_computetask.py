@@ -158,10 +158,6 @@ class ComputeTaskViewTests(APITestCase):
     CHANNELS={"mychannel": {"model_export_enabled": True}},
 )
 class TaskBulkCreateViewTests(ComputeTaskViewTests):
-    def setUp(self):
-        self.maxDiff = None
-        super().setUp()
-
     def test_task_bulk_create(self):
         def mock_register_compute_task(orc_request):
             """Build orchestrator register response from request data."""
@@ -261,7 +257,6 @@ class TaskBulkCreateViewTests(ComputeTaskViewTests):
 )
 class GenericTaskViewTests(ComputeTaskViewTests):
     def setUp(self):
-        self.maxDiff = None
         super().setUp()
         self.url = reverse("api:task-list")
 
