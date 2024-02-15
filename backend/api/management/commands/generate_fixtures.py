@@ -153,7 +153,7 @@ class Command(BaseCommand):
         task_status = (
             ComputeTask.Status.STATUS_DONE
             if cp_status == ComputePlan.Status.PLAN_STATUS_DONE
-            else ComputeTask.Status.STATUS_TODO
+            else ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT
         )
         predict_task = factory.create_computetask(
             cp,
@@ -217,7 +217,7 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.simple_function),
-            status=ComputeTask.Status.STATUS_TODO,
+            status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
         )
         train_task_2 = factory.create_computetask(
             cp,
@@ -230,7 +230,7 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.simple_function),
-            status=ComputeTask.Status.STATUS_TODO,
+            status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
         )
         factory.create_computetask(
             cp,
@@ -242,7 +242,7 @@ class Command(BaseCommand):
                 },
             ),
             outputs=factory.build_computetask_outputs(self.aggregate_function),
-            status=ComputeTask.Status.STATUS_TODO,
+            status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
         )
         return cp
 

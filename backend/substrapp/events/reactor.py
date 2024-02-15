@@ -57,7 +57,7 @@ def on_computetask_event(payload):
                     channel_name, compute_plan_key=orc_task.compute_plan_key
                 )
 
-    if orc_task.status != orchestrator.ComputeTaskStatus.STATUS_TODO:
+    if orc_task.status != orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT:
         return
 
     if event_pb2.EventKind.Value(event_kind) not in [event_pb2.EVENT_ASSET_CREATED, event_pb2.EVENT_ASSET_UPDATED]:

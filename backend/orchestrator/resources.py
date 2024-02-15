@@ -175,8 +175,10 @@ class Function(pydantic.BaseModel):
 
 class ComputeTaskStatus(AutoNameEnum):
     STATUS_UNKNOWN = enum.auto()
-    STATUS_WAITING = enum.auto()
-    STATUS_TODO = enum.auto()
+    STATUS_WAITING_FOR_BUILDER_SLOT = enum.auto()
+    STATUS_BUILDING = enum.auto()
+    STATUS_WAITING_FOR_PARENT_TASKS = enum.auto()
+    STATUS_WAITING_FOR_EXECUTOR_SLOT = enum.auto()
     STATUS_DOING = enum.auto()
     STATUS_DONE = enum.auto()
     STATUS_CANCELED = enum.auto()

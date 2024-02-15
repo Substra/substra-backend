@@ -181,6 +181,9 @@ def get_log_permissions(owner: str, public: bool) -> dict:
 def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime]:
     start_date = end_date = None
     if status in (
+        ComputeTask.Status.STATUS_BUILDING,
+        ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
+        ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
         ComputeTask.Status.STATUS_DOING,
         ComputeTask.Status.STATUS_DONE,
         ComputeTask.Status.STATUS_FAILED,
@@ -338,7 +341,7 @@ def create_computetask(
     inputs: list[ComputeTaskInput] = None,
     outputs: list[ComputeTaskOutput] = None,
     key: uuid.UUID = None,
-    status: int = ComputeTask.Status.STATUS_TODO,
+    status: int = ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
     rank: int = 1,
     worker: str = DEFAULT_WORKER,
     tag: str = "",

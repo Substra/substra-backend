@@ -66,7 +66,7 @@ def test_on_create_failure_report():
         compute_plan,
         function,
         outputs=factory.build_computetask_outputs(function),
-        status=ComputeTask.Status.STATUS_WAITING,
+        status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
     )
     asset_key = test_task.key
     logs_address = "http://backend-org-1-substra-backend-server.org-1:8000/logs/b86cef85-90ca-4d7b-888e-98fa0f09f/file/"
