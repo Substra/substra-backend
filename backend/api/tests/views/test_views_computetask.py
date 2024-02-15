@@ -33,8 +33,6 @@ class ComputeTaskViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
-        self.MaxDiff = None
-
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
