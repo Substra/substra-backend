@@ -29,7 +29,7 @@ class AssetFailureReport(models.Model):
     asset_key = models.UUIDField(primary_key=True, editable=False)
     asset_type = models.CharField(max_length=100, choices=FailedAssetKind.choices)
     logs = models.FileField(
-        storage=settings.COMPUTE_TASK_LOGS_STORAGE, max_length=_UUID_STRING_REPR_LENGTH, upload_to=_upload_to, null=True
+        storage=settings.ASSET_LOGS_STORAGE, max_length=_UUID_STRING_REPR_LENGTH, upload_to=_upload_to, null=True
     )
     logs_checksum = models.CharField(max_length=_SHA256_STRING_REPR_LENGTH)
     logs_address = models.URLField(validators=[URLValidatorWithOptionalTLD()])

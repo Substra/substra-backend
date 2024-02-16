@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `LEDGER_CHANNEL` to `CHANNELS` and `LEDGER_MSP_ID` to `MSP_ID` ([#794](https://github.com/Substra/substra-backend/pull/794))
 - Propagate the creation of `AssetFailureReport` to all backends, so that logs are accessible from all backends ([#807](https://github.com/Substra/substra-backend/pull/807))
 - BREAKING: Rename `STATUS_WAITING` and `STATUS_TODO` in `STATUS_WAITING_FOR_PARENT_TASKS` and `STATUS_WAITING_FOR_EXECUTOR_SLOT` ([#823](https://github.com/Substra/substra-backend/pull/823))
+- Rename all instances of `COMPUTE_TASK_LOGS_STORAGE_ADDRESS` to `ASSET_LOGS_STORAGE_ADDRESS` and `COMPUTE_TASK_LOGS_BUCKET_NAME` to `ASSET_LOGS_BUCKET_NAME` ([#825](https://github.com/Substra/substra-backend/pull/825))
 
 ### Removed
 
