@@ -73,7 +73,7 @@ def test_task_profiling_create_bad_client(authenticated_client, task_profiling):
 @override_settings(**ORG_SETTINGS)
 @pytest.mark.django_db
 def test_task_profiling_create_success(authenticated_backend_client, create_compute_task):
-    compute_task = create_compute_task(status=ComputeTask.Status.STATUS_DOING)
+    compute_task = create_compute_task(status=ComputeTask.Status.STATUS_EXECUTING)
     response = authenticated_backend_client.post(
         TASK_PROFILING_LIST_URL, {"compute_task_key": str(compute_task.key)}, **EXTRA
     )

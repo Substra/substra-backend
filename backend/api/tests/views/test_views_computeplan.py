@@ -41,7 +41,7 @@ def mock_register_compute_plan(data):
         "building_count": 0,
         "waiting_parent_tasks_count": 0,
         "waiting_executor_slot_count": 0,
-        "doing_count": 0,
+        "executing_count": 0,
         "canceled_count": 0,
         "failed_count": 0,
         "owner": "MyOrg1MSP",
@@ -74,7 +74,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
 
         doing_cp = factory.create_computeplan(name="Doing", status=ComputePlan.Status.PLAN_STATUS_DOING)
-        factory.create_computetask(doing_cp, function, status=ComputeTask.Status.STATUS_DOING)
+        factory.create_computetask(doing_cp, function, status=ComputeTask.Status.STATUS_EXECUTING)
         self.now = doing_cp.start_date + datetime.timedelta(hours=1)
 
         done_cp = factory.create_computeplan(name="Done", status=ComputePlan.Status.PLAN_STATUS_DONE)
@@ -102,7 +102,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 1,
-                "doing_count": 0,
+                "executing_count": 0,
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
@@ -125,7 +125,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 0,
-                "doing_count": 1,
+                "executing_count": 1,
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
@@ -148,7 +148,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 0,
-                "doing_count": 0,
+                "executing_count": 0,
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 1,
@@ -172,7 +172,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 0,
-                "doing_count": 0,
+                "executing_count": 0,
                 "canceled_count": 0,
                 "failed_count": 1,
                 "done_count": 0,
@@ -196,7 +196,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 0,
-                "doing_count": 0,
+                "executing_count": 0,
                 "canceled_count": 1,
                 "failed_count": 0,
                 "done_count": 0,
@@ -220,7 +220,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "building_count": 0,
                 "waiting_parent_tasks_count": 0,
                 "waiting_executor_slot_count": 0,
-                "doing_count": 0,
+                "executing_count": 0,
                 "canceled_count": 0,
                 "failed_count": 0,
                 "done_count": 0,
@@ -506,7 +506,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "building_count": 0,
             "waiting_parent_tasks_count": 0,
             "waiting_executor_slot_count": 1,
-            "doing_count": 0,
+            "executing_count": 0,
             "canceled_count": 0,
             "failed_count": 0,
             "done_count": 0,

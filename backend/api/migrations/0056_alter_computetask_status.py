@@ -8,6 +8,7 @@ def migrate_data(apps, schema_editor):
     status_mapping = {
         "STATUS_WAITING": "STATUS_WAITING_FOR_PARENT_TASKS",
         "STATUS_TODO": "STATUS_WAITING_FOR_EXECUTOR_SLOT",
+        "STATUS_DOING": "STATUS_EXECUTING",
     }
     model_model = apps.get_model("api", "computetask")
     for task_instance in model_model.objects.all():
@@ -36,7 +37,7 @@ class Migration(migrations.Migration):
                     ("STATUS_BUILDING", "Status Building"),
                     ("STATUS_WAITING_FOR_PARENT_TASKS", "Status Waiting For Parent Tasks"),
                     ("STATUS_WAITING_FOR_EXECUTOR_SLOT", "Status Waiting For Executor Slot"),
-                    ("STATUS_DOING", "Status Doing"),
+                    ("STATUS_EXECUTING", "Status Executing"),
                     ("STATUS_DONE", "Status Done"),
                     ("STATUS_CANCELED", "Status Canceled"),
                     ("STATUS_FAILED", "Status Failed"),

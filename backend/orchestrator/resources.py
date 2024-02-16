@@ -179,7 +179,7 @@ class ComputeTaskStatus(AutoNameEnum):
     STATUS_BUILDING = enum.auto()
     STATUS_WAITING_FOR_PARENT_TASKS = enum.auto()
     STATUS_WAITING_FOR_EXECUTOR_SLOT = enum.auto()
-    STATUS_DOING = enum.auto()
+    STATUS_EXECUTING = enum.auto()
     STATUS_DONE = enum.auto()
     STATUS_CANCELED = enum.auto()
     STATUS_FAILED = enum.auto()

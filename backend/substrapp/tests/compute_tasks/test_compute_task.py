@@ -28,12 +28,12 @@ NON_RUNNABLE_TASK_STATUSES = [
 )
 def test_is_task_status_runnable(task_status: orchestrator.ComputeTaskStatus, is_runnable: bool):
     compute_task = orc_mock.ComputeTaskFactory(status=task_status)
-    assert task_utils._is_task_status_runnable(compute_task, allow_doing=False) is is_runnable
+    assert task_utils._is_task_status_runnable(compute_task, allow_executing=False) is is_runnable
 
 
-def test_is_task_status_runnable_allow_doing():
-    compute_task = orc_mock.ComputeTaskFactory(status=orchestrator.ComputeTaskStatus.STATUS_DOING)
-    assert task_utils._is_task_status_runnable(compute_task, allow_doing=True)
+def test_is_task_status_runnable_allow_executing():
+    compute_task = orc_mock.ComputeTaskFactory(status=orchestrator.ComputeTaskStatus.STATUS_EXECUTING)
+    assert task_utils._is_task_status_runnable(compute_task, allow_executing=True)
 
 
 @pytest.fixture
@@ -87,11 +87,13 @@ def test_raise_if_task_not_runnable_do_not_raise(task_status: str, client: mock.
     client.query_compute_plan.assert_called_once()
 
 
-def test_raise_if_task_not_runnable_allow_doing_do_not_raise(client: mock.Mock):
-    task = orc_mock.ComputeTaskFactory(status=orchestrator.ComputeTaskStatus.STATUS_DOING, compute_plan_key="cp-key")
+def test_raise_if_task_not_runnable_allow_executing_do_not_raise(client: mock.Mock):
+    task = orc_mock.ComputeTaskFactory(
+        status=orchestrator.ComputeTaskStatus.STATUS_EXECUTING, compute_plan_key="cp-key"
+    )
     client.query_compute_plan.return_value = orc_mock.ComputePlanFactory()
 
-    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_doing=True, existing_task=task)
+    task_utils._raise_if_task_not_runnable(str(uuid.uuid4()), client, allow_executing=True, existing_task=task)
 
     client.query_compute_plan.assert_called_once()
 
@@ -110,7 +112,7 @@ def is_task_runnable(_raise_if_task_not_runnable: mock.Mock, exception: Optional
     "status, should_update",
     [
         (orchestrator.ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT, True),
-        (orchestrator.ComputeTaskStatus.STATUS_DOING, False),
+        (orchestrator.ComputeTaskStatus.STATUS_EXECUTING, False),
     ],
 )
 def test_start_task_if_not_started(client: mock.Mock, status, should_update: bool):

@@ -184,7 +184,7 @@ def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tupl
         ComputeTask.Status.STATUS_BUILDING,
         ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
         ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
-        ComputeTask.Status.STATUS_DOING,
+        ComputeTask.Status.STATUS_EXECUTING,
         ComputeTask.Status.STATUS_DONE,
         ComputeTask.Status.STATUS_FAILED,
         ComputeTask.Status.STATUS_CANCELED,

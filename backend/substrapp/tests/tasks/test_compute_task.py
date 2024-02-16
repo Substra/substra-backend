@@ -39,7 +39,7 @@ def test_compute_task_exception(mocker: MockerFixture):
         task_dir = tempfile.mkdtemp()
 
     task = orc_mock.ComputeTaskFactory(
-        status=orchestrator.ComputeTaskStatus.STATUS_DOING,
+        status=orchestrator.ComputeTaskStatus.STATUS_EXECUTING,
     )
     # Setup a fake context
     ctx = Context(

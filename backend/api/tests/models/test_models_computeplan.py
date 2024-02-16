@@ -12,7 +12,7 @@ from api.tests import asset_factory as factory
         (ComputeTask.Status.STATUS_BUILDING, True, False),
         (ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS, True, False),
         (ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT, True, False),
-        (ComputeTask.Status.STATUS_DOING, True, False),
+        (ComputeTask.Status.STATUS_EXECUTING, True, False),
         (ComputeTask.Status.STATUS_DONE, True, True),
         (ComputeTask.Status.STATUS_FAILED, True, True),
         (ComputeTask.Status.STATUS_CANCELED, True, True),

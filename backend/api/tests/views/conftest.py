@@ -74,5 +74,5 @@ def create_compute_plan(create_compute_task):
 
 @pytest.fixture
 def task_profiling(create_compute_task) -> TaskProfiling:
-    task = create_compute_task(status=ComputeTask.Status.STATUS_DOING)
+    task = create_compute_task(status=ComputeTask.Status.STATUS_EXECUTING)
     return factory.create_computetask_profiling(compute_task=task)

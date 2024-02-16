@@ -89,7 +89,7 @@ class ComputePlan(models.Model):
             waiting_executor_slot_count=Count(
                 "key", filter=Q(status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
             ),
-            doing_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_DOING)),
+            executing_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_EXECUTING)),
             canceled_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_CANCELED)),
             failed_count=Count("key", filter=Q(status=ComputeTask.Status.STATUS_FAILED)),
         )
@@ -107,7 +107,7 @@ class ComputePlan(models.Model):
             compute_plan_status = self.Status.PLAN_STATUS_CANCELED
         elif stats["waiting_builder_slot_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_WAITING
-        elif stats["doing_count"] == 0 and stats["done_count"] == 0:
+        elif stats["executing_count"] == 0 and stats["done_count"] == 0:
             compute_plan_status = self.Status.PLAN_STATUS_TODO
         else:
             compute_plan_status = self.Status.PLAN_STATUS_DOING

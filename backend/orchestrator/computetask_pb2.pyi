@@ -32,7 +32,7 @@ class _ComputeTaskStatusEnumTypeWrapper(google.protobuf.internal.enum_type_wrapp
     STATUS_UNKNOWN: _ComputeTaskStatus.ValueType  # 0
     STATUS_WAITING_FOR_PARENT_TASKS: _ComputeTaskStatus.ValueType  # 1
     STATUS_WAITING_FOR_EXECUTOR_SLOT: _ComputeTaskStatus.ValueType  # 2
-    STATUS_DOING: _ComputeTaskStatus.ValueType  # 3
+    STATUS_EXECUTING: _ComputeTaskStatus.ValueType  # 3
     STATUS_DONE: _ComputeTaskStatus.ValueType  # 4
     STATUS_CANCELED: _ComputeTaskStatus.ValueType  # 5
     STATUS_FAILED: _ComputeTaskStatus.ValueType  # 6
@@ -44,7 +44,7 @@ class ComputeTaskStatus(_ComputeTaskStatus, metaclass=_ComputeTaskStatusEnumType
 STATUS_UNKNOWN: ComputeTaskStatus.ValueType  # 0
 STATUS_WAITING_FOR_PARENT_TASKS: ComputeTaskStatus.ValueType  # 1
 STATUS_WAITING_FOR_EXECUTOR_SLOT: ComputeTaskStatus.ValueType  # 2
-STATUS_DOING: ComputeTaskStatus.ValueType  # 3
+STATUS_EXECUTING: ComputeTaskStatus.ValueType  # 3
 STATUS_DONE: ComputeTaskStatus.ValueType  # 4
 STATUS_CANCELED: ComputeTaskStatus.ValueType  # 5
 STATUS_FAILED: ComputeTaskStatus.ValueType  # 6
@@ -59,7 +59,7 @@ class _ComputeTaskAction:
 class _ComputeTaskActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_ComputeTaskAction.ValueType], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
     TASK_ACTION_UNKNOWN: _ComputeTaskAction.ValueType  # 0
-    TASK_ACTION_DOING: _ComputeTaskAction.ValueType  # 1
+    TASK_ACTION_EXECUTING: _ComputeTaskAction.ValueType  # 1
     TASK_ACTION_CANCELED: _ComputeTaskAction.ValueType  # 2
     TASK_ACTION_FAILED: _ComputeTaskAction.ValueType  # 3
     TASK_ACTION_DONE: _ComputeTaskAction.ValueType  # 4
@@ -69,7 +69,7 @@ class _ComputeTaskActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapp
 class ComputeTaskAction(_ComputeTaskAction, metaclass=_ComputeTaskActionEnumTypeWrapper): ...
 
 TASK_ACTION_UNKNOWN: ComputeTaskAction.ValueType  # 0
-TASK_ACTION_DOING: ComputeTaskAction.ValueType  # 1
+TASK_ACTION_EXECUTING: ComputeTaskAction.ValueType  # 1
 TASK_ACTION_CANCELED: ComputeTaskAction.ValueType  # 2
 TASK_ACTION_FAILED: ComputeTaskAction.ValueType  # 3
 TASK_ACTION_DONE: ComputeTaskAction.ValueType  # 4
