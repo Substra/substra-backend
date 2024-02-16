@@ -15,7 +15,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   version: 12.8.12
 - name: localstack
-  repository: https://helm.localstack.cloud
-  version: 0.6.5
-digest: sha256:191299e835d909667c2914ca24845932e6b8def96223a512360171e1c3fbae62
-generated: "2023-10-30T15:39:06.403078+01:00"
+  repository: https://localstack.github.io/helm-charts
+  version: 0.6.9
+digest: sha256:5f78a36fc3eed5d0f7fe40c86d18993d16494a87ced2c78e4dfb79f63e79a3f6
+generated: "2024-02-16T17:47:16.781406+01:00"
