@@ -856,12 +856,19 @@ docker-registry:
 minio:
   enabled: false
   auth:
-    rootUser: minio
-    rootPassword: minio1234
+    rootUser: &objecStoreRootUser minio
+    rootPassword: &objectStoreRootPassword minio1234
     ## required for helm upgrade to work well (https://github.com/bitnami/charts/blob/1d7e62b47f525fca5ecdc2f34a4e9fa69f1532f5/bitnami/minio/values.yaml#L106)
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
+
+extraEnv:
+  - name: AWS_ACCESS_KEY_ID
+    value: *objecStoreRootUser
+  - name: AWS_SECRET_ACCESS_KEY
+    value: *objectStoreRootPassword
+
 localstack:
   enabled: true
   service:
