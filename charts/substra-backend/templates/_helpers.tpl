@@ -275,3 +275,15 @@ The hostname we should connect to (external is defined, otherwise integrated)
   - name: DJANGO_SETTINGS_MODULE
     value: backend.settings.{{ .Values.settings }}
 {{- end -}}
+
+
+{{/*
+Define service URL based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.url" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- printf "%s-minio:9000" .Release.Name -}}
+    {{- else if .Values.localstack.enabled -}}
+        {{- printf "%s-localstack:4566" .Release.Name -}}
+    {{- end -}}
+{{- end -}}

@@ -19,7 +19,7 @@ data:
   KANIKO_IMAGE: {{ include "common.images.name" .Values.kaniko.image }}
   KANIKO_MIRROR: {{ .Values.kaniko.mirror | quote }}
 
-  OBJECTSTORE_URL: {{ .Release.Name }}-minio:9000
+  OBJECTSTORE_URL: {{ include "substra-backend.objectStore.url" . | quote }}
 
   WORKER_REPLICA_SET_NAME: {{ template "substra.fullname" . }}-worker
   ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS: {{ .Values.DataSampleStorageInServerMedia | quote }}

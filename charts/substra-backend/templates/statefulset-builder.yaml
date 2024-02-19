@@ -157,7 +157,7 @@ spec:
           - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
             value: {{ .Values.kaniko.dockerConfigSecretName | quote }}
           - name: OBJECTSTORE_URL
-            value: {{ .Release.Name }}-minio:9000
+            value: {{ include "substra-backend.objectStore.url" . | quote }}
         ports:
           - name: http
             containerPort: 8000

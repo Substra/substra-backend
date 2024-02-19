@@ -134,7 +134,7 @@ spec:
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL
-              value: {{ .Release.Name }}-minio:9000
+              value: {{ include "substra-backend.objectStore.url" . | quote }}
             - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
               value: {{ .Values.DataSampleStorageInServerMedia | quote }}
           {{- with .Values.extraEnv }}
