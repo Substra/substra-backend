@@ -29,17 +29,15 @@ class ComputePlan(models.Model):
     """ComputePlan represent a compute plan and its associated metadata"""
 
     class Status(models.TextChoices):
-        PLAN_STATUS_WAITING = "PLAN_STATUS_WAITING"
-        PLAN_STATUS_TODO = "PLAN_STATUS_TODO"
+        PLAN_STATUS_CREATED = "PLAN_STATUS_CREATED"
         PLAN_STATUS_DOING = "PLAN_STATUS_DOING"
         PLAN_STATUS_DONE = "PLAN_STATUS_DONE"
         PLAN_STATUS_CANCELED = "PLAN_STATUS_CANCELED"
         PLAN_STATUS_FAILED = "PLAN_STATUS_FAILED"
-        PLAN_STATUS_EMPTY = "PLAN_STATUS_EMPTY"
 
     key = models.UUIDField(primary_key=True)
     owner = models.CharField(max_length=100)
-    status = models.CharField(max_length=64, choices=Status.choices, default=Status.PLAN_STATUS_EMPTY)
+    status = models.CharField(max_length=64, choices=Status.choices, default=Status.PLAN_STATUS_CREATED)
     tag = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
     creator = models.ForeignKey(
@@ -98,17 +96,15 @@ class ComputePlan(models.Model):
         """Compute cp status from tasks counts."""
         stats = self.get_task_stats()
         if stats["task_count"] == 0:
-            compute_plan_status = self.Status.PLAN_STATUS_EMPTY
+            compute_plan_status = self.Status.PLAN_STATUS_CREATED
+        elif stats["waiting_builder_slot_count"] == stats["task_count"]:
+            compute_plan_status = self.Status.PLAN_STATUS_CREATED
         elif stats["done_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_DONE
         elif stats["failed_count"] > 0:
             compute_plan_status = self.Status.PLAN_STATUS_FAILED
         elif self.cancelation_date or stats["canceled_count"] > 0:
             compute_plan_status = self.Status.PLAN_STATUS_CANCELED
-        elif stats["waiting_builder_slot_count"] == stats["task_count"]:
-            compute_plan_status = self.Status.PLAN_STATUS_WAITING
-        elif stats["executing_count"] == 0 and stats["done_count"] == 0:
-            compute_plan_status = self.Status.PLAN_STATUS_TODO
         else:
             compute_plan_status = self.Status.PLAN_STATUS_DOING
 

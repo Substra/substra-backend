@@ -308,7 +308,7 @@ def create_datasample(
 
 def create_computeplan(
     key: uuid.UUID = None,
-    status: int = ComputePlan.Status.PLAN_STATUS_TODO,
+    status: int = ComputePlan.Status.PLAN_STATUS_CREATED,
     tag: str = "",
     name: str = "computeplan",
     failed_task_key: str = None,

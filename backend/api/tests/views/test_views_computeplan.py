@@ -34,7 +34,7 @@ def mock_register_compute_plan(data):
         "tag": data["tag"],
         "name": data["name"],
         "metadata": data["metadata"],
-        "status": ComputePlan.Status.PLAN_STATUS_TODO,
+        "status": ComputePlan.Status.PLAN_STATUS_CREATED,
         "task_count": 0,
         "done_count": 0,
         "waiting_builder_slot_count": 0,
@@ -70,8 +70,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         function = factory.create_function()
 
-        todo_cp = factory.create_computeplan(name="To do", status=ComputePlan.Status.PLAN_STATUS_TODO)
-        factory.create_computetask(todo_cp, function, status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
+        created_cp = factory.create_computeplan(name="Created", status=ComputePlan.Status.PLAN_STATUS_CREATED)
+        factory.create_computetask(created_cp, function, status=ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT)
 
         doing_cp = factory.create_computeplan(name="Doing", status=ComputePlan.Status.PLAN_STATUS_DOING)
         factory.create_computetask(doing_cp, function, status=ComputeTask.Status.STATUS_EXECUTING)
@@ -88,13 +88,11 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         canceled_cp = factory.create_computeplan(name="Canceled", status=ComputePlan.Status.PLAN_STATUS_CANCELED)
         factory.create_computetask(canceled_cp, function, status=ComputeTask.Status.STATUS_CANCELED)
 
-        empty_cp = factory.create_computeplan(name="Empty", status=ComputePlan.Status.PLAN_STATUS_EMPTY)
-
         self.expected_results = [
             {
-                "key": str(todo_cp.key),
+                "key": str(created_cp.key),
                 "tag": "",
-                "name": "To do",
+                "name": "Created",
                 "owner": "MyOrg1MSP",
                 "metadata": {},
                 "task_count": 1,
@@ -107,9 +105,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "failed_count": 0,
                 "done_count": 0,
                 "failed_task_key": None,
-                "status": "PLAN_STATUS_TODO",
+                "status": "PLAN_STATUS_CREATED",
                 "creator": None,
-                "creation_date": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": created_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "start_date": None,
                 "end_date": None,
                 "duration": 0,  # because start_date is None
@@ -208,29 +206,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "end_date": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "estimated_end_date": canceled_cp.end_date.isoformat().replace("+00:00", "Z"),
                 "duration": 3600,  # 1 hour (default factory value)
-            },
-            {
-                "key": str(empty_cp.key),
-                "tag": "",
-                "name": "Empty",
-                "owner": "MyOrg1MSP",
-                "metadata": {},
-                "task_count": 0,
-                "waiting_builder_slot_count": 0,
-                "building_count": 0,
-                "waiting_parent_tasks_count": 0,
-                "waiting_executor_slot_count": 0,
-                "executing_count": 0,
-                "canceled_count": 0,
-                "failed_count": 0,
-                "done_count": 0,
-                "failed_task_key": None,
-                "status": "PLAN_STATUS_EMPTY",
-                "creator": None,
-                "creation_date": empty_cp.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": None,
-                "end_date": None,
-                "duration": 0,  # because start_date is None
             },
         ]
 
@@ -422,9 +397,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
-            ("PLAN_STATUS_EMPTY"),
-            ("PLAN_STATUS_WAITING"),
-            ("PLAN_STATUS_TODO"),
+            ("PLAN_STATUS_CREATED"),
+            ("PLAN_STATUS_CREATED"),
             ("PLAN_STATUS_DOING"),
             ("PLAN_STATUS_DONE"),
             ("PLAN_STATUS_CANCELED"),
@@ -458,7 +432,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     @parameterized.expand(
         [
-            (["PLAN_STATUS_WAITING", "PLAN_STATUS_TODO"],),
+            (["PLAN_STATUS_CREATED"],),
             (["PLAN_STATUS_DOING", "PLAN_STATUS_XXX"],),
             (["PLAN_STATUS_DONE", "PLAN_STATUS_CANCELED", "PLAN_STATUS_FAILED"],),
         ]
@@ -492,7 +466,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         """Filter computeplan on other asset key such as function_key, dataset_key and data_sample_key"""
         function = factory.create_function()
 
-        compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_TODO)
+        compute_plan = factory.create_computeplan(name="cp", status=ComputePlan.Status.PLAN_STATUS_CREATED)
         factory.create_computetask(compute_plan, function)
         expected_cp = {
             "key": str(compute_plan.key),
@@ -511,7 +485,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "failed_count": 0,
             "done_count": 0,
             "failed_task_key": None,
-            "status": "PLAN_STATUS_TODO",
+            "status": "PLAN_STATUS_CREATED",
             "creation_date": compute_plan.creation_date.isoformat().replace("+00:00", "Z"),
             "start_date": None,
             "end_date": None,
@@ -546,7 +520,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             if cp["status"] == "PLAN_STATUS_DOING":
                 cp["duration"] = 3600
         self.assertEqual(
-            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
         # non json data (must be ignored)
@@ -558,7 +533,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             if cp["status"] == "PLAN_STATUS_DOING":
                 cp["duration"] = 3600
         self.assertEqual(
-            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
         # json data with incorrect structure (must be ignored)
@@ -570,7 +546,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             if cp["status"] == "PLAN_STATUS_DOING":
                 cp["duration"] = 3600
         self.assertEqual(
-            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
         # json data with proper structure and missing keys (must be ignored)
@@ -582,7 +559,8 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             if cp["status"] == "PLAN_STATUS_DOING":
                 cp["duration"] = 3600
         self.assertEqual(
-            response.json(), {"count": 6, "next": None, "previous": None, "results": self.expected_results}
+            response.json(),
+            {"count": len(self.expected_results), "next": None, "previous": None, "results": self.expected_results},
         )
 
         # exists
