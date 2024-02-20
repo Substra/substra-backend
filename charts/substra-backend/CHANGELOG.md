@@ -2,6 +2,12 @@
 
 ## [] - Unreleased
 
+## [24.0.3] - 2024-02-20
+
+### Changed
+
+- Update substra-backend image to `0.43.0`
+
 ## [24.0.1] - 2023-12-15
 
 ### Changed
