@@ -10,7 +10,7 @@ from substrapp.utils import raise_if_path_traversal
 
 
 @deconstructible
-class FileValidator(object):
+class SubstraFunctionArchiveValidator(object):
     error_messages = {
         "open": "Cannot handle this file object.",
         "compressed": "Ensure this file is an archive (zip or tar.* compressed file).",
