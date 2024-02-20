@@ -863,11 +863,6 @@ minio:
     ## required to take into account new access and secret keys
     forceNewKeys: true
 
-extraEnv:
-  - name: AWS_ACCESS_KEY_ID
-    value: *objecStoreRootUser
-  - name: AWS_SECRET_ACCESS_KEY
-    value: *objectStoreRootPassword
 
 localstack:
   enabled: true
@@ -889,6 +884,11 @@ localstack:
       value: "0.0"
     - name: DOCKER_HOST
       value: "unix:///var/run/docker.sock"
+    - name: AWS_ACCESS_KEY_ID
+      value: *objecStoreRootUser
+    - name: AWS_SECRET_ACCESS_KEY
+      value: *objectStoreRootPassword
+
   persistence:
     enabled: true
     accessMode: ReadWriteOnce
