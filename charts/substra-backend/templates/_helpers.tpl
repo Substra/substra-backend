@@ -287,3 +287,41 @@ Define service URL based on MinIO or LocalStack enablement
         {{- printf "%s-localstack:4566" .Release.Name -}}
     {{- end -}}
 {{- end -}}
+
+
+{{/*
+Define objectstore access key based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.accessKey" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- .Values.minio.auth.rootUser }}
+    {{- else if .Values.localstack.enabled -}}
+        {{- include "substra-backend.localstack.envValue" (dict "name" "AWS_ACCESS_KEY_ID" "context" .) -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define objectstore secret key bassed on MinIO and Localstack enablemement
+*/}}
+{{- define "substra-backend.objectStore.secretKey" -}}
+  {{- if .Values.minio.enabled -}}
+        {{- .Values.minio.auth.rootPassword }}
+    {{- else if .Values.localstack.enabled -}}
+        {{- include "substra-backend.localstack.envValue" (dict "name" "AWS_SECRET_ACCESS_KEY" "context" .) -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Retrieve AWS environment variable value
+*/}}
+{{- define "substra-backend.localstack.envValue" -}}
+{{- $envName := .name -}}
+{{- $context := .context -}}
+{{- $value := "" -}}
+{{- range $context.Values.localstack.environment -}}
+  {{- if eq .name $envName -}}
+    {{- $value = .value -}}
+  {{- end -}}
+{{- end -}}
+{{- $value -}}
+{{- end -}}
