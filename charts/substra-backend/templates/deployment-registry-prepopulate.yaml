@@ -23,15 +23,15 @@ spec:
       initContainers:
       - name: wait-registry
         image: jwilder/dockerize:0.6.1
-        command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
+        command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-harbor:80']
       - name: kaniko
         image: {{ include "common.images.name" $.Values.kaniko.image }}
         args:
           - "--context=/docker-context"
           {{- if .dstImage }}
-          - "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}"
+          - "--destination={{ $.Release.Name }}-harbor:80/{{ .dstImage }}"
           {{- else }}
-          - "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}"
+          - "--destination={{ $.Release.Name }}-harbor:80/{{ .image }}"
           {{- end }}
           - "--insecure"
           - "--verbosity=debug"

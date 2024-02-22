@@ -29,6 +29,10 @@ dependencies:
     repository: https://helm.twun.io
     version: 2.2.2
     condition: docker-registry.enabled
+  - name: harbor
+    repository: https://charts.bitnami.com/bitnami
+    version: 19.6.0
+    condition: harbor.enabled
   - name: minio
     repository: https://charts.bitnami.com/bitnami
     version: 12.8.12
