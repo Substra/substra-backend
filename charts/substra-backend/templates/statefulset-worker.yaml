@@ -95,8 +95,6 @@ spec:
               value: "{{ .Values.server.defaultDomain }}"
             - name: "CELERY_WORKER_CONCURRENCY"
               value: {{ .Values.worker.concurrency | quote }}
-            - name: WORKER_PVC_DOCKER_CACHE
-              value: docker-cache
             - name: WORKER_PVC_SUBTUPLE
               value: subtuple
             {{- if .Values.privateCa.enabled }}
@@ -208,12 +206,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.worker.persistence.size }}
-  - metadata:
-      name: docker-cache
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      {{ include "common.storage.class" .Values.kaniko.cache.persistence }}
-      resources:
-        requests:
-          storage: {{ .Values.kaniko.cache.persistence.size }}
 {{- end }}
