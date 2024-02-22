@@ -109,8 +109,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
-              value: {{ .Values.kaniko.dockerConfigSecretName | quote  }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL
@@ -164,14 +162,6 @@ spec:
           secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-      {{- if .Values.kaniko.dockerConfigSecretName }}
-      - name: docker-config
-        secret:
-          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
-          items:
-          - key: .dockerconfigjson
-            path: config.json
-      {{- end }}
     {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
