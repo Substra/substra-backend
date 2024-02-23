@@ -70,7 +70,7 @@ def execute_compute_task(ctx: Context) -> None:
 
         # save entrypoint to DB
         entrypoint = get_entrypoint(container_image_tag)
-        ImageEntrypoint.objects.create(
+        ImageEntrypoint.objects.get_or_create(
             archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
         )
         volume_mounts, volumes = get_volumes(ctx)
