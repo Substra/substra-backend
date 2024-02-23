@@ -14,6 +14,7 @@ from django.conf import settings
 
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks import image_builder
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.command import get_exec_command_args
@@ -27,6 +28,8 @@ from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import get_container_image_name
 from substrapp.docker_registry import get_entrypoint
+from substrapp.exceptions import OrganizationError
+from substrapp.exceptions import OrganizationHttpError
 from substrapp.exceptions import PodReadinessTimeoutError
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import execute
@@ -35,6 +38,7 @@ from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
 from substrapp.models import ImageEntrypoint
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_owner
 from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
@@ -51,17 +55,24 @@ def execute_compute_task(ctx: Context) -> None:
     env = get_environment(ctx)
     image = get_container_image_name(container_image_tag)
 
-    # save entrypoint to DB
-    entrypoint = get_entrypoint(container_image_tag)
-    ImageEntrypoint.objects.get_or_create(
-        archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
-    )
-
     k8s_client = _get_k8s_client()
 
     should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
 
     if should_create_pod:
+        if get_owner() != ctx.function.owner:
+            try:
+                image_builder.load_remote_function_image(ctx.function, channel_name)
+            except OrganizationHttpError as e:
+                raise compute_task_errors.CeleryNoRetryError() from e
+            except OrganizationError as e:
+                raise compute_task_errors.CeleryRetryError() from e
+
+        # save entrypoint to DB
+        entrypoint = get_entrypoint(container_image_tag)
+        ImageEntrypoint.objects.create(
+            archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
+        )
         volume_mounts, volumes = get_volumes(ctx)
 
         with get_orchestrator_client(channel_name) as client:
