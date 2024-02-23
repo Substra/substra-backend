@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Convert asset uuid to str in `FailedAssetLogsViewSet` [#804](https://github.com/Substra/substra-backend/pull/804)
+- Organisations which are not function owner loads function image only once ([#833](https://github.com/Substra/substra-backend/pull/833/files))
 
 ## [0.42.2](https://github.com/Substra/substra-backend/releases/tag/0.42.2) 2023-10-18
 
