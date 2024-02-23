@@ -128,3 +128,6 @@ orchestrator:
     - yourchannel:
         restricted: false
         model_export_enabled: true
+
+builder:
+  enabled: true
