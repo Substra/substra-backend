@@ -398,7 +398,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     @parameterized.expand(
         [
             ("PLAN_STATUS_CREATED"),
-            ("PLAN_STATUS_CREATED"),
             ("PLAN_STATUS_DOING"),
             ("PLAN_STATUS_DONE"),
             ("PLAN_STATUS_CANCELED"),
