@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compute task status `DOING` is renamed `EXECUTING` ([#827](https://github.com/Substra/substra-backend/pull/827/))
 - Compute plan statuses `EMPTY`, `WAITING` ansd `TODO` are merged into new status `CREATED` ([#827](https://github.com/Substra/substra-backend/pull/827/))
 
+### Removed
+
+- `worker` does not wait the cache to be pre-populated to start ([#831](https://github.com/Substra/substra-backend/pull/831))
+- Remove docker pull configuration from the `worker` used by kaniko ([#831](https://github.com/Substra/substra-backend/pull/831))
+
 ## [0.43.0](https://github.com/Substra/substra-backend/releases/tag/0.43.0) 2024-02-26
 
 ### Added
