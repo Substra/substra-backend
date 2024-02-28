@@ -20,7 +20,7 @@ privateCa:
   ## @param privateCa.image.tag Private CA injector tag
   ## @param privateCa.image.pullPolicy Private CA injector pull policy
   ## @param privateCa.image.pullSecrets Specify image pull secrets
-  ## @param privateCa.image.registry The registery to pull the CA Cert Injector image
+  ## @param privateCa.image.registry The registry to pull the CA Cert Injector image
   ##
   image:
     registry: ghcr.io
