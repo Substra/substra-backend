@@ -201,9 +201,11 @@ The hostname we should connect to (external is defined, otherwise integrated)
 `wait-minio` container initialisation used inside of `initContainers`
 */}}
 {{- define "common.waitMinIOContainer" -}}
+{{- if or .Values.minio.enabled .Values.localstack.enabled }}
 - name: wait-minio
   image: jwilder/dockerize:0.6.1
-  command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
+  command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.objectStore.url" .}}']
+{{- end }}
 {{- end -}}
 
 
@@ -272,4 +274,54 @@ The hostname we should connect to (external is defined, otherwise integrated)
   env:
   - name: DJANGO_SETTINGS_MODULE
     value: backend.settings.{{ .Values.settings }}
+{{- end -}}
+
+
+{{/*
+Define service URL based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.url" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- printf "%s-minio:9000" .Release.Name -}}
+    {{- else if .Values.localstack.enabled -}}
+        {{- printf "%s-localstack:4566" .Release.Name -}}
+    {{- end -}}
+{{- end -}}
+
+
+{{/*
+Define objectstore access key based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.accessKey" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- .Values.minio.auth.rootUser }}
+    {{- else if .Values.localstack.enabled -}}
+        {{- include "substra-backend.localstack.envValue" (dict "name" "AWS_ACCESS_KEY_ID" "context" .) -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define objectstore secret key bassed on MinIO and Localstack enablemement
+*/}}
+{{- define "substra-backend.objectStore.secretKey" -}}
+  {{- if .Values.minio.enabled -}}
+        {{- .Values.minio.auth.rootPassword }}
+    {{- else if .Values.localstack.enabled -}}
+        {{- include "substra-backend.localstack.envValue" (dict "name" "AWS_SECRET_ACCESS_KEY" "context" .) -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Retrieve AWS environment variable value
+*/}}
+{{- define "substra-backend.localstack.envValue" -}}
+{{- $envName := .name -}}
+{{- $context := .context -}}
+{{- $value := "" -}}
+{{- range $context.Values.localstack.environment -}}
+  {{- if eq .name $envName -}}
+    {{- $value = .value -}}
+  {{- end -}}
+{{- end -}}
+{{- $value -}}
 {{- end -}}

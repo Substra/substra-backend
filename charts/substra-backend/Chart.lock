@@ -14,5 +14,8 @@ dependencies:
 - name: minio
   repository: https://charts.bitnami.com/bitnami
   version: 12.8.12
-digest: sha256:f7f76249b4efc0de4514cdc62dbd91e8bc48769b996c9b277568fb85d7ce5683
-generated: "2023-10-10T12:10:32.20442+02:00"
+- name: localstack
+  repository: https://localstack.github.io/helm-charts
+  version: 0.6.9
+digest: sha256:5f78a36fc3eed5d0f7fe40c86d18993d16494a87ced2c78e4dfb79f63e79a3f6
+generated: "2024-02-16T17:47:16.781406+01:00"

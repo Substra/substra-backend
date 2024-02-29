@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://github.com/Substra
-version: 24.0.3
+version: 24.1.0
 appVersion: 0.43.0
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
@@ -33,3 +33,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     version: 12.8.12
     condition: minio.enabled
+  - name: localstack
+    repository: https://localstack.github.io/helm-charts
+    version: 0.6.9
+    condition: localstack.enabled
