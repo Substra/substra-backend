@@ -863,7 +863,8 @@ minio:
     ## required to take into account new access and secret keys
     forceNewKeys: true
 
-
+## @skip localstack
+##
 localstack:
   enabled: true
   service:
