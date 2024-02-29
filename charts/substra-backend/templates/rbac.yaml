@@ -28,13 +28,6 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get"]
-  {{- if .Values.psp.create }}
-  - apiGroups: [""]
-    resources: ["podsecuritypolicies"]
-    verbs: ["use"]
-    resourceNames:
-      - {{ template "substra.fullname" . }}-psp
-  {{- end }}
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -160,13 +153,6 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get"]
-  {{- if .Values.psp.create }}
-  - apiGroups: [""]
-    resources: ["podsecuritypolicies"]
-    verbs: ["use"]
-    resourceNames:
-      - {{ template "substra.fullname" . }}-psp
-  {{- end }}
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
