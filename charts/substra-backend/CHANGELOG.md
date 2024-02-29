@@ -2,6 +2,12 @@
 
 ## [] - Unreleased
 
+## [24.1.0] - 2024-02-29
+
+### Added
+
+- Minio is optional. S3 bucket is now available through LocalStack
+
 ## [24.0.3] - 2024-02-26
 
 ### Changed
