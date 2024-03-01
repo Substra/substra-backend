@@ -61,15 +61,18 @@ class UtilsTests(APITestCase):
 
 
 def test_retry():
+    class CustomTestException(Exception):
+        pass
+
     @utils.retry(raise_exception=True)
     def test_raise():
-        raise Exception("failure")
+        raise CustomTestException("failure")
 
     @utils.retry()
     def test_do_not_raise():
-        raise Exception("failure")
+        raise CustomTestException("failure")
 
-    with pytest.raises(Exception):
+    with pytest.raises(CustomTestException):
         test_raise()
 
     test_do_not_raise()
