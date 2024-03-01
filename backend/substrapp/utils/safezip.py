@@ -48,3 +48,6 @@ class ZipFile(zipfile.ZipFile):
 
     def _is_symlink(self, zipinfo: zipfile.ZipInfo) -> bool:
         return zipinfo.external_attr & stat.S_IFLNK << 16 == stat.S_IFLNK << 16
+
+
+is_zipfile = zipfile.is_zipfile
