@@ -25,7 +25,9 @@ OIDC = {
 
 if OIDC["ENABLED"]:  # noqa: C901
     # Reusing name from Mozilla OIDC
-    OIDC_TIMEOUT = os.environ.get("OIDC_TIMEOUT", common.HTTP_CLIENT_TIMEOUT_SECONDS)
+    OIDC_TIMEOUT = os.environ.get(
+        "OIDC_TIMEOUT", common.HTTP_CLIENT_TIMEOUT_SECONDS
+    )  # Timeout duration in seconds for the OIDC requests. Default to the main timeout
 
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
     common.AUTHENTICATION_BACKENDS += ["users.authentication.OIDCAuthenticationBackend"]
