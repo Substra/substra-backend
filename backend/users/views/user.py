@@ -266,7 +266,7 @@ class UserAwaitingApprovalViewSet(
             user = User.objects.get(username=request.GET.get("username"))
             user.delete()
             return ApiResponse(data={"detail": "User removed"}, status=status.HTTP_200_OK)
-        except User.DoesNotExist or User.MultipleObjectsReturned:
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
             pass
         return ApiResponse(data={"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 

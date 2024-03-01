@@ -292,11 +292,11 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results),
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     def test_datamanager_list_can_process(self):
         public_dm = DataManager.objects.get(key=self.expected_results[0]["key"])
@@ -311,19 +311,19 @@ class DataManagerViewTests(APITestCase):
 
         params = urlencode({"can_process": "MyOrg1MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results),
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
         params = urlencode({"can_process": "MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_results[:2])
 
         params = urlencode({"can_process": "MyOrg3MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), [self.expected_results[0]]),
+        self.assertEqual(response.json().get("results"), [self.expected_results[0]])
 
         params = urlencode({"can_process": "MyOrg1MSP,MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_results[:2])
 
     def test_datamanager_list_can_access_logs(self):
         public_dm = DataManager.objects.get(key=self.expected_results[0]["key"])
@@ -338,19 +338,19 @@ class DataManagerViewTests(APITestCase):
 
         params = urlencode({"can_access_logs": "MyOrg1MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results),
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
         params = urlencode({"can_access_logs": "MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_results[:2])
 
         params = urlencode({"can_access_logs": "MyOrg3MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), [self.expected_results[0]]),
+        self.assertEqual(response.json().get("results"), [self.expected_results[0]])
 
         params = urlencode({"can_access_logs": "MyOrg1MSP,MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_results[:2])
 
     def test_datamanager_create(self):
         def mock_orc_response(data):

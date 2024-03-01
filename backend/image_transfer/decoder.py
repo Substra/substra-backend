@@ -130,7 +130,7 @@ def check_if_the_docker_image_is_in_the_registry(dxf_base: DXFBase, docker_image
                 f"{error_message}\n" f"If you still want to unpack your payload, set `strict=False`."
             )
         else:
-            warnings.warn(error_message, UserWarning)
+            warnings.warn(error_message, UserWarning, stacklevel=3)
             return
     print(f"Skipping {docker_image} as its already in the registry", file=sys.stderr)
 

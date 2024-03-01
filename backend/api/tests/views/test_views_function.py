@@ -353,11 +353,11 @@ class FunctionViewTests(APITestCase):
     def test_function_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), self.expected_functions),
+        self.assertEqual(response.json().get("results"), self.expected_functions)
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), self.expected_functions[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_functions[::-1])
 
     @parameterized.expand(
         [
@@ -406,19 +406,19 @@ class FunctionViewTests(APITestCase):
 
         params = urlencode({"can_process": "MyOrg1MSP"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), self.expected_functions),
+        self.assertEqual(response.json().get("results"), self.expected_functions)
 
         params = urlencode({"can_process": "MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), self.expected_functions[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_functions[:2])
 
         params = urlencode({"can_process": "MyOrg3MSP"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), [self.expected_functions[0]]),
+        self.assertEqual(response.json().get("results"), [self.expected_functions[0]])
 
         params = urlencode({"can_process": "MyOrg1MSP,MyOrg2MSP"})
         response = self.client.get(f"{self.url}?{params}")
-        self.assertEqual(response.json().get("results"), self.expected_functions[:2]),
+        self.assertEqual(response.json().get("results"), self.expected_functions[:2])
 
     @parameterized.expand(
         [

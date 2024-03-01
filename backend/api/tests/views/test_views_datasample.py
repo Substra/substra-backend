@@ -183,11 +183,11 @@ class DataSampleViewTests(APITestCase):
     def test_datasample_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results),
+        self.assertEqual(response.json().get("results"), self.expected_results)
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
-        self.assertEqual(response.json().get("results"), self.expected_results[::-1]),
+        self.assertEqual(response.json().get("results"), self.expected_results[::-1])
 
     @parameterized.expand(
         [
