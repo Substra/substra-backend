@@ -128,5 +128,7 @@ charts/substra-backend/tmpcharts/*
 skaffold-overrides.yaml
 
 # Mac OS
-
 .DS_Store
+
+# Allow python version
+!.python-version
