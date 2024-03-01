@@ -4,9 +4,7 @@ import io
 import json
 import os
 import shutil
-import tarfile
 import time
-import zipfile
 from functools import wraps
 from os.path import isdir
 from os.path import isfile
@@ -18,8 +16,8 @@ import structlog
 from checksumdir import dirhash
 from django.conf import settings
 
+from substrapp.utils import safezip
 from substrapp.utils import tarsafe
-from substrapp.utils.safezip import ZipFile
 
 logger = structlog.get_logger(__name__)
 
@@ -95,11 +93,11 @@ def raise_if_path_traversal(requested_paths, to_directory):
 
 
 def uncompress_path(archive_path, to_directory):
-    if zipfile.is_zipfile(archive_path):
-        with ZipFile(archive_path, "r") as zf:
+    if safezip.is_zipfile(archive_path):
+        with safezip.ZipFile(archive_path, "r") as zf:
             zf.extractall(to_directory)
 
-    elif tarfile.is_tarfile(archive_path):
+    elif tarsafe.is_tarfile(archive_path):
         with tarsafe.open(archive_path, "r:*") as tf:
             tf.extractall(to_directory)
     else:
@@ -107,14 +105,14 @@ def uncompress_path(archive_path, to_directory):
 
 
 def uncompress_content(archive_content, to_directory):
-    if zipfile.is_zipfile(io.BytesIO(archive_content)):
-        with ZipFile(io.BytesIO(archive_content)) as zf:
+    if safezip.is_zipfile(io.BytesIO(archive_content)):
+        with safezip.ZipFile(io.BytesIO(archive_content)) as zf:
             zf.extractall(to_directory)
     else:
         try:
             with tarsafe.open(fileobj=io.BytesIO(archive_content)) as tf:
                 tf.extractall(to_directory)
-        except tarfile.TarError:
+        except tarsafe.TarError:
             raise Exception("Archive must be zip or tar.*")
 
 

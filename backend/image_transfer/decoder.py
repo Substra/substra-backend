@@ -7,7 +7,6 @@ from typing import IO
 from typing import Iterator
 from typing import Optional
 from typing import Union
-from zipfile import ZipFile
 
 import requests
 from dxf import DXF
@@ -24,6 +23,7 @@ from image_transfer.common import file_to_generator
 from image_transfer.common import get_repo_and_tag
 from image_transfer.common import progress_as_string
 from image_transfer.exceptions import ManifestNotFoundError
+from substrapp.utils import safezip
 
 
 def push_payload(
@@ -64,13 +64,13 @@ def push_payload(
     authenticator = Authenticator(username, password)
 
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
-        with ZipFile(zip_file, "r") as zip_file:
+        with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(load_zip_images_in_registry(dxf_base, zip_file, strict))
 
 
 def push_all_blobs_from_manifest(
     dxf_base: DXFBase,
-    zip_file: ZipFile,
+    zip_file: safezip.ZipFile,
     manifest: Manifest,
     blobs_paths: dict,
 ) -> None:
@@ -96,7 +96,7 @@ def push_all_blobs_from_manifest(
 
 def load_single_image_from_zip_in_registry(
     dxf_base: DXFBase,
-    zip_file: ZipFile,
+    zip_file: safezip.ZipFile,
     docker_image: str,
     manifest_path_in_zip: str,
     blobs_paths: dict[str, Union[BlobPathInZip, BlobLocationInRegistry]],
@@ -135,7 +135,7 @@ def check_if_the_docker_image_is_in_the_registry(dxf_base: DXFBase, docker_image
     print(f"Skipping {docker_image} as its already in the registry", file=sys.stderr)
 
 
-def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: ZipFile, strict: bool) -> Iterator[str]:
+def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: safezip.ZipFile, strict: bool) -> Iterator[str]:
     payload_descriptor = get_payload_descriptor(zip_file)
     for (
         docker_image,
@@ -154,5 +154,5 @@ def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: ZipFile, strict: bo
         yield docker_image
 
 
-def get_payload_descriptor(zip_file: ZipFile) -> PayloadDescriptor:
+def get_payload_descriptor(zip_file: safezip.ZipFile) -> PayloadDescriptor:
     return PayloadDescriptor.model_validate_json(zip_file.read("payload_descriptor.json").decode())

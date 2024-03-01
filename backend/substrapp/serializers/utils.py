@@ -1,12 +1,11 @@
-import tarfile
-import zipfile
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from rest_framework import serializers
+from substrap.utils import tarsafe
 
 from substrapp.utils import raise_if_path_traversal
+from substrapp.utils import safezip
 
 
 @deconstructible
@@ -39,14 +38,12 @@ class FileValidator(object):
             raise ValidationError(self.error_messages["open"])
         else:
             try:
-                # is tarfile?
-                archive = tarfile.open(fileobj=data.file)
-            except tarfile.TarError:
-                # is zipfile?
-                if not zipfile.is_zipfile(data.file):
+                archive = tarsafe.open(fileobj=data.file)
+            except tarsafe.TarError:
+                if not safezip.is_zipfile(data.file):
                     raise ValidationError(self.error_messages["compressed"])
 
-                archive = zipfile.ZipFile(file=data.file)
+                archive = safezip.ZipFile(file=data.file)
                 self.validate_archive(archive.namelist())
             else:
                 self.validate_archive(archive.getnames())
