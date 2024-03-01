@@ -1,6 +1,7 @@
 import os
 import pathlib
 import tarfile
+from tarfile import TarError
 
 
 class TarSafe(tarfile.TarFile):
@@ -60,7 +61,7 @@ class TarSafe(tarfile.TarFile):
         return tarinfo.ischr() or tarinfo.isblk()
 
 
-class TarSafeError(Exception):
+class TarSafeError(TarError):
     pass
 
 
