@@ -73,9 +73,6 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
-.python-version
-
 # celery beat schedule file
 celerybeat-schedule
 
@@ -129,6 +126,3 @@ skaffold-overrides.yaml
 
 # Mac OS
 .DS_Store
-
-# Allow python version
-!.python-version
