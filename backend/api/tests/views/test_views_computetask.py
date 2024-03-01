@@ -611,7 +611,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
     def test_task_list_ordering(self):
         params = urlencode({"ordering": "creation_date"})
         response = self.client.get(f"{self.url}?{params}")
-        assert_eq_except_durations(response.json().get("results"), self.list_expected_results),
+        assert_eq_except_durations(response.json().get("results"), self.list_expected_results)
 
         params = urlencode({"ordering": "-creation_date"})
         response = self.client.get(f"{self.url}?{params}")
