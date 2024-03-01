@@ -1,5 +1,11 @@
 # Changelog
 
+## [24.2.1] - 2024-03-01
+
+### Changed
+
+- Bump `bitnami/redis` and `bitnami/common` chart version to `18.17.0` and `2.16.1` respectively
+
 ## [24.2.0] - 2024-02-29
 
 ## Added
