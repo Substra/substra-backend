@@ -22,7 +22,11 @@ OIDC = {
     "USERS": {},
     "OP": {},
 }
+
 if OIDC["ENABLED"]:  # noqa: C901
+    # Reusing name from Mozilla OIDC
+    OIDC_TIMEOUT = os.environ.get("OIDC_TIMEOUT", common.HTTP_CLIENT_TIMEOUT_SECONDS)
+
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
     common.AUTHENTICATION_BACKENDS += ["users.authentication.OIDCAuthenticationBackend"]
     common.LOGGING["loggers"]["mozilla_django_oidc"] = {
