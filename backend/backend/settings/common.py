@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "api",
     "drf_spectacular",
     "django_filters",
+    "django_structlog",
     "builder",
 ]
 
@@ -78,8 +79,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "libs.health_check_middleware.HealthCheckMiddleware",
     "django_structlog.middlewares.RequestMiddleware",
-    "django_structlog.middlewares.CeleryMiddleware",
 ]
+
+DJANGO_STRUCTLOG_CELERY_ENABLED = True
 
 DJANGO_LOG_SQL_QUERIES = to_bool(os.environ.get("DJANGO_LOG_SQL_QUERIES", "True"))
 if DJANGO_LOG_SQL_QUERIES:
