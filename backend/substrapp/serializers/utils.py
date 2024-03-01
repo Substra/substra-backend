@@ -2,10 +2,10 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from rest_framework import serializers
-from substrap.utils import tarsafe
 
 from substrapp.utils import raise_if_path_traversal
 from substrapp.utils import safezip
+from substrapp.utils import tarsafe
 
 
 @deconstructible
