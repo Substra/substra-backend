@@ -6,7 +6,6 @@ from typing import IO
 from typing import Iterator
 from typing import Optional
 from typing import Union
-from zipfile import ZipFile
 
 from dxf import DXF
 from dxf import DXFBase
@@ -20,11 +19,12 @@ from image_transfer.common import Manifest
 from image_transfer.common import PayloadDescriptor
 from image_transfer.common import PayloadSide
 from image_transfer.common import progress_as_string
+from substrapp.utils import safezip
 
 
 def add_blobs_to_zip(
     dxf_base: DXFBase,
-    zip_file: ZipFile,
+    zip_file: safezip.ZipFile,
     blobs_to_pull: list[Blob],
     blobs_already_transferred: list[Blob],
 ) -> dict[str, Union[BlobPathInZip, BlobLocationInRegistry]]:
@@ -54,7 +54,7 @@ def add_blobs_to_zip(
     return blobs_paths
 
 
-def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: ZipFile):
+def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: safezip.ZipFile):
     repository_dxf = DXF.from_base(dxf_base, blob.repository)
     bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
 
@@ -99,7 +99,7 @@ def create_zip_from_docker_images(
     dxf_base: DXFBase,
     docker_images_to_transfer: list[str],
     docker_images_already_transferred: list[str],
-    zip_file: ZipFile,
+    zip_file: safezip.ZipFile,
     platform: Optional[str] = None,
 ) -> None:
     payload_descriptor = PayloadDescriptor.from_images(docker_images_to_transfer, docker_images_already_transferred)
@@ -156,7 +156,7 @@ def make_payload(
     authenticator = Authenticator(username, password)
 
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
-        with ZipFile(zip_file, "w") as zip_file_opened:
+        with safezip.ZipFile(zip_file, "w") as zip_file_opened:
             create_zip_from_docker_images(
                 dxf_base,
                 docker_images_to_transfer,

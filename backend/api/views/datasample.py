@@ -1,9 +1,6 @@
 import os
 import shutil
-import tarfile
 import tempfile
-import zipfile
-from tarfile import TarFile
 from typing import BinaryIO
 from typing import Union
 
@@ -35,11 +32,14 @@ from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager as DataManagerFiles
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataSampleSerializer as DataSampleFilesSerializer
-from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
+from substrapp.utils import safezip
+from substrapp.utils import tarsafe
 
 logger = structlog.get_logger(__name__)
+
+SafeArchive = Union[safezip.ZipFile, tarsafe.TarSafe]
 
 
 def create(request, get_success_headers):
@@ -252,7 +252,7 @@ def _validate_servermedias_path(path):
         raise serializers.ValidationError(f"Invalid path, empty directory: {path}")
 
 
-def _get_archive(f: BinaryIO) -> Union[ZipFile, TarFile]:
+def _get_archive(f: BinaryIO) -> SafeArchive:
     archive, files = _get_archive_and_files(f)
     if not len(files):
         raise serializers.ValidationError("Ensure your archive contains at least one file.")
@@ -266,15 +266,15 @@ def _get_archive(f: BinaryIO) -> Union[ZipFile, TarFile]:
     return archive
 
 
-def _get_archive_and_files(f: BinaryIO) -> tuple[Union[ZipFile, TarFile], list[str]]:
-    if zipfile.is_zipfile(f):
-        archive = zipfile.ZipFile(file=f)
+def _get_archive_and_files(f: BinaryIO) -> tuple[SafeArchive, list[str]]:
+    if safezip.is_zipfile(f):
+        archive = safezip.ZipFile(file=f)
         return archive, archive.namelist()
     f.seek(0)
     try:
-        archive = tarfile.open(fileobj=f)
+        archive = tarsafe.open(fileobj=f)
         return archive, archive.getnames()
-    except tarfile.TarError:
+    except tarsafe.TarError:
         raise serializers.ValidationError("Archive must be zip or tar")
 
 
