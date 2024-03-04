@@ -9,7 +9,7 @@ from substrapp.utils import tarsafe
 
 
 @deconstructible
-class FileValidator(object):
+class SubstraFunctionArchiveValidator(object):
     error_messages = {
         "open": "Cannot handle this file object.",
         "compressed": "Ensure this file is an archive (zip or tar.* compressed file).",
