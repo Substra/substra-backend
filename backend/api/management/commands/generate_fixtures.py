@@ -17,7 +17,7 @@ class Command(BaseCommand):
         self.create_functions()
         self.create_data_manager()
         self.create_data_samples()
-        self.create_created_cp()
+        self.create_cp()
         for status in [
             ComputePlan.Status.PLAN_STATUS_DOING,
             ComputePlan.Status.PLAN_STATUS_DONE,
@@ -105,8 +105,8 @@ class Command(BaseCommand):
             factory.create_datasample_files(key=test_data_sample.key)
             self.test_data_sample_keys.append(test_data_sample.key)
 
-    def create_created_cp(self):
-        logger.debug("  Create created CP")
+    def create_cp(self):
+        logger.debug("  Create CP with default status (`CREATED`)")
         # no task
         return factory.create_computeplan(
             name="created",
