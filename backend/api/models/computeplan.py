@@ -95,9 +95,7 @@ class ComputePlan(models.Model):
     def update_status(self) -> None:
         """Compute cp status from tasks counts."""
         stats = self.get_task_stats()
-        if stats["task_count"] == 0:
-            compute_plan_status = self.Status.PLAN_STATUS_CREATED
-        elif stats["waiting_builder_slot_count"] == stats["task_count"]:
+        if stats["task_count"] == 0 or stats["waiting_builder_slot_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_CREATED
         elif stats["done_count"] == stats["task_count"]:
             compute_plan_status = self.Status.PLAN_STATUS_DONE
