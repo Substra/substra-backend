@@ -160,7 +160,9 @@ def _use_refresh_token(user) -> None:
         settings.OIDC_OP_TOKEN_ENDPOINT,
         data=payload,
         verify=getattr(settings, "OIDC_VERIFY_SSL", True),
-        timeout=getattr(settings, "OIDC_TIMEOUT", settings.HTTP_CLIENT_TIMEOUT_SECONDS),
+        timeout=getattr(
+            settings, "OIDC_TIMEOUT", settings.HTTP_CLIENT_TIMEOUT_SECONDS
+        ),  # nosec B113 - `HTTP_CLIENT_TIMEOUT_SECONDS` has a default value
         proxies=getattr(settings, "OIDC_PROXY", None),
     )
     response.raise_for_status()

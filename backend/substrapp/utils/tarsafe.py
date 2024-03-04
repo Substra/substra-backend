@@ -29,7 +29,9 @@ class TarSafe(tarfile.TarFile):
         Override the parent extractall method and add safety checks.
         """
         self._safetar_check()
-        super().extractall(path, members, numeric_owner=numeric_owner)
+        super().extractall(
+            path, members, numeric_owner=numeric_owner
+        )  # nosec B202 - sanitized by `self._safetar_check` on previous line
 
     def _safetar_check(self):
         """
