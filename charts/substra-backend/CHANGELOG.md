@@ -1,6 +1,11 @@
 # Changelog
 
+## [24.3.2] - 2024-03-06
 
+### Added
+
+- Env var `BUILDER_ENABLED` in server
+  
 ## [24.3.1] - 2024-03-06
 
 ### Fixed
