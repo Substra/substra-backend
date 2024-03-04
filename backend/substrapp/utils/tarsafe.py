@@ -31,7 +31,7 @@ class TarSafe(tarfile.TarFile):
         self._safetar_check()
         super().extractall(
             path, members, numeric_owner=numeric_owner
-        )  # nosec B202 - sanitized by `self._safatar_check` on previous line
+        )  # nosec B202 - sanitized by `self._safetar_check` on previous line
 
     def _safetar_check(self):
         """
