@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ensure that we always use `safezip` and `tarsafe` to avoid path traversal attack ([#845](https://github.com/Substra/substra-backend/pull/845))
 - Add timeout on all OIDC requests (value set with `OIDC_TIMOUT`, and default to `HTTP_CLIENT_TIMEOUT_SECONDS`) ([#846](https://github.com/Substra/substra-backend/pull/846))
+- Check if builder is enabled during function registration ([#847](https://github.com/Substra/substra-backend/pull/847))
 
 ### Changed
 
