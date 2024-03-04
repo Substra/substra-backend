@@ -22,7 +22,13 @@ OIDC = {
     "USERS": {},
     "OP": {},
 }
+
 if OIDC["ENABLED"]:  # noqa: C901
+    # Reusing name from Mozilla OIDC
+    OIDC_TIMEOUT = os.environ.get(
+        "OIDC_TIMEOUT", common.HTTP_CLIENT_TIMEOUT_SECONDS
+    )  # Timeout duration in seconds for the OIDC requests. Default to the main timeout
+
     common.INSTALLED_APPS += ["mozilla_django_oidc"]  # load after auth
     common.AUTHENTICATION_BACKENDS += ["users.authentication.OIDCAuthenticationBackend"]
     common.LOGGING["loggers"]["mozilla_django_oidc"] = {
@@ -65,7 +71,7 @@ if OIDC["ENABLED"]:  # noqa: C901
 
     op_settings = None
     try:
-        op_settings = requests.get(OIDC["OP"]["URL"] + "/.well-known/openid-configuration").json()
+        op_settings = requests.get(OIDC["OP"]["URL"] + "/.well-known/openid-configuration", timeout=OIDC_TIMEOUT).json()
     except Exception as e:
         _LOGGER.error(f"Could not fetch OIDC info from provider: {e}")
 

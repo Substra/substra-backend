@@ -124,6 +124,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OIDC_RP_CLIENT_ID` | nil |  |
 | string | `OIDC_RP_CLIENT_SECRET` | nil |  |
 | string | `OIDC_RP_SIGN_ALGO` | nil |  |
+| string | `OIDC_TIMEOUT` | `common.HTTP_CLIENT_TIMEOUT_SECONDS` | Timeout duration in seconds for the OIDC requests. Default to the main timeout |
 | bool | `OIDC_USERS_APPEND_DOMAIN` | `false` |  |
 | string | `OIDC_USERS_DEFAULT_CHANNEL` | nil |  |
 | int | `OIDC_USERS_LOGIN_VALIDITY_DURATION` | `3600` (`60 * 60`) | seconds |

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Ensure that we always use `safezip` and `tarsafe` to avoid path traversal attack ([#845](https://github.com/Substra/substra-backend/pull/845))
+- Add timeout on all OIDC requests (value set with `OIDC_TIMOUT`, and default to `HTTP_CLIENT_TIMEOUT_SECONDS`) ([#846](https://github.com/Substra/substra-backend/pull/846))
 
 ## [0.43.0](https://github.com/Substra/substra-backend/releases/tag/0.43.0) 2024-02-26
 
