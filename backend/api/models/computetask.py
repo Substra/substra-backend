@@ -66,7 +66,7 @@ class ComputeTask(models.Model, AssetPermissionMixin):
         STATUS_WAITING_FOR_EXECUTOR_SLOT = computetask_pb2.ComputeTaskStatus.Name(
             computetask_pb2.STATUS_WAITING_FOR_EXECUTOR_SLOT
         )
-        STATUS_DOING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING)
+        STATUS_EXECUTING = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_EXECUTING)
         STATUS_DONE = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE)
         STATUS_CANCELED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_CANCELED)
         STATUS_FAILED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED)

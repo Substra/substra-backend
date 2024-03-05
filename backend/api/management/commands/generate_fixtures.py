@@ -17,9 +17,8 @@ class Command(BaseCommand):
         self.create_functions()
         self.create_data_manager()
         self.create_data_samples()
-        self.create_empty_cp()
+        self.create_cp()
         for status in [
-            ComputePlan.Status.PLAN_STATUS_TODO,
             ComputePlan.Status.PLAN_STATUS_DOING,
             ComputePlan.Status.PLAN_STATUS_DONE,
             ComputePlan.Status.PLAN_STATUS_FAILED,
@@ -106,12 +105,12 @@ class Command(BaseCommand):
             factory.create_datasample_files(key=test_data_sample.key)
             self.test_data_sample_keys.append(test_data_sample.key)
 
-    def create_empty_cp(self):
-        logger.debug("  Create empty CP")
+    def create_cp(self):
+        logger.debug("  Create CP with default status (`CREATED`)")
         # no task
         return factory.create_computeplan(
-            name="empty",
-            status=ComputePlan.Status.PLAN_STATUS_EMPTY,
+            name="created",
+            status=ComputePlan.Status.PLAN_STATUS_CREATED,
         )
 
     def create_basic_cp(self, cp_status):
@@ -204,7 +203,7 @@ class Command(BaseCommand):
         # (train, train) -> aggregate
         cp = factory.create_computeplan(
             name="aggregate",
-            status=ComputePlan.Status.PLAN_STATUS_TODO,
+            status=ComputePlan.Status.PLAN_STATUS_CREATED,
         )
         train_task_1 = factory.create_computetask(
             cp,

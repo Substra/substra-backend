@@ -14,9 +14,9 @@ _RUNNABLE_TASK_STATUSES = [ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT]
 logger = structlog.get_logger(__name__)
 
 
-def _is_task_status_runnable(task: ComputeTask, allow_doing: bool) -> bool:
-    if allow_doing:
-        return task.status in _RUNNABLE_TASK_STATUSES + [ComputeTaskStatus.STATUS_DOING]
+def _is_task_status_runnable(task: ComputeTask, allow_executing: bool) -> bool:
+    if allow_executing:
+        return task.status in _RUNNABLE_TASK_STATUSES + [ComputeTaskStatus.STATUS_EXECUTING]
 
     return task.status in _RUNNABLE_TASK_STATUSES
 
@@ -46,7 +46,7 @@ class ComputePlanNonRunnableError(RuntimeError):
 def _raise_if_task_not_runnable(
     task_key: str,
     client: orchestrator.Client,
-    allow_doing: bool = False,
+    allow_executing: bool = False,
     existing_task: ComputeTask = None,
 ) -> None:
     """Raise an exception if a compute task is not runnable by taking into account its status
@@ -55,7 +55,7 @@ def _raise_if_task_not_runnable(
     Args:
         task_key: the compute task key
         client: the orchestrator gRPC client.
-        allow_doing: whether a compute task with the status DOING should be considered as runnable.
+        allow_executing: whether a compute task with the status DOING should be considered as runnable.
         existing_task: the compute task.
             if specified this task will be used to check the status instead of retrieving a task
 
@@ -70,7 +70,7 @@ def _raise_if_task_not_runnable(
     """
     task: ComputeTask = existing_task if existing_task else client.query_task(task_key)
 
-    if not _is_task_status_runnable(task, allow_doing):
+    if not _is_task_status_runnable(task, allow_executing):
         raise TaskNonRunnableStatusError(task.status.name)
 
     compute_plan = client.query_compute_plan(task.compute_plan_key)
@@ -78,20 +78,20 @@ def _raise_if_task_not_runnable(
         raise ComputePlanNonRunnableError(compute_plan.cancelation_date, compute_plan.failure_date)
 
 
-def is_task_runnable(task_key: str, client: orchestrator.Client, allow_doing: bool = False) -> bool:
+def is_task_runnable(task_key: str, client: orchestrator.Client, allow_executing: bool = False) -> bool:
     """Check whether a compute task is runnable given its status and the status of the associated compute plan.
 
     Args:
         task_key: the key of the compute task.
         client: the orchestrator gRPC client.
-        allow_doing: whether a compute task with the status DOING should be considered as runnable.
+        allow_executing: whether a compute task with the status EXECUTING should be considered as runnable.
 
     Returns:
         True if the compute task is runnable, False otherwise.
 
     """
     try:
-        _raise_if_task_not_runnable(task_key, client, allow_doing)
+        _raise_if_task_not_runnable(task_key, client, allow_executing)
     except (TaskNonRunnableStatusError, ComputePlanNonRunnableError):
         return False
     else:
@@ -99,7 +99,7 @@ def is_task_runnable(task_key: str, client: orchestrator.Client, allow_doing: bo
 
 
 def abort_task_if_not_runnable(
-    task_key: str, client: orchestrator.Client, allow_doing: bool = False, task: ComputeTask = None
+    task_key: str, client: orchestrator.Client, allow_executing: bool = False, task: ComputeTask = None
 ) -> None:
     """Cancel a compute task if its associated compute plan is not runnable. In addition, raise an error if the compute
     task is not runnable because of its status or the status of its compute plan.
@@ -107,7 +107,7 @@ def abort_task_if_not_runnable(
     Args:
         task_key: the compute task key.
         client: the orchestrator gRPC client.
-        allow_doing: whether a compute task with the status DOING should be considered as runnable.
+        allow_executing: whether a compute task with the status DOING should be considered as runnable.
         task: the compute task. if specified this task will be used to check the status instead of retrieving a task.
 
     Returns:
@@ -120,7 +120,7 @@ def abort_task_if_not_runnable(
 
     """
     try:
-        _raise_if_task_not_runnable(task_key, client, allow_doing=allow_doing, existing_task=task)
+        _raise_if_task_not_runnable(task_key, client, allow_executing=allow_executing, existing_task=task)
     except ComputePlanNonRunnableError as exc:
         logger.info(
             "Compute plan not runnable. Canceling task.",
@@ -150,8 +150,8 @@ def start_task_if_not_started(task: ComputeTask, client: orchestrator.Client) ->
     """
     if task.status == ComputeTaskStatus.STATUS_WAITING_FOR_EXECUTOR_SLOT:
         try:
-            logger.info("Updating task status to STATUS_DOING", task_key=task.key)
-            client.update_task_status(task.key, computetask_pb2.TASK_ACTION_DOING)
+            logger.info("Updating task status to STATUS_EXECUTING", task_key=task.key)
+            client.update_task_status(task.key, computetask_pb2.TASK_ACTION_EXECUTING)
         except OrcError as rpc_error:
             logger.exception(
                 f"failed to update task status to DOING, {rpc_error.details}",

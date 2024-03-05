@@ -35,7 +35,9 @@ class NewsFeedViewTests(APITestCase):
         # first all CPs are created in the order below
         # then they all start in the same order (depending on the status)
         # finally they all end in the same order (depending on the status)
-        todo_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_TODO)  # no start_date, end_date
+        created_cp = factory.create_computeplan(
+            status=ComputePlan.Status.PLAN_STATUS_CREATED
+        )  # no start_date, end_date
         doing_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_DOING)  # no end_date
         canceled_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_CANCELED)
         failed_cp = factory.create_computeplan(status=ComputePlan.Status.PLAN_STATUS_FAILED)
@@ -152,10 +154,10 @@ class NewsFeedViewTests(APITestCase):
             },
             {
                 "asset_kind": "ASSET_COMPUTE_PLAN",
-                "asset_key": str(todo_cp.key),
-                "name": str(todo_cp.name),
+                "asset_key": str(created_cp.key),
+                "name": str(created_cp.name),
                 "status": "STATUS_CREATED",
-                "timestamp": todo_cp.creation_date.isoformat().replace("+00:00", "Z"),
+                "timestamp": created_cp.creation_date.isoformat().replace("+00:00", "Z"),
                 "detail": {},
             },
         ]

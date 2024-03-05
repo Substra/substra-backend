@@ -58,7 +58,7 @@ class ComputeTaskViewTests(APITestCase):
         for _status in (
             ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT,
             ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
-            ComputeTask.Status.STATUS_DOING,
+            ComputeTask.Status.STATUS_EXECUTING,
             ComputeTask.Status.STATUS_DONE,
             ComputeTask.Status.STATUS_FAILED,
             ComputeTask.Status.STATUS_CANCELED,
@@ -262,7 +262,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
 
         todo_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING_FOR_EXECUTOR_SLOT]
         waiting_task = self.compute_tasks[ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS]
-        doing_task = self.compute_tasks[ComputeTask.Status.STATUS_DOING]
+        executing_task = self.compute_tasks[ComputeTask.Status.STATUS_EXECUTING]
         done_task = self.compute_tasks[ComputeTask.Status.STATUS_DONE]
         failed_task = self.compute_tasks[ComputeTask.Status.STATUS_FAILED]
         canceled_task = self.compute_tasks[ComputeTask.Status.STATUS_CANCELED]
@@ -336,17 +336,17 @@ class GenericTaskViewTests(ComputeTaskViewTests):
                 "outputs": {"model": self.model_output},
             },
             {
-                "key": str(doing_task.key),
+                "key": str(executing_task.key),
                 "function": self.simple_function_data,
                 "owner": "MyOrg1MSP",
                 "compute_plan_key": str(self.compute_plan.key),
                 "metadata": {},
-                "status": "STATUS_DOING",
+                "status": "STATUS_EXECUTING",
                 "worker": "MyOrg1MSP",
                 "rank": 1,
                 "tag": "",
-                "creation_date": doing_task.creation_date.isoformat().replace("+00:00", "Z"),
-                "start_date": doing_task.start_date.isoformat().replace("+00:00", "Z"),
+                "creation_date": executing_task.creation_date.isoformat().replace("+00:00", "Z"),
+                "start_date": executing_task.start_date.isoformat().replace("+00:00", "Z"),
                 "end_date": None,
                 "error_type": None,
                 "logs_permission": {
@@ -484,7 +484,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         [
             ("STATUS_WAITING_FOR_PARENT_TASKS",),
             ("STATUS_WAITING_FOR_EXECUTOR_SLOT",),
-            ("STATUS_DOING",),
+            ("STATUS_EXECUTING",),
             ("STATUS_DONE",),
             ("STATUS_CANCELED",),
             ("STATUS_FAILED",),
@@ -509,7 +509,7 @@ class GenericTaskViewTests(ComputeTaskViewTests):
         [
             (["STATUS_WAITING_FOR_BUILDER_SLOT", "STATUS_BUILDING"],),
             (["STATUS_WAITING_FOR_PARENT_TASKS", "STATUS_WAITING_FOR_EXECUTOR_SLOT"],),
-            (["STATUS_DOING", "STATUS_DONE"],),
+            (["STATUS_EXECUTING", "STATUS_DONE"],),
             (["STATUS_CANCELED", "STATUS_FAILED", "STATUS_XXX"],),
         ]
     )
