@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from unittest import mock
 
+import pytest
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -650,6 +651,7 @@ class FunctionViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@pytest.mark.django_db
 def test_function_create_no_builder(authenticated_client):
     settings.BUILDER_ENABLED = False
 
