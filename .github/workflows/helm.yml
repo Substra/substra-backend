@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   test-generate-publish:
-      uses: substra/substra-gha-workflows/.github/workflows/helm.yml@main
+      uses: substra/substra-gha-workflows/.github/workflows/helm.yml@chore/debug
       secrets: inherit
       with:
         helm-repositories: '[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"},{"name": "std-helm", "url": "https://charts.helm.sh/stable"},{"name": "twumi", "url": "https://helm.twun.io"},{"name": "localstack", "url": "https://localstack.github.io/helm-charts"}]'
