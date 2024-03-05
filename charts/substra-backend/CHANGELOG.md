@@ -1,5 +1,11 @@
 # Changelog
 
+## [24.3.0] - 2024-03-05
+
+### Removed
+
+- kaniko cache warmer and associated configuration on the worker
+
 ## [24.2.1] - 2024-03-01
 
 ### Changed

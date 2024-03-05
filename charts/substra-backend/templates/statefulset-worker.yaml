@@ -59,24 +59,6 @@ spec:
       {{- end }}
       initContainers:
       {{- include "common.addCertInitContainer" . | nindent 6 }}
-      {{- if .Values.kaniko.cache.warmer.cachedImages }}
-      - name: kaniko-cache-warmer
-        image: {{ include "common.images.name" .Values.kaniko.cache.warmer.image }}
-        args:
-        - "--cache-dir=/cache"
-        {{- range .Values.kaniko.cache.warmer.cachedImages }}
-        - "--image={{ . }}"
-        {{- end }}
-        - "--verbosity=debug"
-        volumeMounts:
-          - name: docker-cache
-            mountPath: /cache
-            readOnly: False
-          {{- if .Values.kaniko.dockerConfigSecretName }}
-          - name: docker-config
-            mountPath: /kaniko/.docker
-          {{- end }}
-      {{- end}}
       {{- include "common.waitPostgresqlInitContainer" . | nindent 6 }}
       {{- include "common.waitMinIOContainer" . | nindent 6}}
       containers:
@@ -113,8 +95,6 @@ spec:
               value: "{{ .Values.server.defaultDomain }}"
             - name: "CELERY_WORKER_CONCURRENCY"
               value: {{ .Values.worker.concurrency | quote }}
-            - name: WORKER_PVC_DOCKER_CACHE
-              value: docker-cache
             - name: WORKER_PVC_SUBTUPLE
               value: subtuple
             {{- if .Values.privateCa.enabled }}
@@ -129,8 +109,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
-              value: {{ .Values.kaniko.dockerConfigSecretName | quote  }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL
@@ -184,14 +162,6 @@ spec:
           secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-      {{- if .Values.kaniko.dockerConfigSecretName }}
-      - name: docker-config
-        secret:
-          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
-          items:
-          - key: .dockerconfigjson
-            path: config.json
-      {{- end }}
     {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -226,12 +196,4 @@ spec:
       resources:
         requests:
           storage: {{ .Values.worker.persistence.size }}
-  - metadata:
-      name: docker-cache
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      {{ include "common.storage.class" .Values.kaniko.cache.persistence }}
-      resources:
-        requests:
-          storage: {{ .Values.kaniko.cache.persistence.size }}
 {{- end }}
