@@ -204,7 +204,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- if or .Values.minio.enabled .Values.localstack.enabled }}
 - name: wait-minio
   image: jwilder/dockerize:0.6.1
-  command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.objectStore.url" .}}']
+  command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.objectStore.url" .}}', '-timeout', '15s']
 {{- end }}
 {{- end -}}
 

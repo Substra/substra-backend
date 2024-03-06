@@ -168,8 +168,21 @@ spec:
       {{- end }}
       initContainers:
       {{- include "common.addCertInitContainer" . | nindent 6 }}
+      - name: init-collectstatic
+        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
+        command: ['python', 'manage.py', 'collectstatic', '--noinput']
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-settings
+        env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: backend.settings.{{ .Values.settings }}
+        volumeMounts:
+          - name: statics
+            mountPath: /usr/src/app/backend/statics
       {{- include "common.waitPostgresqlInitContainer" . | nindent 6 }}
-      {{- include "common.waitMinIOContainer" . | nindent 6 }}
       - name: init-migrate
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'migrate']
@@ -187,20 +200,7 @@ spec:
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.settings }}
-      - name: init-collectstatic
-        image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
-        command: ['python', 'manage.py', 'collectstatic', '--noinput']
-        envFrom:
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-orchestrator
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-settings
-        env:
-          - name: DJANGO_SETTINGS_MODULE
-            value: backend.settings.{{ .Values.settings }}
-        volumeMounts:
-          - name: statics
-            mountPath: /usr/src/app/backend/statics
+      {{- include "common.waitMinIOContainer" . | nindent 6 }}
       volumes:
       - name: data-servermedias
         persistentVolumeClaim:

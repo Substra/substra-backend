@@ -1,5 +1,12 @@
 # Changelog
 
+
+## [24.3.1] - 2024-03-06
+
+### Fixed
+
+- increased timout in `wait-minio` & changed initContainers order
+
 ## [24.3.0] - 2024-03-05
 
 ### Removed
