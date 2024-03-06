@@ -878,9 +878,16 @@ harbor:
   redis:
     enabled: false
   externalRedis:
+    host: backend-org-1-redis-master
     password: *redis-password
   internalTLS:
     enabled: false
+  ingress:
+    core:
+      hostname: backend-org-1-harbor
+      annotations:
+        ingress.kubernetes.io/ssl-redirect: "false"
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
   # adminPassword: ""
   # expose:
   #   type: nodePort
