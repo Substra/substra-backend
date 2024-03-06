@@ -31,13 +31,13 @@ redis:
       enabled: false
 
 docker-registry:
-  service:
-    type: NodePort
+  enabled: false
 
 containerRegistry:
-  local: true
+  local: false
   scheme: http
-  pullDomain: 127.0.0.1
+  port: 5000
+
   prepopulate:
     - image: substra/substra-tools:latest
       dstImage: substra/substra-tools:latest
@@ -117,3 +117,6 @@ orchestrator:
     - yourchannel:
         restricted: false
         model_export_enabled: true
+
+builder:
+  enabled: false

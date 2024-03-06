@@ -1,0 +1,6 @@
+harbor:
+  exposureType: proxy
+  service:
+    type: NodePort
+  internalTLS:
+    enabled: false
