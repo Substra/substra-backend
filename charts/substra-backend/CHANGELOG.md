@@ -5,7 +5,7 @@
 
 ### Fixed
 
-- kaniko cache warmer and associated configuration on the worker
+- increased timout in `wait-minio` & changed initContainers order
 
 ## [24.3.0] - 2024-03-05
 
