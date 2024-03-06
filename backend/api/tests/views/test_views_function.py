@@ -5,6 +5,8 @@ import shutil
 import tempfile
 from unittest import mock
 
+import pytest
+from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -36,6 +38,7 @@ class FunctionViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
+        settings.BUILDER_ENABLED = True
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
@@ -646,3 +649,41 @@ class FunctionViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "update_function", side_effect=error):
             response = self.client.put(url, data=data, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@pytest.mark.django_db
+def test_function_create_no_builder(authenticated_client):
+    settings.BUILDER_ENABLED = False
+
+    function_path = os.path.join(FIXTURE_PATH, "function.zip")
+    description_path = os.path.join(FIXTURE_PATH, "description.md")
+    data = {
+        "json": json.dumps(
+            {
+                "name": "Logistic regression",
+                "metric_key": "some key",
+                "permissions": {
+                    "public": True,
+                    "authorized_ids": ["MyOrg1MSP"],
+                },
+                "inputs": {
+                    "datasamples": {"kind": "ASSET_DATA_SAMPLE", "optional": False, "multiple": True},
+                    "opener": {"kind": "ASSET_DATA_MANAGER", "optional": False, "multiple": False},
+                    "model": {"kind": "ASSET_MODEL", "optional": True, "multiple": False},
+                },
+                "outputs": {
+                    "model": {"kind": "ASSET_MODEL", "multiple": False},
+                },
+            }
+        ),
+        "file": open(function_path, "rb"),
+        "description": open(description_path, "rb"),
+    }
+
+    url = reverse("api:function-list")
+    response = authenticated_client.post(url, data=data, format="multipart")
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    data["file"].close()
+    data["description"].close()

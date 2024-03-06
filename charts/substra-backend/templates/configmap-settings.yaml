@@ -12,6 +12,8 @@ data:
   DEFAULT_DOMAIN: {{ .Values.server.defaultDomain | quote }}
   COMMON_HOST_DOMAIN: {{ .Values.server.commonHostDomain | quote }}
 
+  BUILDER_ENABLED: {{ .Values.builder.enabled | quote }}
+
   COMPUTE_POD_RUN_AS_USER: {{ .Values.worker.computePod.securityContext.runAsUser | quote}}
   COMPUTE_POD_RUN_AS_GROUP: {{ .Values.worker.computePod.securityContext.runAsGroup | quote }}
   COMPUTE_POD_FS_GROUP: {{ .Values.worker.computePod.securityContext.fsGroup | quote }}

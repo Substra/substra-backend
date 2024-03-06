@@ -165,6 +165,10 @@ class FunctionViewSet(
     FunctionViewSetConfig, mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, GenericViewSet
 ):
     def create(self, request, *args, **kwargs):
+        if not settings.BUILDER_ENABLED:
+            return ApiResponse(
+                {"detail": "No builder available on this organization"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
         return create(request, self.basename, lambda data: self.get_success_headers(data))
 
     def update(self, request, *args, **kwargs):
