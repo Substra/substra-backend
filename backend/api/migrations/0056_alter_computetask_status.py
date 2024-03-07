@@ -12,7 +12,7 @@ def migrate_data(apps, schema_editor):
     model_model = apps.get_model("api", "computetask")
     for task_instance in model_model.objects.all():
         new_status = status_mapping.get(task_instance.status_old, task_instance.status_old)
-        task_instance.category = new_status
+        task_instance.status = new_status
         task_instance.save()
 
 
