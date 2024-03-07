@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.44.0](https://github.com/Substra/substra-backend/releases/tag/0.44.0) 2024-03-07
+
 ### Fixed
 
 - Ensure that we always use `safezip` and `tarsafe` to avoid path traversal attack ([#845](https://github.com/Substra/substra-backend/pull/845))
@@ -18,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compute task status `DOING` is renamed `EXECUTING` ([#827](https://github.com/Substra/substra-backend/pull/827/))
 - Compute plan statuses `EMPTY`, `WAITING` ansd `TODO` are merged into new status `CREATED` ([#827](https://github.com/Substra/substra-backend/pull/827/))
 
-### Removed
+### Removed
 
 - `worker` does not wait the cache to be pre-populated to start ([#831](https://github.com/Substra/substra-backend/pull/831))
 - Remove docker pull configuration from the `worker` used by kaniko ([#831](https://github.com/Substra/substra-backend/pull/831))
@@ -93,7 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/api-token-auth/` and the associated tokens can now be disabled through the `EXPIRY_TOKEN_ENABLED` environment variable and `server.allowImplicitLogin` chart value ([#698](https://github.com/Substra/substra-backend/pull/698))
 - Tokens issued by `/api-token-auth/` can now be deleted like other API tokens, through a `DELETE` request on the `/active-api-tokens` endpoint ([#698](https://github.com/Substra/substra-backend/pull/698))
 - A standalone Docker image for updating Private CA Certificates. ([#726](https://github.com/Substra/substra-backend/pull/726))
-  
+
 ### Changed
 
 - Increase the number of tasks displayable in frontend workflow [#697](https://github.com/Substra/substra-backend/pull/697)
