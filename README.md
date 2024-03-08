@@ -1,6 +1,4 @@
-# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Build substra backend image](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/container-image-backend.yml) [![Doc](https://img.shields.io/badge/read-docs-purple?logo=mdbook)]("https://docs.substra.org/") [![Slack](https://img.shields.io/badge/chat-on%20slack-blue?logo=slack)]("https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA")
-
-
+# Substra-Backend [![Python](https://github.com/Substra/substra-backend/actions/workflows/python.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/python.yml) [![Helm](https://github.com/Substra/substra-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/helm.yml) [![Docker build](https://github.com/Substra/substra-backend/actions/workflows/docker-build.yaml/badge.svg)](https://github.com/Substra/substra-backend/actions/workflows/docker-build.yaml) [![Doc](https://img.shields.io/badge/read-docs-purple?logo=mdbook)]("https://docs.substra.org/") [![Slack](https://img.shields.io/badge/chat-on%20slack-blue?logo=slack)]("https://join.slack.com/t/substra-workspace/shared_invite/zt-1fqnk0nw6-xoPwuLJ8dAPXThfyldX8yA")
 
 <div align="center">
 <picture>
@@ -13,9 +11,7 @@
 <br>
 <br>
 
-Substra is an open source federated learning (FL) software. This specific reposity is the backend of the Substra software.
-
-
+Substra is an open source federated learning (FL) software. This specific repository is the backend of the Substra software.
 
 # Setup
 
