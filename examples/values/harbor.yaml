@@ -1,0 +1,10 @@
+service:
+  type: LoadBalancer
+internalTLS:
+  enabled: false
+ingress:
+  core:
+    hostname: harbor.harbor.svc.local
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"

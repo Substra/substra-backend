@@ -1,0 +1,19 @@
+docker-registry:
+  enabled: false
+
+  service:
+    type: NodePort
+
+containerRegistry:
+  local: false
+  scheme: http
+  host: harbor-registry.harbor.svc.cluster.local
+  pullDomain: harbor-registry.harbor.svc.cluster.local
+  port: 5000
+  prepopulate:
+    - image: substra/substra-tools:latest
+      dstImage: substra/substra-tools:latest
+      sourceRegistry: ghcr.io
+
+kaniko:
+  dockerConfigSecretName: docker-config
