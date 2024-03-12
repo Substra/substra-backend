@@ -1,11 +1,17 @@
 # Changelog
 
+## [24.4.0] - 2024-03-07
+
+### Changed
+
+- Bump substra-backend image to `0.44.0`
+
 ## [24.3.2] - 2024-03-06
 
 ### Added
 
 - Env var `BUILDER_ENABLED` in server
-  
+
 ## [24.3.1] - 2024-03-06
 
 ### Fixed
