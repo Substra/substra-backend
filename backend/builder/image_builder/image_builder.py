@@ -311,6 +311,9 @@ def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[st
 
     if REGISTRY_SCHEME == "http":
         args.append("--insecure")
+    # TODO: add verification before release
+    else:
+        args.append("--skip-tls-verify")
 
     if KANIKO_MIRROR:
         args.append(f"--registry-mirror={REGISTRY}")

@@ -1,15 +1,12 @@
 docker-registry:
   enabled: false
 
-  service:
-    type: NodePort
-
 containerRegistry:
   local: false
-  scheme: http
+  scheme: https
   host: harbor-registry.harbor.svc.cluster.local
   pullDomain: harbor-registry.harbor.svc.cluster.local
-  port: 5000
+  port: 8080
   prepopulate:
     - image: substra/substra-tools:latest
       dstImage: substra/substra-tools:latest

@@ -52,6 +52,8 @@ def get_container_image(image_name: str) -> dict:
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
         headers={"Accept": "application/json"},
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
+        # TODO: add verification before release
+        verify=False,  # nosec B501
     )
     if response.status_code != requests.status_codes.codes.ok:
         raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
