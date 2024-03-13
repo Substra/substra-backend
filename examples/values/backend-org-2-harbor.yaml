@@ -4,9 +4,9 @@ docker-registry:
 containerRegistry:
   local: false
   scheme: https
-  host: harbor-registry.harbor.svc.cluster.local
-  pullDomain: harbor-registry.harbor.svc.cluster.local
-  port: 8080
+  host: harbor.harbor.svc.cluster.local
+  pullDomain: harbor.harbor.svc.cluster.local
+  port: 8443
   prepopulate:
     - image: substra/substra-tools:latest
       dstImage: substra/substra-tools:latest
