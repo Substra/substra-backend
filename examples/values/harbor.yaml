@@ -1,10 +1,16 @@
 service:
-  type: LoadBalancer
-internalTLS:
-  enabled: false
+  type: ClusterIP
+  
+
 ingress:
   core:
-    hostname: harbor.harbor.svc.local
-    annotations:
-      ingress.kubernetes.io/ssl-redirect: "false"
-      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    hostname: harbor.harbor.svc.cluster.local
+    port: 443
+global:
+  internalTLS:
+    enabled: true
+  externalURL: https://harbor.harbor.svc.cluster.local
+
+nginx:
+  tls:
+    commonName: harbor.harbor.svc.cluster.local
