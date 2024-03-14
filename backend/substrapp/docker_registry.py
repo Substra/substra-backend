@@ -1,4 +1,6 @@
 import json
+import typing
+from pathlib import Path
 
 import kubernetes
 import requests
@@ -30,6 +32,22 @@ class RetrieveDigestError(Exception):
 
 class ImageDigestNotFound(RetrieveDigestError):
     pass
+
+
+class DockerAuthDict(typing.TypedDict):
+    username: str
+    password: str
+    auth: str
+
+
+def get_registry_auth() -> typing.Optional[DockerAuthDict]:
+    config_path = Path("/.docker/config.json")
+    if config_path.is_file():
+        with config_path.open("r") as f:
+            content = json.load(f)
+            return content.get("auths", {}).get(f"{settings.REGISTRY}")
+
+    return None
 
 
 def get_container_image_name(image_name: str) -> str:
