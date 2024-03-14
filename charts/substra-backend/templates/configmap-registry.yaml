@@ -7,8 +7,8 @@ metadata:
 data:
   {{- if .Values.containerRegistry.local }}
   REGISTRY_IS_LOCAL: "{{ .Values.containerRegistry.local }}"
-  REGISTRY: {{ .Release.Name }}-docker-registry:5000
-  REGISTRY_SERVICE_NAME: {{ .Release.Name }}-docker-registry
+  REGISTRY: {{ .Release.Name }}-harbor:80
+  REGISTRY_SERVICE_NAME: {{ .Release.Name }}-harbor
   {{- else }}
   REGISTRY: {{ .Values.containerRegistry.host}}:{{ .Values.containerRegistry.port}}
   {{- end }}

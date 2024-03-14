@@ -834,8 +834,10 @@ postgresql:
 redis:
   enabled: true
   architecture: standalone
+  # networkPolicy:
+  #   enabled: false
   auth:
-    password: redis
+    password: &redis-password redis
   master:
     persistence:
       enabled: true
@@ -853,7 +855,7 @@ redis:
 ## @skip docker-registry
 ##
 docker-registry:
-  enabled: true
+  enabled: false
   storage: filesystem
   persistence:
     enabled: true
@@ -861,6 +863,41 @@ docker-registry:
     deleteEnabled: true
   service:
     type: NodePort
+
+
+harbor:
+  enabled: true
+  exposureType: proxy
+  service:
+    type: NodePort
+  postgresql:
+    enabled: false
+  externalDatabase:
+    user: *psql-username
+    password: *psql-password
+  redis:
+    enabled: false
+  externalRedis:
+    host: backend-org-1-redis-master
+    password: *redis-password
+  internalTLS:
+    enabled: false
+  ingress:
+    core:
+      hostname: backend-org-1-harbor
+      annotations:
+        ingress.kubernetes.io/ssl-redirect: "false"
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  # adminPassword: ""
+  # expose:
+  #   type: nodePort
+  #   tls:
+  #     auto:
+  #       commonName: harbor
+  # nodePort:
+  #   ports:
+  #     http:
+  #       nodePort: null
 
 ## @skip minio
 ##
