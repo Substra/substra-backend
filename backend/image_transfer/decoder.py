@@ -5,7 +5,6 @@ import warnings
 from pathlib import Path
 from typing import IO
 from typing import Iterator
-from typing import Optional
 from typing import Union
 
 import requests
@@ -63,9 +62,10 @@ def push_payload(
         In other words, it's the argument `docker_images_to_transfer` that you passed
         to the function `image_transfer.make_payload(...)`.
     """
-    authenticator = Authenticator(username, password)
+    authenticator = Authenticator()
 
-    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
+    # TODO: add verification before release
+    with DXFBase(host=registry, auth=authenticator.auth, tlsverify=False, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(
                 load_zip_images_in_registry(dxf_base=dxf_base, zip_file=zip_file, repository=repository, strict=strict)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
+from pathlib import Path
 from typing import IO
 from typing import Dict
 from typing import Iterator
@@ -9,6 +10,7 @@ from typing import Optional
 from typing import Union
 
 import requests
+from django.conf import settings
 from dxf import DXF
 from dxf import DXFBase
 from pydantic import BaseModel
@@ -137,9 +139,20 @@ def get_repo_and_tag(docker_image_name: str) -> (str, str):
 
 
 class Authenticator:
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
+    def __init__(self):
+        config_path = Path("/.docker/config.json")
+        if config_path.is_file():
+            with config_path.open("r") as f:
+                content = json.load(f)
+                self.auth_content = content.get("auths", {}).get(f"{settings.REGISTRY}")
 
-    def auth(self, dxf: DXFBase, response: requests.Response) -> None:
-        dxf.authenticate(self.username, self.password, response=response)
+    def auth(self, dxf: DXFBase, response: requests.Response) -> Optional[str]:
+        if self.auth_content:
+            return dxf.authenticate(
+                username=self.auth_content.get("username"),
+                password=self.auth_content.get("password"),
+                authorization=self.auth_content.get("auth"),
+                response=response,
+            )
+
+        return None
