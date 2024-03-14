@@ -46,7 +46,7 @@ def get_registry_auth() -> typing.Optional[DockerAuthDict]:
     if config_path.is_file():
         with config_path.open("r") as f:
             content = json.load(f)
-            return content.get("auths", {}).get(f"{settings.REGISTRY}")
+            return content.get("auths", {}).get(f"{settings.REGISTRY}", None)
 
     return None
 
