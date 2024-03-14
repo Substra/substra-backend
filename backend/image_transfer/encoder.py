@@ -125,8 +125,6 @@ def make_payload(
     registry: str = "registry-1.docker.io",
     secure: bool = True,
     platform: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
 ) -> None:
     """
     Creates a payload from a list of docker images
@@ -145,17 +143,14 @@ def make_payload(
         secure: Set to `False` if the registry doesn't support HTTPS (TLS). Default
             is `True`.
         platform: In case of multi platform images, you can precise which one you want to pull.
-        username: The username to use for authentication to the registry. Optional if
-            the registry doesn't require authentication.
-        password: The password to use for authentication to the registry. Optional if
-            the registry doesn't require authentication.
     """
     if docker_images_already_transferred is None:
         docker_images_already_transferred = []
 
-    authenticator = Authenticator(username, password)
+    authenticator = Authenticator()
 
-    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
+    # TODO: add verification before release
+    with DXFBase(host=registry, auth=authenticator.auth, tlsverify=False, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "w") as zip_file_opened:
             create_zip_from_docker_images(
                 dxf_base,

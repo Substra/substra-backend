@@ -137,6 +137,10 @@ spec:
               mountPath: /var/substra/orchestrator/tls/client
             {{ end }}
             {{ end }}
+            {{- if .Values.kaniko.dockerConfigSecretName }}
+            - name: docker-config
+              mountPath: /.docker
+            {{- end }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
       volumes:
@@ -162,6 +166,14 @@ spec:
           secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
+      {{- if .Values.kaniko.dockerConfigSecretName }}
+      - name: docker-config
+        secret:
+          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
+          items:
+            - key: .dockerconfigjson
+              path: config.json
+      {{- end }}
     {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
