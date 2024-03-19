@@ -117,6 +117,10 @@ spec:
               value: {{ include "substra-backend.objectStore.url" . | quote }}
             - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
               value: {{ .Values.DataSampleStorageInServerMedia | quote }}
+            {{- if .Values.kaniko.dockerConfigSecretName }}
+            - name: DOCKER_CONFIG_SECRET_NAME
+              value: {{ .Values.kaniko.dockerConfigSecretName }}
+            {{- end }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
