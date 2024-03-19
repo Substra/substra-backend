@@ -5,8 +5,8 @@ containerRegistry:
   local: false
   scheme: https
   host: harbor.harbor.svc.cluster.local
-  pullDomain: harbor.harbor.svc.cluster.local:8443
-  port: 8443
+  pullDomain: registry.org-2.internal:30046
+  port: 30046
   prepopulate:
     - image: substra/substra-tools:latest
       dstImage: substra/substra-tools:latest

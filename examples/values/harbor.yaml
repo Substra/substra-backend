@@ -1,21 +1,26 @@
 service:
-  type: ClusterIP
+  type: NodePort
 
   ports:
-    http: 8080
-    https: 8443
-global:
-  internalTLS:
-    enabled: true
+    http: 30000
+    https: 30046
+  
+  nodePorts:
+    http: 30000
+    https: 30046
+
     
-externalURL: https://harbor.harbor.svc.cluster.local:8443
+externalURL: https://harbor.harbor.svc.cluster.local:30046
 adminPassword: "harborP@ssword2403"
 
 nginx:
+  containerPorts:
+    http: 30000
+    https: 30046
   tls:
     commonName: harbor.svc.cluster.local
 
 ingress:
   core:
-    hostname: harbor.harbor.svc.cluster.local
-    port: 8443
+    hostname: harbor.svc.cluster.local
+    port: 30046
