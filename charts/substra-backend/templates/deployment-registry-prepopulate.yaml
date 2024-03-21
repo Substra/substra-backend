@@ -45,6 +45,10 @@ spec:
           - name: docker-config
             mountPath: /kaniko/.docker
           {{- end }}
+          {{- if .Values.privateCa.enabled }}
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+            {{- end }}
       containers:
       - image: gcr.io/google-containers/pause:3.2
         name: pause
@@ -61,6 +65,13 @@ spec:
           items:
           - key: .dockerconfigjson
             path: config.json
+      {{- end }}
+      {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
 ---
 apiVersion: v1
