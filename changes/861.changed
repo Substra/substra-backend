@@ -1,0 +1,1 @@
+- [chore] `towncrier` is now used for changelog management ([#861](https://github.com/Substra/substra-backend/pull/861))
