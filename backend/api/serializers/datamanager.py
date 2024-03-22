@@ -29,7 +29,6 @@ class DataManagerSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "opener",
             "owner",
             "permissions",
-            "type",
         ]
 
     def to_representation(self, instance):
