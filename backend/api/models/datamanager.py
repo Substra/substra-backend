@@ -20,7 +20,6 @@ class DataManager(models.Model, AssetPermissionMixin):
     permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
     logs_permission_public = models.BooleanField()
     logs_permission_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
-    type = models.CharField(max_length=100)
     owner = models.CharField(max_length=100)
     creation_date = models.DateTimeField()
     metadata = models.JSONField()
