@@ -262,7 +262,6 @@ def create_function(
 def create_datamanager(
     key: uuid.UUID = None,
     name: str = "datamanager",
-    type: str = "Test",
     metadata: dict = None,
     owner: str = DEFAULT_OWNER,
     channel: str = DEFAULT_CHANNEL,
@@ -273,7 +272,6 @@ def create_datamanager(
     return DataManager.objects.create(
         key=key,
         name=name,
-        type=type,
         metadata=metadata or {},
         opener_address=get_storage_address("data_manager", key, "opener"),
         opener_checksum=DUMMY_CHECKSUM,

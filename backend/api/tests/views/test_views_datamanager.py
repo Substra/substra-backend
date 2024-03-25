@@ -75,7 +75,6 @@ class DataManagerViewTests(APITestCase):
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
-                "type": "Test",
                 "opener": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/data_manager/{data_manager_1.key}/opener/",
@@ -106,7 +105,6 @@ class DataManagerViewTests(APITestCase):
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
-                "type": "Test",
                 "opener": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/data_manager/{data_manager_2.key}/opener/",
@@ -137,7 +135,6 @@ class DataManagerViewTests(APITestCase):
                         "authorized_ids": ["MyOrg1MSP"],
                     },
                 },
-                "type": "Test",
                 "opener": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/data_manager/{data_manager_3.key}/opener/",
@@ -377,7 +374,6 @@ class DataManagerViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "name": "Datamanager test",
-                    "type": "Test",
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
@@ -410,7 +406,6 @@ class DataManagerViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "name": "Datamanager test",
-                    "type": "Test",
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
@@ -447,7 +442,6 @@ class DataManagerViewTests(APITestCase):
             "json": json.dumps(
                 {
                     "name": "Datamanager test",
-                    "type": "Test",
                     "permissions": {
                         "public": True,
                         "authorized_ids": ["MyOrg1MSP"],
