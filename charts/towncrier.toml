@@ -1,0 +1,10 @@
+[tool.towncrier]
+directory = "changes"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+title_format = "## [{version}] - {project_date}"
+[tool.towncrier.fragment.added]
+[tool.towncrier.fragment.removed]
+[tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.fixed]
