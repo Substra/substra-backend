@@ -67,8 +67,6 @@ def get_request_docker_api(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{path}",
         headers=headers,
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-        # TODO: add verification before release
-        verify=False,  # nosec B501
     )
 
     if response.status_code != requests.status_codes.codes.ok:
