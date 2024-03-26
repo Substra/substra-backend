@@ -149,8 +149,7 @@ def make_payload(
 
     authenticator = Authenticator()
 
-    # TODO: add verification before release
-    with DXFBase(host=registry, auth=authenticator.auth, tlsverify=False, insecure=not secure) as dxf_base:
+    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "w") as zip_file_opened:
             create_zip_from_docker_images(
                 dxf_base,
