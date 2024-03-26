@@ -3,6 +3,11 @@ kind: Config
 
 requires:
   - path: examples/secrets/skaffold.yaml
+    activeProfiles:
+      - name: org-2-harbor
+        activatedBy:
+          - org-2-harbor
+
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
@@ -193,3 +198,11 @@ profiles:
           setValueTemplates: *image-tags
           createNamespace: true
           skipBuildDependencies: true
+  - name: org-2-harbor
+    patches:
+      - op: add
+        path: /deploy/helm/releases/1/valuesFiles/-
+        value: examples/values/backend-org-2-harbor.yaml
+      - op: add
+        path: /manifests/rawYaml
+        value: "./secret-harbor-dockerconfig.yaml"

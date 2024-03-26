@@ -1,4 +1,7 @@
+import base64
 import json
+import typing
+from pathlib import Path
 
 import kubernetes
 import requests
@@ -17,7 +20,7 @@ NAMESPACE = settings.NAMESPACE
 REGISTRY_IS_LOCAL = settings.REGISTRY_IS_LOCAL
 REGISTRY_SERVICE_NAME = settings.REGISTRY_SERVICE_NAME
 HTTP_CLIENT_TIMEOUT_SECONDS = settings.HTTP_CLIENT_TIMEOUT_SECONDS
-USER_IMAGE_REPOSITORY = "substrafoundation/user-image"
+USER_IMAGE_REPOSITORY = "substra/user-image"
 
 
 class ImageNotFoundError(Exception):
@@ -32,6 +35,45 @@ class ImageDigestNotFound(RetrieveDigestError):
     pass
 
 
+class DockerAuthDict(typing.TypedDict):
+    username: str
+    password: str
+    auth: str
+
+
+def get_registry_auth() -> typing.Optional[DockerAuthDict]:
+    config_path = Path("/.docker/config.json")
+    if config_path.is_file():
+        with config_path.open("r") as f:
+            content = json.load(f)
+            return content.get("auths", {}).get(f"{settings.REGISTRY}", None)
+
+    return None
+
+
+def get_request_docker_api(
+    path: str, header_accept: str = "application/vnd.docker.distribution.manifest.v2+json"
+) -> dict:
+    headers = {"Accept": header_accept}
+
+    auth_content = get_registry_auth()
+
+    if auth_content:
+        username = auth_content["username"]
+        password = auth_content["password"]
+        headers["Authorization"] = "Basic " + base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
+
+    response = requests.get(
+        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{path}",
+        headers=headers,
+        timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
+    )
+
+    response.raise_for_status()
+
+    return response.json()
+
+
 def get_container_image_name(image_name: str) -> str:
     pull_domain = REGISTRY_PULL_DOMAIN
 
@@ -43,45 +85,25 @@ def get_container_image_name(image_name: str) -> str:
 
 
 def get_entrypoint(image_tag: str) -> str:
-    d = get_container_image(image_tag)
-    return json.loads(d["history"][0]["v1Compatibility"])["config"]["Entrypoint"]
+    manifest = get_container_manifest(image_tag)
+    blob = get_container_blob(manifest["config"]["digest"])
+
+    return blob["config"]["Entrypoint"]
 
 
-def get_container_image(image_name: str) -> dict:
-    response = requests.get(
-        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
-        headers={"Accept": "application/json"},
-        timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
+def get_container_manifest(image_name: str) -> dict:
+    try:
+        return get_request_docker_api(
+            f"{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
+        )
+    except requests.exceptions.HTTPError as err:
+        raise ImageNotFoundError(f"Error when querying docker-registry, status code: {err.response.status_code}")
+
+
+def get_container_blob(digest: str) -> dict:
+    return get_request_docker_api(
+        f"{USER_IMAGE_REPOSITORY}/blobs/{digest}",
     )
-    if response.status_code != requests.status_codes.codes.ok:
-        raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
-
-    return response.json()
-
-
-def get_container_images() -> list[dict]:
-    response = requests.get(
-        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog",
-        headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-        timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-    )
-
-    response.raise_for_status()
-    res = response.json()
-
-    for repository in res["repositories"]:
-        # get only user-image repo, images built by substra-backend
-        if repository == USER_IMAGE_REPOSITORY:
-            response = requests.get(
-                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list",
-                headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-                timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-            )
-
-            response.raise_for_status()
-            return response.json()
-
-    return None
 
 
 def run_garbage_collector() -> None:

@@ -88,7 +88,7 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
             zip_file=storage_path,
             docker_images_to_transfer=[f"{USER_IMAGE_REPOSITORY}:{container_image_tag}"],
             registry=REGISTRY,
-            secure=False,
+            secure=REGISTRY_SCHEME == "https",
         )
 
         logger.info("Start saving the serialized image")

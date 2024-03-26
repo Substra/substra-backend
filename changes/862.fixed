@@ -1,0 +1,1 @@
+Dxf authenticator now uses content of `dockerconfig` to login

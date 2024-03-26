@@ -1,0 +1,13 @@
+docker-registry:
+  enabled: false
+
+containerRegistry:
+  local: false
+  scheme: https
+  prepopulate:
+    - image: substra/substra-tools:latest
+      dstImage: substra/substra-tools:latest
+      sourceRegistry: ghcr.io
+
+kaniko:
+  dockerConfigSecretName: docker-config

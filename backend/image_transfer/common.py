@@ -14,6 +14,8 @@ from dxf import DXFBase
 from pydantic import BaseModel
 
 from image_transfer.exceptions import ManifestContentError
+from substrapp.docker_registry import DockerAuthDict
+from substrapp.docker_registry import get_registry_auth
 
 
 class PayloadSide(Enum):
@@ -137,9 +139,18 @@ def get_repo_and_tag(docker_image_name: str) -> (str, str):
 
 
 class Authenticator:
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
+    auth_content: Optional[DockerAuthDict]
 
-    def auth(self, dxf: DXFBase, response: requests.Response) -> None:
-        dxf.authenticate(self.username, self.password, response=response)
+    def __init__(self):
+        self.auth_content = get_registry_auth()
+
+    def auth(self, dxf: DXFBase, response: requests.Response) -> Optional[str]:
+        if self.auth_content:
+            return dxf.authenticate(
+                username=self.auth_content.get("username"),
+                password=self.auth_content.get("password"),
+                authorization=self.auth_content.get("auth"),
+                response=response,
+            )
+
+        return None

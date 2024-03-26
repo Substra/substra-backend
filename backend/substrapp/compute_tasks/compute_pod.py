@@ -132,7 +132,12 @@ def create_pod(
             ]
         )
     )
+    image_pull_secret = os.getenv("DOCKER_CONFIG_SECRET_NAME")
 
+    if image_pull_secret:
+        image_pull_secrets = [kubernetes.client.V1LocalObjectReference(name=image_pull_secret)]
+    else:
+        image_pull_secrets = None
     spec = kubernetes.client.V1PodSpec(
         restart_policy="Never",
         affinity=pod_affinity,
@@ -141,6 +146,7 @@ def create_pod(
         security_context=get_pod_security_context(),
         termination_grace_period_seconds=0,
         automount_service_account_token=False,
+        image_pull_secrets=image_pull_secrets,
     )
 
     pod = kubernetes.client.V1Pod(api_version="v1", kind="Pod", metadata=metadata, spec=spec)
