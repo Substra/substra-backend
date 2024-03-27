@@ -1,18 +1,18 @@
-FROM python:3.9-slim AS build
+FROM python:3.11-slim AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
-RUN pip3 install --upgrade --no-cache-dir pip==23.3.2 \
+RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
     && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
@@ -32,8 +32,8 @@ FROM build AS arm64
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # libpq is a required dependency to build psycopg2 from source (support for arm64 platform)
     libpq-dev
-RUN pip3 install --upgrade --no-cache-dir pip==23.3.2 \
-    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.3
+RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
+    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
@@ -50,7 +50,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
@@ -59,7 +59,7 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV GRPC_POLL_STRATEGY=epoll1
 
-COPY --from=build /usr/local/lib/python3.9/ /usr/local/lib/python3.9/
+COPY --from=build /usr/local/lib/python3.11/ /usr/local/lib/python3.11/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
 
