@@ -2,6 +2,14 @@
 
 <!-- towncrier release notes start -->
 
+## [24.5.0] - 2024-03-27
+
+
+### Changed
+
+- Bump app version to 0.45.0
+
+
 ## [24.4.0] - 2024-03-07
 
 ### Changed
