@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.45.0](https://github.com/Substra/substra-backend/releases/tag/0.45.0) - 2024-03-27
+
+
+### Changed
+
+- BREAKING: remove `type` from `datamanager` ([#860](https://github.com/Substra/substra-backend/pull/860))
+- [chore] `towncrier` is now used for changelog management ([#861](https://github.com/Substra/substra-backend/pull/861))
+
+
 ## [0.44.0](https://github.com/Substra/substra-backend/releases/tag/0.44.0) 2024-03-07
 
 ### Fixed
