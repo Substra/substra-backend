@@ -1,0 +1,10 @@
+configs:
+  registry.org-2.com:30046:
+    tls:
+      insecure_skip_verify: true
+  registry.org-2.com:
+    tls:
+      insecure_skip_verify: true
+  "*":
+    tls:
+      insecure_skip_verify: true
