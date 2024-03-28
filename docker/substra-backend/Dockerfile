@@ -1,6 +1,7 @@
 FROM ubuntu:22.04 AS build
 
 RUN apt-get update -y \
+    && apt-get apt install --only-upgrade gnupg \
     && apt-get install --no-install-recommends -y software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev \
