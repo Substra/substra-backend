@@ -1,18 +1,19 @@
 FROM ubuntu:22.04 AS build
 
-RUN apt-get update --no-install-recommends -y \
+RUN apt-get update -y \
     && apt-get install --no-install-recommend -y software-properties-common \
-    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && add-apt-repository --no-install-recommends -y ppa:deadsnakes/ppa \
     && apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev \
     && python3.10 -m venv /venv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv" PYTHONUNBUFFERED=1
 
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
 RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
-    && pip3 install --no-cache-dir setuptools==69.2.0 \
+    && pip3 install --no-cache-dir setuptools==69.2.0 \
     && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
