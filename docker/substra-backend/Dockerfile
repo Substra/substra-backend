@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 AS build
 
-RUN apt-get update -y \
+RUN apt-get update --no-install-recommends -y \
     && apt-get install --no-install-recommend -y software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev \
@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
 RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
-    && pip3 install setuptools>=65.5.1 \
+    && pip3 install --no-cache-dir setuptools==69.2.0 \
     && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev
 RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
     && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9 \
-    && pip3 install setuptools>=65.5.1
+    && pip3 install --no-cache-dir setuptools==69.2.0
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
