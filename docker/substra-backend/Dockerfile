@@ -1,8 +1,8 @@
 FROM ubuntu:22.04 AS build
 
 RUN apt-get update -y \
-    && apt-get install --no-install-recommend -y software-properties-common \
-    && add-apt-repository --no-install-recommends -y ppa:deadsnakes/ppa \
+    && apt-get install --no-install-recommends -y software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev \
     && python3.10 -m venv /venv \
     && apt-get clean \
