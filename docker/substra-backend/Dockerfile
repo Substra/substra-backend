@@ -1,5 +1,7 @@
 FROM ubuntu:22.04 AS build
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
     && apt-get install --no-install-recommends -y software-properties-common \
