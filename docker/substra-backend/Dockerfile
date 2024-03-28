@@ -1,19 +1,18 @@
-FROM python:3.11-slim AS build
+FROM ubuntu:22.04 AS build
 
-ENV GRPC_POLL_STRATEGY=epoll1
-ENV PYTHONUNBUFFERED=1
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    build-essential \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:deadsnakes/ppa
+RUN apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev
+RUN python3.10 -m venv /venv
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv" PYTHONUNBUFFERED=1
 
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
-RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
-    && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
+RUN pip3 install --upgrade --no-cache-dir pip==24.0
+RUN pip3 install setuptools>=65.5.1
+RUN pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
@@ -34,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev
 RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
     && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9
+RUN pip3 install setuptools>=65.5.1
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
@@ -50,7 +50,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM python:3.11-slim
+FROM ubuntu:22.04
 
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
@@ -59,7 +59,7 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV GRPC_POLL_STRATEGY=epoll1
 
-COPY --from=build /usr/local/lib/python3.11/ /usr/local/lib/python3.11/
+COPY --from=build /usr/local/lib/python3.10/ /usr/local/lib/python3.10/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
 
