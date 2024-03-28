@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # libpq is a required dependency to build psycopg2 from source (support for arm64 platform)
     libpq-dev
 RUN pip3 install --upgrade --no-cache-dir pip==24.0 \
-    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9 \
+    && pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9 \
     && pip3 install --no-cache-dir setuptools==69.2.0
 
 ARG USER_ID=1001
