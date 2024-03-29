@@ -2,6 +2,8 @@ FROM ubuntu:22.04 AS build
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV GRPC_POLL_STRATEGY=epoll1
+ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
@@ -10,7 +12,7 @@ RUN apt-get update -y \
     && python3.10 -m venv /venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv" PYTHONUNBUFFERED=1 GRPC_POLL_STRATEGY=epoll1
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 WORKDIR /usr/src/app
 
