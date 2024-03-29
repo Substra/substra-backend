@@ -10,7 +10,7 @@ RUN apt-get update -y \
     && python3.10 -m venv /venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv" PYTHONUNBUFFERED=1
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv" PYTHONUNBUFFERED=1 GRPC_POLL_STRATEGY=epoll1
 
 WORKDIR /usr/src/app
 
