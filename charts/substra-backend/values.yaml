@@ -172,17 +172,19 @@ server:
     ##
     ingressClassName:
 
-  ## @param server.resources Server container resources requests and limits
-  ## e.g:
-  ## resources:
-  ##   limits:
-  ##     cpu: 100m
-  ##     memory: 128Mi
-  ##   requests:
-  ##     cpu: 100m
-  ##     memory: 128Mi
+  ## @param server.resources.requests.cpu Server container cpu request
+  ## @param server.resources.requests.memory Server container memory request
+  ## @param server.resources.limits.cpu Server container cpu limit
+  ## @param server.resources.limits.memory Server container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "6Gi"
+    limits:
+      cpu: "2000m"
+      memory: "12Gi"
+
 
   persistence:
     ## @param server.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
@@ -304,9 +306,18 @@ worker:
     runAsUser: 1001
     runAsGroup: 1001
     fsGroup: 1001
-  ## @param worker.resources Worker container resources requests and limits
+  ## @param worker.resources.requests.cpu Worker container cpu request
+  ## @param worker.resources.requests.memory Worker container memory request
+  ## @param worker.resources.limits.cpu Worker container cpu limit
+  ## @param worker.resources.limits.memory Worker container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "4Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
   ## @param worker.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: {}
@@ -422,9 +433,18 @@ schedulerWorker:
   ## @param schedulerWorker.affinity Affinity settings for pod assignment
   ##
   affinity: {}
-  ## @param schedulerWorker.resources Scheduler container resources requests and limits
+  ## @param schedulerWorker.resources.requests.cpu Scheduler container cpu request
+  ## @param schedulerWorker.resources.requests.memory Scheduler container memory request
+  ## @param schedulerWorker.resources.limits.cpu Scheduler container cpu limit
+  ## @param schedulerWorker.resources.limits.memory Scheduler container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "200Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
   ## @param schedulerWorker.podSecurityContext.enabled Enable security context
   ## @param schedulerWorker.podSecurityContext.runAsUser User ID for the pod
   ## @param schedulerWorker.podSecurityContext.runAsGroup Group ID for the pod
@@ -456,9 +476,18 @@ scheduler:
     tag: null
     pullPolicy: IfNotPresent
     pullSecrets: []
-  ## @param scheduler.resources Scheduler container resources requests and limits
+  ## @param scheduler.resources.requests.cpu Scheduler container cpu request
+  ## @param scheduler.resources.requests.memory Scheduler container memory request
+  ## @param scheduler.resources.limits.cpu Scheduler container cpu limit
+  ## @param scheduler.resources.limits.memory Scheduler container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "200Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
   ## @param scheduler.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: {}
@@ -484,10 +513,10 @@ scheduler:
 ## @param builder.replicaCount Number of builder replicas
 ##
 builder:
-  ## @param builder.enabled Enable worker service
+  ## @param builder.enabled Enable builder service
   ##
   enabled: true
-  ## @param builder.replicaCount Replica count for the worker service
+  ## @param builder.replicaCount Replica count for the builder service
   ##
   replicaCount: 1
 
@@ -524,17 +553,18 @@ builder:
     fsGroup: 1001
 
 
-  ## @param builder.resources Builder container resources requests and limits
-  ## e.g:
-  ## resources:
-  ##   limits:
-  ##     cpu: 100m
-  ##     memory: 128Mi
-  ##   requests:
-  ##     cpu: 100m
-  ##     memory: 128Mi
+  ## @param builder.resources.requests.cpu Builder container cpu request
+  ## @param builder.resources.requests.memory Builder container memory request
+  ## @param builder.resources.limits.cpu Builder container cpu limit
+  ## @param builder.resources.limits.memory Builder container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "2000m"
+      memory: "4Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
 
   ## @param builder.nodeSelector Node labels for pod assignment
   ##
@@ -843,6 +873,13 @@ postgresql:
       capabilities:
         drop:
         - ALL
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "2Gi"
+      limits:
+        cpu: "1000m"
+        memory: "4Gi"
 
 ## @skip redis
 ##
@@ -857,6 +894,13 @@ redis:
     service:
       ports:
         redis: 6379
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1024Mi"
   replica:
     replicaCount: 0
   commonConfiguration: |-
@@ -872,10 +916,17 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: true
-    size: 10Gi
+    size: 50Gi
     deleteEnabled: true
   service:
     type: NodePort
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "16Gi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
 
 ## @skip minio
 ##
@@ -896,6 +947,13 @@ minio:
     capabilities:
       drop:
         - ALL
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "16Gi"
+    limits:
+      cpu: "1000m"
+      memory: "64Gi"
 
 ## @skip localstack
 ##
@@ -904,6 +962,13 @@ localstack:
   service:
     edgeService:
       nodePort: ""
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "16Gi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
   environment:
     - name: SERVICES
       value: s3

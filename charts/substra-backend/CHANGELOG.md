@@ -2,6 +2,14 @@
 
 <!-- towncrier release notes start -->
 
+
+## [26.1.0] - 2024-04-17
+
+### Added
+
+- Resources limits and requests (CPU and memory) for all containers.
+
+
 ## [26.0.0] - 2024-04-16
 
 ### Changed
