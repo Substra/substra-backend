@@ -980,6 +980,15 @@ redis:
     appendonly yes
     # Disable RDB persistence since AOF persistence is enabled
     save ""
+  resources: {
+    requests: {
+      cpu: "1000m",
+      memory: "512Mi"
+    },
+    limits: {
+      memory: "1024Mi"
+    }
+  }
 
 ## @skip docker-registry
 ##
