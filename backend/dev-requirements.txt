@@ -16,7 +16,7 @@ responses==0.21.0
 watchdog==2.1.9
 flake8-bugbear==24.2.6
 pdbpp==0.10.3
-factory-boy==3.2.1
+factory-boy==3.3.0
 mypy==1.4.1
 djangorestframework-stubs==1.8.0
 django-stubs==1.14.0
