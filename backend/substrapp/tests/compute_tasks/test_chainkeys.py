@@ -32,9 +32,10 @@ def test_prepare_chainkeys_dir(tmpdir):
     }
     # fmt: on
 
-    with mock.patch("substrapp.compute_tasks.chainkeys._retrieve_secrets") as mretrievesecrets, mock.patch(
-        "substrapp.compute_tasks.chainkeys._clear_secrets"
-    ) as mcleansecrets:
+    with (
+        mock.patch("substrapp.compute_tasks.chainkeys._retrieve_secrets") as mretrievesecrets,
+        mock.patch("substrapp.compute_tasks.chainkeys._clear_secrets") as mcleansecrets,
+    ):
         mretrievesecrets.return_value = secrets
         prepare_chainkeys_dir(tmpdir, "cp1")
 

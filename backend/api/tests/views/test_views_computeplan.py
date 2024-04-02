@@ -698,8 +698,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_computeplan_cancel(self):
         url = reverse("api:compute_plan-cancel", args=[self.expected_results[0]["key"]])
-        with mock.patch.object(OrchestratorClient, "cancel_compute_plan"), mock.patch.object(
-            OrchestratorClient, "query_compute_plan", return_value=self.expected_results[0]
+        with (
+            mock.patch.object(OrchestratorClient, "cancel_compute_plan"),
+            mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=self.expected_results[0]),
         ):
             response = self.client.post(url, **self.extra)
         self.assertEqual(response.json(), {})

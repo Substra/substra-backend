@@ -3,6 +3,7 @@
 This module provides various helpers to access assets stored in remote Organizations.
 It verifies as well the integrity of downloaded asset when possible.
 """
+
 import enum
 import hashlib
 import os

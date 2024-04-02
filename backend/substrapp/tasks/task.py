@@ -10,6 +10,7 @@ This file contains the main logic for executing a compute task:
 
 We also handle the retry logic here.
 """
+
 import enum
 import pickle  # nosec B403
 from typing import Any
