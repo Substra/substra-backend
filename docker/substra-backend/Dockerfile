@@ -52,7 +52,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
