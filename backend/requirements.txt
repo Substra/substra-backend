@@ -16,7 +16,7 @@ psycopg2-binary==2.9.9
 requests>=2.20.0
 uwsgi==2.0.22
 zxcvbn==4.4.28
-grpcio==1.57.0
+grpcio==1.62.1
 grpcio-tools==1.57.0
 minio==7.1.14
 django-prometheus==2.3.1
