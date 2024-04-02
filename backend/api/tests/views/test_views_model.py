@@ -384,8 +384,9 @@ class ModelViewTests(APITestCase):
         model_files = factory.create_model_files()
         model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
         url = reverse("api:model-file", args=[model.key])
-        with mock.patch("api.views.utils.get_owner", return_value=model.owner), mock.patch(
-            "api.views.model.type", return_value=OrganizationUser
+        with (
+            mock.patch("api.views.utils.get_owner", return_value=model.owner),
+            mock.patch("api.views.model.type", return_value=OrganizationUser),
         ):
             response = self.client.get(
                 url,
@@ -409,8 +410,9 @@ class ModelViewTests(APITestCase):
         model_files = factory.create_model_files()
         model = factory.create_model(self.train_task, key=model_files.key, owner="owkin")
         url = reverse("api:model-file", args=[model.key])
-        with mock.patch("api.views.utils.get_owner", return_value=model.owner), mock.patch(
-            "api.views.model.type", return_value=OrganizationUser
+        with (
+            mock.patch("api.views.utils.get_owner", return_value=model.owner),
+            mock.patch("api.views.model.type", return_value=OrganizationUser),
         ):
             response = self.client.get(
                 url,
@@ -424,8 +426,9 @@ class ModelViewTests(APITestCase):
         model.model_address = None
         model.save()
         url = reverse("api:model-file", args=[model.key])
-        with mock.patch("api.views.utils.get_owner", return_value=model.owner), mock.patch(
-            "api.views.model.type", return_value=OrganizationUser
+        with (
+            mock.patch("api.views.utils.get_owner", return_value=model.owner),
+            mock.patch("api.views.model.type", return_value=OrganizationUser),
         ):
             response = self.client.get(
                 url,

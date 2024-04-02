@@ -1,4 +1,5 @@
 """Opener of the simplified ISIC 2018 dataset (other opener)"""
+
 import csv
 import os
 

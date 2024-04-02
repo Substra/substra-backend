@@ -217,9 +217,10 @@ class DataSampleViewTests(APITestCase):
             ),
         }
 
-        with mock.patch.object(
-            OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("api.views.datasample.check_datamanagers", return_value=None):
+        with (
+            mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples),
+            mock.patch("api.views.datasample.check_datamanagers", return_value=None),
+        ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -246,9 +247,10 @@ class DataSampleViewTests(APITestCase):
             ),
         }
 
-        with mock.patch.object(
-            OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("api.views.datasample.check_datamanagers", return_value=None):
+        with (
+            mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples),
+            mock.patch("api.views.datasample.check_datamanagers", return_value=None),
+        ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -274,9 +276,10 @@ class DataSampleViewTests(APITestCase):
             "data_manager_keys": [self.data_manager_key],
         }
 
-        with mock.patch.object(
-            OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("api.views.datasample.check_datamanagers", return_value=None):
+        with (
+            mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples),
+            mock.patch("api.views.datasample.check_datamanagers", return_value=None),
+        ):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -302,9 +305,10 @@ class DataSampleViewTests(APITestCase):
             "multiple": True,
         }
 
-        with mock.patch.object(
-            OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples
-        ), mock.patch("api.views.datasample.check_datamanagers", return_value=None):
+        with (
+            mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=mock_register_datasamples),
+            mock.patch("api.views.datasample.check_datamanagers", return_value=None),
+        ):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
 
         self.assertIsNotNone(response.data[0]["key"])
@@ -356,8 +360,9 @@ class DataSampleViewTests(APITestCase):
             ),
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=MockOrcError()), mock.patch(
-            "api.views.datasample.check_datamanagers", return_value=None
+        with (
+            mock.patch.object(OrchestratorClient, "register_datasamples", side_effect=MockOrcError()),
+            mock.patch("api.views.datasample.check_datamanagers", return_value=None),
         ):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         # asset not created in local db

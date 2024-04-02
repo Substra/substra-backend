@@ -83,9 +83,10 @@ class PermissionMixinDownloadFileTests(APITestCase):
         metadata.save()
         OutgoingOrganization.objects.create(organization_id="remote-organization", secret="s3cr37")
 
-        with mock.patch(
-            "api.views.utils.get_owner", return_value="local-organization"
-        ), responses.RequestsMock() as mocked_responses:
+        with (
+            mock.patch("api.views.utils.get_owner", return_value="local-organization"),
+            responses.RequestsMock() as mocked_responses,
+        ):
             mocked_responses.add(
                 responses.GET,
                 metadata.archive_address,

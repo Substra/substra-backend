@@ -8,9 +8,10 @@ import substrapp.kubernetes_utils
 
 
 def test_get_service_node_port():
-    with mock.patch("kubernetes.config.load_incluster_config"), mock.patch(
-        "kubernetes.client.CoreV1Api.read_namespaced_service"
-    ) as mgetservice:
+    with (
+        mock.patch("kubernetes.config.load_incluster_config"),
+        mock.patch("kubernetes.client.CoreV1Api.read_namespaced_service") as mgetservice,
+    ):
         mgetservice.side_effect = kubernetes.client.ApiException(500, "something happened")
 
         with pytest.raises(substrapp.exceptions.KubernetesError) as excinfo:

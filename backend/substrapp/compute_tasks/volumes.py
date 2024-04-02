@@ -40,9 +40,9 @@ def get_volumes(ctx: Context):
         {
             "name": "subtuple",
             "persistentVolumeClaim": {
-                "claimName": settings.WORKER_PVC_SUBTUPLE
-                if settings.WORKER_PVC_IS_HOSTPATH
-                else get_worker_subtuple_pvc_name()
+                "claimName": (
+                    settings.WORKER_PVC_SUBTUPLE if settings.WORKER_PVC_IS_HOSTPATH else get_worker_subtuple_pvc_name()
+                )
             },
         }
     ]

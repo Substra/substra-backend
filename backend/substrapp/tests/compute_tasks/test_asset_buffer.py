@@ -220,9 +220,10 @@ class AssetBufferTests(APITestCase):
 
         dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.data_manager_key, Filenames.Opener)
 
-        with mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload, mock.patch(
-            "substrapp.compute_tasks.asset_buffer.get_owner"
-        ) as mget_owner:
+        with (
+            mock.patch("substrapp.compute_tasks.asset_buffer.organization_client.download") as mdownload,
+            mock.patch("substrapp.compute_tasks.asset_buffer.get_owner") as mget_owner,
+        ):
             mget_owner.return_value = organization_id
 
             _add_opener_to_buffer(CHANNEL, self.data_manager)
