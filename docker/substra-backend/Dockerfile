@@ -1,18 +1,13 @@
 FROM ubuntu:22.04 AS build
 
-ARG DEBIAN_FRONTEND=noninteractive
-
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
-    && apt-get install --no-install-recommends -y software-properties-common \
-    && apt-get install --no-install-recommends -y python3.10 python3.10-venv python3-pip gcc python3-dev \
-    && python3.10 -m venv /venv \
+    && apt-get install --no-install-recommends -y software-properties-common python3.11 python3-pip gcc python3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 WORKDIR /usr/src/app
 
@@ -66,7 +61,7 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV GRPC_POLL_STRATEGY=epoll1
 
-COPY --from=build /usr/local/lib/python3.10/ /usr/local/lib/python3.10/
+COPY --from=build /usr/local/lib/python3.11/ /usr/local/lib/python3.11/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
 
