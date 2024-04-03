@@ -1,13 +1,19 @@
 api:
-  - backend/api/**/*
+- changed-files:
+  - any-glob-to-any-file: backend/api/**/*
 
 chart:
-  - chart/**/*
+- changed-files:
+  - any-glob-to-any-file: chart/**/*
 
 documentation:
-  - docs/**/*
-  - README.md
+- changed-files:
+  - any-glob-to-any-file:
+    - docs/**/*
+    - README.md
 
 compute-engine:
-  - backend/substrapp/compute_tasks/**/*
-  - backend/substrapp/tasks/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - backend/substrapp/compute_tasks/**/*
+    - backend/substrapp/tasks/**/*
