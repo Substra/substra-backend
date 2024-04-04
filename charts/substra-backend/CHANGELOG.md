@@ -2,8 +2,17 @@
 
 <!-- towncrier release notes start -->
 
-## [24.5.0] - 2024-03-27
+## [25.0.0] - 2024-04-03
 
+### Changed
+
+- BREAKING: Remove ServiceAccount creation from `worker.rbac.create`, putting it in a new `worker.serviceAccount.create` option
+- BREAKING: Some options that would result in service account names defaulting to "default" now raise an error at rendering time. Set the name to "default" by hand to reproduce the old behavior.
+- Add a new `worker.serviceAccount.name` option
+- Fix "api events" services using the "worker events" service account instead of the "api events" one
+
+
+## [24.5.0] - 2024-03-27
 
 ### Changed
 
