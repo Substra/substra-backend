@@ -1,0 +1,1 @@
+`MinIO` is now the default S3 storage, instead of `localstack`.
