@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## [25.1.0] - 2024-04-04
+
+### Changed
+
+- The default S3 storage is now MinIO, instead of localstack.
+
+
 ## [25.0.0] - 2024-04-03
 
 ### Changed

@@ -872,7 +872,7 @@ docker-registry:
 ## @skip minio
 ##
 minio:
-  enabled: false
+  enabled: true
   auth:
     rootUser: minio
     rootPassword: minio1234
@@ -892,7 +892,7 @@ minio:
 ## @skip localstack
 ##
 localstack:
-  enabled: true
+  enabled: false
   service:
     edgeService:
       nodePort: ""
