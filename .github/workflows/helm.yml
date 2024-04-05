@@ -11,6 +11,7 @@ on:
       - "main"
     paths:
       - "charts/**"
+      - ".github/workflows/helm.yml"
   workflow_dispatch: {}
 
 concurrency:
