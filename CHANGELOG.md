@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Private CA are now injected in Kaniko pods ([#879](https://github.com/Substra/substra-backend/pull/879))
+
 ## [0.38.0](https://github.com/Substra/substra-backend/releases/tag/0.38.0) 2023-06-12
 
 ### Added

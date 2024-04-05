@@ -35,6 +35,9 @@ KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
+PRIVATE_CA_ENABLED = settings.TASK["PRIVATE_CA_ENABLED"]
+PRIVATE_CA_CONFIGMAP_NAME = settings.TASK["PRIVATE_CA_CONFIGMAP_NAME"]
+PRIVATE_CA_FILENAME = settings.TASK["PRIVATE_CA_FILENAME"]
 CELERY_WORKER_CONCURRENCY = settings.CELERY_WORKER_CONCURRENCY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
@@ -227,6 +230,16 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
         )
         volumes.append(docker_config)
 
+    if PRIVATE_CA_ENABLED:
+        private_ca_volume = kubernetes.client.V1Volume(
+            name=PRIVATE_CA_CONFIGMAP_NAME,
+            config_map=kubernetes.client.V1ConfigMapVolumeSource(
+                name=PRIVATE_CA_CONFIGMAP_NAME,
+                items=[kubernetes.client.V1KeyToPath(key=PRIVATE_CA_FILENAME, path="ca-certificates.crt")],
+            ),
+        )
+        volumes.append(private_ca_volume)
+
     return kubernetes.client.V1PodSpec(
         restart_policy="Never", affinity=pod_affinity, containers=[container], volumes=volumes
     )
@@ -273,6 +286,10 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         docker_config = kubernetes.client.V1VolumeMount(
             name=KANIKO_DOCKER_CONFIG_VOLUME_NAME, mount_path="/kaniko/.docker"
         )
+        volume_mounts.append(docker_config)
+
+    if PRIVATE_CA_ENABLED:
+        docker_config = kubernetes.client.V1VolumeMount(name=PRIVATE_CA_CONFIGMAP_NAME, mount_path="/kaniko/ssl/certs")
         volume_mounts.append(docker_config)
 
     return kubernetes.client.V1Container(
