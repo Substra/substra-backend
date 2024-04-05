@@ -11,8 +11,9 @@ on:
       - "main"
     paths:
       - "charts/**"
+  workflow_dispatch: {}
 
-concurrency: 
+concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
@@ -70,7 +71,7 @@ jobs:
 
       - name: Execute readme-generator-for-helm
         run: readme-generator-for-helm/bin/index.js -r backend/charts/substra-backend/README.md -v backend/charts/substra-backend/values.yaml
-      
+
       - name: Check diff
         run: |
           cd backend/
@@ -81,7 +82,7 @@ jobs:
             git diff
             exit 1
           fi
-  
+
   publish:
     name: Publish
     runs-on: ubuntu-latest
@@ -91,12 +92,12 @@ jobs:
       - generate-chart-readme
     steps:
       - uses: actions/checkout@v3
-      
+
       - uses: azure/setup-helm@v3.5
         with:
           version: "v3.12.0"
         id: install
-      
+
       - name: Add dependencies repo
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
