@@ -1,6 +1,6 @@
 # Changelog
 
-## 22.5.1-patch.1
+## [22.5.1-patch.1] - 2024-04-05
 
 ### Changed
 
