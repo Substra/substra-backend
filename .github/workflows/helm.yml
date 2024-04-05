@@ -86,7 +86,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/support/0.38.x'
     needs:
       - test
       - generate-chart-readme
