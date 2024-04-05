@@ -1,6 +1,6 @@
 # Changelog
 
-## 22.5.1.1
+## 22.5.1-patch.1
 
 ### Changed
 
