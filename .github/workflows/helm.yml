@@ -54,7 +54,7 @@ jobs:
 
       - name: Helm repo add
         run: |
-          REPOS_JSON='${{ inputs.helm-repositories }}'
+          REPOS_JSON='[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"},{"name": "std-helm", "url": "https://charts.helm.sh/stable"},{"name": "twumi", "url": "https://helm.twun.io"},{"name": "localstack", "url": "https://localstack.github.io/helm-charts"}]'
           echo "$REPOS_JSON" | jq -c '.[]' | while read repo; do
             name=$(echo "$repo" | jq -r '.name')
             url=$(echo "$repo" | jq -r '.url')
