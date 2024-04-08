@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
-    && apt-get install --no-install-recommends -y software-properties-common python3.11 python3-pip gcc python3-dev ca-certificates \
+    && apt-get install --no-install-recommends -y software-properties-common python3.11 python3-pip gcc python3-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
