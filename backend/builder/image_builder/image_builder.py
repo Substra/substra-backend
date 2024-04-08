@@ -39,7 +39,6 @@ KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NA
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
 KANIKO_CA_SECRET_NAME = "kaniko-certificates"  # nosec B105
 PRIVATE_CA_ENABLED = settings.TASK["PRIVATE_CA_ENABLED"]
-SECRET_NAMESPACE = settings.K8S_SECRET_NAMESPACE
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 KANIKO_CONTAINER_NAME = "kaniko"
@@ -141,9 +140,9 @@ def _create_private_ca_secret(k8s_client: kubernetes.client.CoreV1Api, secret_na
     with cert_file.open() as f:
         secret_content = {cert_file.name: f.read()}
 
-    metadata = {"name": KANIKO_CA_SECRET_NAME, "namespace": SECRET_NAMESPACE}
+    metadata = {"name": KANIKO_CA_SECRET_NAME, "namespace": NAMESPACE}
     body = kubernetes.client.V1Secret(string_data=secret_content, type="kubernetes.io/tls", metadata=metadata)
-    k8s_client.create_namespaced_secret(namespace=SECRET_NAMESPACE, body=body)
+    k8s_client.create_namespaced_secret(namespace=NAMESPACE, body=body)
 
 
 @timeit
