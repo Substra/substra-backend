@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Union
 
@@ -33,12 +34,11 @@ REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
 NAMESPACE = settings.NAMESPACE
 KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
-KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
+KANIKO_IMAGE = "busybox" # TODO: Revert
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
+KANIKO_CA_SECRET_NAME = "kaniko-certificates"  # nosec B105
 PRIVATE_CA_ENABLED = settings.TASK["PRIVATE_CA_ENABLED"]
-PRIVATE_CA_CONFIGMAP_NAME = settings.TASK["PRIVATE_CA_CONFIGMAP_NAME"]
-PRIVATE_CA_FILENAME = settings.TASK["PRIVATE_CA_FILENAME"]
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 KANIKO_CONTAINER_NAME = "kaniko"
@@ -134,6 +134,17 @@ def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api
     return logs
 
 
+def _create_private_ca_secret(k8s_client: kubernetes.client.CoreV1Api, secret_name: str):
+    cert_file = Path("/etc/ssl/certs/ca-certificates.crt")
+
+    with cert_file.open() as f:
+        secret_content = {cert_file.name: f.read()}
+
+    metadata = {"name": KANIKO_CA_SECRET_NAME, "namespace": NAMESPACE}
+    body = kubernetes.client.V1Secret(string_data=secret_content, type="kubernetes.io/tls", metadata=metadata)
+    k8s_client.create_namespaced_secret(namespace=NAMESPACE, body=body)
+
+
 @timeit
 def _build_container_image(path: str, tag: str) -> None:
     _assert_dockerfile_exist(path)
@@ -147,6 +158,9 @@ def _build_container_image(path: str, tag: str) -> None:
     if create_pod:
         try:
             logger.info("creating pod: building image", namespace=NAMESPACE, pod=pod_name, image=tag)
+            if PRIVATE_CA_ENABLED:
+                _create_private_ca_secret(k8s_client, KANIKO_CA_SECRET_NAME)
+
             pod = _build_pod(path, tag)
             k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
         except kubernetes.client.ApiException as e:
@@ -241,10 +255,9 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
 
     if PRIVATE_CA_ENABLED:
         private_ca_volume = kubernetes.client.V1Volume(
-            name=PRIVATE_CA_CONFIGMAP_NAME,
-            config_map=kubernetes.client.V1ConfigMapVolumeSource(
-                name=PRIVATE_CA_CONFIGMAP_NAME,
-                items=[kubernetes.client.V1KeyToPath(key=PRIVATE_CA_FILENAME, path="ca-certificates.crt")],
+            name=KANIKO_CA_SECRET_NAME,
+            config_map=kubernetes.client.V1SecretVolumeSource(
+                name=KANIKO_CA_SECRET_NAME,
             ),
         )
         volumes.append(private_ca_volume)
@@ -298,14 +311,14 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         volume_mounts.append(docker_config)
 
     if PRIVATE_CA_ENABLED:
-        docker_config = kubernetes.client.V1VolumeMount(name=PRIVATE_CA_CONFIGMAP_NAME, mount_path="/kaniko/ssl/certs")
+        docker_config = kubernetes.client.V1VolumeMount(name=KANIKO_CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
         volume_mounts.append(docker_config)
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,
         image=KANIKO_IMAGE,
-        command=None,
-        args=args,
+        command=["sleep", "inf"], # TODO: revert
+        args=None,
         volume_mounts=volume_mounts,
         security_context=container_security_context,
     )
