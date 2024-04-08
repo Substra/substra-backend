@@ -157,6 +157,21 @@ Return the user list
 {{- end -}}
 
 {{/*
+    Create the name for the service account to use for the builder
+*/}}
+{{- define "substra.builder.serviceAccountName" -}}
+{{- if .Values.builder.serviceAccount.create -}}
+    {{ default (printf "%s-builder" ( include "substra.fullname" .)) .Values.builder.serviceAccount.name }}
+{{- else -}}
+    {{- if .Values.builder.serviceAccount.name -}}
+        {{ .Values.builder.serviceAccount.name }}
+    {{-  else -}}
+        {{ fail "if builder.serviceAccount.create is false, builder.serviceAccount.name must be given" }}
+    {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
     Create the name for the service account to use for the worker event app
 */}}
 {{- define "substra.worker.events.serviceAccountName" -}}

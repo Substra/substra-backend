@@ -557,6 +557,13 @@ builder:
   ##
   rbac:
     create: true
+  serviceAccount:
+    ## @param worker.serviceAccount.create Create a service account for the worker
+    ##
+    create: true
+    ## @param worker.serviceAccount.name The name of the ServiceAccount to use. If not set and create is true, a name is generated using the substra.fullname template
+    ##
+    name: ""
 
 
 
