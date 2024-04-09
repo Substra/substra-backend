@@ -8,6 +8,7 @@ In these functions, we:
 """
 
 import io
+from typing import Optional
 
 import kubernetes
 import structlog
@@ -44,18 +45,20 @@ from substrapp.utils import timeit
 logger = structlog.get_logger(__name__)
 
 
+def _is_pod_creation_needed(label_selector: str, *, client: Optional[kubernetes.client.CoreV1Api] = None) -> bool:
+    if not client:
+        client = _get_k8s_client()
+
+    return not pod_exists_by_label_selector(client, label_selector)
+
+
 @timeit
 def download_function(ctx: Context) -> None:
     channel_name = ctx.channel_name
     container_image_tag = utils.container_image_tag_from_function(ctx.function)
-
     compute_pod = ctx.get_compute_pod(container_image_tag)
 
-    k8s_client = _get_k8s_client()
-
-    should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
-
-    if should_create_pod:
+    if _is_pod_creation_needed(compute_pod.label_selector):
         try:
             image_builder.load_remote_function_image(ctx.function, channel_name)
         except OrganizationHttpError as e:
@@ -77,9 +80,7 @@ def execute_compute_task(ctx: Context) -> None:
 
     k8s_client = _get_k8s_client()
 
-    should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
-
-    if should_create_pod:
+    if _is_pod_creation_needed(compute_pod.label_selector, client=k8s_client):
         # save entrypoint to DB
         entrypoint = get_entrypoint(container_image_tag)
         ImageEntrypoint.objects.get_or_create(
@@ -111,7 +112,7 @@ def execute_compute_task(ctx: Context) -> None:
     _exec(ctx, compute_pod)
 
 
-def _get_k8s_client():
+def _get_k8s_client() -> kubernetes.client.CoreV1Api:
     kubernetes.config.load_incluster_config()
     return kubernetes.client.CoreV1Api()
 
