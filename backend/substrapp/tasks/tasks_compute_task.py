@@ -44,6 +44,7 @@ from substrapp.compute_tasks.directories import init_compute_plan_dirs
 from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
+from substrapp.compute_tasks.execute import download_function
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.lock import MAX_TASK_DURATION
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
@@ -53,6 +54,7 @@ from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import ComputeTask
 from substrapp.utils import Timer
+from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
 from substrapp.utils.url import TASK_PROFILING_BASE_URL
@@ -66,6 +68,7 @@ logger = structlog.get_logger(__name__)
 class ComputeTaskSteps(enum.Enum):
     BUILD_IMAGE = "build_image"
     PREPARE_INPUTS = "prepare_inputs"
+    DOWNLOAD_FUNCTION = "download_function"
     TASK_EXECUTION = "task_execution"
     SAVE_OUTPUTS = "save_outputs"
 
@@ -221,6 +224,16 @@ def _run(
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.PREPARE_INPUTS, timer.stop())
 
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
+
+            if get_owner() != ctx.function.owner:
+                # start download_function timer
+                timer.start()
+
+                # Command execution
+                download_function(ctx)
+
+                # stop download_function timer
+                _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.DOWNLOAD_FUNCTION, timer.stop())
 
             # start task_execution timer
             timer.start()

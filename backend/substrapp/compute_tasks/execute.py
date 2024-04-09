@@ -39,10 +39,29 @@ from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
 from substrapp.models import ImageEntrypoint
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.utils import get_owner
 from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
+
+
+@timeit
+def download_function(ctx: Context) -> None:
+    channel_name = ctx.channel_name
+    container_image_tag = utils.container_image_tag_from_function(ctx.function)
+
+    compute_pod = ctx.get_compute_pod(container_image_tag)
+
+    k8s_client = _get_k8s_client()
+
+    should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
+
+    if should_create_pod:
+        try:
+            image_builder.load_remote_function_image(ctx.function, channel_name)
+        except OrganizationHttpError as e:
+            raise compute_task_errors.CeleryNoRetryError() from e
+        except OrganizationError as e:
+            raise compute_task_errors.CeleryRetryError() from e
 
 
 @timeit
@@ -61,14 +80,6 @@ def execute_compute_task(ctx: Context) -> None:
     should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
 
     if should_create_pod:
-        if get_owner() != ctx.function.owner:
-            try:
-                image_builder.load_remote_function_image(ctx.function, channel_name)
-            except OrganizationHttpError as e:
-                raise compute_task_errors.CeleryNoRetryError() from e
-            except OrganizationError as e:
-                raise compute_task_errors.CeleryRetryError() from e
-
         # save entrypoint to DB
         entrypoint = get_entrypoint(container_image_tag)
         ImageEntrypoint.objects.get_or_create(
