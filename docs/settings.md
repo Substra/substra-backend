@@ -51,9 +51,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `OBJECTSTORE_URL` | nil |  |
 | int | `PAGINATION_MAX_PAGE_SIZE` | `10000` |  |
 | string | `POD_IP` | nil |  |
-| string | `PRIVATE_CA_CONFIGMAP_NAME` | nil |  |
 | bool | `PRIVATE_CA_ENABLED` | nil |  |
-| string | `PRIVATE_CA_FILENAME` | nil |  |
 | string | `REGISTRY` | empty string |  |
 | bool | `REGISTRY_IS_LOCAL` | nil |  |
 | string | `REGISTRY_PULL_DOMAIN` | nil |  |
