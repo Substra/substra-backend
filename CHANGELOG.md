@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.2](https://github.com/Substra/substra-backend/releases/tag/0.38.2) 2024-04-09
+
+### Added
+
+- All worker CA are now injected in Kaniko pods ([#880](https://github.com/Substra/substra-backend/pull/880))
+
 ## [0.38.1](https://github.com/Substra/substra-backend/releases/tag/0.38.1) 2024-04-05
 
 ### Added
