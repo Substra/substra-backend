@@ -16,6 +16,7 @@ from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import container_image_exists
+from substrapp.kubernetes_utils import CA_SECRET_NAME
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_pod_logs
 from substrapp.kubernetes_utils import get_security_context
@@ -36,8 +37,6 @@ KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
 PRIVATE_CA_ENABLED = settings.TASK["PRIVATE_CA_ENABLED"]
-PRIVATE_CA_CONFIGMAP_NAME = settings.TASK["PRIVATE_CA_CONFIGMAP_NAME"]
-PRIVATE_CA_FILENAME = settings.TASK["PRIVATE_CA_FILENAME"]
 CELERY_WORKER_CONCURRENCY = settings.CELERY_WORKER_CONCURRENCY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
@@ -232,10 +231,9 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
 
     if PRIVATE_CA_ENABLED:
         private_ca_volume = kubernetes.client.V1Volume(
-            name=PRIVATE_CA_CONFIGMAP_NAME,
-            config_map=kubernetes.client.V1ConfigMapVolumeSource(
-                name=PRIVATE_CA_CONFIGMAP_NAME,
-                items=[kubernetes.client.V1KeyToPath(key=PRIVATE_CA_FILENAME, path="ca-certificates.crt")],
+            name=CA_SECRET_NAME,
+            secret=kubernetes.client.V1SecretVolumeSource(
+                name=CA_SECRET_NAME,
             ),
         )
         volumes.append(private_ca_volume)
@@ -289,7 +287,7 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         volume_mounts.append(docker_config)
 
     if PRIVATE_CA_ENABLED:
-        docker_config = kubernetes.client.V1VolumeMount(name=PRIVATE_CA_CONFIGMAP_NAME, mount_path="/kaniko/ssl/certs")
+        docker_config = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
         volume_mounts.append(docker_config)
 
     return kubernetes.client.V1Container(

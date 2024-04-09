@@ -146,10 +146,6 @@ spec:
             {{- if .Values.privateCa.enabled }}
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
-            - name: PRIVATE_CA_CONFIGMAP_NAME
-              value: {{ .Values.privateCa.configMap.name }}
-            - name: PRIVATE_CA_FILENAME
-              value: {{ .Values.privateCa.configMap.fileName }}
             {{- end }}
             - name: NAMESPACE
               valueFrom:
