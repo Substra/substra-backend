@@ -1,9 +1,11 @@
 import enum
 import time
+from pathlib import Path
 
 import kubernetes
 import structlog
 from django.conf import settings
+from rest_framework import status
 
 from builder.exceptions import PodError
 from builder.exceptions import PodTimeoutError
@@ -12,6 +14,7 @@ from substrapp.utils import timeit
 logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
+CA_SECRET_NAME = "ca-certificates"  # nosec B105
 
 
 class ObjectState(enum.Enum):
@@ -188,3 +191,20 @@ def _get_container_state(container_status: kubernetes.client.V1ContainerStatus) 
     if container_status.state.waiting:
         return ObjectState.WAITING
     return ObjectState.UNKNOWN
+
+
+def create_replace_private_ca_secret(k8s_client: kubernetes.client.CoreV1Api):
+    cert_file = Path("/etc/ssl/certs/ca-certificates.crt")
+
+    with cert_file.open() as f:
+        secret_content = {cert_file.name: f.read()}
+
+    metadata = {"name": CA_SECRET_NAME, "namespace": NAMESPACE}
+    body = kubernetes.client.V1Secret(string_data=secret_content, metadata=metadata)
+    try:
+        k8s_client.create_namespaced_secret(namespace=NAMESPACE, body=body)
+    except kubernetes.client.exceptions.ApiException as e:
+        if e.status == status.HTTP_409_CONFLICT:
+            k8s_client.replace_namespaced_secret(name=CA_SECRET_NAME, namespace=NAMESPACE, body=body)
+            return
+        raise e
