@@ -1,9 +1,11 @@
 import enum
 import time
+from pathlib import Path
 
 import kubernetes
 import structlog
 from django.conf import settings
+from rest_framework import status
 
 from substrapp.exceptions import KubernetesError
 from substrapp.exceptions import PodDeletedError
@@ -15,6 +17,7 @@ from substrapp.utils import timeit
 logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
+CA_SECRET_NAME = "ca-certificates"  # nosec B105
 HTTP_CLIENT_TIMEOUT_SECONDS = settings.HTTP_CLIENT_TIMEOUT_SECONDS
 RUN_AS_GROUP = settings.COMPUTE_POD_RUN_AS_GROUP
 RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
@@ -358,3 +361,20 @@ def execute(pod_name: str, command: list[str]):
         tty=False,
         _preload_content=False,
     )
+
+
+def create_replace_private_ca_secret(k8s_client: kubernetes.client.CoreV1Api):
+    cert_file = Path("/etc/ssl/certs/ca-certificates.crt")
+
+    with cert_file.open() as f:
+        secret_content = {cert_file.name: f.read()}
+
+    metadata = {"name": CA_SECRET_NAME, "namespace": NAMESPACE}
+    body = kubernetes.client.V1Secret(string_data=secret_content, metadata=metadata)
+    try:
+        k8s_client.create_namespaced_secret(namespace=NAMESPACE, body=body)
+    except kubernetes.client.exceptions.ApiException as e:
+        if e.status == status.HTTP_409_CONFLICT:
+            k8s_client.replace_namespaced_secret(name=CA_SECRET_NAME, namespace=NAMESPACE, body=body)
+            return
+        raise e
