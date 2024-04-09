@@ -213,6 +213,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `builder.persistence.storageClass`      | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                      |
 | `builder.persistence.size`              | The size of the volume.                                                                                                                            | `10Gi`                    |
 | `builder.rbac.create`                   | Create a role and service account for the builder                                                                                                  | `true`                    |
+| `builder.serviceAccount.create`         | Create a service account for the builder                                                                                                           | `true`                    |
+| `builder.serviceAccount.name`           | The name of the ServiceAccount to use. If not set and create is true, a name is generated using the substra.fullname template                      | `""`                      |
 
 ### Substra container registry settings
 
