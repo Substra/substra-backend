@@ -1,6 +1,12 @@
 # Changelog
 
-## [22.5.1-patch.2] - 2024-04-05
+## [22.5.1-patch.3] - 2024-04-10
+
+### Changed
+
+- Update substra-backend image tag to `0.38.3`
+
+## [22.5.1-patch.2] - 2024-04-09
 
 ### Changed
 
