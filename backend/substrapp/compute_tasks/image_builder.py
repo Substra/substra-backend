@@ -233,7 +233,7 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
         private_ca_volume = kubernetes.client.V1Volume(
             name=CA_SECRET_NAME,
             secret=kubernetes.client.V1SecretVolumeSource(
-                name=CA_SECRET_NAME,
+                secret_name=CA_SECRET_NAME,
             ),
         )
         volumes.append(private_ca_volume)
@@ -287,8 +287,8 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         volume_mounts.append(docker_config)
 
     if PRIVATE_CA_ENABLED:
-        docker_config = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
-        volume_mounts.append(docker_config)
+        certs_mount = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
+        volume_mounts.append(certs_mount)
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,
