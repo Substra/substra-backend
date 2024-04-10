@@ -66,7 +66,6 @@ logger = structlog.get_logger(__name__)
 
 
 class ComputeTaskSteps(enum.Enum):
-    BUILD_IMAGE = "build_image"
     PREPARE_INPUTS = "prepare_inputs"
     DOWNLOAD_FUNCTION = "download_function"
     TASK_EXECUTION = "task_execution"
@@ -195,12 +194,6 @@ def _run(
         init_asset_buffer()
         init_compute_plan_dirs(dirs)
         init_task_dirs(dirs)
-
-        # start build_image timer
-        timer.start()
-
-        # stop build_image timer
-        _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.BUILD_IMAGE, timer.stop())
 
         with acquire_compute_plan_lock(compute_plan_key):
             # Check the task/cp status again, as the task/cp may not be in a runnable state anymore

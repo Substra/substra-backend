@@ -213,7 +213,7 @@ def test_create_task_profiling_step_update(mock_retry: MagicMock, mocker: Mocker
     params = {
         "channel_name": CHANNEL,
         "compute_task_key": "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f",
-        "field": tasks_compute_task.ComputeTaskSteps.BUILD_IMAGE,
+        "field": tasks_compute_task.ComputeTaskSteps.PREPARE_INPUTS,
         "duration": datetime.timedelta(seconds=20),
     }
 
