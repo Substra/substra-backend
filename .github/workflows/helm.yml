@@ -11,8 +11,14 @@ on:
       - "main"
     paths:
       - "charts/**"
-      - ".github/workflows/helm.yml"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      publish-alpha:
+        description: |
+          Publish alpha chart. Chart version must be X.Y.Z-alpha.N.
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
@@ -24,3 +30,4 @@ jobs:
       secrets: inherit
       with:
         helm-repositories: '[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"},{"name": "std-helm", "url": "https://charts.helm.sh/stable"},{"name": "twumi", "url": "https://helm.twun.io"},{"name": "localstack", "url": "https://localstack.github.io/helm-charts"}]'
+        publish-alpha: ${{ inputs.publish-alpha == true }}
