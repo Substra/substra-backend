@@ -233,7 +233,7 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
         private_ca_volume = kubernetes.client.V1Volume(
             name=CA_SECRET_NAME,
             secret=kubernetes.client.V1SecretVolumeSource(
-                name=CA_SECRET_NAME,
+                secret_name=CA_SECRET_NAME,
             ),
         )
         volumes.append(private_ca_volume)
