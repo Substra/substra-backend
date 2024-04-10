@@ -6,14 +6,14 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
     && apt-get install --no-install-recommends -y software-properties-common \
-    && apt-get --no-install-recommends -y install python3.11 python3-pip gcc python3-dev python3-watchdog celery \
-    && rm -rf /var/lib/apt/lists/* \
-    && alias python=python3
+    && apt-get --no-install-recommends -y install python3-pip gcc python3.11-dev python3-watchdog celery python-is-python3 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
-RUN pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
+
+RUN pip3 install --prefix /usr --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
@@ -32,7 +32,7 @@ FROM build AS arm64
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # libpq is a required dependency to build psycopg2 from source (support for arm64 platform)
     libpq-dev
-RUN pip3 install --prefix /usr/local --no-cache-dir psycopg2==2.9.9
+RUN pip3 install --prefix /usr --no-cache-dir psycopg2==2.9.9
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
@@ -46,7 +46,7 @@ USER ${USER_ID}:${GROUP_ID}
 FROM build AS dev
 
 COPY ./backend/dev-requirements.txt /usr/src/app/.
-RUN pip3 install --prefix /usr/local --no-cache-dir -r dev-requirements.txt
+RUN pip3 install --prefix /usr --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
 FROM ubuntu:23.10
@@ -58,8 +58,9 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV GRPC_POLL_STRATEGY=epoll1
 
-COPY --from=build /usr/local/lib/python3.11/ /usr/local/lib/python3.11/
-COPY --from=build /usr/local/bin/ /usr/local/bin/
+COPY --from=build /usr/lib/python3/ /usr/lib/python3/
+COPY --from=build /usr/bin/ /usr/bin/
+COPY --from=build /lib/ /lib/
 COPY --from=build /usr/src/app /usr/src/app
 
 RUN find /usr/src/app -type d -name tests -prune -exec rm -rf {} \;
