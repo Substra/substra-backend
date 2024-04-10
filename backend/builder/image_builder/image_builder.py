@@ -296,8 +296,8 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         volume_mounts.append(docker_config)
 
     if PRIVATE_CA_ENABLED:
-        docker_config = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
-        volume_mounts.append(docker_config)
+        cert_mount = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
+        volume_mounts.append(cert_mount)
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,
