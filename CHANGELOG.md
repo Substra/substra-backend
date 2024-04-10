@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.4](https://github.com/Substra/substra-backend/releases/tag/0.38.4) 2024-04-10
+
+### Fixed
+
+- Create secret for Kaniko CA ([#885](https://github.com/Substra/substra-backend/pull/885))
+
 ## [0.38.3](https://github.com/Substra/substra-backend/releases/tag/0.38.3) 2024-04-10
 
 ### Fixed
