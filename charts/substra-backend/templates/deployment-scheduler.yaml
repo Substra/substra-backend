@@ -37,6 +37,9 @@ spec:
       {{- end }}
       {{- if .Values.scheduler.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.scheduler.podSecurityContext.fsGroup }}
         runAsGroup: {{ .Values.scheduler.podSecurityContext.runAsGroup }}
         runAsUser: {{ .Values.scheduler.podSecurityContext.runAsUser }}
@@ -45,6 +48,13 @@ spec:
         - name: scheduler
           image: {{ include "substra-backend.images.name" (dict "img" .Values.scheduler.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.scheduler.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           command: ["/bin/bash"]
           args: ["-c", "celery -A backend beat -l debug --schedule /var/substra/runtime-db/celerybeat-scheduler"]
           envFrom:

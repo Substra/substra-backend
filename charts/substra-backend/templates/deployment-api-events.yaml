@@ -35,6 +35,9 @@ spec:
       {{- end }}
       {{- if .Values.api.events.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.api.events.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.api.events.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.api.events.podSecurityContext.runAsGroup }}
@@ -46,6 +49,13 @@ spec:
           imagePullPolicy: {{ .Values.api.events.image.pullPolicy }}
           resources:
             {{- toYaml .Values.api.events.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]

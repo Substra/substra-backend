@@ -53,6 +53,9 @@ spec:
     spec:
       {{- if .Values.builder.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.builder.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.builder.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.builder.podSecurityContext.runAsGroup }}
@@ -70,6 +73,7 @@ spec:
         imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
         securityContext:
           runAsUser: 0
+          runAsNonRoot: false
         command: ['sh', '-c']
         args:
         - |
@@ -88,6 +92,13 @@ spec:
       {{- include "common.waitMinIOContainer" . | nindent 6 }}
       {{- if .Values.kaniko.cache.warmer.cachedImages }}
       - name: kaniko-cache-warmer
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         image: {{ include "common.images.name" .Values.kaniko.cache.warmer.image }}
         args:
         - "--cache-dir=/cache"
@@ -108,6 +119,13 @@ spec:
       - name: builder
         image: {{ include "substra-backend.images.name" (dict "img" .Values.builder.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: "{{ .Values.builder.image.pullPolicy }}"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         command: ["/bin/bash", "-c"]
         {{- if eq .Values.settings "prod" }}
         args: ["celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.builder,{{ .Values.organizationName }}.builder-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast --hostname {{ .Values.organizationName }}.builder-${HOSTNAME##*-}"]

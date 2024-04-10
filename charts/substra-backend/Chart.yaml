@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://github.com/Substra
-version: 26.6.7
+version: 26.6.8-alpha.1
 appVersion: 0.46.0
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
@@ -16,22 +16,22 @@ dependencies:
   - name: redis
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
-    version: 18.17.0
+    version: 19.5.0
   - name: common
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled,postgresql.enabled,minio.enabled
     version: 2.16.1
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 13.1.2
+    version: 15.4.1
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
-    version: 2.2.2
+    version: 2.2.3
     condition: docker-registry.enabled
   - name: minio
     repository: https://charts.bitnami.com/bitnami
-    version: 12.8.12
+    version: 14.6.1
     condition: minio.enabled
   - name: localstack
     repository: https://localstack.github.io/helm-charts

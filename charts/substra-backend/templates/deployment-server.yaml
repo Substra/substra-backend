@@ -36,6 +36,9 @@ spec:
     spec:
       {{- if .Values.server.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.server.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
@@ -47,6 +50,13 @@ spec:
       containers:
       - name: server
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
         command: ["/bin/bash"]
         {{- if eq .Values.settings "prod" }}
@@ -153,6 +163,13 @@ spec:
       - name: metrics-sidecar
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.metrics.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: {{ .Values.server.metrics.image.pullPolicy }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         command: ["/bin/bash"]
         args:
           - "-c"
@@ -180,6 +197,13 @@ spec:
       - name: init-collectstatic
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
@@ -195,6 +219,13 @@ spec:
       - name: init-migrate
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         command: ['python', 'manage.py', 'migrate']
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator

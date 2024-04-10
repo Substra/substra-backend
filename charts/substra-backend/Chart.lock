@@ -1,21 +1,21 @@
 dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
-  version: 18.17.0
+  version: 19.5.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
   version: 2.16.1
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 13.1.2
+  version: 15.4.1
 - name: docker-registry
   repository: https://helm.twun.io
-  version: 2.2.2
+  version: 2.2.3
 - name: minio
   repository: https://charts.bitnami.com/bitnami
-  version: 12.8.12
+  version: 14.6.1
 - name: localstack
   repository: https://localstack.github.io/helm-charts
   version: 0.6.9
-digest: sha256:42c8f0dba9b2ab0b04533af995c5fb55fdb424fec68f9ce93ff697d861e84ac6
-generated: "2024-03-01T14:53:20.819977+01:00"
+digest: sha256:741c436098dd91e19b57ab423a3cf6befff017c76914af997c74b2c236064534
+generated: "2024-05-28T11:12:51.479028+02:00"
