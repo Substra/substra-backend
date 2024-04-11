@@ -19,6 +19,7 @@ import google.protobuf.timestamp_pb2
 import model_pb2
 import organization_pb2
 import performance_pb2
+import profiling_pb2
 import sys
 import typing
 
@@ -88,6 +89,7 @@ class Event(google.protobuf.message.Message):
     ORGANIZATION_FIELD_NUMBER: builtins.int
     PERFORMANCE_FIELD_NUMBER: builtins.int
     COMPUTE_TASK_OUTPUT_ASSET_FIELD_NUMBER: builtins.int
+    PROFILING_STEP_FIELD_NUMBER: builtins.int
     METADATA_FIELD_NUMBER: builtins.int
     id: builtins.str
     asset_key: builtins.str
@@ -117,6 +119,8 @@ class Event(google.protobuf.message.Message):
     @property
     def compute_task_output_asset(self) -> computetask_pb2.ComputeTaskOutputAsset: ...
     @property
+    def profiling_step(self) -> profiling_pb2.ProfilingStep: ...
+    @property
     def metadata(self) -> google.protobuf.internal.containers.ScalarMap[builtins.str, builtins.str]: ...
     def __init__(
         self,
@@ -137,11 +141,12 @@ class Event(google.protobuf.message.Message):
         organization: organization_pb2.Organization | None = ...,
         performance: performance_pb2.Performance | None = ...,
         compute_task_output_asset: computetask_pb2.ComputeTaskOutputAsset | None = ...,
+        profiling_step: profiling_pb2.ProfilingStep | None = ...,
         metadata: collections.abc.Mapping[builtins.str, builtins.str] | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["asset", b"asset", "compute_plan", b"compute_plan", "compute_task", b"compute_task", "compute_task_output_asset", b"compute_task_output_asset", "data_manager", b"data_manager", "data_sample", b"data_sample", "failure_report", b"failure_report", "function", b"function", "model", b"model", "organization", b"organization", "performance", b"performance", "timestamp", b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["asset", b"asset", "asset_key", b"asset_key", "asset_kind", b"asset_kind", "channel", b"channel", "compute_plan", b"compute_plan", "compute_task", b"compute_task", "compute_task_output_asset", b"compute_task_output_asset", "data_manager", b"data_manager", "data_sample", b"data_sample", "event_kind", b"event_kind", "failure_report", b"failure_report", "function", b"function", "id", b"id", "metadata", b"metadata", "model", b"model", "organization", b"organization", "performance", b"performance", "timestamp", b"timestamp"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["asset", b"asset"]) -> typing_extensions.Literal["function", "compute_plan", "compute_task", "data_manager", "data_sample", "failure_report", "model", "organization", "performance", "compute_task_output_asset"] | None: ...
+    def HasField(self, field_name: typing_extensions.Literal["asset", b"asset", "compute_plan", b"compute_plan", "compute_task", b"compute_task", "compute_task_output_asset", b"compute_task_output_asset", "data_manager", b"data_manager", "data_sample", b"data_sample", "failure_report", b"failure_report", "function", b"function", "model", b"model", "organization", b"organization", "performance", b"performance", "profiling_step", b"profiling_step", "timestamp", b"timestamp"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["asset", b"asset", "asset_key", b"asset_key", "asset_kind", b"asset_kind", "channel", b"channel", "compute_plan", b"compute_plan", "compute_task", b"compute_task", "compute_task_output_asset", b"compute_task_output_asset", "data_manager", b"data_manager", "data_sample", b"data_sample", "event_kind", b"event_kind", "failure_report", b"failure_report", "function", b"function", "id", b"id", "metadata", b"metadata", "model", b"model", "organization", b"organization", "performance", b"performance", "profiling_step", b"profiling_step", "timestamp", b"timestamp"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["asset", b"asset"]) -> typing_extensions.Literal["function", "compute_plan", "compute_task", "data_manager", "data_sample", "failure_report", "model", "organization", "performance", "compute_task_output_asset", "profiling_step"] | None: ...
 
 global___Event = Event
 
