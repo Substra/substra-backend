@@ -1,0 +1,4 @@
+Propagate function profiling step through the orchestrator
+  - Create `FunctionProfilingStep` model in the API
+  - Create `FunctionProfilingStep` in orchestrator.resources` representing the different profiling step for the function
+  - Save in the local DB when receive the event `ASSET_PROFILING_STEP`
