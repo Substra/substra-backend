@@ -14,6 +14,7 @@ import kubernetes
 import structlog
 from django.conf import settings
 
+from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks import image_builder
@@ -39,7 +40,6 @@ from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
 from substrapp.models import ImageEntrypoint
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)

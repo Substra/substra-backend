@@ -10,7 +10,6 @@ from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import context
 from substrapp.compute_tasks import directories
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_hash
 from substrapp.utils import retry
 
@@ -39,7 +38,7 @@ class OutputSaver:
 
     def _save_performance(self, output: context.OutputResource):
         logger.info("saving performances")
-        with get_orchestrator_client(self._ctx.channel_name) as client:
+        with orchestrator.get_orchestrator_client(self._ctx.channel_name) as client:
             perf_path = os.path.join(self._ctx.directories.task_dir, output.rel_path)
             perf = _get_perf(perf_path)
             performance_obj = {
@@ -60,7 +59,7 @@ class OutputSaver:
 
         # Register models in the orchestrator
         try:
-            with get_orchestrator_client(self._ctx.channel_name) as client:
+            with orchestrator.get_orchestrator_client(self._ctx.channel_name) as client:
                 registered_models = client.register_models({"models": new_models})
         except Exception as exc:
             for model in new_models:

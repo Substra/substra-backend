@@ -3,7 +3,6 @@ from django.conf import settings
 
 import orchestrator
 from substrapp.models import FailedAssetKind
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import FailableTask
 
 logger = structlog.get_logger("builder")
@@ -28,7 +27,7 @@ class BuildTask(FailableTask):
     # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def before_start(self, task_id: str, args: tuple, kwargs: dict) -> None:
         function_key, channel_name = self.get_task_info(args, kwargs)
-        with get_orchestrator_client(channel_name) as client:
+        with orchestrator.get_orchestrator_client(channel_name) as client:
             client.update_function_status(
                 function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_BUILDING
             )

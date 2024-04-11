@@ -15,13 +15,13 @@ import orchestrator
 from api.models import Function as ApiFunction
 from backend.celery import app
 from builder.exceptions import BuildRetryError
+from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.errors import CeleryNoRetryError
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.models import FailedAssetKind
 from substrapp.models import FunctionImage
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import FailableTask
 
 REGISTRY = settings.REGISTRY

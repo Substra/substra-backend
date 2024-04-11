@@ -10,7 +10,7 @@ from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.permissions import IsAuthorized
 from libs.user_login_throttle import UserLoginThrottle
-from substrapp.orchestrator import get_orchestrator_client
+from orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 from users.models.token import BearerToken
 from users.models.token import ImplicitBearerToken

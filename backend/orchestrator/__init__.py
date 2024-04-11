@@ -1,5 +1,6 @@
 from .client import OrcError
 from .client import OrchestratorClient as Client
+from .client import get_orchestrator_client
 from .resources import Address
 from .resources import AssetKind
 from .resources import ComputePlan
@@ -40,4 +41,5 @@ __all__ = (
     "FunctionInput",
     "FunctionOutput",
     "FunctionStatus",
+    "get_orchestrator_client",
 )

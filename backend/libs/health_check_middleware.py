@@ -3,7 +3,7 @@ from django.conf import settings
 from django.http import HttpResponse
 
 from api.models import ChannelOrganization as ChannelOrganizationRep
-from substrapp.orchestrator import get_orchestrator_client
+from orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 

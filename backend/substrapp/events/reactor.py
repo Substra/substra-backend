@@ -11,11 +11,11 @@ import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from builder.tasks.tasks_build_image import build_image
 from orchestrator import function_pb2
+from orchestrator import get_orchestrator_client
 from orchestrator import model_pb2
 from substrapp.events import handler_compute_engine
 from substrapp.events import health
 from substrapp.models import WorkerLastEvent
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import get_builder_queue
 from substrapp.task_routing import get_generic_worker_queue
 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images

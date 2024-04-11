@@ -4,7 +4,7 @@ import structlog
 
 import orchestrator
 from backend.celery import app
-from substrapp.orchestrator import get_orchestrator_client
+from orchestrator import get_orchestrator_client
 
 OutputIdentifier = str
 TaskKey = str

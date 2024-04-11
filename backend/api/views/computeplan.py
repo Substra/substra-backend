@@ -29,7 +29,7 @@ from api.views.utils import get_channel_name
 from api.views.utils import to_string_uuid
 from api.views.utils import validate_metadata
 from libs.pagination import SmallPageNumberPagination
-from substrapp.orchestrator import get_orchestrator_client
+from orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 
