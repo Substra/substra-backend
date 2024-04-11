@@ -11,7 +11,6 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
-import enum
 import pickle  # nosec B403
 from typing import Any
 
@@ -50,13 +49,6 @@ class FailableTask(Task):
 
     def get_task_info(self, args: tuple, kwargs: dict) -> tuple[str, str]:
         raise NotImplementedError()
-
-
-class ComputeTaskSteps(enum.Enum):
-    BUILD_IMAGE = "build_image"
-    PREPARE_INPUTS = "prepare_inputs"
-    TASK_EXECUTION = "task_execution"
-    SAVE_OUTPUTS = "save_outputs"
 
 
 class ComputeTask(FailableTask):
