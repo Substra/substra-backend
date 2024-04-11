@@ -1,3 +1,4 @@
+import datetime
 import time
 from copy import deepcopy
 from functools import wraps
@@ -6,6 +7,7 @@ from typing import Generator
 import grpc
 import structlog
 from django.conf import settings
+from django.utils.duration import duration_microseconds
 from google.protobuf.json_format import MessageToDict
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
@@ -19,6 +21,7 @@ import orchestrator.info_pb2 as info_pb2
 import orchestrator.model_pb2 as model_pb2
 import orchestrator.organization_pb2 as organization_pb2
 import orchestrator.performance_pb2 as performance_pb2
+import orchestrator.profiling_pb2 as profiling_pb2
 from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
 from orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
 from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
@@ -32,6 +35,7 @@ from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.organization_pb2_grpc import OrganizationServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.profiling_pb2_grpc import ProfilingServiceStub
 from orchestrator.resources import TAG_KEY
 from orchestrator.resources import ComputePlan
 from orchestrator.resources import ComputeTask
@@ -167,6 +171,7 @@ class OrchestratorClient:
         self._computetask_client = ComputeTaskServiceStub(self.grpc_channel)
         self._computeplan_client = ComputePlanServiceStub(self.grpc_channel)
         self._model_client = ModelServiceStub(self.grpc_channel)
+        self._profiling_client = ProfilingServiceStub(self.grpc_channel)
         self._performance_client = PerformanceServiceStub(self.grpc_channel)
         self._event_client = EventServiceStub(self.grpc_channel)
         self._info_client = InfoServiceStub(self.grpc_channel)
@@ -414,6 +419,13 @@ class OrchestratorClient:
             metadata=self._metadata,
         )
         return [ComputeTaskInputAsset.from_grpc(asset) for asset in assets.assets]
+
+    @grpc_retry
+    def register_profiling_step(self, duration: datetime.timedelta, asset_key: str, step: str) -> None:
+        duration_micros = duration_microseconds(duration)
+        profiling_step = profiling_pb2.ProfilingStep(asset_key=asset_key, duration=duration_micros, step=step)
+
+        self._profiling_client.RegisterProfilingStep(profiling_step, metadata=self._metadata)
 
 
 def get_orchestrator_client(channel_name: str = None) -> OrchestratorClient:

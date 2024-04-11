@@ -7,6 +7,7 @@ from builder.exceptions import BuildRetryError
 from builder.exceptions import CeleryNoRetryError
 from builder.image_builder import image_builder
 from builder.tasks.task import BuildTask
+from substrapp.utils import Timer
 
 logger = structlog.get_logger(__name__)
 
@@ -20,12 +21,18 @@ logger = structlog.get_logger(__name__)
 # and https://github.com/celery/celery/issues/5106
 def build_image(task: BuildTask, function_serialized: str, channel_name: str) -> None:
     function = orchestrator.Function.model_validate_json(function_serialized)
-
+    timer = Timer()
     attempt = 0
     while attempt <= task.max_retries:
         try:
-            # TODO refactor
+            timer.start()
+
             image_builder.build_image_if_missing(channel_name, function)
+
+            with orchestrator.get_orchestrator_client(channel_name) as client:
+                client.register_profiling_step(
+                    asset_key=function.key, duration=timer.stop(), step=orchestrator.FunctionProfilingStep.BUILD_IMAGE
+                )
         except BuildRetryError as e:
             logger.info(
                 "Retrying build",
