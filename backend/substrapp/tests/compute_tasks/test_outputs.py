@@ -84,7 +84,7 @@ def test_save_model(settings, mocker: MockerFixture, orc_raise: bool):
         client.register_models.return_value = []
 
     add_model_from_path = mocker.patch("substrapp.compute_tasks.outputs.add_model_from_path")
-    mocker.patch("substrapp.compute_tasks.outputs.get_orchestrator_client", return_value=client)
+    mocker.patch("substrapp.compute_tasks.outputs.orchestrator.get_orchestrator_client", return_value=client)
     organization_client_post = mocker.patch("substrapp.compute_tasks.outputs.organization_client.post")
 
     try:
