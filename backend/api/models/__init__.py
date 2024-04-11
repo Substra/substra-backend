@@ -13,6 +13,7 @@ from .function import FunctionOutput
 from .model import Model
 from .organization import ChannelOrganization
 from .performance import Performance
+from .task_profiling import FunctionProfilingStep
 from .task_profiling import ProfilingStep
 from .task_profiling import TaskProfiling
 
@@ -20,6 +21,7 @@ __all__ = [
     "Function",
     "FunctionInput",
     "FunctionOutput",
+    "FunctionProfilingStep",
     "ComputePlan",
     "ComputeTask",
     "ComputeTaskOutput",

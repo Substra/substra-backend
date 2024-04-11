@@ -14,6 +14,7 @@ from .resources import DataSample
 from .resources import Function
 from .resources import FunctionInput
 from .resources import FunctionOutput
+from .resources import FunctionProfilingStep
 from .resources import FunctionStatus
 from .resources import InvalidInputAsset
 from .resources import Model
@@ -40,6 +41,7 @@ __all__ = (
     "OrcError",
     "FunctionInput",
     "FunctionOutput",
+    "FunctionProfilingStep",
     "FunctionStatus",
     "get_orchestrator_client",
 )
