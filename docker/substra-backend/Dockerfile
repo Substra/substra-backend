@@ -72,6 +72,7 @@ RUN find /usr/src/app -type d -name tests -prune -exec rm -rf {} \;
 WORKDIR /usr/src/app
 
 RUN mkdir -p /var/substra/ /tmp/django_cache \
-    && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
+    && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache \
+    && rm -rf /usr/lib/python3/dist-packages
 
 USER ${USER_ID}:${GROUP_ID}
