@@ -27,7 +27,7 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
         queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
     )
     task_duration = serializers.SerializerMethodField()
-    execution_rundown = ProfilingStepSerializer(many=True, required=False)
+    execution_rundown = serializers.SerializerMethodField("get_steps")
 
     class Meta:
         model = TaskProfiling
@@ -43,3 +43,10 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
             return duration_microseconds(duration)
         else:
             return None
+
+    # Had to add a function for excluding steps that should not be displayed from previous measurement because
+    # nested fields does not use `get_queryset` as defined in their models
+    def get_steps(self, task_profiling):
+        steps = ProfilingStep.objects.filter(compute_task_profile=task_profiling).exclude(step="build_image")
+        serializer = ProfilingStepSerializer(instance=steps, many=True, required=False)
+        return serializer.data
