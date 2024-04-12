@@ -67,7 +67,6 @@ def get_request_docker_api(
         f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{path}",
         headers=headers,
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-        verify=False,  # nosec B501
     )
 
     response.raise_for_status()

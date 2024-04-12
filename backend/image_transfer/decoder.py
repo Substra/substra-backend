@@ -56,7 +56,7 @@ def push_payload(
     """
     authenticator = Authenticator()
 
-    with DXFBase(host=registry, auth=authenticator.auth, tlsverify=False, insecure=not secure) as dxf_base:
+    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(load_zip_images_in_registry(dxf_base, zip_file, strict))
 
