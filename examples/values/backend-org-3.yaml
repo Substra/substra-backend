@@ -96,7 +96,7 @@ hooks:
 
 privateCa:
   enabled: true
-  configMap:
+  secret:
     name: orchestrator-tls-cacert
     fileName: ca.crt
 

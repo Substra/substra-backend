@@ -68,9 +68,9 @@ spec:
           {{- end }}
           update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
         volumeMounts:
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.secret.fileName }}
             name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
+            subPath: {{ .Values.privateCa.secret.fileName }}
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
@@ -186,8 +186,8 @@ spec:
       - name: ssl-certs
         emptyDir: {}
       - name: private-ca
-        configMap:
-          name: {{ .Values.privateCa.configMap.name }}
+        secret:
+          secretName: {{ .Values.privateCa.secret.name }}
       {{- end }}
       {{ if .Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert

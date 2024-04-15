@@ -220,8 +220,8 @@ spec:
       - name: ssl-certs
         emptyDir: {}
       - name: private-ca
-        configMap:
-          name: {{ .Values.privateCa.configMap.name }}
+        secret:
+          secretName: {{ .Values.privateCa.secret.name }}
       {{- end }}
       {{ if .Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert

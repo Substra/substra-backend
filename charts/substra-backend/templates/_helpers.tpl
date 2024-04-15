@@ -283,9 +283,9 @@ The hostname we should connect to (external is defined, otherwise integrated)
     {{- end }}
     update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
   volumeMounts:
-    - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+    - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.secret.fileName }}
       name: private-ca
-      subPath: {{ .Values.privateCa.configMap.fileName }}
+      subPath: {{ .Values.privateCa.secret.fileName }}
     - mountPath: /tmp/certs/
       name: ssl-certs
 {{- end }}
