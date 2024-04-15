@@ -31,13 +31,14 @@ privateCa:
     ## Secrets must be created manually in the namespace.
     ##
     pullSecrets: []
-  ## @param privateCa.secret.name Name of the _ConfigMap_ containing the private CA certificate
-  ## @param privateCa.secret.data Certificate to add in the _ConfigMap_
-  ## @param privateCa.secret.fileName Certificate filename in the _ConfigMap_
+  ## @param privateCa.secret.name Name of the _Secret_ containing the private CA certificate
+  ## @param privateCa.secret.data Certificate to add in the _Secret_
+  ## @param privateCa.secret.fileName Certificate filename in the _Secret_
   secret:
     name: substra-private-ca
     data:
     fileName: private-ca.crt
+  
 
 ## @section Server settings
 ## @param server.replicaCount Number of server replicas
