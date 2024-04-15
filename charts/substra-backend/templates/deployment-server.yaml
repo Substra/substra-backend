@@ -225,8 +225,8 @@ spec:
       {{- end }}
       {{ if .Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert
-        configMap:
-          name: {{ .Values.orchestrator.tls.cacert }}
+        secret:
+          secretName: {{ .Values.orchestrator.tls.cacert }}
       {{ if .Values.orchestrator.tls.mtls.enabled }}
       - name: orchestrator-tls-client-pair
         secret:
