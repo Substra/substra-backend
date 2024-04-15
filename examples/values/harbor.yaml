@@ -19,3 +19,4 @@ nginx:
     https: 30046
   tls:
     commonName: registry.org-2.com
+    existingSecret:  harbor-registry-tls
