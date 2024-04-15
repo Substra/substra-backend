@@ -62,6 +62,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | bool | `TASK_CACHE_DOCKER_IMAGES` | `False` |  |
 | bool | `TASK_CHAINKEYS_ENABLED` | `False` |  |
 | bool | `TASK_LIST_WORKSPACE` | `True` |  |
+| string | `USER_IMAGE_REPOSITORY` | nil |  |
 | string | `WORKER_PVC_DOCKER_CACHE` | nil |  |
 | bool | `WORKER_PVC_IS_HOSTPATH` | nil |  |
 | string | `WORKER_PVC_SUBTUPLE` | nil |  |
