@@ -615,7 +615,7 @@ containerRegistry:
   scheme: http
   ## @param containerRegistry.userImageRepository Name of the repository where to push and pull user docker images
   ##
-  userImageRepository: substrafoundation/user-images
+  userImageRepository: substrafoundation/user-image
   ## @param containerRegistry.pullDomain Hostname from which the cluster should pull container images
   ##
   pullDomain: 127.0.0.1
