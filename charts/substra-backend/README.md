@@ -31,9 +31,9 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `privateCa.image.pullPolicy`     | Private CA injector pull policy                                                                                                                                                    | `IfNotPresent`                             |
 | `privateCa.image.pullSecrets`    | Specify image pull secrets                                                                                                                                                         | `[]`                                       |
 | `privateCa.image.registry`       | The registry to pull the CA Cert Injector image                                                                                                                                    | `ghcr.io`                                  |
-| `privateCa.configMap.name`       | Name of the _ConfigMap_ containing the private CA certificate                                                                                                                      | `substra-private-ca`                       |
-| `privateCa.configMap.data`       | Certificate to add in the _ConfigMap_                                                                                                                                              | `nil`                                      |
-| `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                                                                                                                                            | `private-ca.crt`                           |
+| `privateCa.secret.name`          | Name of the _Secret_ containing the private CA certificate                                                                                                                         | `substra-private-ca`                       |
+| `privateCa.secret.data`          | Certificate to add in the _Secret_                                                                                                                                                 | `nil`                                      |
+| `privateCa.secret.fileName`      | Certificate filename in the _Secret_                                                                                                                                               | `private-ca.crt`                           |
 
 ### Server settings
 

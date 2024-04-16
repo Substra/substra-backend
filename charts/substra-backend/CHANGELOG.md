@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## [26.0.0] - 2024-04-16
+
+### Changed
+
+- BREAKING: private ca are now defined in `privateCa.secret` instead of `privateCa.configMap`
+- `orchestrator-tls-cacert` is now stored as a secret
+
 
 ## [25.1.1] - 2024-04-09
 
