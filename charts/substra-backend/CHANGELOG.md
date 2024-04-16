@@ -2,6 +2,14 @@
 
 <!-- towncrier release notes start -->
 
+
+## [25.1.1] - 2024-04-09
+
+### Added
+
+-  Environment variable `PRIVATE_CA_ENABLED` in builder
+
+
 ## [25.1.0] - 2024-04-04
 
 ### Changed

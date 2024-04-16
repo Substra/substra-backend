@@ -12,6 +12,7 @@ from builder import docker
 from builder import exceptions
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
+from builder.kubernetes import CA_SECRET_NAME
 from builder.kubernetes import get_pod_logs
 from builder.kubernetes import pod_exists
 from builder.kubernetes import watch_pod
@@ -36,6 +37,7 @@ KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 KANIKO_DOCKER_CONFIG_VOLUME_NAME = "docker-config"
+PRIVATE_CA_ENABLED = settings.TASK["PRIVATE_CA_ENABLED"]
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 KANIKO_CONTAINER_NAME = "kaniko"
@@ -236,6 +238,15 @@ def _build_pod_spec(dockerfile_mount_path: str, image_tag: str) -> kubernetes.cl
         )
         volumes.append(docker_config)
 
+    if PRIVATE_CA_ENABLED:
+        private_ca_volume = kubernetes.client.V1Volume(
+            name=CA_SECRET_NAME,
+            secret=kubernetes.client.V1SecretVolumeSource(
+                secret_name=CA_SECRET_NAME,
+            ),
+        )
+        volumes.append(private_ca_volume)
+
     return kubernetes.client.V1PodSpec(
         restart_policy="Never", affinity=pod_affinity, containers=[container], volumes=volumes
     )
@@ -283,6 +294,10 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
             name=KANIKO_DOCKER_CONFIG_VOLUME_NAME, mount_path="/kaniko/.docker"
         )
         volume_mounts.append(docker_config)
+
+    if PRIVATE_CA_ENABLED:
+        cert_mount = kubernetes.client.V1VolumeMount(name=CA_SECRET_NAME, mount_path="/kaniko/ssl/certs")
+        volume_mounts.append(cert_mount)
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,

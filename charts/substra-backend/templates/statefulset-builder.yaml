@@ -94,7 +94,7 @@ spec:
           {{- end }}
       {{- end }}
       containers:
-      - name: builder 
+      - name: builder
         image: {{ include "substra-backend.images.name" (dict "img" .Values.builder.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: "{{ .Values.builder.image.pullPolicy }}"
         command: ["/bin/bash", "-c"]
@@ -142,6 +142,8 @@ spec:
             value: docker-cache
           - name: WORKER_PVC_SUBTUPLE
             value: subtuple
+          - name: PRIVATE_CA_ENABLED
+            value: {{ .Values.privateCa.enabled | quote }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
