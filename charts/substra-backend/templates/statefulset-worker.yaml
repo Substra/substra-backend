@@ -33,6 +33,7 @@ spec:
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/component: substra-worker
+        role-redis-client: 'true'
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
         checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
