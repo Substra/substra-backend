@@ -33,6 +33,7 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-builder
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/component: substra-builder
+        role-database-client: 'true'
         role-redis-client: 'true'
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
