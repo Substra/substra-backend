@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-database-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: primary
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: {{ template "substra.name" . }}
+          role-database-client: 'true'
+    ports:
+    - protocol: TCP
+      port: {{ .Values.database.port }}
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-database-egress
+spec:
+  podSelector:
+    matchLabels:
+          app.kubernetes.io/part-of: {{ template "substra.name" . }}
+          role-database-client: 'true'
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: primary
+          app.kubernetes.io/name: postgresql
+    ports:
+    - protocol: TCP
+      port: {{ .Values.database.port }}

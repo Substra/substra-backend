@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler-worker
+        role-database-client: 'true'
         role-redis-client: 'true'
         {{ include "substra.labels" . | nindent 8 }}
       annotations:

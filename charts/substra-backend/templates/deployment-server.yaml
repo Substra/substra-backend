@@ -17,6 +17,7 @@ spec:
       labels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         role-redis-client: 'true'
+        role-database-client: 'true'
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
