@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 import warnings
 from pathlib import Path
@@ -24,6 +25,8 @@ from image_transfer.common import get_repo_and_tag
 from image_transfer.common import progress_as_string
 from image_transfer.exceptions import ManifestNotFoundError
 from substrapp.utils import safezip
+
+USER_IMAGE_REPOSITORY = os.environ.get("USER_IMAGE_REPOSITORY")
 
 
 def push_payload(
@@ -62,7 +65,6 @@ def push_payload(
         to the function `image_transfer.make_payload(...)`.
     """
     authenticator = Authenticator(username, password)
-
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(load_zip_images_in_registry(dxf_base, zip_file, strict))
@@ -141,17 +143,21 @@ def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: safezip.ZipFile, st
         docker_image,
         manifest_path_in_zip,
     ) in payload_descriptor.manifests_paths.items():
+        # We only need the tag of the image, the repository is organization dependent.
+        _, tag = get_repo_and_tag(docker_image)
+        current_org_docker_image = f"{USER_IMAGE_REPOSITORY}:{tag}"
+
         if manifest_path_in_zip is None:
-            check_if_the_docker_image_is_in_the_registry(dxf_base, docker_image, strict)
+            check_if_the_docker_image_is_in_the_registry(dxf_base, current_org_docker_image, strict)
         else:
             load_single_image_from_zip_in_registry(
                 dxf_base,
                 zip_file,
-                docker_image,
+                current_org_docker_image,
                 manifest_path_in_zip,
                 payload_descriptor.blobs_paths,
             )
-        yield docker_image
+        yield current_org_docker_image
 
 
 def get_payload_descriptor(zip_file: safezip.ZipFile) -> PayloadDescriptor:

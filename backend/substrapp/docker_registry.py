@@ -54,34 +54,11 @@ def get_container_image(image_name: str) -> dict:
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
     )
     if response.status_code != requests.status_codes.codes.ok:
-        raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
+        raise ImageNotFoundError(
+            f"Error when querying {REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}, status code: {response.status_code}"
+        )
 
     return response.json()
-
-
-def get_container_images() -> list[dict]:
-    response = requests.get(
-        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog",
-        headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-        timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-    )
-
-    response.raise_for_status()
-    res = response.json()
-
-    for repository in res["repositories"]:
-        # get only user-image repo, images built by substra-backend
-        if repository == USER_IMAGE_REPOSITORY:
-            response = requests.get(
-                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list",
-                headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-                timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-            )
-
-            response.raise_for_status()
-            return response.json()
-
-    return None
 
 
 def run_garbage_collector() -> None:
