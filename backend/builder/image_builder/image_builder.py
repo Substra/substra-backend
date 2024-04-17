@@ -197,6 +197,7 @@ def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.
                 Label.PodName: pod_name,
                 Label.PodType: "image-build",
                 Label.Component: Label.Component_Compute,
+                Label.RoleRegistryClient: "true",
             },
         ),
         spec=pod_spec,

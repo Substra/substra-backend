@@ -22,6 +22,7 @@ class Label:
     ComputePlanKey = "substra.ai/compute-plan-key"
     FunctionKey = "substra.ai/function-key"
     RandomToken = "substra.ai/random-token"
+    RoleRegistryClient = "role-registry-client"
 
     # Values
     PodType_ComputeTask = "compute-task"
