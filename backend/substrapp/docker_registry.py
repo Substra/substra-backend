@@ -54,9 +54,7 @@ def get_container_image(image_name: str) -> dict:
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
     )
     if response.status_code != requests.status_codes.codes.ok:
-        raise ImageNotFoundError(
-            f"Error when querying {REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}, status code: {response.status_code}"
-        )
+        raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
 
     return response.json()
 
