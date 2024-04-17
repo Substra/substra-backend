@@ -36,6 +36,7 @@ spec:
         role-database-client: 'true'
         role-redis-client: 'true'
         role-registry-client: 'true'
+        role-storage-client: 'true'
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
         checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
