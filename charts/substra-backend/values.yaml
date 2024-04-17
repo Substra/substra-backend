@@ -630,7 +630,7 @@ containerRegistry:
   host: 127.0.0.1
   ## @param containerRegistry.port Port of the container registry
   ##
-  port: 32000
+  port: 5000
   ## @param containerRegistry.scheme Communication scheme of the container registry
   ##
   scheme: http
