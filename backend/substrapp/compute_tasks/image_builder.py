@@ -16,6 +16,7 @@ IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 IMAGE_BUILD_CHECK_DELAY = settings.IMAGE_BUILD_CHECK_DELAY
 REGISTRY = settings.REGISTRY
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
+USER_IMAGE_REPOSITORY = settings.USER_IMAGE_REPOSITORY
 
 
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
@@ -33,4 +34,4 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
         storage_path.write_bytes(function_image_content)
-        push_payload(storage_path, registry=REGISTRY, secure=False)
+        push_payload(storage_path, registry=REGISTRY, repository=USER_IMAGE_REPOSITORY, secure=False)
