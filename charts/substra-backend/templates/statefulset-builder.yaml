@@ -34,6 +34,7 @@ spec:
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/component: substra-builder
         role-database-client: 'true'
+        role-orchestrator-client: 'true'
         role-redis-client: 'true'
         role-registry-client: 'true'
         role-storage-client: 'true'
