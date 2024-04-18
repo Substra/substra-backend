@@ -23,6 +23,7 @@ from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.kubernetes_utils import delete_pod
+from substrapp.kubernetes_utils import get_resources_requirements
 from substrapp.kubernetes_utils import get_security_context
 from substrapp.lock_local import lock_resource
 from substrapp.utils import timeit
@@ -306,6 +307,7 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
         args=args,
         volume_mounts=volume_mounts,
         security_context=container_security_context,
+        resources=get_resources_requirements(cpu_request="1000m", memory_request="4Gi", memory_limit="32Gi"),
     )
 
 
