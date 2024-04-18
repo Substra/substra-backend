@@ -14,3 +14,4 @@ data:
   {{- end }}
   REGISTRY_SCHEME: {{ .Values.containerRegistry.scheme}}
   REGISTRY_PULL_DOMAIN: {{ .Values.containerRegistry.pullDomain}}
+  USER_IMAGE_REPOSITORY: {{ .Values.containerRegistry.userImageRepository}}

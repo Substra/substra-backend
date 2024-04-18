@@ -233,14 +233,15 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 ### Substra container registry settings
 
-| Name                            | Description                                                                                     | Value       |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- |
-| `containerRegistry.local`       | Whether the registry is exposed as a _nodePort_ and located in the same _Namespace_ as Substra. | `true`      |
-| `containerRegistry.host`        | Hostname of the container registry                                                              | `127.0.0.1` |
-| `containerRegistry.port`        | Port of the container registry                                                                  | `32000`     |
-| `containerRegistry.scheme`      | Communication scheme of the container registry                                                  | `http`      |
-| `containerRegistry.pullDomain`  | Hostname from which the cluster should pull container images                                    | `127.0.0.1` |
-| `containerRegistry.prepopulate` | Images to add to the container registry                                                         | `[]`        |
+| Name                                    | Description                                                                                     | Value                |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------- |
+| `containerRegistry.local`               | Whether the registry is exposed as a _nodePort_ and located in the same _Namespace_ as Substra. | `true`               |
+| `containerRegistry.host`                | Hostname of the container registry                                                              | `127.0.0.1`          |
+| `containerRegistry.port`                | Port of the container registry                                                                  | `32000`              |
+| `containerRegistry.scheme`              | Communication scheme of the container registry                                                  | `http`               |
+| `containerRegistry.userImageRepository` | Name of the repository where to push and pull user docker images                                | `substra/user-image` |
+| `containerRegistry.pullDomain`          | Hostname from which the cluster should pull container images                                    | `127.0.0.1`          |
+| `containerRegistry.prepopulate`         | Images to add to the container registry                                                         | `[]`                 |
 
 ### Api event app settings
 

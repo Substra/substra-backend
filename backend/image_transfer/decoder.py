@@ -31,6 +31,7 @@ def push_payload(
     strict: bool = False,
     registry: str = "registry-1.docker.io",
     secure: bool = True,
+    repository: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
 ) -> list[str]:
@@ -49,6 +50,7 @@ def push_payload(
         registry: the registry to push to. It defaults to `registry-1.docker.io` (dockerhub).
         secure: whether to use TLS (HTTPS) or not to connect to the registry,
             default is True.
+        repository: the repository to push the images to. Optional.
         username: the username to use to connect to the registry. Optional
             if the registry does not require authentication.
         password: the password to use to connect to the registry. Optional
@@ -65,7 +67,9 @@ def push_payload(
 
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
-            return list(load_zip_images_in_registry(dxf_base, zip_file, strict))
+            return list(
+                load_zip_images_in_registry(dxf_base=dxf_base, zip_file=zip_file, repository=repository, strict=strict)
+            )
 
 
 def push_all_blobs_from_manifest(
@@ -135,12 +139,20 @@ def check_if_the_docker_image_is_in_the_registry(dxf_base: DXFBase, docker_image
     print(f"Skipping {docker_image} as its already in the registry", file=sys.stderr)
 
 
-def load_zip_images_in_registry(dxf_base: DXFBase, zip_file: safezip.ZipFile, strict: bool) -> Iterator[str]:
+def load_zip_images_in_registry(
+    dxf_base: DXFBase, zip_file: safezip.ZipFile, strict: bool, repository: Optional[str] = None
+) -> Iterator[str]:
     payload_descriptor = get_payload_descriptor(zip_file)
     for (
         docker_image,
         manifest_path_in_zip,
     ) in payload_descriptor.manifests_paths.items():
+
+        if repository is not None:
+            # The repository depends on the organization registry.
+            _, tag = get_repo_and_tag(docker_image)
+            docker_image = f"{repository}:{tag}"
+
         if manifest_path_in_zip is None:
             check_if_the_docker_image_is_in_the_registry(dxf_base, docker_image, strict)
         else:

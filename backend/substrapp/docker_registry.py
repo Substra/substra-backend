@@ -17,7 +17,7 @@ NAMESPACE = settings.NAMESPACE
 REGISTRY_IS_LOCAL = settings.REGISTRY_IS_LOCAL
 REGISTRY_SERVICE_NAME = settings.REGISTRY_SERVICE_NAME
 HTTP_CLIENT_TIMEOUT_SECONDS = settings.HTTP_CLIENT_TIMEOUT_SECONDS
-USER_IMAGE_REPOSITORY = "substrafoundation/user-image"
+USER_IMAGE_REPOSITORY = settings.USER_IMAGE_REPOSITORY
 
 
 class ImageNotFoundError(Exception):
@@ -57,31 +57,6 @@ def get_container_image(image_name: str) -> dict:
         raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
 
     return response.json()
-
-
-def get_container_images() -> list[dict]:
-    response = requests.get(
-        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog",
-        headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-        timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-    )
-
-    response.raise_for_status()
-    res = response.json()
-
-    for repository in res["repositories"]:
-        # get only user-image repo, images built by substra-backend
-        if repository == USER_IMAGE_REPOSITORY:
-            response = requests.get(
-                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list",
-                headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
-                timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
-            )
-
-            response.raise_for_status()
-            return response.json()
-
-    return None
 
 
 def run_garbage_collector() -> None:
