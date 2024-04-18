@@ -47,6 +47,14 @@ def get_security_context(root: bool = False, capabilities: list[str] = None) -> 
     return security_context
 
 
+def get_resources_requirements(
+    *, cpu_request: str = "1000m", memory_request: str = "200M", memory_limit: str = "2G"
+) -> kubernetes.client.V1ResourceRequirements:
+    return kubernetes.client.V1ResourceRequirements(
+        requests={"cpu": cpu_request, "memory": memory_request}, limits={"memory": memory_limit}
+    )
+
+
 def pod_exists_by_label_selector(k8s_client: kubernetes.client.CoreV1Api, label_selector: str) -> bool:
     """Return True if the pod exists, else False.
 

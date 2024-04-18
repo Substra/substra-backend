@@ -41,6 +41,13 @@ spec:
         - name: worker-event-app
           image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.worker.events.image.pullPolicy }}
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "500m"
+            limits:
+              memory: "400Mi"
+              cpu: "500m"
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]
