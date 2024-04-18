@@ -2,13 +2,17 @@
 
 <!-- towncrier release notes start -->
 
+## [26.2.0] - 2024-04-16
+
+### Added
+
+- User docker registry in configurable through value in `containerRegistry.userImageRepository`
 
 ## [26.1.0] - 2024-04-17
 
 ### Added
 
 - Resources limits and requests (CPU and memory) for all containers.
-
 
 ## [26.0.0] - 2024-04-16
 
