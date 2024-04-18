@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-internet-ingress
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 192.168.0.0/16
+        - 172.16.0.0/20
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      role-internet-ingress: 'true'
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-internet-egress
+spec:
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 192.168.0.0/16
+        - 172.16.0.0/20
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      role-internet-egress: 'true'
+  policyTypes:
+  - Egress
