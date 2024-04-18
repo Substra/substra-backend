@@ -43,6 +43,7 @@ containerRegistry:
       sourceRegistry: ghcr.io
       dstImage: substra/substra-tools:latest
   userImageRepository: substra-user-images
+
 worker:
   concurrency: 3
 
