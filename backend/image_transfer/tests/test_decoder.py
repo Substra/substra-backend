@@ -52,6 +52,26 @@ def test_end_to_end_single_image(
 
 @pytest.mark.usefixtures("add_destination_registry")
 @pytest.mark.serial
+def test_end_to_end_single_image_different_repository(
+    tmp_path, ubuntu_base_image, base_registry_local_port, destination_registry_local_port
+):
+    payload_path = tmp_path / "payload.zip"
+    make_payload(
+        payload_path,
+        [ubuntu_base_image],
+        registry=f"localhost:{base_registry_local_port}",
+        secure=False,
+    )
+
+    images_pushed = push_payload(
+        payload_path, registry=f"localhost:{destination_registry_local_port}", secure=False, repository="custom_ubuntu"
+    )
+    expected_image = f"custom_ubuntu:{ubuntu_base_image.split(':',1)[1]}"
+    assert images_pushed == [expected_image]
+
+
+@pytest.mark.usefixtures("add_destination_registry")
+@pytest.mark.serial
 def test_end_to_end_multiple_images(
     tmp_path,
     docker_client,
