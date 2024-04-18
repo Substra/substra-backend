@@ -38,7 +38,7 @@ privateCa:
     name: substra-private-ca
     data:
     fileName: private-ca.crt
-  
+
 
 ## @section Server settings
 ## @param server.replicaCount Number of server replicas
@@ -615,7 +615,7 @@ containerRegistry:
   scheme: http
   ## @param containerRegistry.userImageRepository Name of the repository where to push and pull user docker images
   ##
-  userImageRepository: substrafoundation/user-image
+  userImageRepository: substra/user-image
   ## @param containerRegistry.pullDomain Hostname from which the cluster should pull container images
   ##
   pullDomain: 127.0.0.1
