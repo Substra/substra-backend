@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "substra.name" . }}-orchestrator-client-egress
+spec:
+  podSelector:
+    matchLabels:
+      role-orchestrator-client: 'true'
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: orchestrator
+          app.kubernetes.io/component: "server"
+    ports:
+    - protocol: TCP
+      port: {{ .Values.orchestrator.port }}
+
