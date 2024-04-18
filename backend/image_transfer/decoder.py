@@ -64,6 +64,7 @@ def push_payload(
         to the function `image_transfer.make_payload(...)`.
     """
     authenticator = Authenticator(username, password)
+
     with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(
@@ -146,9 +147,9 @@ def load_zip_images_in_registry(
         docker_image,
         manifest_path_in_zip,
     ) in payload_descriptor.manifests_paths.items():
-        # We only need the tag of the image, the repository is organization dependent.
 
         if repository is not None:
+            # The repository depends on the organization registry.
             _, tag = get_repo_and_tag(docker_image)
             docker_image = f"{repository}:{tag}"
 

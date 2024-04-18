@@ -248,6 +248,7 @@ def test_raise_error_if_image_is_not_here_and_strict(
 
     with pytest.raises(ManifestNotFoundError) as err:
         push_payload(payload_path, strict=True, registry=f"localhost:{destination_registry_local_port}", secure=False)
+
     assert tag_ubuntu_custom_image in str(err.value)
 
 
