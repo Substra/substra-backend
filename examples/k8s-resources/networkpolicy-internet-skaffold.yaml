@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: skaffold-local-ingress-allow-all
+spec:
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
