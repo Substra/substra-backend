@@ -33,7 +33,27 @@ spec:
         - 172.16.0.0/20
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      # Not filtering on substra.name as kaniko builder needs access too
+      role-internet-egress: 'true'
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-internet-builder-egress
+spec:
+  egress:
+  - to:
+    ports:
+      - protocol: TCP
+        port: 53
+      - protocol: UDP
+        port: 53
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: substra-compute
+      # Not filtering on substra.name as kaniko builder needs access too
       role-internet-egress: 'true'
   policyTypes:
   - Egress

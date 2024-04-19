@@ -198,6 +198,7 @@ def _build_pod(dockerfile_mount_path: str, image_tag: str) -> kubernetes.client.
                 Label.PodType: "image-build",
                 Label.Component: Label.Component_Compute,
                 Label.RoleRegistryClient: "true",
+                Label.RoleInternetEgress: "true",
             },
         ),
         spec=pod_spec,
@@ -304,6 +305,8 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,
+        # image="busybox",
+        # command=["sleep", "inf"],
         image=KANIKO_IMAGE,
         command=None,
         args=args,
