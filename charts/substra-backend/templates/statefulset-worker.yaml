@@ -33,6 +33,7 @@ spec:
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/component: substra-worker
+        role-api-k8s-client: 'true'
         role-database-client: 'true'
         role-server-client: 'true'
         role-orchestrator-client: 'true'
