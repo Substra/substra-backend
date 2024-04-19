@@ -10,15 +10,18 @@ spec:
   policyTypes:
     - Egress
   egress:
-    {{- range (lookup "v1" "Endpoints" "default" "kubernetes").subsets }}
-    - to:
-        {{- range .addresses }}
-        - ipBlock:
-            cidr: {{ .ip }}/32
-        {{- end }}
-      ports:
-        {{- range .ports }}
-        - protocol: {{ .protocol }}
-          port: {{ .port }}
-        {{- end }}
-    {{- end }}
+    # {{- range (lookup "v1" "Endpoints" "default" "kubernetes").subsets }}
+    # - to:
+    #     {{- range .addresses }}
+    #     - ipBlock:
+    #         cidr: {{ .ip }}/32
+    #     {{- end }}
+    #   ports:
+    #     {{- range .ports }}
+    #     - protocol: {{ .protocol }}
+    #       port: {{ .port }}
+    #     {{- end }}
+    # {{- end }}
+     to:
+      - ipBlock:
+        cidr: 10.0.0.0/8
