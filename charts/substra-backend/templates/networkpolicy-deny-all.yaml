@@ -3,7 +3,9 @@ apiVersion: networking.k8s.io/v1
 metadata:
   name: {{ template "substra.name". }}-deny-all-backend
 spec:
-  podSelector: {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: substra-backend
   ingress: []
   egress:
     - to:
