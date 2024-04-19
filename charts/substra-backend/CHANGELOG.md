@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.3.0] - 2024-04-19
+
+### Removed
+
+- Revert resources limits and requests (CPU and memory) for all containers.
+
 ## [26.2.0] - 2024-04-18
 
 ### Added
