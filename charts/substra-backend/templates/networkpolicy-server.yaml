@@ -1,11 +1,13 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: substra-backend-server-ingress
+  name: {{ template "substra.name" . }}-server-ingress
 spec:
   ingress:
   - from:
-    - podSelector:
+    # Allow workers in other backends to connect
+    - namespaceSelector: {}
+      podSelector:
         matchLabels:
           role-server-client: 'true'
     ports:
@@ -21,20 +23,19 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: substra-backend-server-egress
+  name: {{ template "substra.name" . }}-server-egress
 spec:
   egress:
   - ports:
     - port: {{ .Values.server.service.port }}
       protocol: TCP
     to:
-    - podSelector:
+    - namespaceSelector: {}
+      podSelector:
         matchLabels:
           app.kubernetes.io/name: {{ template "substra.name" . }}-server
-          {{ include "substra.selectorLabels" . | nindent 10}}
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: {{ template "substra.name" . }}
       role-server-client: 'true'
   policyTypes:
   - Egress
