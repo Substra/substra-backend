@@ -30,9 +30,11 @@ build:
 
 manifests:
   rawYaml:
-    - examples/k8s-resources/networkpolicy-internet-skaffold.yaml
+    - examples/k8s-resources/networkpolicy-org-1-internet-skaffold.yaml
+    - examples/k8s-resources/networkpolicy-org-2-internet-skaffold.yaml
 
 deploy:
+  kubectl: {}
   helm:
     releases:
       - name: backend-org-1
@@ -204,6 +206,9 @@ profiles:
           setValueTemplates: *image-tags
           createNamespace: true
           skipBuildDependencies: true
+      - op: add
+        path: /manifests/rawYaml/-
+        value: examples/k8s-resources/networkpolicy-org-3-internet-skaffold.yaml
   - name: org-2-external-registry
     patches:
       - op: add
