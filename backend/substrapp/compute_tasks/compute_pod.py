@@ -23,7 +23,7 @@ class Label:
     FunctionKey = "substra.ai/function-key"
     RandomToken = "substra.ai/random-token"
     RoleRegistryClient = "role-registry-client"
-
+    RoleInternetEgress = "role-internet-egress"
     # Values
     PodType_ComputeTask = "compute-task"
     Component_Compute = "substra-compute"
