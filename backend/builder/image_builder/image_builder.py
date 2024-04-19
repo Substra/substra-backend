@@ -305,8 +305,6 @@ def _build_container(dockerfile_mount_path: str, image_tag: str) -> kubernetes.c
 
     return kubernetes.client.V1Container(
         name=KANIKO_CONTAINER_NAME,
-        # image="busybox",
-        # command=["sleep", "inf"],
         image=KANIKO_IMAGE,
         command=None,
         args=args,
