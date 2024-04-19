@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-api-server-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      role-api-k8s-client: 'true'
+  policyTypes:
+    - Egress
+  egress:
+    {{- range (lookup "v1" "Endpoints" "default" "kubernetes").subsets }}
+    - to:
+        {{- range .addresses }}
+        - ipBlock:
+            cidr: {{ .ip }}/32
+        {{- end }}
+      ports:
+        {{- range .ports }}
+        - protocol: {{ .protocol }}
+          port: {{ .port }}
+        {{- end }}
+    {{- end }}
