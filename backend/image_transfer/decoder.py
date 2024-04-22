@@ -5,6 +5,7 @@ import warnings
 from pathlib import Path
 from typing import IO
 from typing import Iterator
+from typing import Optional
 from typing import Union
 
 import requests
@@ -31,8 +32,6 @@ def push_payload(
     registry: str = "registry-1.docker.io",
     secure: bool = True,
     repository: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
 ) -> list[str]:
     """Push the payload to the registry.
 
@@ -50,10 +49,6 @@ def push_payload(
         secure: whether to use TLS (HTTPS) or not to connect to the registry,
             default is True.
         repository: the repository to push the images to. Optional.
-        username: the username to use to connect to the registry. Optional
-            if the registry does not require authentication.
-        password: the password to use to connect to the registry. Optional
-            if the registry does not require authentication.
 
     Returns:
         The list of docker images loaded in the registry
