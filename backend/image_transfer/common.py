@@ -153,4 +153,6 @@ class Authenticator:
                 response=response,
             )
 
-        return None
+        return dxf.authenticate(
+            response=response,
+        )

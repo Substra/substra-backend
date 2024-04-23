@@ -122,7 +122,6 @@ def test_end_to_end_single_image_from_dockerhub_no_platform(
         make_payload(
             payload_path,
             [f"library/{ubuntu_base_image}"],
-            secure=False,
         )
 
 
@@ -135,7 +134,7 @@ def test_end_to_end_single_image_from_dockerhub(
     destination_registry_local_port,
 ):
     payload_path = tmp_path / "payload.zip"
-    make_payload(payload_path, [f"library/{ubuntu_base_image}"], platform="linux/amd64", secure=False)
+    make_payload(payload_path, [f"library/{ubuntu_base_image}"], platform="linux/amd64")
 
     images_pushed = push_payload(payload_path, registry=f"localhost:{destination_registry_local_port}", secure=False)
     assert images_pushed == [f"library/{ubuntu_base_image}"]
