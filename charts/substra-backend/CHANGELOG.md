@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.5.0] - 2024-04-29
+
+### Added
+
+- Provides `.Values.kaniko.dockerConfigSecretName` to the executor (#862)
+
 ## [26.4.0] - 2024-04-25
 
 ### Added

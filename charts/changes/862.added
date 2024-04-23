@@ -1,1 +1,0 @@
-Provides `.Values.kaniko.dockerConfigSecretName` to the executor
