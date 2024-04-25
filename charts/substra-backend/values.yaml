@@ -371,6 +371,18 @@ worker:
       tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
+    ## @param worker.events.resources.requests.cpu Worker events container cpu request
+    ## @param worker.events.resources.requests.memory Worker events container memory request
+    ## @param worker.events.resources.limits.cpu Worker events container cpu limit
+    ## @param worker.events.resources.limits.memory Worker events container memory limit
+    ##
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "500m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
     ## @param worker.events.podSecurityContext.enabled Enable security context
     ## @param worker.events.podSecurityContext.runAsUser User ID for the pod
     ## @param worker.events.podSecurityContext.runAsGroup Group ID for the pod
@@ -678,6 +690,18 @@ api:
       ## If not set and create is true, a name is generated using the substra.fullname template
       ##
       name: ""
+      ## @param api.events.resources.requests.cpu Api events container cpu request
+      ## @param api.events.resources.requests.memory Api events container memory request
+      ## @param api.events.resources.limits.cpu Api events container cpu limit
+      ## @param api.events.resources.limits.memory Api events container memory limit
+      ##
+      resources:
+        requests:
+          memory: "200Mi"
+          cpu: "500m"
+        limits:
+          memory: "400Mi"
+          cpu: "500m"
 
 ## @section Orchestrator settings
 ##
@@ -775,6 +799,43 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
+
+## @section Registry prepopulate
+##
+registryPrepopulate:
+  ## @param registryPrepopulate.waitRegistry.resources.requests.cpu Wait registry container cpu request
+  ## @param registryPrepopulate.waitRegistry.resources.requests.memory Wait registry container memory request
+  ## @param registryPrepopulate.waitRegistry.resources.limits.memory Wait registry container memory limit
+  ##
+  waitRegistry:
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "500m"
+      limits:
+        memory: "400Mi"
+  ## @param registryPrepopulate.kaniko.resources.requests.cpu Kaniko container cpu request
+  ## @param registryPrepopulate.kaniko.resources.requests.memory Kaniko container memory request
+  ## @param registryPrepopulate.kaniko.resources.limits.memory Kaniko container memory limit
+  ##
+  kaniko:
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "8Gi"
+  ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
+  ## @param registryPrepopulate.pause.resources.requests.memory Pause container memory request
+  ## @param registryPrepopulate.pause.resources.limits.memory Pause container memory limit
+  ##
+  pause:
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
 
 ## @section Single Sign-On through OpenID Connect
 

@@ -302,6 +302,20 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
 
+### Registry prepopulate
+
+| Name                                                         | Description                            | Value   |
+| ------------------------------------------------------------ | -------------------------------------- | ------- |
+| `registryPrepopulate.waitRegistry.resources.requests.cpu`    | Wait registry container cpu request    | `500m`  |
+| `registryPrepopulate.waitRegistry.resources.requests.memory` | Wait registry container memory request | `200Mi` |
+| `registryPrepopulate.waitRegistry.resources.limits.memory`   | Wait registry container memory limit   | `400Mi` |
+| `registryPrepopulate.kaniko.resources.requests.cpu`          | Kaniko container cpu request           | `1000m` |
+| `registryPrepopulate.kaniko.resources.requests.memory`       | Kaniko container memory request        | `2Gi`   |
+| `registryPrepopulate.kaniko.resources.limits.memory`         | Kaniko container memory limit          | `8Gi`   |
+| `registryPrepopulate.pause.resources.requests.cpu`           | Pause container cpu request            | `50m`   |
+| `registryPrepopulate.pause.resources.requests.memory`        | Pause container memory request         | `64Mi`  |
+| `registryPrepopulate.pause.resources.limits.memory`          | Pause container memory limit           | `128Mi` |
+
 ### Single Sign-On through OpenID Connect
 
 Uses the authorization code flow.
