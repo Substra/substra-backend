@@ -1,6 +1,6 @@
 import kubernetes
-import yaml
 import structlog
+import yaml
 from django.conf import settings
 
 from substrapp.exceptions import KubernetesError
