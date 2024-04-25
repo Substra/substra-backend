@@ -179,8 +179,8 @@ server:
   ##
   resources:
     requests:
-      cpu: "1000m"
-      memory: "6Gi"
+      cpu: "500m"
+      memory: "512Mi"
     limits:
       cpu: "2000m"
       memory: "12Gi"
@@ -313,8 +313,8 @@ worker:
   ##
   resources:
     requests:
-      cpu: "1000m"
-      memory: "4Gi"
+      cpu: "500m"
+      memory: "512Mi"
     limits:
       cpu: "2000m"
       memory: "8Gi"
@@ -378,8 +378,8 @@ worker:
     ##
     resources:
       requests:
-        memory: "200Mi"
-        cpu: "500m"
+        memory: "50Mi"
+        cpu: "100m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -452,8 +452,8 @@ schedulerWorker:
   ##
   resources:
     requests:
-      cpu: "250m"
-      memory: "200Mi"
+      cpu: "100m"
+      memory: "50Mi"
     limits:
       cpu: "250m"
       memory: "400Mi"
@@ -495,8 +495,8 @@ scheduler:
   ##
   resources:
     requests:
-      cpu: "250m"
-      memory: "200Mi"
+      cpu: "100m"
+      memory: "50Mi"
     limits:
       cpu: "250m"
       memory: "400Mi"
@@ -572,8 +572,8 @@ builder:
   ##
   resources:
     requests:
-      cpu: "2000m"
-      memory: "4Gi"
+      cpu: "500m"
+      memory: "512Mi"
     limits:
       cpu: "2000m"
       memory: "8Gi"
@@ -666,8 +666,8 @@ api:
     ##
     resources:
       requests:
-        memory: "200Mi"
-        cpu: "500m"
+        memory: "50Mi"
+        cpu: "100m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -810,8 +810,8 @@ registryPrepopulate:
   waitRegistry:
     resources:
       requests:
-        memory: "200Mi"
-        cpu: "500m"
+        memory: "50Mi"
+        cpu: "100m"
       limits:
         memory: "400Mi"
   ## @param registryPrepopulate.kaniko.resources.requests.cpu Kaniko container cpu request
@@ -821,8 +821,8 @@ registryPrepopulate:
   kaniko:
     resources:
       requests:
-        memory: "2Gi"
-        cpu: "1000m"
+        memory: "256Mi"
+        cpu: "500m"
       limits:
         memory: "8Gi"
   ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
@@ -939,8 +939,8 @@ postgresql:
         - ALL
     resources:
       requests:
-        cpu: "1000m"
-        memory: "2Gi"
+        cpu: "100m"
+        memory: "256Mi"
       limits:
         cpu: "1000m"
         memory: "4Gi"
@@ -960,8 +960,8 @@ redis:
         redis: 6379
     resources:
       requests:
-        cpu: "500m"
-        memory: "512Mi"
+        cpu: "100m"
+        memory: "256Mi"
       limits:
         cpu: "500m"
         memory: "1024Mi"
@@ -986,8 +986,8 @@ docker-registry:
     type: NodePort
   resources:
     requests:
-      cpu: "500m"
-      memory: "16Gi"
+      cpu: "100m"
+      memory: "256Mi"
     limits:
       cpu: "500m"
       memory: "64Gi"
@@ -1013,8 +1013,8 @@ minio:
         - ALL
   resources:
     requests:
-      cpu: "500m"
-      memory: "16Gi"
+      cpu: "100m"
+      memory: "1Gi"
     limits:
       cpu: "1000m"
       memory: "64Gi"
@@ -1028,8 +1028,8 @@ localstack:
       nodePort: ""
   resources:
     requests:
-      cpu: "500m"
-      memory: "16Gi"
+      cpu: "100m"
+      memory: "1Gi"
     limits:
       cpu: "500m"
       memory: "64Gi"
