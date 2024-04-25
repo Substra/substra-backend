@@ -179,7 +179,7 @@ server:
   ##
   resources:
     requests:
-      cpu: "500m"
+      cpu: "200m"
       memory: "512Mi"
     limits:
       cpu: "2000m"
@@ -313,7 +313,7 @@ worker:
   ##
   resources:
     requests:
-      cpu: "500m"
+      cpu: "200m"
       memory: "512Mi"
     limits:
       cpu: "2000m"
@@ -462,7 +462,7 @@ schedulerWorker:
   ##
   resources:
     requests:
-      cpu: "100m"
+      cpu: "50m"
       memory: "50Mi"
     limits:
       cpu: "250m"
@@ -505,7 +505,7 @@ scheduler:
   ##
   resources:
     requests:
-      cpu: "100m"
+      cpu: "50m"
       memory: "50Mi"
     limits:
       cpu: "250m"
@@ -582,7 +582,7 @@ builder:
   ##
   resources:
     requests:
-      cpu: "500m"
+      cpu: "200m"
       memory: "512Mi"
     limits:
       cpu: "2000m"
@@ -947,7 +947,7 @@ postgresql:
         - ALL
     resources:
       requests:
-        cpu: "100m"
+        cpu: "50m"
         memory: "256Mi"
       limits:
         cpu: "1000m"
@@ -968,7 +968,7 @@ redis:
         redis: 6379
     resources:
       requests:
-        cpu: "100m"
+        cpu: "50m"
         memory: "256Mi"
       limits:
         cpu: "500m"
@@ -1036,7 +1036,7 @@ localstack:
       nodePort: ""
   resources:
     requests:
-      cpu: "100m"
+      cpu: "50m"
       memory: "1Gi"
     limits:
       cpu: "500m"
