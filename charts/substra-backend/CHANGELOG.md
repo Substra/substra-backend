@@ -2,7 +2,7 @@
 
 <!-- towncrier release notes start -->
 
-## [26.4.0] - 2024-04-17
+## [26.4.0] - 2024-04-25
 
 ### Added
 
