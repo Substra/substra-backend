@@ -52,7 +52,9 @@ def get_resources_requirements_from_yaml(
     *,
     yaml_resources: str,
 ) -> kubernetes.client.V1ResourceRequirements:
-    resources_dict = yaml.load(yaml_resources, Loader=yaml.FullLoader)
+    """Return a kubernetes.client.V1ResourceRequirements object from a yaml string."""
+    resources_dict = yaml.safe_load(yaml_resources)
+
     return kubernetes.client.V1ResourceRequirements(
         requests=resources_dict["requests"], limits=resources_dict["limits"]
     )
