@@ -109,6 +109,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: COMPUTE_POD_RESOURCES
+              value: {{ toYaml .Values.worker.computePod.resources | quote }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL

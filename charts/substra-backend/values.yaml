@@ -355,6 +355,16 @@ worker:
       fsGroup: 1001
       runAsUser: 1001
       runAsGroup: 1001
+    ## @param worker.computePod.resources.requests.cpu Worker compute pod container cpu request
+    ## @param worker.computePod.resources.requests.memory Worker compute pod container memory request
+    ## @param worker.computePod.resources.limits.memory Worker compute pod container memory limit
+    ##
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        memory: "64Gi"
   events:
     ## @param worker.events.enabled Enable event service
     ##
@@ -577,7 +587,6 @@ builder:
     limits:
       cpu: "2000m"
       memory: "8Gi"
-
   ## @param builder.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: { }
@@ -749,6 +758,16 @@ kaniko:
     registry: gcr.io
     repository: kaniko-project/executor
     tag: v1.8.1
+  ## @param kaniko.resources.requests.cpu Kaniko container cpu request
+  ## @param kaniko.resources.requests.memory Kaniko container memory request
+  ## @param kaniko.resources.limits.memory Kaniko container memory limit
+  ##
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      memory: "32Gi"
   ## @param kaniko.mirror If set to `true` pull base images from the local registry.
   ##
   mirror: false
@@ -814,17 +833,6 @@ registryPrepopulate:
         cpu: "100m"
       limits:
         memory: "400Mi"
-  ## @param registryPrepopulate.kaniko.resources.requests.cpu Kaniko container cpu request
-  ## @param registryPrepopulate.kaniko.resources.requests.memory Kaniko container memory request
-  ## @param registryPrepopulate.kaniko.resources.limits.memory Kaniko container memory limit
-  ##
-  kaniko:
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "500m"
-      limits:
-        memory: "8Gi"
   ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
   ## @param registryPrepopulate.pause.resources.requests.memory Pause container memory request
   ## @param registryPrepopulate.pause.resources.limits.memory Pause container memory limit

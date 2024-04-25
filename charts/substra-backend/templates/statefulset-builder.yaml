@@ -160,6 +160,8 @@ spec:
             value: {{ .Values.kaniko.dockerConfigSecretName | quote }}
           - name: OBJECTSTORE_URL
             value: {{ include "substra-backend.objectStore.url" . | quote }}
+          - name: KANIKO_RESOURCES
+            value: {{ toYaml .Values.kaniko.resources | quote }}
         ports:
           - name: http
             containerPort: 8000

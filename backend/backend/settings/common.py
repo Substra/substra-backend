@@ -197,6 +197,7 @@ TASK = {
     "KANIKO_MIRROR": to_bool(os.environ.get("KANIKO_MIRROR", False)),
     "KANIKO_IMAGE": os.environ.get("KANIKO_IMAGE"),
     "KANIKO_DOCKER_CONFIG_SECRET_NAME": os.environ.get("KANIKO_DOCKER_CONFIG_SECRET_NAME"),
+    "KANIKO_RESOURCES": os.environ.get("KANIKO_RESOURCES"),
     "COMPUTE_POD_STARTUP_TIMEOUT_SECONDS": int(os.environ.get("COMPUTE_POD_STARTUP_TIMEOUT_SECONDS", 300)),
     "PRIVATE_CA_ENABLED": to_bool(os.environ.get("PRIVATE_CA_ENABLED")),
 }
@@ -223,6 +224,7 @@ COMPUTE_POD_RUN_AS_USER = os.environ.get("COMPUTE_POD_RUN_AS_USER")
 COMPUTE_POD_RUN_AS_GROUP = os.environ.get("COMPUTE_POD_RUN_AS_GROUP")
 COMPUTE_POD_FS_GROUP = os.environ.get("COMPUTE_POD_FS_GROUP")
 COMPUTE_POD_GKE_GPUS_LIMITS = int(os.environ.get("COMPUTE_POD_GKE_GPUS_LIMITS", 0))
+COMPUTE_POD_RESOURCES = os.environ.get("COMPUTE_POD_RESOURCES")
 
 # Prometheus configuration
 ENABLE_METRICS = to_bool(os.environ.get("ENABLE_METRICS", False))

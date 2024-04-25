@@ -1,4 +1,5 @@
 import kubernetes
+import yaml
 import structlog
 from django.conf import settings
 
@@ -47,11 +48,13 @@ def get_security_context(root: bool = False, capabilities: list[str] = None) -> 
     return security_context
 
 
-def get_resources_requirements(
-    *, cpu_request: str = "1000m", memory_request: str = "200M", memory_limit: str = "2G"
+def get_resources_requirements_from_yaml(
+    *,
+    yaml_resources: str,
 ) -> kubernetes.client.V1ResourceRequirements:
+    resources_dict = yaml.load(yaml_resources, Loader=yaml.FullLoader)
     return kubernetes.client.V1ResourceRequirements(
-        requests={"cpu": cpu_request, "memory": memory_request}, limits={"memory": memory_limit}
+        requests=resources_dict["requests"], limits=resources_dict["limits"]
     )
 
 
