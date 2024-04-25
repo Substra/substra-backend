@@ -64,7 +64,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `server.service.externalIPs`                      | A list of IP addresses for which nodes in the cluster will also accept traffic for this service                                                    | `[]`                                       |
 | `server.service.annotations`                      | Additional annotations for the _Service_ resource.                                                                                                 | `{}`                                       |
 | `server.ingress.enabled`                          | Deploy an ingress for the substra backend server                                                                                                   | `false`                                    |
-| `server.ingress.hostname`                         | Default host for the ingress ressource                                                                                                             | `substra.backend.local`                    |
+| `server.ingress.hostname`                         | Default host for the ingress resource                                                                                                              | `substra.backend.local`                    |
 | `server.ingress.pathType`                         | Ingress path type                                                                                                                                  | `ImplementationSpecific`                   |
 | `server.ingress.path`                             | Path for the default host                                                                                                                          | `/`                                        |
 | `server.ingress.extraPaths`                       | The list of extra paths to be created for the default host                                                                                         | `[]`                                       |
@@ -144,6 +144,10 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.events.image.tag`                      | Substra event app image tag (defaults to AppVersion)                                                                                               | `nil`                     |
 | `worker.events.image.pullPolicy`               | Substra event app image pull policy                                                                                                                | `IfNotPresent`            |
 | `worker.events.image.pullSecrets`              | Specify image pull secrets                                                                                                                         | `[]`                      |
+| `worker.events.resources.requests.cpu`         | Worker events container cpu request                                                                                                                | `500m`                    |
+| `worker.events.resources.requests.memory`      | Worker events container memory request                                                                                                             | `200Mi`                   |
+| `worker.events.resources.limits.cpu`           | Worker events container cpu limit                                                                                                                  | `500m`                    |
+| `worker.events.resources.limits.memory`        | Worker events container memory limit                                                                                                               | `400Mi`                   |
 | `worker.events.podSecurityContext.enabled`     | Enable security context                                                                                                                            | `true`                    |
 | `worker.events.podSecurityContext.runAsUser`   | User ID for the pod                                                                                                                                | `1001`                    |
 | `worker.events.podSecurityContext.runAsGroup`  | Group ID for the pod                                                                                                                               | `1001`                    |
@@ -253,6 +257,10 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `api.events.image.tag`                     | Substra event app image tag (defaults to AppVersion) | `nil`                     |
 | `api.events.image.pullPolicy`              | Substra event app image pull policy                  | `IfNotPresent`            |
 | `api.events.image.pullSecrets`             | Specify image pull secrets                           | `[]`                      |
+| `api.events.resources.requests.cpu`        | Api events container cpu request                     | `500m`                    |
+| `api.events.resources.requests.memory`     | Api events container memory request                  | `200Mi`                   |
+| `api.events.resources.limits.cpu`          | Api events container cpu limit                       | `500m`                    |
+| `api.events.resources.limits.memory`       | Api events container memory limit                    | `400Mi`                   |
 | `api.events.podSecurityContext.enabled`    | Enable security context                              | `true`                    |
 | `api.events.podSecurityContext.runAsUser`  | User ID for the pod                                  | `1001`                    |
 | `api.events.podSecurityContext.runAsGroup` | Group ID for the pod                                 | `1001`                    |

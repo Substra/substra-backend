@@ -121,7 +121,7 @@ server:
     ##
     enabled: false
 
-    ## @param server.ingress.hostname Default host for the ingress ressource
+    ## @param server.ingress.hostname Default host for the ingress resource
     ##
     hostname: substra.backend.local
 
@@ -659,6 +659,18 @@ api:
       tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
+    ## @param api.events.resources.requests.cpu Api events container cpu request
+    ## @param api.events.resources.requests.memory Api events container memory request
+    ## @param api.events.resources.limits.cpu Api events container cpu limit
+    ## @param api.events.resources.limits.memory Api events container memory limit
+    ##
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "500m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
     ## @param api.events.podSecurityContext.enabled Enable security context
     ## @param api.events.podSecurityContext.runAsUser User ID for the pod
     ## @param api.events.podSecurityContext.runAsGroup Group ID for the pod
@@ -690,18 +702,6 @@ api:
       ## If not set and create is true, a name is generated using the substra.fullname template
       ##
       name: ""
-      ## @param api.events.resources.requests.cpu Api events container cpu request
-      ## @param api.events.resources.requests.memory Api events container memory request
-      ## @param api.events.resources.limits.cpu Api events container cpu limit
-      ## @param api.events.resources.limits.memory Api events container memory limit
-      ##
-      resources:
-        requests:
-          memory: "200Mi"
-          cpu: "500m"
-        limits:
-          memory: "400Mi"
-          cpu: "500m"
 
 ## @section Orchestrator settings
 ##
