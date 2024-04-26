@@ -73,7 +73,7 @@ class ComputeTask(FailableTask):
     # Celery does not provide unpacked arguments, we are doing it in `split_args`
     def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
-        # delete compute pod to reset hardware ressources
+        # delete compute pod to reset hardware resources
         delete_compute_plan_pods(task.compute_plan_key)
         logger.info(
             "Retrying task",

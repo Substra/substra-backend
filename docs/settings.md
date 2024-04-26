@@ -17,6 +17,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `COMMON_HOST_DOMAIN` | nil |  |
 | string | `COMPUTE_POD_FS_GROUP` | nil |  |
 | int | `COMPUTE_POD_GKE_GPUS_LIMITS` | `0` |  |
+| string | `COMPUTE_POD_RESOURCES` | nil |  |
 | string | `COMPUTE_POD_RUN_AS_GROUP` | nil |  |
 | string | `COMPUTE_POD_RUN_AS_USER` | nil |  |
 | int | `COMPUTE_POD_STARTUP_TIMEOUT_SECONDS` | `300` |  |
@@ -43,6 +44,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | nil |  |
 | string | `KANIKO_IMAGE` | nil |  |
 | bool | `KANIKO_MIRROR` | `False` |  |
+| string | `KANIKO_RESOURCES` | nil |  |
 | bool | `LOGGING_USE_COLORS` | `True` |  |
 | string | `LOG_LEVEL` | `INFO` |  |
 | string | `NAMESPACE` | nil |  |

@@ -6,9 +6,11 @@ from django.conf import settings
 
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_pod_security_context
+from substrapp.kubernetes_utils import get_resources_requirements_from_yaml
 from substrapp.kubernetes_utils import get_security_context
 
 NAMESPACE = settings.NAMESPACE
+COMPUTE_POD_RESOURCES = settings.COMPUTE_POD_RESOURCES
 logger = structlog.get_logger(__name__)
 
 
@@ -112,6 +114,7 @@ def create_pod(
         args=None,
         volume_mounts=volume_mounts + gpu_volume_mounts,
         security_context=get_security_context(),
+        resources=get_resources_requirements_from_yaml(yaml_resources=COMPUTE_POD_RESOURCES),
         env=[kubernetes.client.V1EnvVar(name=env_name, value=env_value) for env_name, env_value in environment.items()],
         **container_optional_kwargs,
     )

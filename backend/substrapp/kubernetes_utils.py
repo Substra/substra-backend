@@ -1,5 +1,6 @@
 import kubernetes
 import structlog
+import yaml
 from django.conf import settings
 
 from substrapp.exceptions import KubernetesError
@@ -45,6 +46,18 @@ def get_security_context(root: bool = False, capabilities: list[str] = None) -> 
         security_context.run_as_user = int(RUN_AS_USER)
 
     return security_context
+
+
+def get_resources_requirements_from_yaml(
+    *,
+    yaml_resources: str,
+) -> kubernetes.client.V1ResourceRequirements:
+    """Return a kubernetes.client.V1ResourceRequirements object from a yaml string."""
+    resources_dict = yaml.safe_load(yaml_resources)
+
+    return kubernetes.client.V1ResourceRequirements(
+        requests=resources_dict["requests"], limits=resources_dict["limits"]
+    )
 
 
 def pod_exists_by_label_selector(k8s_client: kubernetes.client.CoreV1Api, label_selector: str) -> bool:

@@ -41,6 +41,8 @@ spec:
         - name: worker-event-app
           image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.worker.events.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.worker.events.resources | nindent 12 }}
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]

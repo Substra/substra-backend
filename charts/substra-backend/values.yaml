@@ -121,7 +121,7 @@ server:
     ##
     enabled: false
 
-    ## @param server.ingress.hostname Default host for the ingress ressource
+    ## @param server.ingress.hostname Default host for the ingress resource
     ##
     hostname: substra.backend.local
 
@@ -172,17 +172,19 @@ server:
     ##
     ingressClassName:
 
-  ## @param server.resources Server container resources requests and limits
-  ## e.g:
-  ## resources:
-  ##   limits:
-  ##     cpu: 100m
-  ##     memory: 128Mi
-  ##   requests:
-  ##     cpu: 100m
-  ##     memory: 128Mi
+  ## @param server.resources.requests.cpu Server container cpu request
+  ## @param server.resources.requests.memory Server container memory request
+  ## @param server.resources.limits.cpu Server container cpu limit
+  ## @param server.resources.limits.memory Server container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "12Gi"
+
 
   persistence:
     ## @param server.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
@@ -304,9 +306,18 @@ worker:
     runAsUser: 1001
     runAsGroup: 1001
     fsGroup: 1001
-  ## @param worker.resources Worker container resources requests and limits
+  ## @param worker.resources.requests.cpu Worker container cpu request
+  ## @param worker.resources.requests.memory Worker container memory request
+  ## @param worker.resources.limits.cpu Worker container cpu limit
+  ## @param worker.resources.limits.memory Worker container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
   ## @param worker.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: {}
@@ -344,6 +355,16 @@ worker:
       fsGroup: 1001
       runAsUser: 1001
       runAsGroup: 1001
+    ## @param worker.computePod.resources.requests.cpu Worker compute pod container cpu request
+    ## @param worker.computePod.resources.requests.memory Worker compute pod container memory request
+    ## @param worker.computePod.resources.limits.memory Worker compute pod container memory limit
+    ##
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        memory: "64Gi"
   events:
     ## @param worker.events.enabled Enable event service
     ##
@@ -360,6 +381,18 @@ worker:
       tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
+    ## @param worker.events.resources.requests.cpu Worker events container cpu request
+    ## @param worker.events.resources.requests.memory Worker events container memory request
+    ## @param worker.events.resources.limits.cpu Worker events container cpu limit
+    ## @param worker.events.resources.limits.memory Worker events container memory limit
+    ##
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
     ## @param worker.events.podSecurityContext.enabled Enable security context
     ## @param worker.events.podSecurityContext.runAsUser User ID for the pod
     ## @param worker.events.podSecurityContext.runAsGroup Group ID for the pod
@@ -422,9 +455,18 @@ schedulerWorker:
   ## @param schedulerWorker.affinity Affinity settings for pod assignment
   ##
   affinity: {}
-  ## @param schedulerWorker.resources Scheduler container resources requests and limits
+  ## @param schedulerWorker.resources.requests.cpu Scheduler container cpu request
+  ## @param schedulerWorker.resources.requests.memory Scheduler container memory request
+  ## @param schedulerWorker.resources.limits.cpu Scheduler container cpu limit
+  ## @param schedulerWorker.resources.limits.memory Scheduler container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
   ## @param schedulerWorker.podSecurityContext.enabled Enable security context
   ## @param schedulerWorker.podSecurityContext.runAsUser User ID for the pod
   ## @param schedulerWorker.podSecurityContext.runAsGroup Group ID for the pod
@@ -456,9 +498,18 @@ scheduler:
     tag: null
     pullPolicy: IfNotPresent
     pullSecrets: []
-  ## @param scheduler.resources Scheduler container resources requests and limits
+  ## @param scheduler.resources.requests.cpu Scheduler container cpu request
+  ## @param scheduler.resources.requests.memory Scheduler container memory request
+  ## @param scheduler.resources.limits.cpu Scheduler container cpu limit
+  ## @param scheduler.resources.limits.memory Scheduler container memory limit
   ##
-  resources: {}
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
   ## @param scheduler.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: {}
@@ -484,10 +535,10 @@ scheduler:
 ## @param builder.replicaCount Number of builder replicas
 ##
 builder:
-  ## @param builder.enabled Enable worker service
+  ## @param builder.enabled Enable builder service
   ##
   enabled: true
-  ## @param builder.replicaCount Replica count for the worker service
+  ## @param builder.replicaCount Replica count for the builder service
   ##
   replicaCount: 1
 
@@ -524,18 +575,18 @@ builder:
     fsGroup: 1001
 
 
-  ## @param builder.resources Builder container resources requests and limits
-  ## e.g:
-  ## resources:
-  ##   limits:
-  ##     cpu: 100m
-  ##     memory: 128Mi
-  ##   requests:
-  ##     cpu: 100m
-  ##     memory: 128Mi
+  ## @param builder.resources.requests.cpu Builder container cpu request
+  ## @param builder.resources.requests.memory Builder container memory request
+  ## @param builder.resources.limits.cpu Builder container cpu limit
+  ## @param builder.resources.limits.memory Builder container memory limit
   ##
-  resources: {}
-
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
   ## @param builder.nodeSelector Node labels for pod assignment
   ##
   nodeSelector: { }
@@ -617,6 +668,18 @@ api:
       tag: null
       pullPolicy: IfNotPresent
       pullSecrets: []
+    ## @param api.events.resources.requests.cpu Api events container cpu request
+    ## @param api.events.resources.requests.memory Api events container memory request
+    ## @param api.events.resources.limits.cpu Api events container cpu limit
+    ## @param api.events.resources.limits.memory Api events container memory limit
+    ##
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
     ## @param api.events.podSecurityContext.enabled Enable security context
     ## @param api.events.podSecurityContext.runAsUser User ID for the pod
     ## @param api.events.podSecurityContext.runAsGroup Group ID for the pod
@@ -695,6 +758,16 @@ kaniko:
     registry: gcr.io
     repository: kaniko-project/executor
     tag: v1.8.1
+  ## @param kaniko.resources.requests.cpu Kaniko container cpu request
+  ## @param kaniko.resources.requests.memory Kaniko container memory request
+  ## @param kaniko.resources.limits.memory Kaniko container memory limit
+  ##
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      memory: "32Gi"
   ## @param kaniko.mirror If set to `true` pull base images from the local registry.
   ##
   mirror: false
@@ -745,6 +818,32 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
+
+## @section Registry prepopulate
+##
+registryPrepopulate:
+  ## @param registryPrepopulate.waitRegistry.resources.requests.cpu Wait registry container cpu request
+  ## @param registryPrepopulate.waitRegistry.resources.requests.memory Wait registry container memory request
+  ## @param registryPrepopulate.waitRegistry.resources.limits.memory Wait registry container memory limit
+  ##
+  waitRegistry:
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+  ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
+  ## @param registryPrepopulate.pause.resources.requests.memory Pause container memory request
+  ## @param registryPrepopulate.pause.resources.limits.memory Pause container memory limit
+  ##
+  pause:
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
 
 ## @section Single Sign-On through OpenID Connect
 
@@ -846,6 +945,13 @@ postgresql:
       capabilities:
         drop:
         - ALL
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "4Gi"
 
 ## @skip redis
 ##
@@ -860,6 +966,13 @@ redis:
     service:
       ports:
         redis: 6379
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "1024Mi"
   replica:
     replicaCount: 0
   commonConfiguration: |-
@@ -875,10 +988,17 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: true
-    size: 10Gi
+    size: 50Gi
     deleteEnabled: true
   service:
     type: NodePort
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
 
 ## @skip minio
 ##
@@ -899,6 +1019,13 @@ minio:
     capabilities:
       drop:
         - ALL
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "64Gi"
 
 ## @skip localstack
 ##
@@ -907,6 +1034,13 @@ localstack:
   service:
     edgeService:
       nodePort: ""
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "1Gi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
   environment:
     - name: SERVICES
       value: s3

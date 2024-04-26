@@ -23,9 +23,13 @@ spec:
       initContainers:
       - name: wait-registry
         image: jwilder/dockerize:0.6.1
+        resources:
+          {{- toYaml $.Values.registryPrepopulate.waitRegistry | nindent 12 }}
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
         image: {{ include "common.images.name" $.Values.kaniko.image }}
+        resources:
+          {{- toYaml $.Values.kaniko.resources | nindent 12 }}
         args:
           - "--context=/docker-context"
           {{- if .dstImage }}
@@ -48,6 +52,8 @@ spec:
       containers:
       - image: gcr.io/google-containers/pause:3.2
         name: pause
+        resources:
+          {{- toYaml $.Values.registryPrepopulate.pause.resources | nindent 12 }}
       volumes:
       - name: kaniko-dir
         emptyDir: {}
