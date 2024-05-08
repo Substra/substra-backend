@@ -7,10 +7,12 @@ spec:
   - from:
     - ipBlock:
         cidr: 0.0.0.0/0
+        {{- if not .Values.server.allowLocalRequests }}
         except:
         - 10.0.0.0/8
         - 192.168.0.0/16
         - 172.16.0.0/20
+        {{- end }}
   podSelector:
     matchLabels:
       app.kubernetes.io/part-of: {{ template "substra.name" . }}

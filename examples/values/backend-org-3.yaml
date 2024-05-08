@@ -49,6 +49,7 @@ worker:
 
 server:
   allowImplicitLogin: true
+  allowLocalRequests: true
   defaultDomain: http://backend-org-3-substra-backend-server.org-3:8000
   commonHostDomain: org-3.com
   ingress:

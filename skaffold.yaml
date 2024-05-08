@@ -28,11 +28,6 @@ build:
       docker:
         dockerfile: docker/ca-cert-injector/Dockerfile
 
-manifests:
-  rawYaml:
-    - examples/k8s-resources/networkpolicy-org-1-internet-skaffold.yaml
-    - examples/k8s-resources/networkpolicy-org-2-internet-skaffold.yaml
-
 deploy:
   kubectl: {}
   helm:
