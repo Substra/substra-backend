@@ -34,6 +34,13 @@ spec:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: {{ template "substra.name" . }}-server
+    {{- if .Values.server.allowLocalRequests }}
+    # Allow communication between backends in same cluster
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    - ipBlock:
+        cidr: 172.16.0.0/20
+      {{- end }}
   podSelector:
     matchLabels:
       role-server-client: 'true'
