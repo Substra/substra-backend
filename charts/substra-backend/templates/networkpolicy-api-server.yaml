@@ -10,6 +10,6 @@ spec:
   policyTypes:
     - Egress
   egress:
-     to:
+    - to:
       - ipBlock:
         cidr: 10.0.0.0/8
