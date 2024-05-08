@@ -48,6 +48,7 @@ privateCa:
 ## @param server.uwsgiProcesses The number of uwsgi processes
 ## @param server.uwsgiThreads The number of uwsgi threads
 ## @param server.allowImplicitLogin Allow clients to get API tokens directly with username+password on the `/api-token-auth/` endpoint (ie `Client.login` in the Substra SDK)
+## @param server.allowLocalRequests Allow calls to the backend API from within the cluster and local addresses (for instance when multiple organization are in the same cluster, or using a cluster on your machine)
 ##
 server:
   replicaCount: 1
@@ -57,6 +58,7 @@ server:
   uwsgiProcesses: 20
   uwsgiThreads: 10
   allowImplicitLogin: true
+  allowLocalRequests: false
 
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry
