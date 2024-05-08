@@ -13,3 +13,5 @@ spec:
     - to:
       - ipBlock:
           cidr: 10.0.0.0/8
+      - ipBlock:
+          cidr: 172.16.0.0/12
