@@ -29,7 +29,6 @@ build:
         dockerfile: docker/ca-cert-injector/Dockerfile
 
 deploy:
-  kubectl: {}
   helm:
     releases:
       - name: backend-org-1
