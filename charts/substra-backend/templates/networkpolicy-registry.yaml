@@ -1,0 +1,77 @@
+{{- if .Values.containerRegistry.local }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-registry-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: docker-registry
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: {{ template "substra.name" . }}
+          role-registry-client: 'true'
+  # kaniko-function-xx send requests through the service, which changes the IP address calling the registry, preventing 
+  # to connect as the connection doesn't come directly from the pod
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: {{ .Values.containerRegistry.port }}
+    # Nodeport range
+    - protocol: TCP
+      port: 30000
+      endPort: 32767
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-registry-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      role-registry-client: 'true'
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: docker-registry
+    ports:
+    - protocol: TCP
+      port: {{ .Values.containerRegistry.port }}
+    # Nodeport range
+    - protocol: TCP
+      port: 30000
+      endPort: 32767
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name". }}-registry-kaniko-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: substra-compute
+      role-registry-client: 'true'
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: docker-registry
+    ports:
+    - protocol: TCP
+      port: {{ .Values.containerRegistry.port }}
+    # Nodeport range
+    - protocol: TCP
+      port: 30000
+      endPort: 32767
+{{- end }}
