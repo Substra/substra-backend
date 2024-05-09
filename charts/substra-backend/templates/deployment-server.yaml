@@ -19,7 +19,11 @@ spec:
         role-redis-client: 'true'
         role-database-client: 'true'
         role-internet-ingress: 'true'
+        role-internet-egress: 'true'
         role-orchestrator-client: 'true'
+        {{- if .Values.server.allowLocalRequests }}
+        role-server-client: 'true'
+        {{- end }}
         role-storage-client: 'true'
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
