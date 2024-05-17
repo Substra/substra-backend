@@ -28,6 +28,7 @@ deploy:
         chartPath: charts/substra-backend
         valuesFiles:
           - examples/values/backend-org-1.yaml
+          - charts/substra-backend/resources.yaml
         namespace: org-1
         setValues:
           _: _

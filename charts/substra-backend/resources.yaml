@@ -1,0 +1,138 @@
+server:
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "12Gi"
+
+worker:
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        memory: "64Gi"
+  events:
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
+
+schedulerWorker:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
+
+scheduler:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+    limits:
+      cpu: "250m"
+      memory: "400Mi"
+
+builder:
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+
+api:
+  events:
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+        cpu: "500m"
+
+kaniko:
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      memory: "32Gi"
+
+registryPrepopulate:
+  waitRegistry:
+    resources:
+      requests:
+        memory: "50Mi"
+        cpu: "100m"
+      limits:
+        memory: "400Mi"
+  pause:
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+
+postgresql:
+  primary:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "4Gi"
+
+redis:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "1024Mi"
+
+docker-registry:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
+
+minio:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+    limits:
+      cpu: "1000m"
+      memory: "64Gi"
+
+localstack:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "1Gi"
+    limits:
+      cpu: "500m"
+      memory: "64Gi"
