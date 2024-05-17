@@ -1,0 +1,22 @@
+service:
+  type: NodePort
+
+  ports:
+    http: 30000
+    https: 30046
+
+  nodePorts:
+    http: 30000
+    https: 30046
+
+
+externalURL: https://registry.org-2.com:30046
+adminPassword: "harborP@ssword2403"
+
+nginx:
+  containerPorts:
+    http: 30000
+    https: 30046
+  tls:
+    commonName: registry.org-2.com
+    existingSecret:  harbor-registry-tls

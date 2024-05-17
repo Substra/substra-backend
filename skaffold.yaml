@@ -3,6 +3,10 @@ kind: Config
 
 requires:
   - path: examples/secrets/skaffold.yaml
+    activeProfiles:
+      - name: org-2-harbor
+        activatedBy:
+          - org-2-harbor
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
