@@ -2,6 +2,7 @@ apiVersion: skaffold/v4beta2
 kind: Config
 
 requires:
+  - path: examples/secrets/skaffold.yaml
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
