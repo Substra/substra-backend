@@ -16,6 +16,7 @@ from image_transfer.common import Authenticator
 from image_transfer.common import Blob
 from image_transfer.common import BlobLocationInRegistry
 from image_transfer.common import BlobPathInZip
+from image_transfer.common import DXFBaseNoCookies
 from image_transfer.common import Manifest
 from image_transfer.common import PayloadDescriptor
 from image_transfer.common import PayloadSide
@@ -59,7 +60,7 @@ def push_payload(
     """
     authenticator = Authenticator()
 
-    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
+    with DXFBaseNoCookies(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(
                 load_zip_images_in_registry(dxf_base=dxf_base, zip_file=zip_file, repository=repository, strict=strict)

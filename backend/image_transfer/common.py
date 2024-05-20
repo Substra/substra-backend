@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from enum import Enum
+from http.cookiejar import DefaultCookiePolicy
 from typing import IO
 from typing import Dict
 from typing import Iterator
@@ -156,3 +157,11 @@ class Authenticator:
         return dxf.authenticate(
             response=response,
         )
+
+
+# Remove all cookies, otherwise Harbor will send CSRF cookies, which does not make sense for API requests
+class DXFBaseNoCookies(DXFBase):
+    def __enter__(self: "DXFBaseNoCookies") -> "DXFBaseNoCookies":
+        super().__enter__()
+        self._sessions[0].cookies.set_policy(DefaultCookiePolicy(allowed_domains=[]))
+        return self
