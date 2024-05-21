@@ -388,8 +388,8 @@ worker:
     ##
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -675,8 +675,8 @@ api:
     ##
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -829,8 +829,8 @@ registryPrepopulate:
   waitRegistry:
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
   ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
