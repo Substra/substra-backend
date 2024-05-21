@@ -66,7 +66,7 @@ def test_end_to_end_single_image_different_repository(
     images_pushed = push_payload(
         payload_path, registry=f"localhost:{destination_registry_local_port}", secure=False, repository="custom_ubuntu"
     )
-    expected_image = f"custom_ubuntu:{ubuntu_base_image.split(':',1)[1]}"
+    expected_image = f"custom_ubuntu:{ubuntu_base_image.split(':', 1)[1]}"
     assert images_pushed == [expected_image]
 
 
@@ -119,7 +119,10 @@ def test_end_to_end_single_image_from_dockerhub_no_platform(
 ):
     payload_path = tmp_path / "payload.zip"
     with pytest.raises(ManifestContentError):
-        make_payload(payload_path, [f"library/{ubuntu_base_image}"])
+        make_payload(
+            payload_path,
+            [f"library/{ubuntu_base_image}"],
+        )
 
 
 @pytest.mark.usefixtures("add_destination_registry")

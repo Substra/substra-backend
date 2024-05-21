@@ -1,0 +1,16 @@
+docker-registry:
+  enabled: false
+
+containerRegistry:
+  local: false
+  scheme: https
+  host: registry.org-2.com
+  pullDomain: registry.org-2.com:30046
+  port: 30046
+  prepopulate:
+    - image: substra/substra-tools:latest
+      dstImage: substra/substra-tools:latest
+      sourceRegistry: ghcr.io
+
+kaniko:
+  dockerConfigSecretName: docker-config

@@ -117,6 +117,10 @@ spec:
               value: {{ include "substra-backend.objectStore.url" . | quote }}
             - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
               value: {{ .Values.DataSampleStorageInServerMedia | quote }}
+            {{- if .Values.kaniko.dockerConfigSecretName }}
+            - name: DOCKER_CONFIG_SECRET_NAME
+              value: {{ .Values.kaniko.dockerConfigSecretName }}
+            {{- end }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
@@ -139,6 +143,10 @@ spec:
               mountPath: /var/substra/orchestrator/tls/client
             {{ end }}
             {{ end }}
+            {{- if .Values.kaniko.dockerConfigSecretName }}
+            - name: docker-config
+              mountPath: /.docker
+            {{- end }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
       volumes:
@@ -164,6 +172,14 @@ spec:
           secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
+      {{- if .Values.kaniko.dockerConfigSecretName }}
+      - name: docker-config
+        secret:
+          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
+          items:
+            - key: .dockerconfigjson
+              path: config.json
+      {{- end }}
     {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

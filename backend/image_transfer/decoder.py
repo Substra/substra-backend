@@ -16,6 +16,7 @@ from image_transfer.common import Authenticator
 from image_transfer.common import Blob
 from image_transfer.common import BlobLocationInRegistry
 from image_transfer.common import BlobPathInZip
+from image_transfer.common import DXFBaseNoCookies
 from image_transfer.common import Manifest
 from image_transfer.common import PayloadDescriptor
 from image_transfer.common import PayloadSide
@@ -32,8 +33,6 @@ def push_payload(
     registry: str = "registry-1.docker.io",
     secure: bool = True,
     repository: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
 ) -> list[str]:
     """Push the payload to the registry.
 
@@ -51,10 +50,6 @@ def push_payload(
         secure: whether to use TLS (HTTPS) or not to connect to the registry,
             default is True.
         repository: the repository to push the images to. Optional.
-        username: the username to use to connect to the registry. Optional
-            if the registry does not require authentication.
-        password: the password to use to connect to the registry. Optional
-            if the registry does not require authentication.
 
     Returns:
         The list of docker images loaded in the registry
@@ -63,9 +58,9 @@ def push_payload(
         In other words, it's the argument `docker_images_to_transfer` that you passed
         to the function `image_transfer.make_payload(...)`.
     """
-    authenticator = Authenticator(username, password)
+    authenticator = Authenticator()
 
-    with DXFBase(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
+    with DXFBaseNoCookies(host=registry, auth=authenticator.auth, insecure=not secure) as dxf_base:
         with safezip.ZipFile(zip_file, "r") as zip_file:
             return list(
                 load_zip_images_in_registry(dxf_base=dxf_base, zip_file=zip_file, repository=repository, strict=strict)
