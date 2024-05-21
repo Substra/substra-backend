@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Add `resources-dev.yaml` file to overwrite resources requirement to none in a dev setup (#907)
+- Add `resources-dev.yaml` file to overwrite resources requirement to a minimal value in a dev setup (#907)
 
 ## [26.5.0] - 2024-04-29
 

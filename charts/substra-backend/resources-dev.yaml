@@ -1,47 +1,94 @@
 server:
-  resources: {}
-
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 worker:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
   computePod:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
   events:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
 
 schedulerWorker:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 scheduler:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 builder:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 api:
   events:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
 
 kaniko:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 registryPrepopulate:
   waitRegistry:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
   pause:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
 
 postgresql:
   primary:
-    resources: {}
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
 
 redis:
-    resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 docker-registry:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 minio:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"
 
 localstack:
-  resources: {}
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "16Mi"

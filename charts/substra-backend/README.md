@@ -72,8 +72,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `server.ingress.extraHosts`                       | The list of additional hostnames to be covered with this ingress record                                                                            | `[]`                                       |
 | `server.ingress.extraTls`                         | The tls configuration for hostnames to be coverred by the ingress                                                                                  | `[]`                                       |
 | `server.ingress.ingressClassName`                 | _IngressClass_ that will be used to implement the Ingress                                                                                          | `nil`                                      |
-| `server.resources.requests.cpu`                   | Server container cpu request                                                                                                                       | `200m`                                     |
-| `server.resources.requests.memory`                | Server container memory request                                                                                                                    | `512Mi`                                    |
+| `server.resources.requests.cpu`                   | Server container cpu request                                                                                                                       | `1000m`                                    |
+| `server.resources.requests.memory`                | Server container memory request                                                                                                                    | `6Gi`                                      |
 | `server.resources.limits.cpu`                     | Server container cpu limit                                                                                                                         | `2000m`                                    |
 | `server.resources.limits.memory`                  | Server container memory limit                                                                                                                      | `12Gi`                                     |
 | `server.persistence.storageClass`                 | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                                       |
@@ -122,8 +122,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.podSecurityContext.runAsUser`          | User ID for the pod                                                                                                                                | `1001`                    |
 | `worker.podSecurityContext.runAsGroup`         | Group ID for the pod                                                                                                                               | `1001`                    |
 | `worker.podSecurityContext.fsGroup`            | FileSystem group ID for the pod                                                                                                                    | `1001`                    |
-| `worker.resources.requests.cpu`                | Worker container cpu request                                                                                                                       | `200m`                    |
-| `worker.resources.requests.memory`             | Worker container memory request                                                                                                                    | `512Mi`                   |
+| `worker.resources.requests.cpu`                | Worker container cpu request                                                                                                                       | `1000m`                   |
+| `worker.resources.requests.memory`             | Worker container memory request                                                                                                                    | `4Gi`                     |
 | `worker.resources.limits.cpu`                  | Worker container cpu limit                                                                                                                         | `2000m`                   |
 | `worker.resources.limits.memory`               | Worker container memory limit                                                                                                                      | `8Gi`                     |
 | `worker.nodeSelector`                          | Node labels for pod assignment                                                                                                                     | `{}`                      |
@@ -138,8 +138,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.computePod.securityContext.fsGroup`    | Set the filesystem group for the Compute pod                                                                                                       | `1001`                    |
 | `worker.computePod.securityContext.runAsUser`  | Set the user for the Compute pod                                                                                                                   | `1001`                    |
 | `worker.computePod.securityContext.runAsGroup` | Set the group for the Compute pod                                                                                                                  | `1001`                    |
-| `worker.computePod.resources.requests.cpu`     | Worker compute pod container cpu request                                                                                                           | `500m`                    |
-| `worker.computePod.resources.requests.memory`  | Worker compute pod container memory request                                                                                                        | `512Mi`                   |
+| `worker.computePod.resources.requests.cpu`     | Worker compute pod container cpu request                                                                                                           | `1000m`                   |
+| `worker.computePod.resources.requests.memory`  | Worker compute pod container memory request                                                                                                        | `1Gi`                     |
 | `worker.computePod.resources.limits.memory`    | Worker compute pod container memory limit                                                                                                          | `64Gi`                    |
 | `worker.events.enabled`                        | Enable event service                                                                                                                               | `true`                    |
 | `worker.events.image.registry`                 | Substra event app image registry                                                                                                                   | `ghcr.io`                 |
@@ -147,8 +147,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.events.image.tag`                      | Substra event app image tag (defaults to AppVersion)                                                                                               | `nil`                     |
 | `worker.events.image.pullPolicy`               | Substra event app image pull policy                                                                                                                | `IfNotPresent`            |
 | `worker.events.image.pullSecrets`              | Specify image pull secrets                                                                                                                         | `[]`                      |
-| `worker.events.resources.requests.cpu`         | Worker events container cpu request                                                                                                                | `100m`                    |
-| `worker.events.resources.requests.memory`      | Worker events container memory request                                                                                                             | `50Mi`                    |
+| `worker.events.resources.requests.cpu`         | Worker events container cpu request                                                                                                                | `500m`                    |
+| `worker.events.resources.requests.memory`      | Worker events container memory request                                                                                                             | `200Mi`                   |
 | `worker.events.resources.limits.cpu`           | Worker events container cpu limit                                                                                                                  | `500m`                    |
 | `worker.events.resources.limits.memory`        | Worker events container memory limit                                                                                                               | `400Mi`                   |
 | `worker.events.podSecurityContext.enabled`     | Enable security context                                                                                                                            | `true`                    |
@@ -176,8 +176,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `schedulerWorker.nodeSelector`                  | Node labels for pod assignment                                     | `{}`                      |
 | `schedulerWorker.tolerations`                   | Toleration labels for pod assignment                               | `[]`                      |
 | `schedulerWorker.affinity`                      | Affinity settings for pod assignment                               | `{}`                      |
-| `schedulerWorker.resources.requests.cpu`        | Scheduler container cpu request                                    | `50m`                     |
-| `schedulerWorker.resources.requests.memory`     | Scheduler container memory request                                 | `50Mi`                    |
+| `schedulerWorker.resources.requests.cpu`        | Scheduler container cpu request                                    | `250m`                    |
+| `schedulerWorker.resources.requests.memory`     | Scheduler container memory request                                 | `200Mi`                   |
 | `schedulerWorker.resources.limits.cpu`          | Scheduler container cpu limit                                      | `250m`                    |
 | `schedulerWorker.resources.limits.memory`       | Scheduler container memory limit                                   | `400Mi`                   |
 | `schedulerWorker.podSecurityContext.enabled`    | Enable security context                                            | `true`                    |
@@ -196,8 +196,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `scheduler.image.tag`                     | Substra backend tasks scheduler image tag (defaults to AppVersion) | `nil`                     |
 | `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy                   | `IfNotPresent`            |
 | `scheduler.image.pullSecrets`             | Specify image pull secrets                                         | `[]`                      |
-| `scheduler.resources.requests.cpu`        | Scheduler container cpu request                                    | `50m`                     |
-| `scheduler.resources.requests.memory`     | Scheduler container memory request                                 | `50Mi`                    |
+| `scheduler.resources.requests.cpu`        | Scheduler container cpu request                                    | `250m`                    |
+| `scheduler.resources.requests.memory`     | Scheduler container memory request                                 | `200Mi`                   |
 | `scheduler.resources.limits.cpu`          | Scheduler container cpu limit                                      | `250m`                    |
 | `scheduler.resources.limits.memory`       | Scheduler container memory limit                                   | `400Mi`                   |
 | `scheduler.nodeSelector`                  | Node labels for pod assignment                                     | `{}`                      |
@@ -225,8 +225,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `builder.podSecurityContext.runAsUser`  | User ID for the pod                                                                                                                                | `1001`                    |
 | `builder.podSecurityContext.runAsGroup` | Group ID for the pod                                                                                                                               | `1001`                    |
 | `builder.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                                                                                                                    | `1001`                    |
-| `builder.resources.requests.cpu`        | Builder container cpu request                                                                                                                      | `200m`                    |
-| `builder.resources.requests.memory`     | Builder container memory request                                                                                                                   | `512Mi`                   |
+| `builder.resources.requests.cpu`        | Builder container cpu request                                                                                                                      | `2000m`                   |
+| `builder.resources.requests.memory`     | Builder container memory request                                                                                                                   | `4Gi`                     |
 | `builder.resources.limits.cpu`          | Builder container cpu limit                                                                                                                        | `2000m`                   |
 | `builder.resources.limits.memory`       | Builder container memory limit                                                                                                                     | `8Gi`                     |
 | `builder.nodeSelector`                  | Node labels for pod assignment                                                                                                                     | `{}`                      |
@@ -260,8 +260,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `api.events.image.tag`                     | Substra event app image tag (defaults to AppVersion) | `nil`                     |
 | `api.events.image.pullPolicy`              | Substra event app image pull policy                  | `IfNotPresent`            |
 | `api.events.image.pullSecrets`             | Specify image pull secrets                           | `[]`                      |
-| `api.events.resources.requests.cpu`        | Api events container cpu request                     | `100m`                    |
-| `api.events.resources.requests.memory`     | Api events container memory request                  | `50Mi`                    |
+| `api.events.resources.requests.cpu`        | Api events container cpu request                     | `500m`                    |
+| `api.events.resources.requests.memory`     | Api events container memory request                  | `200Mi`                   |
 | `api.events.resources.limits.cpu`          | Api events container cpu limit                       | `500m`                    |
 | `api.events.resources.limits.memory`       | Api events container memory limit                    | `400Mi`                   |
 | `api.events.podSecurityContext.enabled`    | Enable security context                              | `true`                    |
@@ -296,8 +296,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `kaniko.image.registry`                 | Kaniko image registry                                                                                                                              | `gcr.io`                  |
 | `kaniko.image.repository`               | Kaniko image repository                                                                                                                            | `kaniko-project/executor` |
 | `kaniko.image.tag`                      | Kaniko image tag                                                                                                                                   | `v1.8.1`                  |
-| `kaniko.resources.requests.cpu`         | Kaniko container cpu request                                                                                                                       | `500m`                    |
-| `kaniko.resources.requests.memory`      | Kaniko container memory request                                                                                                                    | `256Mi`                   |
+| `kaniko.resources.requests.cpu`         | Kaniko container cpu request                                                                                                                       | `1000m`                   |
+| `kaniko.resources.requests.memory`      | Kaniko container memory request                                                                                                                    | `4Gi`                     |
 | `kaniko.resources.limits.memory`        | Kaniko container memory limit                                                                                                                      | `32Gi`                    |
 | `kaniko.mirror`                         | If set to `true` pull base images from the local registry.                                                                                         | `false`                   |
 | `kaniko.dockerConfigSecretName`         | A Docker config to use for pulling base images                                                                                                     | `nil`                     |
@@ -320,8 +320,8 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 | Name                                                         | Description                            | Value   |
 | ------------------------------------------------------------ | -------------------------------------- | ------- |
-| `registryPrepopulate.waitRegistry.resources.requests.cpu`    | Wait registry container cpu request    | `100m`  |
-| `registryPrepopulate.waitRegistry.resources.requests.memory` | Wait registry container memory request | `50Mi`  |
+| `registryPrepopulate.waitRegistry.resources.requests.cpu`    | Wait registry container cpu request    | `500m`  |
+| `registryPrepopulate.waitRegistry.resources.requests.memory` | Wait registry container memory request | `200Mi` |
 | `registryPrepopulate.waitRegistry.resources.limits.memory`   | Wait registry container memory limit   | `400Mi` |
 | `registryPrepopulate.pause.resources.requests.cpu`           | Pause container cpu request            | `50m`   |
 | `registryPrepopulate.pause.resources.requests.memory`        | Pause container memory request         | `64Mi`  |
