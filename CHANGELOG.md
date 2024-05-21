@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.46.0](https://github.com/Substra/substra-backend/releases/tag/0.46.0) - 2024-05-21
+
+
+### Added
+
+- Add privateCa to Kaniko pods ([#877](https://github.com/Substra/substra-backend/pull/877)) ([#877](https://github.com/Substra/substra-backend/pull/877))
+- Parametrize user docker repository for user docker images through environment variable. ([#888](https://github.com/Substra/substra-backend/pull/888))
+- Resources to Kaniko pods and computeTask pods ([#892](https://github.com/Substra/substra-backend/pull/892))
+- Profiling step `download_function` ([#1520](https://github.com/Substra/substra-backend/pull/1520))
+
+### Changed
+
+- Requests to get Docker manifest now uses manifests in version 2 ([#862](https://github.com/Substra/substra-backend/pull/862))
+- substra-backend docker image is now based on Ubuntu 23.10 ([#866](https://github.com/Substra/substra-backend/pull/866))
+- `MinIO` is now the default S3 storage, instead of `localstack`. ([#878](https://github.com/Substra/substra-backend/pull/878))
+
+### Fixed
+
+- Dxf authenticator now uses content of `dockerconfig` to login ([#862](https://github.com/Substra/substra-backend/pull/862))
+
+### Removed
+
+- Function `get_container_images` which was not used ([#862](https://github.com/Substra/substra-backend/pull/862))
+- Task profiling step `build_image` ([#1517](https://github.com/Substra/substra-backend/pull/1517))
+
+
 ## [0.45.0](https://github.com/Substra/substra-backend/releases/tag/0.45.0) - 2024-03-27
 
 
