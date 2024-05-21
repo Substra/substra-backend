@@ -1,0 +1,47 @@
+server:
+  resources: {}
+
+worker:
+  resources: {}
+  computePod:
+    resources: {}
+  events:
+    resources: {}
+
+schedulerWorker:
+  resources: {}
+
+scheduler:
+  resources: {}
+
+builder:
+  resources: {}
+
+api:
+  events:
+    resources: {}
+
+kaniko:
+  resources: {}
+
+registryPrepopulate:
+  waitRegistry:
+    resources: {}
+  pause:
+    resources: {}
+
+postgresql:
+  primary:
+    resources: {}
+
+redis:
+    resources: {}
+
+docker-registry:
+  resources: {}
+
+minio:
+  resources: {}
+
+localstack:
+  resources: {}
