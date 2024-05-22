@@ -7,6 +7,9 @@ requires:
       - name: org-2-harbor
         activatedBy:
           - org-2-harbor
+      - name: org-2-external-registry
+        activatedBy:
+          - org-2-external-registry
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
