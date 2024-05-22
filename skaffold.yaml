@@ -3,6 +3,13 @@ kind: Config
 
 requires:
   - path: examples/secrets/skaffold.yaml
+    activeProfiles:
+      - name: org-2-harbor
+        activatedBy:
+          - org-2-harbor
+      - name: org-2-external-registry
+        activatedBy:
+          - org-2-external-registry
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
@@ -198,3 +205,20 @@ profiles:
       - op: add
         path: /deploy/helm/releases/1/valuesFiles/-
         value: examples/values/backend-org-2-harbor.yaml
+  - name: org-2-harbor
+    patches:
+      - op: add
+        path: /deploy/helm/releases/1/valuesFiles/-
+        value: examples/values/backend-org-2-harbor.yaml
+      - op: add
+        path: /deploy/helm/releases/-
+        value:
+          name: harbor
+          remoteChart: harbor
+          repo: https://charts.bitnami.com/bitnami
+          valuesFiles:
+            - examples/values/harbor.yaml
+          namespace: harbor
+          setValues:
+            _: _
+          createNamespace: true
