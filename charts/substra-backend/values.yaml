@@ -179,8 +179,8 @@ server:
   ##
   resources:
     requests:
-      cpu: "200m"
-      memory: "512Mi"
+      cpu: "1000m"
+      memory: "6Gi"
     limits:
       cpu: "2000m"
       memory: "12Gi"
@@ -313,8 +313,8 @@ worker:
   ##
   resources:
     requests:
-      cpu: "200m"
-      memory: "512Mi"
+      cpu: "1000m"
+      memory: "4Gi"
     limits:
       cpu: "2000m"
       memory: "8Gi"
@@ -361,8 +361,8 @@ worker:
     ##
     resources:
       requests:
-        cpu: "500m"
-        memory: "512Mi"
+        cpu: "1000m"
+        memory: "1Gi"
       limits:
         memory: "64Gi"
   events:
@@ -388,8 +388,8 @@ worker:
     ##
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -462,8 +462,8 @@ schedulerWorker:
   ##
   resources:
     requests:
-      cpu: "50m"
-      memory: "50Mi"
+      cpu: "250m"
+      memory: "200Mi"
     limits:
       cpu: "250m"
       memory: "400Mi"
@@ -505,8 +505,8 @@ scheduler:
   ##
   resources:
     requests:
-      cpu: "50m"
-      memory: "50Mi"
+      cpu: "250m"
+      memory: "200Mi"
     limits:
       cpu: "250m"
       memory: "400Mi"
@@ -582,8 +582,8 @@ builder:
   ##
   resources:
     requests:
-      cpu: "200m"
-      memory: "512Mi"
+      cpu: "2000m"
+      memory: "4Gi"
     limits:
       cpu: "2000m"
       memory: "8Gi"
@@ -675,8 +675,8 @@ api:
     ##
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
         cpu: "500m"
@@ -764,8 +764,8 @@ kaniko:
   ##
   resources:
     requests:
-      cpu: "500m"
-      memory: "256Mi"
+      cpu: "1000m"
+      memory: "4Gi"
     limits:
       memory: "32Gi"
   ## @param kaniko.mirror If set to `true` pull base images from the local registry.
@@ -829,8 +829,8 @@ registryPrepopulate:
   waitRegistry:
     resources:
       requests:
-        memory: "50Mi"
-        cpu: "100m"
+        memory: "200Mi"
+        cpu: "500m"
       limits:
         memory: "400Mi"
   ## @param registryPrepopulate.pause.resources.requests.cpu Pause container cpu request
@@ -947,8 +947,8 @@ postgresql:
         - ALL
     resources:
       requests:
-        cpu: "50m"
-        memory: "256Mi"
+        cpu: "1000m"
+        memory: "2Gi"
       limits:
         cpu: "1000m"
         memory: "4Gi"
@@ -968,8 +968,8 @@ redis:
         redis: 6379
     resources:
       requests:
-        cpu: "50m"
-        memory: "256Mi"
+        cpu: "500m"
+        memory: "512Mi"
       limits:
         cpu: "500m"
         memory: "1024Mi"
@@ -988,14 +988,14 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: true
-    size: 50Gi
+    size: 10Gi
     deleteEnabled: true
   service:
     type: NodePort
   resources:
     requests:
-      cpu: "100m"
-      memory: "256Mi"
+      cpu: "500m"
+      memory: "16Gi"
     limits:
       cpu: "500m"
       memory: "64Gi"
@@ -1021,8 +1021,8 @@ minio:
         - ALL
   resources:
     requests:
-      cpu: "100m"
-      memory: "1Gi"
+      cpu: "500m"
+      memory: "16Gi"
     limits:
       cpu: "1000m"
       memory: "64Gi"
@@ -1036,8 +1036,8 @@ localstack:
       nodePort: ""
   resources:
     requests:
-      cpu: "50m"
-      memory: "1Gi"
+      cpu: "500m"
+      memory: "16Gi"
     limits:
       cpu: "500m"
       memory: "64Gi"

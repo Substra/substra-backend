@@ -55,9 +55,11 @@ def get_resources_requirements_from_yaml(
     """Return a kubernetes.client.V1ResourceRequirements object from a yaml string."""
     resources_dict = yaml.safe_load(yaml_resources)
 
-    return kubernetes.client.V1ResourceRequirements(
-        requests=resources_dict["requests"], limits=resources_dict["limits"]
-    )
+    requests = resources_dict.get("requests", None)
+
+    limits = resources_dict.get("limits", None)
+
+    return kubernetes.client.V1ResourceRequirements(requests=requests, limits=limits)
 
 
 def pod_exists_by_label_selector(k8s_client: kubernetes.client.CoreV1Api, label_selector: str) -> bool:

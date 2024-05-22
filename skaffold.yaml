@@ -35,6 +35,7 @@ deploy:
         chartPath: charts/substra-backend
         valuesFiles:
           - examples/values/backend-org-1.yaml
+          - charts/substra-backend/resources-dev.yaml
         namespace: org-1
         setValues:
           _: _
@@ -59,6 +60,7 @@ deploy:
         chartPath: charts/substra-backend
         valuesFiles:
           - examples/values/backend-org-2.yaml
+          - charts/substra-backend/resources-dev.yaml
         namespace: org-2
         setValues:
           _: _
@@ -194,6 +196,7 @@ profiles:
           chartPath: charts/substra-backend
           valuesFiles:
             - examples/values/backend-org-3.yaml
+            - charts/substra-backend/resources-dev.yaml
           namespace: org-3
           setValues:
             _: _
