@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.6.0] - 2024-05-22
+
+### Added
+
+- Network policies limit connection to pods
+  
 ## [26.5.0] - 2024-04-29
 
 ### Added
