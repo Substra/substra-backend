@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.6.1] - 2024-05-23
+
+### Fix
+
+- Missing resources field in `registryPrepopulate.waitRegistry` deployment (#910)
+
 ## [26.6.0] - 2024-05-22
 
 ### Added
@@ -13,7 +19,7 @@
 ### Changed
 
 - Add `resources-dev.yaml` file to overwrite resources requirement to a minimal value in a dev setup (#907)
-  
+
 ## [26.5.0] - 2024-04-29
 
 ### Added
