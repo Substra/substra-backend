@@ -33,6 +33,17 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-builder
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/component: substra-builder
+        {{- if .Values.privateCa.enabled }}
+        # Needed to create the secret with the certificate
+        role-api-k8s-client: 'true'
+        {{- end }}
+        role-database-client: 'true'
+        role-internet-egress: 'true'
+        role-orchestrator-client: 'true'
+        role-redis-client: 'true'
+        role-registry-client: 'true'
+        role-server-client: 'true'
+        role-storage-client: 'true'
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
         checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}

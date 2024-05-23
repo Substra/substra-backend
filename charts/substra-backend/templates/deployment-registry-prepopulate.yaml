@@ -19,9 +19,11 @@ spec:
       labels:
         {{ include "substra.labels" $ | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
+        role-registry-client: 'true'
+        role-internet-egress: 'true'
     spec:
       initContainers:
-      - name: wait-registry
+      - name: wait-registry 
         image: jwilder/dockerize:0.6.1
         resources:
           {{- toYaml $.Values.registryPrepopulate.waitRegistry | nindent 12 }}

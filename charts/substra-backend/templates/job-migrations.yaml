@@ -12,6 +12,9 @@ spec:
   template:
     metadata:
       name: {{ template "substra.fullname" . }}-migrations
+      labels:
+          {{ include "substra.labels" . | nindent 10 }}
+          role-database-client: 'true'
     spec:
       restartPolicy: OnFailure
       automountServiceAccountToken: false

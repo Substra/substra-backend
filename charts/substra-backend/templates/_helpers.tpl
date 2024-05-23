@@ -327,6 +327,28 @@ Define service URL based on MinIO or LocalStack enablement
     {{- end -}}
 {{- end -}}
 
+{{/*
+Define service port based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.port" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- print "9000" -}}
+    {{- else if .Values.localstack.enabled -}}
+        {{- print "4566" -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define service port based on MinIO or LocalStack enablement
+*/}}
+{{- define "substra-backend.objectStore.labels" -}}
+    {{- if .Values.minio.enabled -}}
+        {{- print "app.kubernetes.io/name: minio" -}}
+    {{- else if .Values.localstack.enabled -}}
+        {{- print "app.kubernetes.io/name: localstack" -}}
+    {{- end -}}
+{{- end -}}
+
 
 {{/*
 Define objectstore access key based on MinIO or LocalStack enablement

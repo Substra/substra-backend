@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name" . }}-server-ingress
+spec:
+  ingress:
+  - from:
+    # Allow workers in other backends to connect
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          role-server-client: 'true'
+    ports:
+    - port: {{ .Values.server.service.port }}
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "substra.name" . }}-server
+      {{ include "substra.labels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.name" . }}-server-egress
+spec:
+  egress:
+  - ports:
+    - port: {{ .Values.server.service.port }}
+      protocol: TCP
+    to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ template "substra.name" . }}-server
+    {{- if .Values.server.allowLocalRequests }}
+    # Allow communication between backends in same cluster
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    - ipBlock:
+        cidr: 172.16.0.0/20
+      {{- end }}
+  podSelector:
+    matchLabels:
+      role-server-client: 'true'
+  policyTypes:
+  - Egress

@@ -51,6 +51,7 @@ server:
   allowImplicitLogin: true
   defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
   commonHostDomain: org-1.com
+  allowLocalRequests: true
   ingress:
     enabled: true
     hostname: "substra-backend.org-1.com"

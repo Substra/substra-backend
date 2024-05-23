@@ -16,6 +16,15 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
+        role-redis-client: 'true'
+        role-database-client: 'true'
+        role-internet-ingress: 'true'
+        role-internet-egress: 'true'
+        role-orchestrator-client: 'true'
+        {{- if .Values.server.allowLocalRequests }}
+        role-server-client: 'true'
+        {{- end }}
+        role-storage-client: 'true'
         {{ include "substra.labels" . | nindent 8 }}
       annotations:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm

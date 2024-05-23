@@ -1,0 +1,14 @@
+# Deny ALL networking in launched substra ml task
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "substra.fullname". }}-deny-ingress
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      substra.ai/pod-type: compute-task
+  policyTypes:
+  - Ingress
+  - Egress
