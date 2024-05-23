@@ -26,7 +26,7 @@ spec:
       - name: wait-registry 
         image: jwilder/dockerize:0.6.1
         resources:
-          {{- toYaml $.Values.registryPrepopulate.waitRegistry | nindent 12 }}
+          {{- toYaml $.Values.registryPrepopulate.waitRegistry.resources | nindent 12 }}
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
         image: {{ include "common.images.name" $.Values.kaniko.image }}
