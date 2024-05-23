@@ -7,7 +7,7 @@ config:
   DEFAULT_THROTTLE_RATES: "120"
   TASK_CACHE_DOCKER_IMAGES: "False"
   LOG_LEVEL: DEBUG
-organizationName: MyOrg1
+organizationName: FirstOrg
 
 # set the same creds as in localdev so they're the same everywhere in dev
 database:
@@ -58,7 +58,7 @@ server:
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
-      nginx.ingress.kubernetes.io/proxy-body-size: 100m
+      nginx.ingress.kubernetes.io/proxy-body-size: 500m
       nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502"
@@ -73,13 +73,13 @@ kaniko:
 
 addAccountOperator:
   incomingOrganizations:
-    - { name: MyOrg1MSP, secret: selfSecret1 }
-    - { name: MyOrg2MSP, secret: organizationSecret1w2 }
-    - { name: MyOrg3MSP, secret: organizationSecret1w3 }
+    - { name: "First Organization", secret: "selfSecret1" }
+    - { name: "MyOrg2MSP", secret: "organizationSecret1w2" }
+    - { name: "MyOrg3MSP", secret: "organizationSecret1w3" }
   outgoingOrganizations:
-    - { name: MyOrg1MSP, secret: selfSecret1 }
-    - { name: MyOrg2MSP, secret: organizationSecret2w1 }
-    - { name: MyOrg3MSP, secret: organizationSecret3w1 }
+    - { name: "First Organization", secret: "selfSecret1" }
+    - { name: "MyOrg2MSP", secret: "organizationSecret2w1" }
+    - { name: "MyOrg3MSP", secret: "organizationSecret3w1" }
 
   users:
     - name: "org-1"
@@ -123,7 +123,7 @@ orchestrator:
     mtls:
       enabled: true
       clientCertificate: orchestrator-tls-client-pair
-  mspID: MyOrg1MSP
+  mspID: "First Organization"
   channels:
     - mychannel:
         restricted: false

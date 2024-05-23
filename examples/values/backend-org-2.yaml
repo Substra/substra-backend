@@ -58,7 +58,7 @@ server:
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
-      nginx.ingress.kubernetes.io/proxy-body-size: 100m
+      nginx.ingress.kubernetes.io/proxy-body-size: 500m
       nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
       nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502"
@@ -73,13 +73,13 @@ kaniko:
 
 addAccountOperator:
   incomingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret2w1 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
-    - { name: MyOrg3MSP, secret: organizationSecret2w3 }
+    - { name: "First Organization", secret: "organizationSecret2w1" }
+    - { name: "MyOrg2MSP", secret: "selfSecret2" }
+    - { name: "MyOrg3MSP", secret: "organizationSecret2w3" }
   outgoingOrganizations:
-    - { name: MyOrg1MSP, secret: organizationSecret1w2 }
-    - { name: MyOrg2MSP, secret: selfSecret2 }
-    - { name: MyOrg3MSP, secret: organizationSecret3w2 }
+    - { name: "First Organization", secret: "organizationSecret1w2" }
+    - { name: "MyOrg2MSP", secret: "selfSecret2" }
+    - { name: "MyOrg3MSP", secret: "organizationSecret3w2" }
 
   users:
     - name: "org-2"
