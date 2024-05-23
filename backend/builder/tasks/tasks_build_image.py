@@ -5,7 +5,7 @@ import orchestrator
 from backend.celery import app
 from builder.exceptions import BuildRetryError
 from builder.exceptions import CeleryNoRetryError
-from builder.image_builder.image_builder import build_image_if_missing
+from builder.image_builder import image_builder
 from builder.tasks.task import BuildTask
 
 logger = structlog.get_logger(__name__)
@@ -26,7 +26,7 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
     while attempt <= task.max_retries:
         try:
             # TODO refactor
-            build_image_if_missing(channel_name, function)
+            image_builder.build_image_if_missing(channel_name, function)
         except BuildRetryError as e:
             logger.info(
                 "Retrying build",
@@ -40,4 +40,8 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
                 raise CeleryNoRetryError from e
             else:
                 continue
+        except Exception as exception:
+            logger.exception(exception)
+            raise CeleryNoRetryError from exception
+
         break

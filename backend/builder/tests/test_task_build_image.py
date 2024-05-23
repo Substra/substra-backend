@@ -7,6 +7,7 @@ import orchestrator.mock as orc_mock
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.tasks.tasks_build_image import build_image
+from substrapp.compute_tasks.errors import CeleryNoRetryError
 from substrapp.models import FailedAssetKind
 from substrapp.utils.errors import store_failure
 
@@ -28,6 +29,15 @@ def test_store_failure_build_error():
     assert failure_report.logs.read() == str.encode(msg)
 
 
+def test_catch_all_exceptions(celery_app, celery_worker, mocker):
+    mocker.patch("builder.tasks.task.get_orchestrator_client")
+    mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=Exception("random error"))
+    function = orc_mock.FunctionFactory()
+    with pytest.raises(CeleryNoRetryError):
+        r = build_image.apply_async(kwargs={"function_serialized": function.model_dump_json(), "channel_name": CHANNEL})
+        r.get()
+
+
 @pytest.mark.parametrize("execution_number", range(10))
 def test_order_building_success(celery_app, celery_worker, mocker, execution_number):
     function_1 = orc_mock.FunctionFactory()
@@ -35,7 +45,7 @@ def test_order_building_success(celery_app, celery_worker, mocker, execution_num
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
     mocker.patch("builder.tasks.task.get_orchestrator_client")
-    mocker.patch("builder.tasks.tasks_build_image.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5))
+    mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5))
 
     result_1 = build_image.apply_async(
         kwargs={"function_serialized": function_1.model_dump_json(), "channel_name": CHANNEL}
@@ -71,7 +81,7 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
     mocker.patch("builder.tasks.task.get_orchestrator_client")
-    mocker.patch("builder.tasks.tasks_build_image.build_image_if_missing", side_effect=side_effect_creator())
+    mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=side_effect_creator())
 
     result_retry = build_image.apply_async(
         kwargs={"function_serialized": function_retry.model_dump_json(), "channel_name": CHANNEL}
