@@ -54,7 +54,7 @@ def get_registry_auth() -> typing.Optional[DockerAuthDict]:
 def get_request_docker_api(
     path: str,
     header_accept: str = (
-        "application/vnd.docker.distribution.manifest.v2+json," "application/vnd.oci.image.manifest.v1+json"
+        "application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json"
     ),
 ) -> dict:
     headers = {"Accept": header_accept}
