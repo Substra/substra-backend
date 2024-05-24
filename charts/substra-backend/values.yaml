@@ -749,6 +749,9 @@ orchestrator:
         restricted: false
         model_export_enabled: false
 
+  ## @param orchestrator.sameCluster Turn this setting to on when the orchestrator is on the same cluster to allow a more relaxed network policy
+  sameCluster: false
+
 ## @section Kaniko settings
 ##
 kaniko:

@@ -115,6 +115,7 @@ privateCa:
 
 orchestrator:
   host: orchestrator-org-1-server.org-1.svc.cluster.local
+  sameCluster: true
   port: 9000
   tls:
     enabled: true

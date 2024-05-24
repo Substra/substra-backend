@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## [26.6.2] - 2024-05-24
+
+### Changed
+
+- Allow all ingress on server pod (#912)
+- Add a variable (`orchestrator.sameCluster`) to allow more communication between backend and orchestrator (#912)
+  
 ## [26.6.1] - 2024-05-23
 
 ### Fix
