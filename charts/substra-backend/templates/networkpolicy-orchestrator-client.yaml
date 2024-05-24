@@ -1,3 +1,4 @@
+{{- if .Values.orchestrator.sameCluster }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -10,12 +11,13 @@ spec:
   - Egress
   egress:
   - to:
-    - namespaceSelector: {}
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: orchestrator
-          app.kubernetes.io/component: "server"
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    - ipBlock:
+        cidr: 192.168.0.0/16
+    - ipBlock:
+        cidr: 172.16.0.0/20
     ports:
     - protocol: TCP
       port: {{ .Values.orchestrator.port }}
-
+{{- end -}}
