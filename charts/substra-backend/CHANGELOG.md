@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.6.4] - 2024-05-27
+
+### Fixed
+
+- whitespace removal removed newline in `networkpolicy-orchestrator-client.yaml` (#914)
+  
 ## [26.6.3] - 2024-05-27
 
 ### Changed
