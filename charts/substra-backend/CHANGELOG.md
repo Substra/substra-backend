@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- towncrier release notes start -->
-## [26.6.2] - 2024-05-27
+## [26.6.3] - 2024-05-27
 
 ### Changed
 
