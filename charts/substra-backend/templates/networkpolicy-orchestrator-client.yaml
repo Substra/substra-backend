@@ -17,7 +17,7 @@ spec:
         cidr: 192.168.0.0/16
     - ipBlock:
         cidr: 172.16.0.0/20
-    {{- else -}}
+    {{- else }}
     - ipBlock:
         cidr: 0.0.0.0/0
         except:
