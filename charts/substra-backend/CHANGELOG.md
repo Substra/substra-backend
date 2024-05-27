@@ -1,6 +1,11 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.6.2] - 2024-05-27
+
+### Changed
+
+- Allow pods with label `role-orchestrator-client` to communicate with internet when orchestrator is remote (#913)
 
 ## [26.6.2] - 2024-05-24
 
