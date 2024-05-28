@@ -47,9 +47,9 @@ spec:
             ## IncomingOrganization
             while IFS= read -r org_password; do
               # Extract the password as the last word
-              password=$(echo "$user_password" | awk '{print $NF}')
+              password=$(echo "$org_password" | awk '{print $NF}')
               # Extract the username by removing the last word
-              orgname=$(echo "$user_password" | sed 's/ [^ ]*$//')
+              orgname=$(echo "$org_password" | sed 's/ [^ ]*$//')
               ./manage.py create_incoming_organization "$orgname" "$password"
             done < /accounts/incoming_organizations
 

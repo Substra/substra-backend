@@ -1,6 +1,13 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+
+## [26.6.6] - 2024-06-03
+
+### Changed
+
+- Handle whitespaces in organization names during registration in migrations (#915)
+
 ## [26.6.5] - 2024-05-29
 
 ### Fixed
@@ -12,7 +19,7 @@
 ### Fixed
 
 - whitespace removal removed newline in `networkpolicy-orchestrator-client.yaml` (#914)
-  
+
 ## [26.6.3] - 2024-05-27
 
 ### Changed
@@ -25,7 +32,7 @@
 
 - Allow all ingress on server pod (#912)
 - Add a variable (`orchestrator.sameCluster`) to allow more communication between backend and orchestrator (#912)
-  
+
 ## [26.6.1] - 2024-05-23
 
 ### Fix
