@@ -34,6 +34,7 @@ def get_security_context(root: bool = False, capabilities: list[str] = None) -> 
         privileged=False,
         allow_privilege_escalation=False,
         capabilities=kubernetes.client.V1Capabilities(drop=["ALL"], add=capabilities),
+        seccomp_profile=kubernetes.client.V1SeccompProfile(type="RuntimeDefault"),
     )
 
     if root:
