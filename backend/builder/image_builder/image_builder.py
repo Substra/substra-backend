@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from typing import Union
 
 import kubernetes
+import requests.exceptions
 import structlog
 from django.conf import settings
 
@@ -67,7 +68,12 @@ def build_image_if_missing(channel: str, function: orchestrator.Function) -> Non
     datastore = ds.Datastore(channel=channel)
     container_image_tag = utils.container_image_tag_from_function(function)
     with lock_resource("image-build", container_image_tag, ttl=IMAGE_BUILD_TIMEOUT, timeout=IMAGE_BUILD_TIMEOUT):
-        if docker.container_image_exists(container_image_tag):
+        try:
+            image_exists = docker.container_image_exists(container_image_tag)
+        except requests.exceptions.ReadTimeout as e:
+            raise BuildRetryError(f"Timeout while checking if image exists: {e}") from e
+
+        if image_exists:
             logger.info("Reusing existing image", image=container_image_tag)
         else:
             asset_content = datastore.get_function(function)
@@ -136,7 +142,7 @@ def _delete_kaniko_pod(create_pod: bool, k8s_client: kubernetes.client.CoreV1Api
 
 
 @timeit
-def _build_container_image(path: str, tag: str) -> None:
+def _build_container_image(path: str, tag: str) -> None:  # noqa: C901
     _assert_dockerfile_exist(path)
 
     kubernetes.config.load_incluster_config()
@@ -160,7 +166,11 @@ def _build_container_image(path: str, tag: str) -> None:
 
     except Exception as e:
         # In case of concurrent builds, it may fail. Check if the image exists.
-        if docker.container_image_exists(tag):
+        try:
+            image_exists = docker.container_image_exists(tag)
+        except Exception:
+            image_exists = False
+        if image_exists:
             logger.warning(
                 f"Build of container image {tag} failed, probably because it was done by a concurrent build",
                 exc_info=True,

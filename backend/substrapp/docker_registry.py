@@ -75,8 +75,6 @@ def get_request_docker_api(
     if response.status_code != requests.status_codes.codes.ok:
         raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
 
-    response.raise_for_status()
-
     return response.json()
 
 
