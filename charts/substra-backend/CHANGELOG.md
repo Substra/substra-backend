@@ -5,7 +5,7 @@
 
 ### Fixed
 
-- Open ingress for `docker-registry` when `containerRegistry.local` is `true` as it it is necessary on some infrastructure (#915)
+- Open ingress for `docker-registry` when `containerRegistry.local` is `true` as it it is necessary on some infrastructure (#916)
 
 ## [26.6.4] - 2024-05-27
 
