@@ -1000,6 +1000,8 @@ redis:
     appendonly yes
     # Disable RDB persistence since AOF persistence is enabled
     save ""
+  pdb:
+    create: false
 
 ## @skip docker-registry
 ##
@@ -1057,6 +1059,8 @@ minio:
       drop: [ "ALL" ]
     seccompProfile:
       type: "RuntimeDefault"
+  pdb:
+    create: false
 
 ## @skip localstack
 ##
