@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.6.5] - 2024-05-29
+
+### Fixed
+
+- Open ingress for `docker-registry` when `containerRegistry.local` is `true` as it it is necessary on some infrastructure (#916)
+
 ## [26.6.4] - 2024-05-27
 
 ### Fixed

@@ -16,9 +16,10 @@ spec:
           app.kubernetes.io/part-of: {{ template "substra.name" . }}
           role-registry-client: 'true'
   # kaniko-function-xx send requests through the service, which changes the IP address calling the registry, preventing 
-  # to connect as the connection doesn't come directly from the pod
+  # to connect as the connection doesn't come directly from the pod. Cloud provider also uses IPs whiwh are not part
+  # of the cluster to pull images
     - ipBlock:
-        cidr: 10.0.0.0/8
+        cidr: 0.0.0.0/0
     ports:
     - protocol: TCP
       port: {{ .Values.containerRegistry.port }}
