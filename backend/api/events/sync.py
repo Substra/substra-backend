@@ -406,7 +406,9 @@ def _on_create_failure_report_event(event: dict) -> None:
     asset_key = event["asset_key"]
     failure_report = event["failure_report"]
 
-    _create_failure_report(data=failure_report)
+    error_type = failure_report_pb2.ErrorType.Value(failure_report["error_type"])
+    if error_type != failure_report_pb2.ERROR_TYPE_INTERNAL:
+        _create_failure_report(data=failure_report)
 
     asset_type = failure_report_pb2.FailedAssetKind.Value(failure_report["asset_type"])
 
