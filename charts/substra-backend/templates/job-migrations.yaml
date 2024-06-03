@@ -45,15 +45,21 @@ spec:
             done < /accounts/users
 
             ## IncomingOrganization
-            while read -r user_password; do
-                read user password <<< "$user_password"
-                ./manage.py create_incoming_organization "$user" "$password"
+            while IFS= read -r org_password; do
+              # Extract the password as the last word
+              password=$(echo "$org_password" | awk '{print $NF}')
+              # Extract the username by removing the last word
+              orgname=$(echo "$org_password" | sed 's/ [^ ]*$//')
+              ./manage.py create_incoming_organization "$orgname" "$password"
             done < /accounts/incoming_organizations
 
             ## OutgoingOrganization
-            while read -r user_password; do
-                read user password <<< "$user_password"
-                ./manage.py create_outgoing_organization "$user" "$password"
+            while IFS= read -r org_password; do
+              # Extract the password as the last word
+              password=$(echo "$org_password" | awk '{print $NF}')
+              # Extract the username by removing the last word
+              orgname=$(echo "$org_password" | sed 's/ [^ ]*$//')
+              ./manage.py create_outgoing_organization "$orgname" "$password"
             done < /accounts/outgoing_organizations
         envFrom:
           - configMapRef:
