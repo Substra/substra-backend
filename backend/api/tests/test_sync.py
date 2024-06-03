@@ -96,3 +96,44 @@ def test_on_create_failure_report():
     compute_task = ComputeTask.objects.get(key=asset_key)
     assert compute_task.logs_address == logs_address
     assert compute_task.error_type == "ERROR_TYPE_EXECUTION"
+
+
+@pytest.mark.django_db
+def test_on_create_failure_report_internal():
+    compute_plan = factory.create_computeplan()
+
+    function = factory.create_function(
+        inputs=factory.build_function_inputs(["datasamples", "opener", "model"]),
+        outputs=factory.build_function_outputs(["model"]),
+        name="simple function",
+    )
+    test_task = factory.create_computetask(
+        compute_plan,
+        function,
+        outputs=factory.build_computetask_outputs(function),
+        status=ComputeTask.Status.STATUS_WAITING_FOR_PARENT_TASKS,
+    )
+    asset_key = test_task.key
+    payload = {
+        "id": "157ba2a7-e94c-4173-a647-45df4294e370",
+        "asset_key": asset_key,
+        "asset_kind": "ASSET_FAILURE_REPORT",
+        "event_kind": "EVENT_ASSET_CREATED",
+        "channel": "mychannel",
+        "timestamp": "2024-01-09T17:20:25.994591Z",
+        "failure_report": {
+            "asset_key": asset_key,
+            "error_type": "ERROR_TYPE_INTERNAL",
+            "creation_date": "2024-01-09T17:20:25.994591Z",
+            "owner": "MyOrg1MSP",
+            "asset_type": "FAILED_ASSET_COMPUTE_TASK",
+        },
+        "metadata": {},
+    }
+    _on_create_failure_report_event(payload)
+
+    # AsseFailureReport is not created for internal errors
+    with pytest.raises(AssetFailureReport.DoesNotExist):
+        AssetFailureReport.objects.get(asset_key=asset_key)
+    compute_task = ComputeTask.objects.get(key=asset_key)
+    assert compute_task.error_type == "ERROR_TYPE_INTERNAL"
