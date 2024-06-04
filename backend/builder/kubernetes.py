@@ -15,6 +15,8 @@ logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
 CA_SECRET_NAME = "ca-certificates"  # nosec B105
+BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS = settings.BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS
+BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS = settings.BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS
 
 
 class ObjectState(enum.Enum):
@@ -82,7 +84,7 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
     # This variable is used to track the current status through retries
     previous_pod_status = None
 
-    while attempt < max_attempts:
+    while attempt < BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS:
         try:
             api_response = retrieve_pod_status(k8s_client, name)
         except kubernetes.client.ApiException as exc:
@@ -116,7 +118,8 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
             # increment attempt because if at some point our pod is stuck in pending state
             # we need to exit this function
             attempt += 1
-            time.sleep(2)
+            # time.sleep(2)
+            time.sleep(BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS)
 
         # Here PodInitializing and ContainerCreating are valid reasons to wait more time
         # Other possible reasons include "CrashLoopBackOff", "CreateContainerConfigError",
