@@ -191,6 +191,10 @@ spec:
             value: {{ include "substra-backend.objectStore.url" . | quote }}
           - name: KANIKO_RESOURCES
             value: {{ toYaml .Values.kaniko.resources | quote }}
+          - name: BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS
+            value: {{ toYaml .Values.builder.kanikoStartup.maxAttempts | quote }}
+          - name: BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS
+            value: {{ toYaml .Values.builder.kanikoStartup.checkDelay | quote }}
         ports:
           - name: http
             containerPort: 8000
