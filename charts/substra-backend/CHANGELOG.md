@@ -1,6 +1,11 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.7.0] - 2024-06-04
+
+### Changed
+
+- Add `BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS` & `BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS` in builder
 
 ## [26.6.8] - 2024-06-06
 
