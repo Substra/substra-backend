@@ -83,6 +83,7 @@ def execute_compute_task(ctx: Context) -> None:
     if _is_pod_creation_needed(compute_pod.label_selector, client=k8s_client):
         # save entrypoint to DB
         entrypoint = get_entrypoint(container_image_tag)
+
         ImageEntrypoint.objects.get_or_create(
             archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
         )

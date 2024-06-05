@@ -9,6 +9,7 @@ from typing import Union
 
 from dxf import DXF
 from dxf import DXFBase
+from requests import HTTPError
 from tqdm import tqdm
 
 from image_transfer.common import Authenticator
@@ -19,6 +20,7 @@ from image_transfer.common import Manifest
 from image_transfer.common import PayloadDescriptor
 from image_transfer.common import PayloadSide
 from image_transfer.common import progress_as_string
+from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.utils import safezip
 
 
@@ -89,7 +91,13 @@ def get_manifests_and_list_of_all_blobs(
     manifests = []
     blobs_to_pull = []
     for docker_image in docker_images:
-        manifest, blobs = get_manifest_and_list_of_blobs_to_pull(dxf_base, docker_image, platform)
+        try:
+            manifest, blobs = get_manifest_and_list_of_blobs_to_pull(dxf_base, docker_image, platform)
+        except HTTPError as e:
+            if e.response.status_code == 412:
+                raise RegistryPreconditionFailedException(
+                    f"{docker_image} is either not scanned yet or not passing the vulnerability checks."
+                ) from e
         manifests.append(manifest)
         blobs_to_pull += blobs
     return manifests, blobs_to_pull

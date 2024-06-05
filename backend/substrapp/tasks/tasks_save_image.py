@@ -10,12 +10,15 @@ from django.conf import settings
 from django.core.files import File
 from django.urls import reverse
 
+import image_transfer
 import orchestrator
 from api.models import Function as ApiFunction
 from backend.celery import app
-from image_transfer import make_payload
+from builder.exceptions import BuildRetryError
 from substrapp.compute_tasks import utils
+from substrapp.compute_tasks.errors import CeleryNoRetryError
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
+from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.models import FailedAssetKind
 from substrapp.models import FunctionImage
 from substrapp.orchestrator import get_orchestrator_client
@@ -61,18 +64,8 @@ class SaveImageTask(FailableTask):
             )
 
 
-@app.task(
-    bind=True,
-    acks_late=True,
-    reject_on_worker_lost=True,
-    ignore_result=False,
-    base=SaveImageTask,
-)
-# Ack late and reject on worker lost allows use to
-# see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
-# and https://github.com/celery/celery/issues/5106
-def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[dict, str]:
-    logger.info("Starting save_image_task")
+def save_image(function_serialized: str, channel_name: str) -> dict:
+    logger.info("Starting save_image")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
     # create serialized image
     function = orchestrator.Function.model_validate_json(function_serialized)
@@ -84,12 +77,20 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
 
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
-        make_payload(
-            zip_file=storage_path,
-            docker_images_to_transfer=[f"{USER_IMAGE_REPOSITORY}:{container_image_tag}"],
-            registry=REGISTRY,
-            secure=REGISTRY_SCHEME == "https",
-        )
+        try:
+            image_transfer.make_payload(
+                zip_file=storage_path,
+                docker_images_to_transfer=[f"{USER_IMAGE_REPOSITORY}:{container_image_tag}"],
+                registry=REGISTRY,
+                secure=REGISTRY_SCHEME == "https",
+            )
+        except RegistryPreconditionFailedException as e:
+            raise BuildRetryError(
+                f"The image associated with the function {function.key} was built successfully "
+                f"but did not pass the security checks; "
+                "please contact an Harbor administrator to ensure that the image was scanned, "
+                "and get more information about the CVE."
+            ) from e
 
         logger.info("Start saving the serialized image")
         # save it
@@ -115,4 +116,24 @@ def save_image_task(task: SaveImageTask, function_serialized: str, channel_name:
             },
         }
 
-        return orc_update_function_param, channel_name
+        return orc_update_function_param
+
+
+@app.task(
+    bind=True,
+    acks_late=True,
+    reject_on_worker_lost=True,
+    ignore_result=False,
+    base=SaveImageTask,
+)
+# Ack late and reject on worker lost allows use to
+# see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
+# and https://github.com/celery/celery/issues/5106
+def save_image_task(task: SaveImageTask, function_serialized: str, channel_name: str) -> tuple[dict, str]:
+    try:
+        orc_update_function_param = save_image(function_serialized, channel_name)
+    except BuildRetryError:
+        raise
+    except Exception as e:
+        raise CeleryNoRetryError from e
+    return orc_update_function_param, channel_name
