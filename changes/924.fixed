@@ -1,0 +1,1 @@
+Bypass `AssetFailureReport` creation whenerror type is `ERROR_TYPE_INTERNAL`. It fixes errors when the backend receives an internal error from the orchestrator (without log address/checksum, as they are not provided in this scenario)
