@@ -1,0 +1,1 @@
+All exceptions raised during the build of an image are caught and properly handled.

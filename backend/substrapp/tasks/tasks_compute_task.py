@@ -129,7 +129,7 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
         raise
     except Exception as exception:
         logger.exception(exception)
-        raise compute_task_errors.CeleryRetryError() from exception
+        raise compute_task_errors.CeleryRetryError from exception
 
 
 def _send_profiling_event(*, channel_name: str, url_create: str, url_update: str, data: dict[str, Any]) -> bytes:
