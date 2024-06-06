@@ -3,6 +3,7 @@ from django.conf import settings
 
 import orchestrator
 from backend.celery import app
+from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.exceptions import CeleryNoRetryError
 from builder.image_builder import image_builder
@@ -40,6 +41,8 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
                 raise CeleryNoRetryError from e
             else:
                 continue
+        except BuildError:
+            raise
         except Exception as exception:
             logger.exception(exception)
             raise CeleryNoRetryError from exception
