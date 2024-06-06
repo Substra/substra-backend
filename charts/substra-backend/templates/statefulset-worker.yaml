@@ -53,6 +53,9 @@ spec:
     spec:
       {{- if .Values.worker.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         runAsUser: {{ .Values.worker.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.worker.podSecurityContext.runAsGroup }}
         fsGroup: {{ .Values.worker.podSecurityContext.fsGroup }}
@@ -72,6 +75,13 @@ spec:
         - name: worker
           image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: "{{ .Values.worker.image.pullPolicy }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.worker,{{ .Values.organizationName }}.worker-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.worker-${HOSTNAME##*-}"]

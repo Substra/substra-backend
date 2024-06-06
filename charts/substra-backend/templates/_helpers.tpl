@@ -243,6 +243,13 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- if or .Values.minio.enabled .Values.localstack.enabled }}
 - name: wait-minio
   image: jwilder/dockerize:0.6.1
+  securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop: ["ALL"]
   command: ['dockerize', '-wait', 'tcp://{{ template "substra-backend.objectStore.url" .}}', '-timeout', '15s']
 {{- end }}
 {{- end -}}
@@ -254,6 +261,13 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.waitPostgresqlInitContainer" -}}
 - name: wait-postgresql
   image: postgres
+  securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop: ["ALL"]
   env:
    - name: PGUSER
      value: {{ .Values.database.auth.username }}
@@ -274,6 +288,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
   imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
   securityContext:
     runAsUser: 0
+    runAsNonRoot: false
   command: ['sh', '-c']
   args:
   - |
@@ -296,6 +311,13 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.waitInitMigrationsInitContainer" -}}
 - name: wait-init-migrations
   image: {{ include "substra-backend.images.name" (dict "img" .Values.worker.events.image "defaultTag" $.Chart.AppVersion) }}
+  securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop: ["ALL"]
   command: ['bash', '/usr/src/app/wait-init-migration.sh']
   volumeMounts:
   - name: volume-wait-init-migrations

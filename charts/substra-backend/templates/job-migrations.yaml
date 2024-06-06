@@ -20,6 +20,9 @@ spec:
       automountServiceAccountToken: false
       {{- if .Values.server.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.server.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
@@ -30,6 +33,13 @@ spec:
       {{- end }}
       containers:
       - name: db-migrations
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         image: {{ include "substra-backend.images.name" (dict "img" .Values.server.image "defaultTag" $.Chart.AppVersion) }}
         imagePullPolicy: {{ .Values.server.image.pullPolicy }}
         command: ["/bin/bash", "-c"]

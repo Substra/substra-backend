@@ -36,9 +36,13 @@ spec:
       {{- end }}
       {{- if .Values.worker.events.podSecurityContext.enabled }}
       securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
         fsGroup: {{ .Values.worker.events.podSecurityContext.fsGroup }}
         runAsUser: {{ .Values.worker.events.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.worker.events.podSecurityContext.runAsGroup }}
+
       {{- end }}
       serviceAccountName: {{ include "substra.worker.events.serviceAccountName" . }}
       containers:
@@ -47,6 +51,13 @@ spec:
           imagePullPolicy: {{ .Values.worker.events.image.pullPolicy }}
           resources:
             {{- toYaml .Values.worker.events.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           command: ["/bin/bash"]
           {{- if eq .Values.settings "prod" }}
           args: ["-c", "python manage.py consume"]

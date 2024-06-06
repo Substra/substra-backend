@@ -23,13 +23,27 @@ spec:
         role-internet-egress: 'true'
     spec:
       initContainers:
-      - name: wait-registry 
+      - name: wait-registry
         image: jwilder/dockerize:0.6.1
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         resources:
           {{- toYaml $.Values.registryPrepopulate.waitRegistry.resources | nindent 12 }}
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
         image: {{ include "common.images.name" $.Values.kaniko.image }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
         resources:
           {{- toYaml $.Values.kaniko.resources | nindent 12 }}
         args:
@@ -56,6 +70,13 @@ spec:
         name: pause
         resources:
           {{- toYaml $.Values.registryPrepopulate.pause.resources | nindent 12 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop: ["ALL"]
       volumes:
       - name: kaniko-dir
         emptyDir: {}

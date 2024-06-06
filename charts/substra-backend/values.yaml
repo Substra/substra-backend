@@ -488,7 +488,7 @@ scheduler:
   ## @param scheduler.replicaCount Replica count for the scheduler server
   ##
   replicaCount: 1
-  ## @param scheduler.image.registry Subsra backend tasks scheduler image registry
+  ## @param scheduler.image.registry Substra backend tasks scheduler image registry
   ## @param scheduler.image.repository Substra backend tasks scheduler image repository
   ## @param scheduler.image.tag Substra backend tasks scheduler image tag (defaults to AppVersion)
   ## @param scheduler.image.pullPolicy Substra backend task scheduler image pull policy
@@ -941,15 +941,6 @@ postgresql:
     database: *psql-database
   ## @skip postgresql.primary
   primary:
-    podSecurityContext:
-      runAsNonRoot: true
-      seccompProfile:
-        type: RuntimeDefault
-    containerSecurityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-        - ALL
     resources:
       requests:
         cpu: "1000m"
@@ -957,6 +948,20 @@ postgresql:
       limits:
         cpu: "1000m"
         memory: "4Gi"
+    podSecurityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ "ALL" ]
+      seccompProfile:
+        type: "RuntimeDefault"
 
 ## @skip redis
 ##
@@ -978,6 +983,16 @@ redis:
       limits:
         cpu: "500m"
         memory: "1024Mi"
+    containerSecurityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop: [ "ALL" ]
   replica:
     replicaCount: 0
   commonConfiguration: |-
@@ -985,6 +1000,8 @@ redis:
     appendonly yes
     # Disable RDB persistence since AOF persistence is enabled
     save ""
+  pdb:
+    create: false
 
 ## @skip docker-registry
 ##
@@ -1004,6 +1021,15 @@ docker-registry:
     limits:
       cpu: "500m"
       memory: "64Gi"
+  containerSecurityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
 
 ## @skip minio
 ##
@@ -1016,14 +1042,6 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
-  podSecurityContext:
-    seccompProfile:
-      type: RuntimeDefault
-  containerSecurityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
   resources:
     requests:
       cpu: "500m"
@@ -1031,6 +1049,18 @@ minio:
     limits:
       cpu: "1000m"
       memory: "64Gi"
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ "ALL" ]
+    seccompProfile:
+      type: "RuntimeDefault"
+  pdb:
+    create: false
 
 ## @skip localstack
 ##
@@ -1070,6 +1100,7 @@ localstack:
     enabled: true
     accessMode: ReadWriteOnce
     size: 5Gi
+
 ## @section Helm hooks
 ##
 hooks:

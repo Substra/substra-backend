@@ -7,6 +7,14 @@ Substra Backend is a component of [Substra](https://github.com/SubstraFoundation
 - Kubernetes 1.19+
 - If you want to enable GPU support, install the nvidia device plugin for kubernetes: https://github.com/NVIDIA/k8s-device-plugin or https://github.com/NVIDIA/gpu-operator
 
+## Upgrading dependencies
+
+If you make changes to the versions of the external charts defined in `Chart.yaml`, you need to update the `Chart.lock` file by running:
+
+```bash
+helm dependency update
+```
+
 ## Changelog
 
 See [CHANGELOG.md](https://github.com/Substra/substra-backend/blob/main/charts/substra-backend/CHANGELOG.md)
@@ -192,7 +200,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | ----------------------------------------- | ------------------------------------------------------------------ | ------------------------- |
 | `scheduler.enabled`                       | Enable scheduler service                                           | `true`                    |
 | `scheduler.replicaCount`                  | Replica count for the scheduler server                             | `1`                       |
-| `scheduler.image.registry`                | Subsra backend tasks scheduler image registry                      | `ghcr.io`                 |
+| `scheduler.image.registry`                | Substra backend tasks scheduler image registry                     | `ghcr.io`                 |
 | `scheduler.image.repository`              | Substra backend tasks scheduler image repository                   | `substra/substra-backend` |
 | `scheduler.image.tag`                     | Substra backend tasks scheduler image tag (defaults to AppVersion) | `nil`                     |
 | `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy                   | `IfNotPresent`            |

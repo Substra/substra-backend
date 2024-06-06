@@ -2,6 +2,16 @@
 
 <!-- towncrier release notes start -->
 
+## [26.6.8] - 2024-06-06
+
+### Added
+
+- Pod and container security contexts (#895)
+
+### Changed
+
+- Updated bitnami charts to their latest version (#895)
+
 ## [26.6.7] - 2024-06-03
 
 
