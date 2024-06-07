@@ -942,7 +942,6 @@ postgresql:
   ## @skip postgresql.auth
   auth:
     enablePostgresUser: false
-    postgresPassword: *psql-password
     username: *psql-username
     password: *psql-password
     database: *psql-database
