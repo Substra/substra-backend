@@ -548,6 +548,13 @@ builder:
   ##
   concurrency: 1
 
+  ## @param builder.kanikoStartup.maxAttempts Number of checks done before considering a kaniko pod has failed to spawn
+  ## @param builder.kanikoStartup.checkDelay Time, in seconds, to wait when a container is in pending state before checking again its status
+  ##
+  kanikoStartup:
+    maxAttempts: 60
+    checkDelay: 2
+
   ## Substra backend image version
   ## @param builder.image.registry Substra backend server image registry
   ## @param builder.image.repository Substra backend server image repository
