@@ -118,7 +118,6 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
             # increment attempt because if at some point our pod is stuck in pending state
             # we need to exit this function
             attempt += 1
-            # time.sleep(2)
             time.sleep(BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS)
 
         # Here PodInitializing and ContainerCreating are valid reasons to wait more time
