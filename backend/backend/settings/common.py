@@ -18,6 +18,11 @@ import structlog
 from django.core.files.storage import FileSystemStorage
 
 from .deps.celery import *
+
+# The two next lines are needed for wait_init_migration as we have one configmap with all settings,
+# wait-init-migrations receives `PRIVATE_CA_ENABLED`, which requires the following vat
+from .deps.image_build import BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS
+from .deps.image_build import BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS
 from .deps.jwt import *
 from .deps.org import *
 from .deps.path import *
