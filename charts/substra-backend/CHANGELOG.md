@@ -1,6 +1,13 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+
+## [26.7.1] - 2024-06-10
+
+### Fixed
+
+- Remove Postgres default user (#928)
+
 ## [26.7.0] - 2024-06-07
 
 ### Changed
