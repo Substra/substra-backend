@@ -1,5 +1,4 @@
 import structlog
-from django.conf import settings
 
 import orchestrator
 from backend.celery import app
@@ -10,7 +9,6 @@ from builder.image_builder import image_builder
 from builder.tasks.task import BuildTask
 
 logger = structlog.get_logger(__name__)
-max_retries = settings.CELERY_TASK_MAX_RETRIES
 
 
 @app.task(

@@ -2,12 +2,13 @@ import time
 
 import celery
 import pytest
+from requests.exceptions import ReadTimeout
 
 import orchestrator.mock as orc_mock
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
+from builder.exceptions import CeleryNoRetryError
 from builder.tasks.tasks_build_image import build_image
-from substrapp.compute_tasks.errors import CeleryNoRetryError
 from substrapp.models import FailedAssetKind
 from substrapp.utils.errors import store_failure
 
@@ -93,3 +94,21 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
     result_retry.get()
     assert result_retry.state == celery.states.SUCCESS
     assert result_other.state == "WAITING"
+
+
+def test_ssl_connection_timeout(celery_app, celery_worker, mocker):
+    """
+    Test that in case of a SSL connection timeout, the task is retried max_retries times,
+    then raise a CeleryNoRetryError
+    """
+    function = orc_mock.FunctionFactory()
+    mocker.patch("builder.tasks.task.get_orchestrator_client")
+    api_mock = mocker.patch(
+        "substrapp.docker_registry.get_request_docker_api", side_effect=ReadTimeout("Read timed out. ")
+    )
+
+    with pytest.raises(CeleryNoRetryError):
+        build_image.apply_async(
+            kwargs={"function_serialized": function.model_dump_json(), "channel_name": CHANNEL}
+        ).get()
+    assert api_mock.call_count == build_image.max_retries
