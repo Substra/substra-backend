@@ -142,7 +142,6 @@ def load_zip_images_in_registry(
         docker_image,
         manifest_path_in_zip,
     ) in payload_descriptor.manifests_paths.items():
-
         if repository is not None:
             # The repository depends on the organization registry.
             _, tag = get_repo_and_tag(docker_image)
