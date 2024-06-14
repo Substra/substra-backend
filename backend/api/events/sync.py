@@ -1,3 +1,4 @@
+import datetime
 import secrets
 import string
 from typing import Optional
@@ -434,8 +435,9 @@ def _create_failure_report(data: dict) -> None:
 
 
 def _on_create_profiling_step_event(data: dict) -> None:
+    duration = datetime.timedelta(seconds=data["profiling_step"]["duration"])
     profiling_step = FunctionProfilingStep(
-        function_key=data["asset_key"], duration=data["profiling_step"]["duration"], step=data["profiling_step"]["step"]
+        function_id=data["asset_key"], duration=duration, step=data["profiling_step"]["step"]
     )
     profiling_step.save()
 
