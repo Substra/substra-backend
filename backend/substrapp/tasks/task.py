@@ -20,7 +20,7 @@ from celery import Task
 from django.conf import settings
 
 import orchestrator
-from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
+from substrapp.compute_tasks import compute_pod
 from substrapp.models import FailedAssetKind
 from substrapp.task_routing import WORKER_QUEUE
 from substrapp.tasks.tasks_asset_failure_report import store_asset_failure_report
@@ -74,7 +74,7 @@ class ComputeTask(FailableTask):
     def on_retry(self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo) -> None:
         _, task = self.split_args(args)
         # delete compute pod to reset hardware resources
-        delete_compute_plan_pods(task.compute_plan_key)
+        compute_pod.delete_compute_plan_pods(task.compute_plan_key)
         logger.info(
             "Retrying task",
             celery_task_id=task_id,
