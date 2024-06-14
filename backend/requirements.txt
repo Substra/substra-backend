@@ -23,7 +23,7 @@ django-prometheus==2.3.1
 django-filter==23.2
 pydantic==2.4.0
 redis==5.0.0
-mozilla-django-oidc==3.0.0
+mozilla-django-oidc==4.0.1
 # Dependencies used in local dev mode
 argh==0.26.2
 watchdog==2.1.9
