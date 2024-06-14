@@ -15,6 +15,7 @@ import structlog
 from django.conf import settings
 
 from orchestrator import get_orchestrator_client
+from substrapp import docker_registry
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks import image_builder
@@ -29,8 +30,6 @@ from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.environment import get_environment
 from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
-from substrapp.docker_registry import get_container_image_name
-from substrapp.docker_registry import get_entrypoint
 from substrapp.exceptions import OrganizationError
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.exceptions import PodReadinessTimeoutError
@@ -76,13 +75,13 @@ def execute_compute_task(ctx: Context) -> None:
     pod_name = compute_pod.name
 
     env = get_environment(ctx)
-    image = get_container_image_name(container_image_tag)
+    image = docker_registry.get_container_image_name(container_image_tag)
 
     k8s_client = _get_k8s_client()
 
     if _is_pod_creation_needed(compute_pod.label_selector, client=k8s_client):
         # save entrypoint to DB
-        entrypoint = get_entrypoint(container_image_tag)
+        entrypoint = docker_registry.get_entrypoint(container_image_tag)
 
         ImageEntrypoint.objects.get_or_create(
             archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint

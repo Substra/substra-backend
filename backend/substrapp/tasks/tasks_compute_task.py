@@ -27,6 +27,7 @@ from rest_framework import status
 
 import orchestrator
 from backend.celery import app
+from substrapp import docker_registry
 from substrapp.clients import organization as organization_client
 from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
@@ -120,6 +121,14 @@ def compute_task(self: ComputeTask, channel_name: str, serialized_task: str, com
     except (task_utils.ComputePlanNonRunnableError, task_utils.TaskNonRunnableStatusError) as exception:
         logger.exception(exception)
         raise celery.exceptions.Ignore
+    except docker_registry.RegistryPreconditionFailedException as exception:
+        logger.exception(exception)
+        raise compute_task_errors.CeleryRetryError(
+            f"The image associated with the task {task.key} did not pass the "
+            "security checks; please contact an Harbor administrator "
+            "to ensure that the image was scanned, "
+            "and get more information about the CVE."
+        ) from exception
     except compute_task_errors.CeleryNoRetryError as exception:
         logger.exception(exception)
         raise

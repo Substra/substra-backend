@@ -9,7 +9,10 @@ import pytest
 import orchestrator
 import orchestrator.client as orc_client
 import orchestrator.mock as orc_mock
+from substrapp import docker_registry
 from substrapp.compute_tasks import compute_task as task_utils
+from substrapp.compute_tasks.errors import CeleryRetryError
+from substrapp.tasks import compute_task
 
 RUNNABLE_TASK_STATUSES = task_utils._RUNNABLE_TASK_STATUSES
 NON_RUNNABLE_TASK_STATUSES = [
@@ -122,3 +125,23 @@ def test_start_task_if_not_started(client: mock.Mock, status, should_update: boo
 
     if should_update:
         client.update_task_status.assert_called_once()
+
+
+def test_compute_task_412_repackaged(mocker, celery_app, celery_worker):
+    mocker.patch(
+        "substrapp.docker_registry.get_request_docker_api",
+        side_effect=docker_registry.RegistryPreconditionFailedException,
+    )
+    mocker.patch("substrapp.compute_tasks.compute_pod.delete_compute_plan_pods")
+    task = orc_mock.ComputeTaskFactory()
+    with pytest.raises(CeleryRetryError) as exception:
+        r = compute_task.apply(
+            args=(
+                "channel-name",
+                task.model_dump_json(),
+                task.compute_plan_key,
+            ),
+            retries=1,
+        )
+        r.get()
+        assert "please contact an Harbor administrator" in str(exception)

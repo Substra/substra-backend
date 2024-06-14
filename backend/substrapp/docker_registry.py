@@ -79,10 +79,7 @@ def get_request_docker_api(
     if response.status_code != requests.status_codes.codes.ok:
         if response.status_code == 412:
             raise RegistryPreconditionFailedException(
-                f"The image requested at path {path} did not pass the "
-                "security checks; please contact an Harbor administrator "
-                "to ensure that the image was scanned, "
-                "and get more information about the CVE.",
+                f"The image located at {path} is either not scanned yet or not passing the vulnerability checks.",
                 response=response,
             )
         raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
