@@ -22,7 +22,7 @@ CHANNEL = "mychannel"
 
 
 def test_compute_task_exception(mocker: MockerFixture):
-    mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client")
+    mocker.patch("substrapp.tasks.tasks_compute_task.orchestrator.get_orchestrator_client")
     mock_raise_if_not_runnable = mocker.patch("substrapp.compute_tasks.compute_task._raise_if_task_not_runnable")
     mock_start_task = mocker.patch("substrapp.compute_tasks.compute_task.start_task_if_not_started")
     mock_init_cp_dirs = mocker.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs")
@@ -123,7 +123,7 @@ def mock_retry(mocker: MockerFixture) -> MagicMock:
 
 
 def test_celery_retry(mocker: MockerFixture):
-    mocker.patch("substrapp.tasks.tasks_compute_task.get_orchestrator_client")
+    mocker.patch("substrapp.tasks.tasks_compute_task.orchestrator.get_orchestrator_client")
     mocker.patch("substrapp.compute_tasks.compute_task._raise_if_task_not_runnable")
     mocker.patch("substrapp.compute_tasks.compute_task.start_task_if_not_started")
     mocker.patch("substrapp.tasks.tasks_compute_task.Context.from_task")

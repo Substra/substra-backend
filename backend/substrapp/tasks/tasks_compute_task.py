@@ -51,7 +51,6 @@ from substrapp.compute_tasks.lock import acquire_compute_plan_lock
 from substrapp.compute_tasks.outputs import OutputSaver
 from substrapp.exceptions import OrganizationHttpError
 from substrapp.lock_local import lock_resource
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import ComputeTask
 from substrapp.utils import Timer
 from substrapp.utils import get_owner
@@ -84,7 +83,7 @@ def queue_compute_task(channel_name: str, task: orchestrator.ComputeTask) -> Non
         )
         return
 
-    with get_orchestrator_client(channel_name) as client:
+    with orchestrator.get_orchestrator_client(channel_name) as client:
         if not task_utils.is_task_runnable(task.key, client):
             return  # avoid creating a Celery task
 
@@ -172,7 +171,7 @@ def _run(
     )
 
     # In case of retries: only execute the compute task if it is not in a final state
-    with get_orchestrator_client(channel_name) as client:
+    with orchestrator.get_orchestrator_client(channel_name) as client:
         task = client.query_task(task.key)
         # Set allow_executing=True to allow celery retries.
         task_utils.abort_task_if_not_runnable(task.key, client, allow_executing=True, task=task)
@@ -197,7 +196,7 @@ def _run(
 
         with acquire_compute_plan_lock(compute_plan_key):
             # Check the task/cp status again, as the task/cp may not be in a runnable state anymore
-            with get_orchestrator_client(channel_name) as client:
+            with orchestrator.get_orchestrator_client(channel_name) as client:
                 # Set allow_executing=True to allow celery retries.
                 task_utils.abort_task_if_not_runnable(task.key, client, allow_executing=True)
 
@@ -247,7 +246,7 @@ def _run(
             # stop outputs saving timer
             _create_task_profiling_step(channel_name, task.key, ComputeTaskSteps.SAVE_OUTPUTS, timer.stop())
 
-            with get_orchestrator_client(channel_name) as client:
+            with orchestrator.get_orchestrator_client(channel_name) as client:
                 task_utils.mark_as_done(ctx.task.key, client)
 
     except OSError as e:

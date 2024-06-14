@@ -11,7 +11,6 @@ from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.errors import InvalidContextError
 from substrapp.compute_tasks.errors import UnsupportedOutputAsset
-from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 
@@ -75,7 +74,7 @@ class Context:
         compute_plan_key = task.compute_plan_key
 
         # fetch more information from the orchestrator
-        with get_orchestrator_client(channel_name) as client:
+        with orchestrator.get_orchestrator_client(channel_name) as client:
             compute_plan = client.query_compute_plan(compute_plan_key)
             input_assets = client.get_task_input_assets(task.key)
             function = client.query_function(task.function_key)

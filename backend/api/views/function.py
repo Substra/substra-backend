@@ -25,9 +25,9 @@ from api.views.utils import get_channel_name
 from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
+from orchestrator import get_orchestrator_client
 from substrapp.models import Function as FunctionFiles
 from substrapp.models import FunctionImage
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import FunctionSerializer as FunctionFilesSerializer
 from substrapp.utils import get_hash
 

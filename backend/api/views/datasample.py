@@ -28,9 +28,9 @@ from api.serializers import DataSampleSerializer
 from api.views.utils import ApiResponse
 from api.views.utils import get_channel_name
 from libs.pagination import DefaultPageNumberPagination
+from orchestrator import get_orchestrator_client
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager as DataManagerFiles
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataSampleSerializer as DataSampleFilesSerializer
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal

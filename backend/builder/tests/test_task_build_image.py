@@ -31,7 +31,7 @@ def test_store_failure_build_error():
 
 
 def test_catch_all_exceptions(celery_app, celery_worker, mocker):
-    mocker.patch("builder.tasks.task.get_orchestrator_client")
+    mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
     mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=Exception("random error"))
     function = orc_mock.FunctionFactory()
     with pytest.raises(CeleryNoRetryError):
@@ -45,8 +45,10 @@ def test_order_building_success(celery_app, celery_worker, mocker, execution_num
     function_2 = orc_mock.FunctionFactory()
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
-    mocker.patch("builder.tasks.task.get_orchestrator_client")
-    mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5))
+    mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
+    mocker.patch(
+        "builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5)
+    )
 
     result_1 = build_image.apply_async(
         kwargs={"function_serialized": function_1.model_dump_json(), "channel_name": CHANNEL}
@@ -81,8 +83,10 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
         return side_effect
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
-    mocker.patch("builder.tasks.task.get_orchestrator_client")
-    mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=side_effect_creator())
+    mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
+    mocker.patch(
+        "builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=side_effect_creator()
+    )
 
     result_retry = build_image.apply_async(
         kwargs={"function_serialized": function_retry.model_dump_json(), "channel_name": CHANNEL}
@@ -102,7 +106,7 @@ def test_ssl_connection_timeout(celery_app, celery_worker, mocker):
     then raise a CeleryNoRetryError
     """
     function = orc_mock.FunctionFactory()
-    mocker.patch("builder.tasks.task.get_orchestrator_client")
+    mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
     api_mock = mocker.patch(
         "substrapp.docker_registry.get_request_docker_api", side_effect=ReadTimeout("Read timed out. ")
     )

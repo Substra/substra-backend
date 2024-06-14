@@ -15,14 +15,15 @@ import orchestrator
 from api.models import Function as ApiFunction
 from backend.celery import app
 from builder.exceptions import BuildRetryError
+from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.errors import CeleryNoRetryError
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.models import FailedAssetKind
 from substrapp.models import FunctionImage
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.task import FailableTask
+from substrapp.utils import Timer
 
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
@@ -42,6 +43,11 @@ class SaveImageTask(FailableTask):
     ignore_result = False
 
     asset_type = FailedAssetKind.FAILED_ASSET_FUNCTION
+    timer: Timer
+
+    def before_start(self, task_id: str, args: tuple, kwargs: dict) -> None:
+        self.timer = Timer()
+        self.timer.start()
 
     @property
     def attempt(self) -> int:
@@ -56,17 +62,23 @@ class SaveImageTask(FailableTask):
     # Celery does not provide unpacked arguments, we are doing it in `get_task_info`
     def on_success(self, retval: tuple[dict, str], task_id: str, args: tuple, kwargs: dict[str, Any]) -> None:
         orc_update_function_param, channel_name = retval
-
+        function_key = orc_update_function_param["key"]
         with get_orchestrator_client(channel_name) as client:
             client.update_function(orc_update_function_param)
             client.update_function_status(
-                function_key=orc_update_function_param["key"], action=orchestrator.function_pb2.FUNCTION_ACTION_READY
+                function_key=function_key, action=orchestrator.function_pb2.FUNCTION_ACTION_READY
+            )
+            client.register_profiling_step(
+                asset_key=function_key,
+                duration=self.timer.stop(),
+                step=orchestrator.FunctionProfilingStep.SAVE_FUNCTION,
             )
 
 
 def save_image(function_serialized: str, channel_name: str) -> dict:
     logger.info("Starting save_image")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
+
     # create serialized image
     function = orchestrator.Function.model_validate_json(function_serialized)
     container_image_tag = utils.container_image_tag_from_function(function)

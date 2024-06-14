@@ -6,8 +6,8 @@ from django.apps import AppConfig
 from django.conf import settings
 from grpc import StatusCode
 
+from orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
-from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 

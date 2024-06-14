@@ -42,9 +42,9 @@ from api.views.utils import validate_key
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
 from orchestrator import computetask
+from orchestrator import get_orchestrator_client
 from orchestrator.resources import TAG_KEY
 from substrapp.models import AssetFailureReport
-from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 

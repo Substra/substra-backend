@@ -5,9 +5,9 @@ from celery import Task
 from django.conf import settings
 
 from backend.celery import app
+from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.models import FailedAssetKind
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils.errors import store_failure
 
 REGISTRY = settings.REGISTRY

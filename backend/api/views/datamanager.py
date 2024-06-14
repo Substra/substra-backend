@@ -26,8 +26,8 @@ from api.views.utils import ValidationExceptionError
 from api.views.utils import get_channel_name
 from api.views.utils import validate_metadata
 from libs.pagination import DefaultPageNumberPagination
+from orchestrator import get_orchestrator_client
 from substrapp.models import DataManager as DataManagerFiles
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer as DataManagerFilesSerializer
 from substrapp.utils import get_hash
 

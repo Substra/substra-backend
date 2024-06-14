@@ -8,7 +8,6 @@ import orchestrator
 from api.events import health
 from api.events import sync
 from api.models import LastEvent
-from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger("events")
 
@@ -47,7 +46,7 @@ def consume_channel(client: orchestrator.Client, channel_name: str, exception_ra
 
 
 def consume(health_service: health.HealthService):
-    client = get_orchestrator_client()
+    client = orchestrator.get_orchestrator_client()
     exception_raised = threading.Event()
 
     consumers = [

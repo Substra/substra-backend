@@ -7,7 +7,6 @@ from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
 from substrapp.compute_tasks.lock import acquire_compute_plan_lock
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import release_worker
 
 logger = structlog.get_logger(__name__)
@@ -40,7 +39,7 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name: str, comput
 
 @app.task(ignore_result=False)
 def delete_cp_pod_and_dirs(channel_name: str, compute_plan_key: str) -> None:
-    with get_orchestrator_client(channel_name) as client:
+    with orchestrator.get_orchestrator_client(channel_name) as client:
         _teardown_compute_plan_resources(client, compute_plan_key)
 
 

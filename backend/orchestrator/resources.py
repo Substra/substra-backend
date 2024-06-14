@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import datetime
 import enum
-from typing import Optional
-from typing import Union
+import typing
 
 import pydantic
 
@@ -151,6 +150,16 @@ class FunctionStatus(AutoNameEnum):
         return cls(function_pb2.FunctionStatus.Name(s))
 
 
+class FunctionProfilingStep(str, enum.Enum):
+    BUILD_IMAGE = "build_image"
+    SAVE_FUNCTION = "save_function"
+
+    # Not relying on `django.db.models.TextChoices` to avoid multiplicating dependencies with django
+    @classmethod
+    def to_choices(cls) -> typing.List[typing.Tuple[str, str]]:
+        return list(cls._member_map_.items())
+
+
 class Function(pydantic.BaseModel):
     key: str
     owner: str
@@ -227,9 +236,9 @@ class ComputeTaskOutput(_Base):
 
 class ComputeTaskInput(pydantic.BaseModel):
     identifier: str
-    asset_key: Optional[str] = None
-    parent_task_key: Optional[str] = None
-    parent_task_output_identifier: Optional[str] = None
+    asset_key: typing.Optional[str] = None
+    parent_task_key: typing.Optional[str] = None
+    parent_task_output_identifier: typing.Optional[str] = None
 
     @classmethod
     def from_grpc(cls, i: computetask_pb2.ComputeTaskInput) -> ComputeTaskInput:
@@ -280,9 +289,9 @@ class ComputeTask(_Base):
 class ComputeTaskInputAsset(pydantic.BaseModel):
     identifier: str
     kind: AssetKind = AssetKind.ASSET_UNKNOWN
-    model: Optional[Model] = None
-    data_manager: Optional[DataManager] = None
-    data_sample: Optional[DataSample] = None
+    model: typing.Optional[Model] = None
+    data_manager: typing.Optional[DataManager] = None
+    data_sample: typing.Optional[DataSample] = None
 
     @classmethod
     def from_grpc(cls, input_asset: computetask_pb2.ComputeTaskInputAsset) -> ComputeTaskInputAsset:
@@ -302,7 +311,7 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
         return asset
 
     @property
-    def asset(self) -> Union[Model, DataManager, DataSample, None]:
+    def asset(self) -> typing.Union[Model, DataManager, DataSample, None]:
         if self.kind == AssetKind.ASSET_DATA_MANAGER:
             return self.data_manager
         elif self.kind == AssetKind.ASSET_DATA_SAMPLE:
@@ -318,8 +327,8 @@ class ComputeTaskInputAsset(pydantic.BaseModel):
 class ComputePlan(_Base):
     key: str
     tag: str
-    cancelation_date: Optional[datetime.datetime] = None
-    failure_date: Optional[datetime.datetime] = None
+    cancelation_date: typing.Optional[datetime.datetime] = None
+    failure_date: typing.Optional[datetime.datetime] = None
 
     @classmethod
     def from_grpc(cls, compute_plan: computeplan_pb2.ComputePlan) -> ComputePlan:

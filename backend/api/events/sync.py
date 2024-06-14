@@ -22,6 +22,7 @@ from api.models import ComputeTaskOutputAsset
 from api.models import DataManager
 from api.models import DataSample
 from api.models import Function
+from api.models import FunctionProfilingStep
 from api.models import Model
 from api.serializers import ChannelOrganizationSerializer
 from api.serializers import ComputePlanSerializer
@@ -432,6 +433,13 @@ def _create_failure_report(data: dict) -> None:
         logger.debug("FailureReport already exists", asset_key=data["asset_key"])
 
 
+def _on_create_profiling_step_event(data: dict) -> None:
+    profiling_step = FunctionProfilingStep(
+        function_key=data["asset_key"], duration=data["profiling_step"]["duration"], step=data["profiling_step"]["step"]
+    )
+    profiling_step.save()
+
+
 EVENT_CALLBACKS = {
     common_pb2.ASSET_COMPUTE_PLAN: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_computeplan_event,
@@ -468,6 +476,9 @@ EVENT_CALLBACKS = {
     },
     common_pb2.ASSET_FAILURE_REPORT: {
         event_pb2.EVENT_ASSET_CREATED: _on_create_failure_report_event,
+    },
+    common_pb2.ASSET_PROFILING_STEP: {
+        event_pb2.EVENT_ASSET_CREATED: _on_create_profiling_step_event,
     },
 }
 
