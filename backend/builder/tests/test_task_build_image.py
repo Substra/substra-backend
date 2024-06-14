@@ -46,7 +46,9 @@ def test_order_building_success(celery_app, celery_worker, mocker, execution_num
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
     mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
-    mocker.patch("builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5))
+    mocker.patch(
+        "builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=lambda x, y: time.sleep(0.5)
+    )
 
     result_1 = build_image.apply_async(
         kwargs={"function_serialized": function_1.model_dump_json(), "channel_name": CHANNEL}
@@ -82,7 +84,9 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
 
     # BuildTask `before_start` uses this client to change the status, which would lead to `OrcError`
     mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
-    mocker.patch("builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=side_effect_creator())
+    mocker.patch(
+        "builder.tasks.tasks_build_image.image_builder.build_image_if_missing", side_effect=side_effect_creator()
+    )
 
     result_retry = build_image.apply_async(
         kwargs={"function_serialized": function_retry.model_dump_json(), "channel_name": CHANNEL}
