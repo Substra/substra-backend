@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.47.0](https://github.com/Substra/substra-backend/releases/tag/0.47.0) - 2024-06-11
+
+
+### Added
+
+- Repackage Harbor 412 errors to a user-friendly message. ([#926](https://github.com/Substra/substra-backend/pull/926))
+
+### Changed
+
+- SSL connection errors to the registry are now retried. ([#917](https://github.com/Substra/substra-backend/pull/917))
+
+### Fixed
+
+- All exceptions raised during the build of an image are caught and properly handled. ([#911](https://github.com/Substra/substra-backend/pull/911))
+- Bypass `AssetFailureReport` creation whenerror type is `ERROR_TYPE_INTERNAL`. It fixes errors when the backend receives an internal error from the orchestrator (without log address/checksum, as they are not provided in this scenario) ([#924](https://github.com/Substra/substra-backend/pull/924))
+- Errors when saving the image to the registry are properly handled. ([#926](https://github.com/Substra/substra-backend/pull/926))
+- Bubble up \`BuildError\` in the builder ([#927](https://github.com/Substra/substra-backend/pull/927))
+
+
 ## [0.46.0](https://github.com/Substra/substra-backend/releases/tag/0.46.0) - 2024-06-03
 
 
