@@ -131,6 +131,22 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: COMPUTE_POD_AFFINITY
+              value: |-
+                "affinity:
+                  podAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                    - labelSelector:
+                        matchExpressions:
+                        - key: statefulset.kubernetes.io/pod-name
+                          operator: In
+                          values:
+                          - $(POD_NAME)
+                      topologyKey: kubernetes.io/hostname"
             - name: COMPUTE_POD_RESOURCES
               value: {{ toYaml .Values.worker.computePod.resources | quote }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
