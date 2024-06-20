@@ -1,9 +1,18 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.7.3] - 2024-06-20
+
+### Fixed
+
+- Allow egress connections from worker to the internet. This is needed for deployment when all organizations are not in the same cluster, and the worker then need to download images from other organizations
+
+### Removed 
+
+- Network policy `xxx-registry-remote-egress` as it is now covered by `role-internet-egress: 'true'`
+  
 
 ## [26.7.2] - 2024-06-13
-
 
 ### Changed
 

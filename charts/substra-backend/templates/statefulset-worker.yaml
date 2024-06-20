@@ -35,6 +35,8 @@ spec:
         app.kubernetes.io/component: substra-worker
         role-api-k8s-client: 'true'
         role-database-client: 'true'
+        # Needed for downloading models from other backends + connecting to remote registry
+        role-internet-egress: 'true'
         role-server-client: 'true'
         role-orchestrator-client: 'true'
         role-redis-client: 'true'
