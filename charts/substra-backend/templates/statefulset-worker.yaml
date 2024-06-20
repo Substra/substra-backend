@@ -124,7 +124,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: NODE_NAME
+            - name: NODE_NAME # TODO see if I can remove
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
@@ -133,17 +133,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: COMPUTE_POD_AFFINITY
-              value: |-
-                "affinity:
-                  podAffinity:
-                    requiredDuringSchedulingIgnoredDuringExecution:
-                    - labelSelector:
-                        matchExpressions:
-                        - key: statefulset.kubernetes.io/pod-name
-                          operator: In
-                          values:
-                          - $(POD_NAME)
-                      topologyKey: kubernetes.io/hostname"
+              value: {{ .Values.worker.computePod.affinity | quote }} # TODO see if it works
             - name: COMPUTE_POD_RESOURCES
               value: {{ toYaml .Values.worker.computePod.resources | quote }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
@@ -244,7 +234,7 @@ spec:
   - metadata:
       name: subtuple
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: [ {{ .Values.worker.volumeAccessMode }} ]
       {{ include "common.storage.class" .Values.worker.persistence }}
       resources:
         requests:

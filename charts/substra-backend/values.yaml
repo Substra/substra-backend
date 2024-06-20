@@ -366,7 +366,19 @@ worker:
         cpu: "1000m"
         memory: "1Gi"
       limits:
-        memory: "64Gi"
+        memory: "64Gi"$
+    ## @param worker.computePod.affinity Worker compute pod container affinity
+    ##
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: statefulset.kubernetes.io/pod-name
+              operator: In
+              values:
+              - $(POD_NAME)
+          topologyKey: kubernetes.io/hostname"
   events:
     ## @param worker.events.enabled Enable event service
     ##
@@ -426,7 +438,9 @@ worker:
       ## If not set and create is true, a name is generated using the substra.fullname template
       ##
       name: ""
-
+  ## @param worker.volumeAccessMode Access mode for volume
+  ##
+  volumeAccessMode: "ReadWriteOnce"
 ## @section Substra periodic tasks worker settings
 ##
 schedulerWorker:
