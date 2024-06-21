@@ -376,6 +376,12 @@ worker:
         memory: "1Gi"
       limits:
         memory: "64Gi"$
+    ## @param worker.computePod.nodeSelector Node labels for pod assignment
+    ##
+    nodeSelector: {}
+    ## @param worker.computePod.tolerations Toleration labels for pod assignment
+    ##
+    tolerations: []
     ## @param worker.computePod.affinity Worker compute pod container affinity
     ##
     affinity:
