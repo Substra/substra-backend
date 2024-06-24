@@ -283,7 +283,7 @@ server:
       ##
       honorLabels: false
 
-## @section Substra worker settings
+## @section Substra worker settings. Note that you can access the worker pod name using $(POD_NAME) and its node using $(NODE_NAME).
 ##
 worker:
   ## @param worker.enabled Enable worker service
@@ -382,7 +382,7 @@ worker:
     ## @param worker.computePod.tolerations Toleration labels for pod assignment
     ##
     tolerations: []
-    ## @param worker.computePod.affinity Worker compute pod container affinity. Pass as a string in order to catch the generated pod name on the statefuset environment variable PODNAME.
+    ## @param worker.computePod.affinity Worker compute pod container affinity.
     ##
     affinity:
       podAffinity:
@@ -392,7 +392,7 @@ worker:
           - key: statefulset.kubernetes.io/pod-name
             operator: In
             values:
-            - $(POD_NAME)
+            - $(HOSTNAME)
           topologyKey: kubernetes.io/hostname
   events:
     ## @param worker.events.enabled Enable event service
