@@ -133,11 +133,11 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: COMPUTE_POD_AFFINITY
-              value: {{ .Values.worker.computePod.affinity | quote }} # TODO see if it works to inject POD_NAME venv in string
+              value: {{ toYaml .Values.worker.computePod.affinity | quote }} # TODO see if it works to inject POD_NAME venv in string
             - name: COMPUTE_POD_NODE_SELECTOR
-              value: {{ .Values.worker.computePod.nodeSelector | quote }}
+              value: {{ toYaml .Values.worker.computePod.nodeSelector | quote }}
             - name: COMPUTE_POD_TOLERATIONS
-              value: {{ .Values.worker.computePod.tolerations | quote }}
+              value: {{ toYaml .Values.worker.computePod.tolerations | quote }}
             - name: COMPUTE_POD_RESOURCES
               value: {{ toYaml .Values.worker.computePod.resources | quote }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
