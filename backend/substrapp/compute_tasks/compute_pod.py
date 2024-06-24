@@ -1,4 +1,4 @@
-import json
+import yaml
 import os
 
 import kubernetes
@@ -129,9 +129,9 @@ def create_pod(
         image_pull_secrets = None
     spec = kubernetes.client.V1PodSpec(
         restart_policy="Never",
-        affinity=json.loads(os.getenv("COMPUTE_POD_AFFINITY")),
-        node_selector=json.loads(os.getenv("COMPUTE_POD_NODE_SELECTOR")),
-        tolerations=json.loads(os.getenv("COMPUTE_POD_TOLERATIONS")),
+        affinity=yaml.safe_load(os.getenv("COMPUTE_POD_AFFINITY")),
+        node_selector=yaml.safe_load(os.getenv("COMPUTE_POD_NODE_SELECTOR")),
+        tolerations=yaml.safe_load(os.getenv("COMPUTE_POD_TOLERATIONS")),
         containers=[container_compute],
         volumes=volumes + gpu_volume,
         security_context=get_pod_security_context(),
