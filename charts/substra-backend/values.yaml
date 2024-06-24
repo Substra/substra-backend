@@ -379,11 +379,11 @@ worker:
       podAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
         - labelSelector:
-          matchExpressions:
-          - key: statefulset.kubernetes.io/pod-name
-            operator: In
-            values:
-            - $(HOSTNAME)
+            matchExpressions:
+            - key: statefulset.kubernetes.io/pod-name
+              operator: In
+              values:
+              - $(POD_NAME)
           topologyKey: kubernetes.io/hostname
   events:
     ## @param worker.events.enabled Enable event service
