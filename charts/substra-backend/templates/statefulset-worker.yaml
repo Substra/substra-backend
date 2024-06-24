@@ -238,7 +238,7 @@ spec:
   - metadata:
       name: subtuple
     spec:
-      accessModes: [ {{ .Values.worker.volumeAccessMode }} ]
+      accessModes: {{ .Values.worker.accessMode }}
       {{ include "common.storage.class" .Values.worker.persistence }}
       resources:
         requests:
