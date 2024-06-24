@@ -453,9 +453,9 @@ worker:
       ## If not set and create is true, a name is generated using the substra.fullname template
       ##
       name: ""
-  ## @param worker.volumeAccessMode Access mode for volume
+  ## @param worker.accessMode Access mode for volume
   ##
-  volumeAccessMode: "ReadWriteOnce"
+  accessMode: ["ReadWriteOnce"]
 ## @section Substra periodic tasks worker settings
 ##
 schedulerWorker:
