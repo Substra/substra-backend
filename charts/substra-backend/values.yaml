@@ -375,7 +375,6 @@ worker:
     tolerations: []
     ## @param worker.computePod.affinity Worker compute pod container affinity. Pass as a string in order to catch the generated pod name on the statefuset environment variable PODNAME.
     ##
-    ##  '{"podAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"topologyKey":"kubernetes.io/hostname", "labelSelector": {"matchExpressions":{"key":"statefulset.kubernetes.io/pod-name", "operator":"In","values":"$POD_NAME"}}}}}'
     affinity:
       podAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
