@@ -241,6 +241,7 @@ spec:
   - metadata:
       name: subtuple
     spec:
+      storageClassName: {{ .Values.worker.persistence.storageClass }}
       accessModes: {{ .Values.worker.accessModes }}
       {{ include "common.storage.class" .Values.worker.persistence }}
       resources:
