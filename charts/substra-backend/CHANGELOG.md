@@ -8,7 +8,6 @@
 
 Configuration of compute pod `affinity`, `nodeSelector` and `toleration` on `values.yaml` file.
 
-
 ## [26.7.5] - 2024-06-29
 
 ### Added
