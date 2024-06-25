@@ -382,7 +382,10 @@ worker:
     ## @param worker.computePod.tolerations Toleration labels for pod assignment
     ##
     tolerations: []
-    ## @param worker.computePod.affinity Worker compute pod container affinity.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].key Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey Pod affinity rule defnition.
     ##
     affinity:
       podAffinity:

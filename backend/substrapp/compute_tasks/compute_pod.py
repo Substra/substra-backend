@@ -1,8 +1,8 @@
-import yaml
 import os
 
 import kubernetes
 import structlog
+import yaml
 from django.conf import settings
 
 from substrapp.kubernetes_utils import delete_pod

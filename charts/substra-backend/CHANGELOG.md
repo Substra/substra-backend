@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## [26.8.0] - 2024-06-25
+
+# Added
+
+Configuration of compute pod `affinity`, `nodeSelector` and `toleration` on `values.yaml` file.
+
+
 ## [26.7.5] - 2024-06-29
 
 ### Added
