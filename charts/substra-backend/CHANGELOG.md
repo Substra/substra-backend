@@ -9,7 +9,7 @@ Configuration of compute pod `affinity`, `nodeSelector` and `toleration` on `val
 
 # Changed
 
-Backend version to `0.48.0-alpha0`
+Backend version to `0.48.0-alpha.0`
 
 ## [26.7.3] - 2024-06-20
 
