@@ -179,7 +179,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `worker.events.rbac.create`                                                                                                           | Create a role and service account for the event app                                                                                                | `true`                               |
 | `worker.events.serviceAccount.create`                                                                                                 | Create a service account for the event app                                                                                                         | `true`                               |
 | `worker.events.serviceAccount.name`                                                                                                   | The name of the ServiceAccount to use                                                                                                              | `""`                                 |
-| `worker.accessMode`                                                                                                                   | Access mode for volume                                                                                                                             | `["ReadWriteOnce"]`                  |
+| `worker.accessModes`                                                                                                                  | Access modes for volume                                                                                                                            | `["ReadWriteOnce"]`                  |
 
 ### Substra periodic tasks worker settings
 
