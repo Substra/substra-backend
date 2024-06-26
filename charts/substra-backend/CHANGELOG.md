@@ -1,6 +1,13 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+
+## [26.7.5] - 2024-06-26
+
+### Added
+
+- nodeSelector, tolerations and affinity for server in `values.yaml`
+
 ## [26.7.4] - 2024-06-28
 
 ### Added
@@ -16,6 +23,10 @@
 ### Removed
 
 - Network policy `xxx-registry-remote-egress` as it is now covered by `role-internet-egress: 'true'`
+<<<<<<< HEAD
+=======
+
+>>>>>>> 809a13e1 (chore: add nodeSelector, tolerations and affinity for server to values)
 
 ## [26.7.2] - 2024-06-13
 
