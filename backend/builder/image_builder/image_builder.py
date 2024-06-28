@@ -335,6 +335,7 @@ def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[st
         "--snapshotMode=redo",
         "--push-retry=3",
         "--cache-copy-layers",
+        "--cache-run-layers",
         "--log-format=text",
         f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
     ]
