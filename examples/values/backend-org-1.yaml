@@ -95,6 +95,7 @@ oidc:
   provider:
     url: "http://oidc-provider:4000"
     displayName: Dev Provider
+    sameCluster: true
   users:
     loginValidityDuration: 30 # very short value to test background refresh
     appendDomain: true
