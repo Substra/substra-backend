@@ -1,6 +1,13 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+
+## [26.7.5] - 2024-06-26
+
+### Added
+
+- nodeSelector, tolerations and affinity for server in `values.yaml`
+
 ## [26.7.4] - 2024-06-28
 
 ### Added
