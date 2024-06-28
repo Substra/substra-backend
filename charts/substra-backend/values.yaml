@@ -881,8 +881,12 @@ oidc:
   provider:
     ## @param oidc.provider.url The identity provider URL (with scheme).
     url: null
+    ## @param oidc.provider.port The identity provider port
+    port: 443
     ## @param oidc.provider.displayName The name of the provider as displayed in the interface ("Sign in with X")
     displayName: null
+    ## @param oidc.provider.sameCluster Turn this setting to on when the OIDC client is hosted on the same cluster to allow a more relaxed network policy
+    sameCluster: false
     # @param oidc.provider.endpoints The endpoints are appended to the given provider domain. If not given, they are read from `/.well-known/openid-configuration` at startup.
     endpoints:
       ## @param oidc.provider.endpoints.authorization Typically https://provider/auth

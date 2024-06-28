@@ -25,6 +25,9 @@ kind: NetworkPolicy
 metadata:
   name: {{ template "substra.name" . }}-server-egress
 spec:
+  podSelector:
+    matchLabels:
+      role-server-client: 'true'
   egress:
   - ports:
     - port: {{ .Values.server.service.port }}
@@ -39,10 +42,21 @@ spec:
     - ipBlock:
         cidr: 10.0.0.0/8
     - ipBlock:
+        cidr: 192.168.0.0/16
+    - ipBlock:
         cidr: 172.16.0.0/20
       {{- end }}
-  podSelector:
-    matchLabels:
-      role-server-client: 'true'
+  {{- if .Values.oidc.provider.sameCluster }}
+  - ports:
+    - port: {{ .Values.oidc.provider.port }}
+      protocol: TCP
+    to:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    - ipBlock:
+        cidr: 192.168.0.0/16
+    - ipBlock:
+        cidr: 172.16.0.0/20
+    {{- end }}
   policyTypes:
   - Egress
