@@ -820,7 +820,12 @@ kaniko:
 ## @section Account operator settings
 ##
 addAccountOperator:
-  ## @param addAccountOperator.outgoingOrganizations Outgoind organizations credentials for substra backend organization-to-organization communications
+  ## @param addAccountOperator.secretName name of the Secret gathering information related to:
+  ##   - organization-to-organization communications (outgoingOrganizations and incomingOrganizations)
+  ##   - users who can log into the substra backend server with admin privileges
+  ##
+  secretName: ""
+  ## @param addAccountOperator.outgoingOrganizations Outgoing organizations credentials for substra backend organization-to-organization communications
   ## e.g:
   ## - name: organizationId
   ##   secret: organizationSecret
@@ -932,9 +937,9 @@ database:
     ## @param database.auth.password what password to use for connecting
     password: &psql-password postgres
 
-    ## @param database.auth.credentialsSecretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
+    ## @param database.auth.secretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
     ##
-    credentialsSecretName: null
+    secretName: ""
 
   ## @param database.host Hostname of the database to connect to (defaults to local)
   host: null
@@ -989,6 +994,8 @@ redis:
   architecture: standalone
   auth:
     password: redis
+    ## @param redis.auth.secretName An alternative to giving username and password; must have `CELERY_BROKER_PASSWORD` key.
+    secretName: ""
   master:
     persistence:
       enabled: true
@@ -1061,6 +1068,8 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
+    ## @param database.auth.secretName An alternative to giving username and password; must have `OBJECTSTORE_ACCESSKEY` and `OBJECTSTORE_SECRETKEY` keys.
+    secretName: ""
   resources:
     requests:
       cpu: "500m"
@@ -1114,7 +1123,6 @@ localstack:
       value: "helloAws"
     - name: AWS_SECRET_ACCESS_KEY
       value: "mySuperSecureAWSAccessKey1234"
-
   persistence:
     enabled: true
     accessMode: ReadWriteOnce
