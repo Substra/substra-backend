@@ -28,6 +28,7 @@ from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.compute_pod import create_pod
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.environment import get_environment
+from substrapp.compute_tasks.image_builder import push_blob_to_registry
 from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.exceptions import OrganizationError
@@ -38,6 +39,7 @@ from substrapp.kubernetes_utils import execute
 from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
+from substrapp.models import FunctionImage
 from substrapp.models import ImageEntrypoint
 from substrapp.utils import timeit
 
@@ -51,13 +53,21 @@ def _is_pod_creation_needed(label_selector: str, *, client: Optional[kubernetes.
     return not pod_exists_by_label_selector(client, label_selector)
 
 
+def _is_function_image_downloaded(function_key: str) -> bool:
+    try:
+        FunctionImage.objects.get(function_id=function_key)
+        return True
+    except FunctionImage.DoesNotExist:
+        return False
+
+
 @timeit
 def download_function(ctx: Context) -> None:
     channel_name = ctx.channel_name
     container_image_tag = utils.container_image_tag_from_function(ctx.function)
     compute_pod = ctx.get_compute_pod(container_image_tag)
 
-    if _is_pod_creation_needed(compute_pod.label_selector):
+    if not _is_function_image_downloaded(ctx.function.key) and _is_pod_creation_needed(compute_pod.label_selector):
         try:
             image_builder.load_remote_function_image(ctx.function, channel_name)
         except OrganizationHttpError as e:
@@ -81,8 +91,14 @@ def execute_compute_task(ctx: Context) -> None:
 
     if _is_pod_creation_needed(compute_pod.label_selector, client=k8s_client):
         # save entrypoint to DB
-        entrypoint = docker_registry.get_entrypoint(container_image_tag)
-
+        try:
+            entrypoint = docker_registry.get_entrypoint(container_image_tag)
+        except docker_registry.ImageNotFoundError:
+            # push the image from the saved binary blob
+            container_image_tag = utils.container_image_tag_from_function(ctx.function)
+            function_image_fd = FunctionImage.objects.get(function_id=ctx.function.key).file.open("rb").read()
+            push_blob_to_registry(function_image_fd, container_image_tag)
+            entrypoint = docker_registry.get_entrypoint(container_image_tag)
         ImageEntrypoint.objects.get_or_create(
             archive_checksum=ctx.function.archive_address.checksum, entrypoint_json=entrypoint
         )

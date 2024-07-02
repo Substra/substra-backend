@@ -1,0 +1,1 @@
+Function images are only downloaded if they do not already exist on the local backend when a task is launched.

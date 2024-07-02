@@ -41,7 +41,7 @@ def push_payload(
     Args:
         zip_file: the zip file containing the payload. It can be a `pathlib.Path`, a `str`
             or a file-like object.
-        strict: `False` by default. If True, it will raise an error if the
+        strict: `False` by default. If True, it will raise an error if
             some blobs/images are missing.
             That can happen if the user
             set an image in `docker_images_already_transferred`

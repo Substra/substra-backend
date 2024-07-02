@@ -20,6 +20,16 @@ SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 USER_IMAGE_REPOSITORY = settings.USER_IMAGE_REPOSITORY
 
 
+def push_blob_to_registry(blob: bytes, tag: str) -> None:
+    os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
+    with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
+        storage_path = pathlib.Path(tmp_dir) / f"{tag}.zip"
+        storage_path.write_bytes(blob)
+        push_payload(
+            storage_path, registry=REGISTRY, repository=USER_IMAGE_REPOSITORY, secure=REGISTRY_SCHEME == "https"
+        )
+
+
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
     # Ask the backend owner of the function if it's available
     container_image_tag = utils.container_image_tag_from_function(function)
@@ -31,10 +41,4 @@ def load_remote_function_image(function: orchestrator.Function, channel: str) ->
         checksum=function.image.checksum,
     )
 
-    os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
-    with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
-        storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
-        storage_path.write_bytes(function_image_content)
-        push_payload(
-            storage_path, registry=REGISTRY, repository=USER_IMAGE_REPOSITORY, secure=REGISTRY_SCHEME == "https"
-        )
+    push_blob_to_registry(function_image_content, tag=container_image_tag)
