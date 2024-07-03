@@ -994,7 +994,6 @@ redis:
   architecture: standalone
   auth:
     password: redis
-    ## @param redis.auth.secretName An alternative to giving username and password; must have `CELERY_BROKER_PASSWORD` key.
     secretName: ""
   master:
     persistence:
