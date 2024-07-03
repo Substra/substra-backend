@@ -408,3 +408,48 @@ Retrieve AWS environment variable value
 {{- end -}}
 {{- $value -}}
 {{- end -}}
+
+
+{{/*
+Define database secret name
+*/}}
+{{- define "substra-backend.database.secretName" -}}
+    {{- if .Values.database.auth.secretName -}}
+        {{- .Values.database.auth.secretName }}
+    {{- else -}}
+        {{ include "substra.fullname" . }}-database
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define redis secret name
+*/}}
+{{- define "substra-backend.redis.secretName" -}}
+    {{- if .Values.redis.auth.secretName -}}
+        {{- .Values.database.auth.secretName }}
+    {{- else -}}
+        {{ include "substra.fullname" . }}-redis
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define account operators secret name
+*/}}
+{{- define "substra-backend.accountOperator.secretName" -}}
+    {{- if .Values.addAccountOperator.secretName -}}
+        {{- .Values.database.auth.secretName }}
+    {{- else -}}
+        {{ include "substra.fullname" . }}-add-account
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define object store secret name
+*/}}
+{{- define "substra-backend.objectstore.secretName" -}}
+    {{- if .Values.redis.auth.secretName -}}
+        {{- .Values.database.auth.secretName }}
+    {{- else -}}
+        {{ include "substra.fullname" . }}-objectstore
+    {{- end -}}
+{{- end -}}
