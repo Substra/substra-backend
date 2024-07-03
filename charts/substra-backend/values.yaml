@@ -839,9 +839,7 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
-  ## @param addAccountOperator.secretName An alternative to giving:
-  ##   - organization-to-organization communications (outgoingOrganizations and incomingOrganizations)
-  ##   - users who can log into the substra backend server with admin privileges
+  ## @param addAccountOperator.secretName An alternative to providing credentials for organization-to-organization communications and users
   ## Secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys
   secretName: ""
 
