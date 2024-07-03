@@ -327,9 +327,10 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 | Name                                       | Description                                                                                        | Value |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------- | ----- |
-| `addAccountOperator.outgoingOrganizations` | Outgoind organizations credentials for substra backend organization-to-organization communications | `[]`  |
+| `addAccountOperator.outgoingOrganizations` | Outgoing organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
+| `addAccountOperator.secretName`            | An alternative to giving:                                                                          | `""`  |
 
 ### Registry prepopulate
 
@@ -376,14 +377,14 @@ Else, you must strike a balance: longer durations are more convenient, but risk 
 
 ### Database connection settings
 
-| Name                                  | Description                                                                                                 | Value      |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
-| `database.auth.database`              | what DB to connect to                                                                                       | `substra`  |
-| `database.auth.username`              | what user to connect as                                                                                     | `postgres` |
-| `database.auth.password`              | what password to use for connecting                                                                         | `postgres` |
-| `database.auth.credentialsSecretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `nil`      |
-| `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`      |
-| `database.port`                       | Port of an external database to connect to                                                                  | `5432`     |
+| Name                       | Description                                                                                                 | Value      |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| `database.auth.database`   | what DB to connect to                                                                                       | `substra`  |
+| `database.auth.username`   | what user to connect as                                                                                     | `postgres` |
+| `database.auth.password`   | what password to use for connecting                                                                         | `postgres` |
+| `database.auth.secretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `""`       |
+| `database.host`            | Hostname of the database to connect to (defaults to local)                                                  | `nil`      |
+| `database.port`            | Port of an external database to connect to                                                                  | `5432`     |
 
 ### PostgreSQL settings
 
@@ -391,9 +392,10 @@ Database included as a subchart used by default.
 
 See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
 
-| Name                 | Description                                                | Value  |
-| -------------------- | ---------------------------------------------------------- | ------ |
-| `postgresql.enabled` | Deploy a PostgreSQL instance along the backend for its use | `true` |
+| Name                       | Description                                                                                                         | Value  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| `postgresql.enabled`       | Deploy a PostgreSQL instance along the backend for its use                                                          | `true` |
+| `database.auth.secretName` | An alternative to giving username and password; must have `OBJECTSTORE_ACCESSKEY` and `OBJECTSTORE_SECRETKEY` keys. | `""`   |
 
 ### Helm hooks
 
