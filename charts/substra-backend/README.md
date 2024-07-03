@@ -330,7 +330,7 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 | `addAccountOperator.outgoingOrganizations` | Outgoing organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
 | `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
-| `addAccountOperator.secretName`            | An alternative to giving:                                                                          | `""`  |
+| `addAccountOperator.secretName`            | An alternative to providing credentials for organization-to-organization communications and users  | `""`  |
 
 ### Registry prepopulate
 
