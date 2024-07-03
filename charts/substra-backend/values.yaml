@@ -820,11 +820,6 @@ kaniko:
 ## @section Account operator settings
 ##
 addAccountOperator:
-  ## @param addAccountOperator.secretName name of the Secret gathering information related to:
-  ##   - organization-to-organization communications (outgoingOrganizations and incomingOrganizations)
-  ##   - users who can log into the substra backend server with admin privileges
-  ##
-  secretName: ""
   ## @param addAccountOperator.outgoingOrganizations Outgoing organizations credentials for substra backend organization-to-organization communications
   ## e.g:
   ## - name: organizationId
@@ -844,6 +839,11 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
+  ## @param addAccountOperator.secretName An alternative to giving:
+  ##   - organization-to-organization communications (outgoingOrganizations and incomingOrganizations)
+  ##   - users who can log into the substra backend server with admin privileges
+  ## Secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys
+  secretName: ""
 
 ## @section Registry prepopulate
 ##
