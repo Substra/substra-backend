@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.7.6] - 2024-07-03
+
+### Added
+
+- Allow using existing secrets for accountOperators, postgres, redis and objectstore
+
 ## [26.7.5] - 2024-06-29
 
 ### Added
