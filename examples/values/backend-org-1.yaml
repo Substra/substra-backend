@@ -12,8 +12,7 @@ organizationName: MyOrg1
 # set the same creds as in localdev so they're the same everywhere in dev
 database:
   auth:
-    username: &psql-username backend
-    password: &psql-password backend
+    existingSecretName: orchestrator-org-1-server-database
     database: &psql-database backend_default
 
 postgresql:
@@ -21,8 +20,8 @@ postgresql:
     persistence:
       enabled: false
   auth:
-    username: *psql-username
-    password: *psql-password
+    username: postgres
+    password: postgres
     database: *psql-database
 
 redis:
