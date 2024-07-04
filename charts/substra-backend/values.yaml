@@ -839,9 +839,8 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
-  ## @param addAccountOperator.secretName An alternative to providing credentials for organization-to-organization communications and users
-  ## Secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys
-  secretName: ""
+  ## @param addAccountOperator.existingSecretName An alternative to providing credentials for organization-to-organization communications and users ; secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys
+  existingSecretName: ""
 
 ## @section Registry prepopulate
 ##
@@ -934,10 +933,9 @@ database:
     username: &psql-username postgres
     ## @param database.auth.password what password to use for connecting
     password: &psql-password postgres
-
-    ## @param database.auth.secretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
+    ## @param database.auth.existingSecretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
     ##
-    secretName: ""
+    existingSecretName: ""
 
   ## @param database.host Hostname of the database to connect to (defaults to local)
   host: null
@@ -961,6 +959,7 @@ postgresql:
     username: *psql-username
     password: *psql-password
     database: *psql-database
+
   ## @skip postgresql.primary
   primary:
     resources:
@@ -992,7 +991,7 @@ redis:
   architecture: standalone
   auth:
     password: redis
-    secretName: ""
+    existingSecretName: ""
   master:
     persistence:
       enabled: true
@@ -1065,8 +1064,8 @@ minio:
     forcePassword: true
     ## required to take into account new access and secret keys
     forceNewKeys: true
-    ## @param database.auth.secretName An alternative to giving username and password; must have `OBJECTSTORE_ACCESSKEY` and `OBJECTSTORE_SECRETKEY` keys.
-    secretName: ""
+    ## @param database.auth.existingSecretName An alternative to giving username and password; must have `OBJECTSTORE_ACCESSKEY` and `OBJECTSTORE_SECRETKEY` keys.
+    existingSecretName: ""
   resources:
     requests:
       cpu: "500m"

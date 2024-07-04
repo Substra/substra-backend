@@ -404,8 +404,8 @@ Retrieve AWS environment variable value
 Define database secret name
 */}}
 {{- define "substra-backend.database.secretName" -}}
-    {{- if .Values.database.auth.secretName -}}
-        {{- .Values.database.auth.secretName }}
+    {{- if .Values.database.auth.existingSecretName -}}
+        {{- .Values.database.auth.existingSecretName }}
     {{- else -}}
         {{ include "substra.fullname" . }}-database
     {{- end -}}
@@ -415,8 +415,8 @@ Define database secret name
 Define redis secret name
 */}}
 {{- define "substra-backend.redis.secretName" -}}
-    {{- if .Values.redis.auth.secretName -}}
-        {{- .Values.database.auth.secretName }}
+    {{- if .Values.redis.auth.existingSecretName -}}
+        {{- .Values.database.auth.existingSecretName }}
     {{- else -}}
         {{ include "substra.fullname" . }}-redis
     {{- end -}}
@@ -426,8 +426,8 @@ Define redis secret name
 Define account operators secret name
 */}}
 {{- define "substra-backend.accountOperator.secretName" -}}
-    {{- if .Values.addAccountOperator.secretName -}}
-        {{- .Values.database.auth.secretName }}
+    {{- if .Values.addAccountOperator.existingSecretName -}}
+        {{- .Values.database.auth.existingSecretName }}
     {{- else -}}
         {{ include "substra.fullname" . }}-add-account
     {{- end -}}
@@ -437,8 +437,8 @@ Define account operators secret name
 Define object store secret name
 */}}
 {{- define "substra-backend.objectStore.secretName" -}}
-    {{- if .Values.redis.auth.secretName -}}
-        {{- .Values.database.auth.secretName }}
+    {{- if .Values.redis.auth.existingSecretName -}}
+        {{- .Values.database.auth.existingSecretName }}
     {{- else -}}
         {{ include "substra.fullname" . }}-objectstore
     {{- end -}}
