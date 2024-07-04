@@ -70,13 +70,13 @@ spec:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
           - secretRef:
-              name: {{ include "substra.fullname" . }}-objectstore
+              name: {{ include "substra-backend.objectStore.secretName" . }}
           - configMapRef:
               name: {{ include "substra.fullname" . }}-settings
           - configMapRef:
               name: {{ include "substra.fullname" . }}-database
           - secretRef:
-              name: {{ include "substra-backend.database.secret-name" . }}
+              name: {{ include "substra-backend.database.secretName" . }}
           - secretRef:
               name: {{ include "substra.fullname" . }}-server-key
           - configMapRef:
@@ -230,13 +230,13 @@ spec:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
           - secretRef:
-              name: {{ include "substra.fullname" . }}-objectstore
+              name: {{ include "substra-backend.objectStore.secretName" . }}
           - configMapRef:
               name: {{ include "substra.fullname" . }}-database
           - configMapRef:
               name: {{ include "substra.fullname" . }}-settings
           - secretRef:
-              name: {{ include "substra-backend.database.secret-name" . }}
+              name: {{ include "substra-backend.database.secretName" . }}
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.settings }}

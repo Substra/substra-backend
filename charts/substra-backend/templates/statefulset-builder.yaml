@@ -146,12 +146,12 @@ spec:
           - configMapRef:
                 name: {{ include "substra.fullname" . }}-database
           - secretRef:
-              name: {{ include "substra.fullname" . }}-objectstore
+              name: {{ include "substra-backend.objectStore.secretName" . }}
           - secretRef:
-              name: {{ include "substra.fullname" . }}-redis
+              name: {{ include "substra-backend.redis.secretName" . }}
           # TODO: Remove once moved ImageResitryEntrypoint logic
           - secretRef:
-                name: {{ include "substra-backend.database.secret-name" . }}
+              name: {{ include "substra-backend.database.secretName" . }}
         env:
           - name: HOST_IP
             valueFrom:
