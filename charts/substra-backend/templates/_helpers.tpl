@@ -216,14 +216,6 @@ example:
 {{- end -}}
 
 
-{{- define "substra-backend.database.secret-name" -}}
-    {{- if .Values.database.auth.credentialsSecretName -}}
-        {{- .Values.database.auth.credentialsSecretName }}
-    {{- else -}}
-        {{- template "substra.fullname" . }}-database
-    {{- end -}}
-{{- end -}}
-
 {{/*
 The hostname we should connect to (external is defined, otherwise integrated)
 */}}
@@ -331,7 +323,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
   - configMapRef:
       name: {{ include "substra.fullname" . }}-settings
   - secretRef:
-      name: {{ include "substra-backend.database.secret-name" . }}
+      name: {{ include "substra-backend.database.secretName" . }}
   env:
   - name: DJANGO_SETTINGS_MODULE
     value: backend.settings.{{ .Values.settings }}
@@ -371,7 +363,6 @@ Define service port based on MinIO or LocalStack enablement
     {{- end -}}
 {{- end -}}
 
-
 {{/*
 Define objectstore access key based on MinIO or LocalStack enablement
 */}}
@@ -409,7 +400,6 @@ Retrieve AWS environment variable value
 {{- $value -}}
 {{- end -}}
 
-
 {{/*
 Define database secret name
 */}}
@@ -446,7 +436,7 @@ Define account operators secret name
 {{/*
 Define object store secret name
 */}}
-{{- define "substra-backend.objectstore.secretName" -}}
+{{- define "substra-backend.objectStore.secretName" -}}
     {{- if .Values.redis.auth.secretName -}}
         {{- .Values.database.auth.secretName }}
     {{- else -}}

@@ -74,9 +74,9 @@ spec:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-redis
             - secretRef:
-                name: {{ include "substra.fullname" . }}-redis
+                name: {{ include "substra-backend.redis.secretName" . }}
             - secretRef:
-                name: {{ include "substra-backend.database.secret-name" . }}
+                name: {{ include "substra-backend.database.secretName" . }}
           readinessProbe:
             exec:
               command:

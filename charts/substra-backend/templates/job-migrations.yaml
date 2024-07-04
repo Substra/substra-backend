@@ -77,7 +77,7 @@ spec:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-database
           - secretRef:
-              name: {{ include "substra-backend.database.secret-name" . }}
+              name: {{ include "substra-backend.database.secretName" . }}
         env:
           - name: DJANGO_SETTINGS_MODULE
             value: backend.settings.{{ .Values.settings }}
@@ -88,4 +88,4 @@ spec:
       volumes:
         - name: accounts
           secret:
-            secretName: {{ template "substra.fullname" . }}-add-account
+            secretName: {{ include "substra-backend.accountOperator.secretName" . }}
