@@ -2,11 +2,15 @@
 
 <!-- towncrier release notes start -->
 
-## [26.7.6] - 2024-07-03
+## [26.8.0] - 2024-07-05
 
 ### Added
 
 - Allow using existing secrets for accountOperators, postgres, redis and objectstore
+
+### Changed
+
+- `database.auth.credentialsSecretName` is now `database.auth.existingSecretName`
 
 ## [26.7.5] - 2024-06-29
 
