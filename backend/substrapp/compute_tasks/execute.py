@@ -50,7 +50,10 @@ def _is_pod_creation_needed(label_selector: str, *, client: Optional[kubernetes.
     if not client:
         client = _get_k8s_client()
 
-    return not pod_exists_by_label_selector(client, label_selector)
+    pod_creation_needed = not pod_exists_by_label_selector(client, label_selector)
+    logger.info(f"Pod creation needed {pod_creation_needed}", label_selector=label_selector)
+
+    return pod_creation_needed
 
 
 def _is_function_image_downloaded(function_key: str) -> bool:
