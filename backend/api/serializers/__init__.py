@@ -11,10 +11,10 @@ from .organization import ChannelOrganizationSerializer
 from .performance import CPPerformanceSerializer
 from .performance import ExportPerformanceSerializer
 from .performance import PerformanceSerializer
+from .task_profiling import FunctionProfilingSerializer
 from .task_profiling import TaskProfilingSerializer
 
 __all__ = [
-    "FunctionSerializer",
     "ComputePlanSerializer",
     "ComputeTaskSerializer",
     "ComputeTaskInputAssetSerializer",
@@ -22,6 +22,8 @@ __all__ = [
     "DataManagerSerializer",
     "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
+    "FunctionSerializer",
+    "FunctionProfilingSerializer",
     "ModelSerializer",
     "ChannelOrganizationSerializer",
     "PerformanceSerializer",
