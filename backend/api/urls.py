@@ -29,6 +29,9 @@ router.register(r"performance", views.PerformanceViewSet, basename="performance"
 router.register(r"logs", views.FailedAssetLogsViewSet, basename="logs")
 router.register(r"task_profiling", views.TaskProfilingViewSet, basename="task_profiling")
 
+function_profiling_router = routers.NestedDefaultRouter(router, r"function", lookup="function")
+function_profiling_router.register(r"profiling", views.FunctionProfilingViewSet, basename="function-profiling")
+
 task_profiling_router = routers.NestedDefaultRouter(router, r"task_profiling", lookup="task_profiling")
 task_profiling_router.register(r"step", views.TaskProfilingStepViewSet, basename="step")
 
@@ -42,5 +45,6 @@ urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
     path("", include(task_profiling_router.urls)),
+    path("", include(function_profiling_router.urls)),
     path(r"compute_plan/<compute_plan_pk>/workflow_graph/", views.get_cp_graph, name="workflow_graph"),
 ]

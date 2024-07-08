@@ -16,6 +16,7 @@ from .model import ModelViewSet
 from .newsfeed import NewsFeedViewSet
 from .performance import CPPerformanceViewSet
 from .performance import PerformanceViewSet
+from .task_profiling import FunctionProfilingViewSet
 from .task_profiling import TaskProfilingStepViewSet
 from .task_profiling import TaskProfilingViewSet
 
@@ -28,6 +29,7 @@ __all__ = [
     "FailedAssetLogsViewSet",
     "FunctionViewSet",
     "FunctionPermissionViewSet",
+    "FunctionProfilingViewSet",
     "ComputeTaskViewSet",
     "ComputeTaskPermissionViewSet",
     "ComputePlanViewSet",

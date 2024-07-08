@@ -14,8 +14,10 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.viewsets import GenericViewSet
 
+from api.models import Function
 from api.models import ProfilingStep
 from api.models import TaskProfiling
+from api.serializers import FunctionProfilingSerializer
 from api.serializers import TaskProfilingSerializer
 from api.serializers.task_profiling import ProfilingStepSerializer
 from api.views.utils import IsCurrentBackendOrReadOnly
@@ -83,3 +85,23 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
 
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class FunctionProfilingViewSet(
+    GenericViewSet,
+):
+    filter_backends = (DjangoFilterBackend,)
+    serializer_class = FunctionProfilingSerializer
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    permission_classes = [IsAuthorized]
+    lookup_field = "key"
+    lookup_url_kwarg = "function_pk"
+
+    def get_queryset(self):
+        return Function.objects.filter(channel=get_channel_name(self.request)).prefetch_related("profiling_steps")
+
+    # Do not use pagination
+    def list(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
