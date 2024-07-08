@@ -4,6 +4,7 @@ from typing import Union
 from django.utils.duration import duration_microseconds
 from rest_framework import serializers
 
+import orchestrator
 from api.models import ComputeTask
 from api.models import Function
 from api.models import TaskProfiling
@@ -82,7 +83,11 @@ class FunctionProfilingSerializer(serializers.ModelSerializer):
             "duration",
         ]
 
-    def get_duration(self, function: Function) -> str:
+    def get_duration(self, function: Function) -> Union[str, None]:
+        counter_steps = len(orchestrator.FunctionProfilingStep)
+
+        if function.profiling_steps.count() < counter_steps:
+            return None
         return functools.reduce(
             lambda acc, val: acc + duration_microseconds(val.duration), function.profiling_steps.all(), 0
         )
