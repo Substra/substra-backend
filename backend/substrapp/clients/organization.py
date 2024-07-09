@@ -184,7 +184,12 @@ def get(
 ) -> bytes:
     """Get asset data."""
     content = _http_request(_Method.GET, channel, organization_id, url).content
+    logger.info("Downloading content succeed")
+
+    logger.info("Starting computing hash")
     new_checksum = compute_hash(content, key=salt)
+    logger.info("Computing hash succeed")
+
     if new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
     return content
