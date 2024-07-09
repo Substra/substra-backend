@@ -1,0 +1,1 @@
+Function durations received from the orchestrator are now correctly saved as milliseconds instead of seconds
