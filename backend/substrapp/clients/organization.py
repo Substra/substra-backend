@@ -125,6 +125,7 @@ def _http_request(
 
     response = None
     try:
+        logger.ingo("Sending http request", headers=headers, timeout=_HTTP_TIMEOUT, verify=_HTTP_VERIFY)
         response = _HTTP_METHOD_TO_FUNC[method](
             url,
             headers=_add_mandatory_headers(headers, channel),
@@ -133,6 +134,7 @@ def _http_request(
             timeout=_HTTP_TIMEOUT,
             **_http_request_kwargs(data, stream),
         )
+        logger.ingo("Fecthing http response success", response=response)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
         raise OrganizationError(f"Failed to connect to {organization_id}") from exc
 
