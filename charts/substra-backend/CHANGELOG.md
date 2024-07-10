@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.8.0] - 2024-07-10
+
+### Added
+
+- Allow using existing secret for `addAccountOperators`
+
 ## [26.7.5] - 2024-06-29
 
 ### Added
