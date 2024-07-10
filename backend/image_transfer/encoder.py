@@ -98,6 +98,7 @@ def get_manifests_and_list_of_all_blobs(
                 raise RegistryPreconditionFailedException(
                     f"{docker_image} is either not scanned yet or not passing the vulnerability checks."
                 ) from e
+            raise e
         manifests.append(manifest)
         blobs_to_pull += blobs
     return manifests, blobs_to_pull
