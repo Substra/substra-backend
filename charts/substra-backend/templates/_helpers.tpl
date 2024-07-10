@@ -414,7 +414,7 @@ Define account operators secret name
 */}}
 {{- define "substra-backend.accountOperator.secretName" -}}
     {{- if .Values.addAccountOperator.existingSecret -}}
-        {{- .Values.database.auth.existingSecret }}
+        {{- .Values.addAccountOperator.existingSecret }}
     {{- else -}}
         {{ template "substra.fullname" . }}-add-account
     {{- end -}}
