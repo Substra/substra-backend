@@ -992,6 +992,8 @@ redis:
   architecture: standalone
   auth:
     password: redis
+    existingSecret: ""
+    existingSecretPasswordKey: ""
   master:
     persistence:
       enabled: true

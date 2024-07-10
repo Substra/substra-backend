@@ -177,13 +177,16 @@ spec:
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-redis
-          - secretRef:
-              name: {{ include "substra.fullname" . }}-redis
         env:
           - name: PROMETHEUS_MULTIPROC_DIR
             value: {{ $metricsPath }}
           - name: CELERY_MONITORING_ENABLED
             value: "True"
+          - name: CELERY_BROKER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "substra-backend.redis.secretName" . }}
+                key: {{ include "substra-backend.redis.secretPasswordKey" . }}
         ports:
           - name: metrics
             containerPort: 8001

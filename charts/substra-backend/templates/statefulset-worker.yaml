@@ -51,7 +51,7 @@ spec:
         checksum-cm-redis: {{ include (print $.Template.BasePath "/configmap-redis.yaml") . | sha256sum }}
         checksum-secret-objectstore : {{ include (print $.Template.BasePath "/secret-objectstore.yaml") . | sha256sum }}
         checksum-secret-database : {{ include (print $.Template.BasePath "/secret-database.yaml") . | sha256sum }}
-        checksum-secret-redis : {{ include (print $.Template.BasePath "/secret-redis.yaml") . | sha256sum }}
+        checksum-secret-redis : {{ include "substra-backend.redis.secretName" . | sha256sum }}
     spec:
       {{- if .Values.worker.podSecurityContext.enabled }}
       securityContext:
@@ -104,8 +104,6 @@ spec:
             - secretRef:
                 name: {{ include "substra.fullname" . }}-objectstore
             - secretRef:
-                name: {{ include "substra.fullname" . }}-redis
-            - secretRef:
                 name: {{ include "substra-backend.database.secret-name" . }}
           env:
             - name: DJANGO_SETTINGS_MODULE
@@ -114,6 +112,11 @@ spec:
               value: "{{ .Values.server.defaultDomain }}"
             - name: "CELERY_WORKER_CONCURRENCY"
               value: {{ .Values.worker.concurrency | quote }}
+            - name: CELERY_BROKER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "substra-backend.redis.secretName" . }}
+                  key: redis-password
             - name: WORKER_PVC_SUBTUPLE
               value: subtuple
             {{- if .Values.privateCa.enabled }}

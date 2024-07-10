@@ -419,3 +419,25 @@ Define account operators secret name
         {{ template "substra.fullname" . }}-add-account
     {{- end -}}
 {{- end -}}
+
+{{/*
+Define redis secret name
+*/}}
+{{- define "substra-backend.redis.secretName" -}}
+    {{- if .Values.redis.auth.existingSecret -}}
+        {{- .Values.redis.auth.existingSecret }}
+    {{- else -}}
+        {{- printf "%s" (include "common.names.fullname" .) -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Define redis secret key
+*/}}
+{{- define "substra-backend.redis.secretPasswordKey" -}}
+    {{- if .Values.redis.auth.existingSecretPasswordKey -}}
+        {{- printf "%s" (tpl .Values.redis.auth.existingSecretPasswordKey $) -}}
+    {{- else -}}
+        {{- printf "redis-password" -}}
+    {{- end -}}
+{{- end -}}
