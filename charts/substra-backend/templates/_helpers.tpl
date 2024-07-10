@@ -408,3 +408,14 @@ Retrieve AWS environment variable value
 {{- end -}}
 {{- $value -}}
 {{- end -}}
+
+{{/*
+Define account operators secret name
+*/}}
+{{- define "substra-backend.accountOperator.secretName" -}}
+    {{- if .Values.addAccountOperator.existingSecret -}}
+        {{- .Values.database.auth.existingSecret }}
+    {{- else -}}
+        {{ template "substra.fullname" . }}-add-account
+    {{- end -}}
+{{- end -}}
