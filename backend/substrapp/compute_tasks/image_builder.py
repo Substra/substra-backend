@@ -24,11 +24,7 @@ def push_blob_to_registry(blob: bytes, tag: str) -> None:
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         storage_path = pathlib.Path(tmp_dir) / f"{tag}.zip"
-
-        logger.info("Starting writing payload", tag=tag)
         storage_path.write_bytes(blob)
-        logger.info("Writting payload succeed", tag=tag)
-
         push_payload(
             storage_path, registry=REGISTRY, repository=USER_IMAGE_REPOSITORY, secure=REGISTRY_SCHEME == "https"
         )
@@ -37,13 +33,11 @@ def push_blob_to_registry(blob: bytes, tag: str) -> None:
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
     # Ask the backend owner of the function if it's available
     container_image_tag = utils.container_image_tag_from_function(function)
-    logger.info("Starting to download image content", function_key=function.key)
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,
         url=function.image.uri,
         checksum=function.image.checksum,
     )
-    logger.info("Download function succeed", function_key=function.key)
 
     push_blob_to_registry(function_image_content, tag=container_image_tag)

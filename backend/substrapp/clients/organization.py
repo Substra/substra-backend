@@ -125,7 +125,6 @@ def _http_request(
 
     response = None
     try:
-        logger.info("Sending http request", headers=headers, timeout=_HTTP_TIMEOUT, verify=_HTTP_VERIFY)
         response = _HTTP_METHOD_TO_FUNC[method](
             url,
             headers=_add_mandatory_headers(headers, channel),
@@ -134,7 +133,6 @@ def _http_request(
             timeout=_HTTP_TIMEOUT,
             **_http_request_kwargs(data, stream),
         )
-        logger.info("Fecthing http response success", response=response)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as exc:
         raise OrganizationError(f"Failed to connect to {organization_id}") from exc
 
@@ -186,11 +184,8 @@ def get(
 ) -> bytes:
     """Get asset data."""
     content = _http_request(_Method.GET, channel, organization_id, url).content
-    logger.info("Http request succeed")
 
-    logger.info("Starting computing hash")
     new_checksum = compute_hash(content, key=salt)
-    logger.info("Computing hash succeed")
 
     if new_checksum != checksum:
         raise IntegrityError(f"url {url}: checksum doesn't match {checksum} vs {new_checksum}")
