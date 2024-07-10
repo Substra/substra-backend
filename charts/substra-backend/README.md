@@ -325,11 +325,12 @@ See [UPGRADE.md](https://github.com/Substra/substra-backend/blob/main/charts/sub
 
 ### Account operator settings
 
-| Name                                       | Description                                                                                        | Value |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------- | ----- |
-| `addAccountOperator.outgoingOrganizations` | Outgoind organizations credentials for substra backend organization-to-organization communications | `[]`  |
-| `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications | `[]`  |
-| `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges   | `[]`  |
+| Name                                       | Description                                                                                                                                                                                  | Value |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `addAccountOperator.outgoingOrganizations` | Outgoind organizations credentials for substra backend organization-to-organization communications                                                                                           | `[]`  |
+| `addAccountOperator.incomingOrganizations` | Incoming organizations credentials for substra backend organization-to-organization communications                                                                                           | `[]`  |
+| `addAccountOperator.users`                 | A list of administrators users who can log into the substra backend server with admin privileges                                                                                             | `[]`  |
+| `addAccountOperator.existingSecret`        | An alternative to providing credentials for organization-to-organization communications and users ; secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys | `""`  |
 
 ### Registry prepopulate
 

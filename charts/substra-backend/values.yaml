@@ -839,6 +839,9 @@ addAccountOperator:
   ##   channel: mychannel
   ##
   users: []
+  ## @param addAccountOperator.existingSecret An alternative to providing credentials for organization-to-organization communications and users ; secret must have the `users`, `incoming_organizations` and `outgoing_organizations` keys
+  ##
+  existingSecret: ""
 
 ## @section Registry prepopulate
 ##

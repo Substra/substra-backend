@@ -88,4 +88,4 @@ spec:
       volumes:
         - name: accounts
           secret:
-            secretName: {{ template "substra.fullname" . }}-add-account
+            secretName: {{ include "substra-backend.accountOperator.secretName" . }}
