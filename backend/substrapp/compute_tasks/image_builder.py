@@ -24,7 +24,9 @@ def push_blob_to_registry(blob: bytes, tag: str) -> None:
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         storage_path = pathlib.Path(tmp_dir) / f"{tag}.zip"
+        logger.debug("Starting writing payload", tag=tag, path=storage_path)
         storage_path.write_bytes(blob)
+        logger.debug("Writting payload succeed", tag=tag, path=storage_path)
         push_payload(
             storage_path, registry=REGISTRY, repository=USER_IMAGE_REPOSITORY, secure=REGISTRY_SCHEME == "https"
         )
