@@ -7,6 +7,7 @@ from typing import Iterator
 from typing import Optional
 from typing import Union
 
+import structlog
 from dxf import DXF
 from dxf import DXFBase
 from requests import HTTPError
@@ -22,6 +23,8 @@ from image_transfer.common import PayloadSide
 from image_transfer.common import progress_as_string
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.utils import safezip
+
+logger = structlog.get_logger(__name__)
 
 
 def add_blobs_to_zip(
@@ -98,6 +101,16 @@ def get_manifests_and_list_of_all_blobs(
                 raise RegistryPreconditionFailedException(
                     f"{docker_image} is either not scanned yet or not passing the vulnerability checks."
                 ) from e
+            else:
+                logger.error(
+                    "Cannot get manifests and blobs",
+                    docker_image=docker_image,
+                    platform=platform,
+                    response_content=e.response.content,
+                    status_code=e.response.status_code,
+                    error=e,
+                )
+                raise e
         manifests.append(manifest)
         blobs_to_pull += blobs
     return manifests, blobs_to_pull
