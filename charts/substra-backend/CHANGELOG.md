@@ -2,6 +2,22 @@
 
 <!-- towncrier release notes start -->
 
+## [26.8.1] - 2024-07-11
+
+### Added
+
+- Configure key for `redis.auth.existingSecret`
+
+- Helpers to enable the use of pre-defined secrets from helpers
+
+### Changed
+
+- Directly inject redis password into `CELERY_BROKER_PASSWORD` container env from Redis' internal secret
+
+### Removed
+
+- Substra's `substra-redis` secret as duplicate of Redis' internal secret
+
 ## [26.8.0] - 2024-07-10
 
 ### Added
