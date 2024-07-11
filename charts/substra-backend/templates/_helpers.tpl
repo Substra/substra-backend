@@ -427,7 +427,7 @@ Define redis secret name
     {{- if .Values.redis.auth.existingSecret -}}
         {{- .Values.redis.auth.existingSecret }}
     {{- else -}}
-        {{- printf "%s" (include "common.names.fullname" .) -}}
+        {{-  printf "%s" .Release.Name }}-redis
     {{- end -}}
 {{- end -}}
 
