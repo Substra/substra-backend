@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-redis
+  namespace: org-1
+stringData:
+  redis-password: redis
