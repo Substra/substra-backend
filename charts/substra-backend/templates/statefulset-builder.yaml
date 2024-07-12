@@ -48,6 +48,7 @@ spec:
         # This will cause the pod to restart if the content of the ConfigMap is updated through Helm
         checksum-cm-orchestrator: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
         checksum-cm-settings: {{ include (print $.Template.BasePath "/configmap-settings.yaml") . | sha256sum }}
+        checksum-cm-registry: {{ include (print $.Template.BasePath "/configmap-registry.yaml") . | sha256sum }}
         checksum-secret-objectstore : {{ include (print $.Template.BasePath "/secret-objectstore.yaml") . | sha256sum }}
         checksum-secret-redis: {{ include "substra-backend.redis.secretName" . | sha256sum }}
     spec:

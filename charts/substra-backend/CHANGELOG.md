@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.8.2] - 2024-07-12
+
+### Fixed
+
+- `server` and `builder` respectively restarts after oidc and registry config updates
+
 ## [26.8.1] - 2024-07-11
 
 ### Added
