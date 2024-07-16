@@ -1090,6 +1090,7 @@ minio:
 ##
 localstack:
   enabled: false
+  startServices: "s3"
   service:
     edgeService:
       nodePort: ""
