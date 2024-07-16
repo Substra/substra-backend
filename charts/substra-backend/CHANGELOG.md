@@ -2,6 +2,12 @@
 
 <!-- towncrier release notes start -->
 
+## [26.8.3] - 2024-07-16
+
+### Fixed
+
+- Start only s3 `localstack` service by default when enabled
+
 ## [26.8.2] - 2024-07-12
 
 ### Fixed
