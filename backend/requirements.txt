@@ -4,7 +4,7 @@ django-structlog==8.1.0
 celery==5.3.6
 checksumdir==1.2.0
 cryptography==42.0.5
-django-cors-headers==3.14.0
+django-cors-headers==4.4.0
 django-celery-results==2.5.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
