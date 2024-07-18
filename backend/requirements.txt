@@ -25,7 +25,7 @@ pydantic==2.4.0
 redis==5.0.0
 mozilla-django-oidc==4.0.1
 # Dependencies used in local dev mode
-argh==0.26.2
+argh==0.31.3
 watchdog==2.1.9
 python-dxf
 tqdm
