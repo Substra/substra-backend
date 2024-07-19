@@ -86,6 +86,8 @@ class FunctionProfilingSerializer(serializers.ModelSerializer):
     def get_duration(self, function: Function) -> Union[str, None]:
         counter_steps = len(orchestrator.FunctionProfilingStep)
 
+        # Returns the total duration only when all steps are completed. This mimicks `TaskProfiling` behavior.
+        # This is used in the front-end, which shows the total breakdown only when all steps have been finished.
         if function.profiling_steps.count() < counter_steps:
             return None
         return functools.reduce(
