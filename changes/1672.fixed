@@ -1,0 +1,1 @@
+Pin `pyopenssl` to version `24.1.0` to avoid deprecation warnings
