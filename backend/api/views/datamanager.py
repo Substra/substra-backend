@@ -46,12 +46,12 @@ def _register_in_orchestrator(request, instance):
         "name": request.data.get("name"),
         "opener": {
             "checksum": get_hash(instance.data_opener),
-            "storage_address": current_site + reverse("api:data_manager-opener", args=[instance.key]),
+            "storage_address": current_site + reverse("api:data_manager_permissions-opener", args=[instance.key]),
         },
         "type": request.data.get("type"),
         "description": {
             "checksum": get_hash(instance.description),
-            "storage_address": current_site + reverse("api:data_manager-description", args=[instance.key]),
+            "storage_address": current_site + reverse("api:data_manager_permissions-description", args=[instance.key]),
         },
         "new_permissions": {
             "public": permissions.get("public"),

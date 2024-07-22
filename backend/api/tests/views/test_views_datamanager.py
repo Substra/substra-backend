@@ -523,7 +523,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_download_opener(self):
         data_manager_files = factory.create_datamanager_files()
         data_manager = factory.create_datamanager(key=data_manager_files.key)
-        url = reverse("api:data_manager-opener", args=[data_manager.key])
+        url = reverse("api:data_manager_permissions-opener", args=[data_manager.key])
         with mock.patch("api.views.utils.get_owner", return_value=data_manager.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
@@ -534,7 +534,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_download_description(self):
         data_manager_files = factory.create_datamanager_files()
         data_manager = factory.create_datamanager(key=data_manager_files.key)
-        url = reverse("api:data_manager-description", args=[data_manager.key])
+        url = reverse("api:data_manager_permissions-description", args=[data_manager.key])
         with mock.patch("api.views.utils.get_owner", return_value=data_manager.owner):
             response = self.client.get(url, **self.extra)
         content = response.getvalue()
