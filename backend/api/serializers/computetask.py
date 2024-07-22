@@ -181,10 +181,10 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         # replace in common relationships
         if "function" in task:
             task["function"]["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:function-description", args=[task["function"]["key"]])
+                reverse("api:function_permissions-description", args=[task["function"]["key"]])
             )
             task["function"]["archive"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:function-file", args=[task["function"]["key"]])
+                reverse("api:function_permissions-file", args=[task["function"]["key"]])
             )
 
     @transaction.atomic

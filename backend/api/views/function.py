@@ -45,11 +45,11 @@ def _register_in_orchestrator(request, basename, instance):
         "name": request.data.get("name"),
         "description": {
             "checksum": get_hash(instance.description),
-            "storage_address": current_site + reverse("api:function-description", args=[instance.key]),
+            "storage_address": current_site + reverse("api:function_permissions-description", args=[instance.key]),
         },
         "archive": {
             "checksum": instance.checksum,
-            "storage_address": current_site + reverse("api:function-file", args=[instance.key]),
+            "storage_address": current_site + reverse("api:function_permissions-file", args=[instance.key]),
         },
         "new_permissions": {
             "public": permissions.get("public"),
