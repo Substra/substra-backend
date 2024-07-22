@@ -14,7 +14,7 @@ from api.views.utils import CP_BASENAME_PREFIX
 
 router = DefaultRouter()
 router.register(r"model", views.ModelViewSet, basename="model")
-router.register(r"model", views.ModelPermissionViewSet, basename="model")
+router.register(r"model", views.ModelPermissionViewSet, basename="model_permissions")
 router.register(r"data_sample", views.DataSampleViewSet, basename="data_sample")
 router.register(r"data_manager", views.DataManagerViewSet, basename="data_manager")
 router.register(r"data_manager", views.DataManagerPermissionViewSet, basename="data_manager")
