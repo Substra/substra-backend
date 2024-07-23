@@ -61,10 +61,10 @@ class FunctionSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         request = self.context.get("request")
         if request:
             res["description"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:function-description", args=[res["key"]])
+                reverse("api:function_permissions-description", args=[res["key"]])
             )
             res["archive"]["storage_address"] = request.build_absolute_uri(
-                reverse("api:function-file", args=[res["key"]])
+                reverse("api:function_permissions-file", args=[res["key"]])
             )
         # from list to dict, to align with the orchestrator format
         res["inputs"] = {_input.pop("identifier"): _input for _input in res["inputs"]}

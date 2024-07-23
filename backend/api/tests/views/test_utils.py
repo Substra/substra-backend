@@ -38,7 +38,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.function_content = self.function_file.read()
         self.function_description_file, self.function_description_filename = get_description_function()
         self.function_key = uuid.uuid4()
-        self.function_url = reverse("api:function-file", kwargs={"pk": self.function_key})
+        self.function_url = reverse("api:function_permissions-file", kwargs={"pk": self.function_key})
         self.extra = {
             "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
             "HTTP_ACCEPT": "application/json;version=0.0",

@@ -6,7 +6,7 @@ checksumdir==1.2.0
 cryptography==42.0.5
 django-cors-headers==4.4.0
 django-celery-results==2.5.1
-djangorestframework==3.14.0
+djangorestframework==3.15.2
 djangorestframework-simplejwt==5.2.2
 drf-spectacular==0.25.1
 drf-nested-routers==0.93.4

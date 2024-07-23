@@ -383,7 +383,7 @@ class ModelViewTests(APITestCase):
     def test_model_download_file(self):
         model_files = factory.create_model_files()
         model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
-        url = reverse("api:model-file", args=[model.key])
+        url = reverse("api:model_permissions-file", args=[model.key])
         with (
             mock.patch("api.views.utils.get_owner", return_value=model.owner),
             mock.patch("api.views.model.type", return_value=OrganizationUser),
@@ -399,7 +399,7 @@ class ModelViewTests(APITestCase):
     def test_model_download_file_wrong_user(self):
         model_files = factory.create_model_files()
         model = factory.create_model(self.train_task, key=model_files.key, owner="substra")
-        url = reverse("api:model-file", args=[model.key])
+        url = reverse("api:model_permissions-file", args=[model.key])
         with mock.patch("api.views.utils.get_owner", return_value=model.owner):
             response = self.client.get(
                 url,
@@ -409,7 +409,7 @@ class ModelViewTests(APITestCase):
     def test_model_download_file_wrong_owner(self):
         model_files = factory.create_model_files()
         model = factory.create_model(self.train_task, key=model_files.key, owner="owkin")
-        url = reverse("api:model-file", args=[model.key])
+        url = reverse("api:model_permissions-file", args=[model.key])
         with (
             mock.patch("api.views.utils.get_owner", return_value=model.owner),
             mock.patch("api.views.model.type", return_value=OrganizationUser),
@@ -425,7 +425,7 @@ class ModelViewTests(APITestCase):
         # delete intermediary model
         model.model_address = None
         model.save()
-        url = reverse("api:model-file", args=[model.key])
+        url = reverse("api:model_permissions-file", args=[model.key])
         with (
             mock.patch("api.views.utils.get_owner", return_value=model.owner),
             mock.patch("api.views.model.type", return_value=OrganizationUser),

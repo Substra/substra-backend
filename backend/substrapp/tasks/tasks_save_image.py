@@ -112,7 +112,9 @@ def save_image(function_serialized: str, channel_name: str) -> dict:
         # update APIFunction image-related fields
         api_function = ApiFunction.objects.get(key=function.key)
         # TODO get full url cf https://github.com/Substra/substra-backend/backend/api/serializers/function.py#L66
-        api_function.image_address = settings.DEFAULT_DOMAIN + reverse("api:function-image", args=[function.key])
+        api_function.image_address = settings.DEFAULT_DOMAIN + reverse(
+            "api:function_permissions-image", args=[function.key]
+        )
         api_function.image_checksum = image.checksum
         api_function.save()
 

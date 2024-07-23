@@ -85,7 +85,7 @@ class OutputSaver:
             instance.file.save("model", f)
 
         current_site = settings.DEFAULT_DOMAIN
-        storage_address = f'{current_site}{reverse("api:model-file", args=[instance.key])}'
+        storage_address = f'{current_site}{reverse("api:model_permissions-file", args=[instance.key])}'
 
         logger.debug("Saving model in local storage", model_key=instance.key, identifier=model.identifier)
 

@@ -610,7 +610,7 @@ class FunctionViewTests(APITestCase):
     def test_function_download_file(self):
         function_files = factory.create_function_files()
         function = factory.create_function(key=function_files.key)
-        url = reverse("api:function-file", args=[function.key])
+        url = reverse("api:function_permissions-file", args=[function.key])
         with mock.patch("api.views.utils.get_owner", return_value=function.owner):
             response = self.client.get(url)
         content = response.getvalue()
@@ -621,7 +621,7 @@ class FunctionViewTests(APITestCase):
     def test_function_download_description(self):
         function_files = factory.create_function_files()
         function = factory.create_function(key=function_files.key)
-        url = reverse("api:function-description", args=[function.key])
+        url = reverse("api:function_permissions-description", args=[function.key])
         with mock.patch("api.views.utils.get_owner", return_value=function.owner):
             response = self.client.get(url)
         content = response.getvalue()

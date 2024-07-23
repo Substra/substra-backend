@@ -41,7 +41,7 @@ class AuthenticationTests(APITestCase):
         metadata = factory.create_function(key=self.function.key, public=True, owner="foo")
         metadata.archive_address = "http://fake_address.com"
         metadata.save()
-        self.function_url = reverse("api:function-file", kwargs={"pk": self.function.key})
+        self.function_url = reverse("api:function_permissions-file", kwargs={"pk": self.function.key})
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
