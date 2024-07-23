@@ -1,0 +1,1 @@
+Compute pod `affinity`, `nodeSelector` and `tolerations` are now configured for environment variable defined in the `values.yaml` file.

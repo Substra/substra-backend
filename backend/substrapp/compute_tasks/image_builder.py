@@ -33,7 +33,6 @@ def push_blob_to_registry(blob: bytes, tag: str) -> None:
 def load_remote_function_image(function: orchestrator.Function, channel: str) -> None:
     # Ask the backend owner of the function if it's available
     container_image_tag = utils.container_image_tag_from_function(function)
-
     function_image_content = organization_client.get(
         channel=channel,
         organization_id=function.owner,

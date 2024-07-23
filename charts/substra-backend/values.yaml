@@ -283,7 +283,7 @@ server:
       ##
       honorLabels: false
 
-## @section Substra worker settings
+## @section Substra worker settings. Note that you can access the worker pod name using $(POD_NAME) and its node using $(NODE_NAME).
 ##
 worker:
   ## @param worker.enabled Enable worker service
@@ -376,6 +376,27 @@ worker:
         memory: "1Gi"
       limits:
         memory: "64Gi"
+    ## @param worker.computePod.nodeSelector Node labels for pod assignment
+    ##
+    nodeSelector: {}
+    ## @param worker.computePod.tolerations Toleration labels for pod assignment
+    ##
+    tolerations: []
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].key Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].operator Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchExpressions[0].values Pod affinity rule defnition.
+    ## @param worker.computePod.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey Pod affinity rule defnition.
+    ##
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: statefulset.kubernetes.io/pod-name
+              operator: In
+              values:
+              - $(POD_NAME)
+          topologyKey: kubernetes.io/hostname
   events:
     ## @param worker.events.enabled Enable event service
     ##
@@ -435,7 +456,9 @@ worker:
       ## If not set and create is true, a name is generated using the substra.fullname template
       ##
       name: ""
-
+  ## @param worker.accessModes Access modes for volume
+  ##
+  accessModes: ["ReadWriteOnce"]
 ## @section Substra periodic tasks worker settings
 ##
 schedulerWorker:

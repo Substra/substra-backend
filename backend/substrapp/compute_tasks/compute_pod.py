@@ -2,6 +2,7 @@ import os
 
 import kubernetes
 import structlog
+import yaml
 from django.conf import settings
 
 from substrapp.kubernetes_utils import delete_pod
@@ -120,22 +121,6 @@ def create_pod(
         **container_optional_kwargs,
     )
 
-    pod_affinity = kubernetes.client.V1Affinity(
-        pod_affinity=kubernetes.client.V1PodAffinity(
-            required_during_scheduling_ignored_during_execution=[
-                kubernetes.client.V1PodAffinityTerm(
-                    label_selector=kubernetes.client.V1LabelSelector(
-                        match_expressions=[
-                            kubernetes.client.V1LabelSelectorRequirement(
-                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv("HOSTNAME")]
-                            )
-                        ]
-                    ),
-                    topology_key="kubernetes.io/hostname",
-                )
-            ]
-        )
-    )
     image_pull_secret = os.getenv("DOCKER_CONFIG_SECRET_NAME")
 
     if image_pull_secret:
@@ -144,7 +129,9 @@ def create_pod(
         image_pull_secrets = None
     spec = kubernetes.client.V1PodSpec(
         restart_policy="Never",
-        affinity=pod_affinity,
+        affinity=yaml.safe_load(os.getenv("COMPUTE_POD_AFFINITY")),
+        node_selector=yaml.safe_load(os.getenv("COMPUTE_POD_NODE_SELECTOR")),
+        tolerations=yaml.safe_load(os.getenv("COMPUTE_POD_TOLERATIONS")),
         containers=[container_compute],
         volumes=volumes + gpu_volume,
         security_context=get_pod_security_context(),
