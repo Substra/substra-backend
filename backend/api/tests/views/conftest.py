@@ -1,10 +1,15 @@
+import datetime
+import random
 from typing import Optional
 
 import pytest
 from rest_framework import test
 
+import orchestrator
 from api.models import ComputePlan
 from api.models import ComputeTask
+from api.models import Function
+from api.models import FunctionProfilingStep
 from api.models import TaskProfiling
 from api.tests import asset_factory as factory
 from api.tests.common import AuthenticatedBackendClient
@@ -76,3 +81,16 @@ def create_compute_plan(create_compute_task):
 def task_profiling(create_compute_task) -> TaskProfiling:
     task = create_compute_task(status=ComputeTask.Status.STATUS_EXECUTING)
     return factory.create_computetask_profiling(compute_task=task)
+
+
+@pytest.fixture
+def create_function_profiling():
+    def _create_function_profiling(
+        function: Function, step: orchestrator.FunctionProfilingStep
+    ) -> FunctionProfilingStep:
+        duration = datetime.timedelta(microseconds=random.randint(500, 1500))
+        step = FunctionProfilingStep(function=function, duration=duration, step=step)
+        step.save()
+        return step
+
+    return _create_function_profiling

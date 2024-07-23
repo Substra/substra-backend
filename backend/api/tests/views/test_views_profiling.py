@@ -1,11 +1,15 @@
 import datetime
+import functools
 
 import pytest
 from django.test import override_settings
 from django.urls.base import reverse
+from django.utils.duration import duration_microseconds
 from rest_framework import status
 
+import orchestrator
 from api.models import ComputeTask
+from api.models import FunctionProfilingStep
 from api.tests import asset_factory as factory
 
 CHANNEL = "mychannel"
@@ -197,3 +201,51 @@ def test_task_profiling_create_fail_other_backend(authenticated_client, create_c
 
     response = authenticated_client.post(TASK_PROFILING_LIST_URL, {"compute_task_key": str(task.key)})
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def _get_serialized_step(step: FunctionProfilingStep) -> dict:
+    return {"duration": duration_microseconds(step.duration), "step": step.step.value}
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db
+def test_function_profiling_get_steps_unfinished(authenticated_client, create_function_profiling):
+    function = factory.create_function()
+    function_key = function.key
+
+    step = create_function_profiling(function=function, step=orchestrator.FunctionProfilingStep.BUILD_IMAGE)
+    step_url = reverse("api:function-profiling-list", args=[str(function_key)])
+    response = authenticated_client.get(step_url)
+
+    assert response.status_code == status.HTTP_200_OK
+
+    expected_results = {
+        "function_key": str(function_key),
+        "execution_rundown": [_get_serialized_step(step)],
+        "duration": None,
+    }
+
+    assert response.json() == expected_results
+
+
+@override_settings(**ORG_SETTINGS)
+@pytest.mark.django_db
+def test_function_profiling_get_steps_finished(authenticated_client, create_function_profiling):
+    function = factory.create_function()
+    function_key = function.key
+
+    steps = [create_function_profiling(function=function, step=step) for step in orchestrator.FunctionProfilingStep]
+    step_url = reverse("api:function-profiling-list", args=[str(function_key)])
+    response = authenticated_client.get(step_url)
+    print(response.json())
+    assert response.status_code == status.HTTP_200_OK
+
+    execution_rundown = [_get_serialized_step(step) for step in steps]
+    total_duration = functools.reduce(lambda acc, step: duration_microseconds(step.duration) + acc, steps, 0)
+    expected_results = {
+        "function_key": str(function_key),
+        "execution_rundown": execution_rundown,
+        "duration": total_duration,
+    }
+
+    assert response.json() == expected_results

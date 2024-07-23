@@ -1,10 +1,14 @@
+import functools
 from typing import Union
 
 from django.utils.duration import duration_microseconds
 from rest_framework import serializers
 
+import orchestrator
 from api.models import ComputeTask
+from api.models import Function
 from api.models import TaskProfiling
+from api.models.task_profiling import FunctionProfilingStep
 from api.models.task_profiling import ProfilingStep
 
 
@@ -50,3 +54,42 @@ class TaskProfilingSerializer(serializers.ModelSerializer):
         steps = ProfilingStep.objects.filter(compute_task_profile=task_profiling).exclude(step="build_image")
         serializer = ProfilingStepSerializer(instance=steps, many=True, required=False)
         return serializer.data
+
+
+class FunctionProfilingStepSerializer(serializers.ModelSerializer):
+    duration = serializers.SerializerMethodField()
+
+    def get_duration(self, profiling_step: FunctionProfilingStep) -> int:
+        return duration_microseconds(profiling_step.duration)
+
+    class Meta:
+        model = FunctionProfilingStep
+        fields = [
+            "duration",
+            "step",
+        ]
+
+
+class FunctionProfilingSerializer(serializers.ModelSerializer):
+    function_key = serializers.UUIDField(format="hex_verbose", source="key")
+    execution_rundown = FunctionProfilingStepSerializer(source="profiling_steps", many=True)
+    duration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Function
+        fields = [
+            "function_key",
+            "execution_rundown",
+            "duration",
+        ]
+
+    def get_duration(self, function: Function) -> Union[str, None]:
+        counter_steps = len(orchestrator.FunctionProfilingStep)
+
+        # Returns the total duration only when all steps are completed. This mimicks `TaskProfiling` behavior.
+        # This is used in the front-end, which shows the total breakdown only when all steps have been finished.
+        if function.profiling_steps.count() < counter_steps:
+            return None
+        return functools.reduce(
+            lambda acc, val: acc + duration_microseconds(val.duration), function.profiling_steps.all(), 0
+        )

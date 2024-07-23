@@ -3,10 +3,13 @@ from uuid import uuid4
 import pytest
 from django.utils import timezone
 
+import orchestrator
 from api.events.sync import _on_create_failure_report_event
 from api.events.sync import _on_create_performance_event
+from api.events.sync import _on_create_profiling_step_event
 from api.models import ComputeTask
 from api.models import ComputeTaskOutput
+from api.models import FunctionProfilingStep
 from api.models import Performance
 from api.tests import asset_factory as factory
 from substrapp.models import AssetFailureReport
@@ -137,3 +140,27 @@ def test_on_create_failure_report_internal():
         AssetFailureReport.objects.get(asset_key=asset_key)
     compute_task = ComputeTask.objects.get(key=asset_key)
     assert compute_task.error_type == "ERROR_TYPE_INTERNAL"
+
+
+@pytest.mark.django_db
+def test_on_create_function_profiling():
+    function = factory.create_function()
+
+    asset_key = function.key
+    duration = 500
+    step = orchestrator.FunctionProfilingStep.BUILD_IMAGE.value
+    payload = {
+        "id": "157ba2a7-e94c-4173-a647-45df4294e370",
+        "asset_key": asset_key,
+        "asset_kind": "ASSET_PROFILING_STEP",
+        "event_kind": "EVENT_ASSET_CREATED",
+        "channel": "mychannel",
+        "timestamp": "2024-09-07T10:20:25.994591Z",
+        "profiling_step": {"function_key": asset_key, "duration": duration, "step": step},
+    }
+    _on_create_profiling_step_event(payload)
+    profiling_step = FunctionProfilingStep.objects.get(function_id=asset_key)
+    assert profiling_step.function_id == asset_key
+    assert profiling_step.step == step
+    # Check that we saved it as microseconds, as we pass it as microseconds
+    assert profiling_step.duration.microseconds == duration

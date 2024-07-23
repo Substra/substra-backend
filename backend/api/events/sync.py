@@ -435,7 +435,7 @@ def _create_failure_report(data: dict) -> None:
 
 
 def _on_create_profiling_step_event(data: dict) -> None:
-    duration = datetime.timedelta(seconds=data["profiling_step"]["duration"])
+    duration = datetime.timedelta(microseconds=data["profiling_step"]["duration"])
     profiling_step = FunctionProfilingStep(
         function_id=data["asset_key"], duration=duration, step=data["profiling_step"]["step"]
     )
