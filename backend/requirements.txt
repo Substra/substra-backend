@@ -10,7 +10,7 @@ djangorestframework==3.15.2
 djangorestframework-simplejwt==5.2.2
 drf-spectacular==0.25.1
 drf-nested-routers==0.93.4
-pyjwt==2.6.0
+pyjwt==2.8.0
 kubernetes==29.0.0
 psycopg2-binary==2.9.9
 requests>=2.20.0,!=2.32.*
