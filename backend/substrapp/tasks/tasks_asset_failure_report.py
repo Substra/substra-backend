@@ -5,6 +5,7 @@ from celery import Task
 from django.conf import settings
 
 from backend.celery import app
+from builder import exceptions as builder_errors
 from orchestrator import failure_report_pb2
 from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import errors as compute_task_errors
@@ -75,7 +76,7 @@ def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType.ValueType:
         The error type corresponding to the exception.
     """
 
-    if isinstance(exc, compute_task_errors._ComputeTaskError):
+    if isinstance(exc, (compute_task_errors._ComputeTaskError, builder_errors._BuildError)):
         error_type = exc.error_type
     else:
         error_type = compute_task_errors.ComputeTaskErrorType.INTERNAL_ERROR
