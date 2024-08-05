@@ -5,9 +5,9 @@ from celery import Task
 from django.conf import settings
 
 from backend.celery import app
+from orchestrator import failure_report_pb2
 from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import errors as compute_task_errors
-from substrapp.models import FailedAssetKind
 from substrapp.utils.errors import store_failure
 
 REGISTRY = settings.REGISTRY
@@ -45,10 +45,7 @@ def store_asset_failure_report(
 ) -> None:
     exception = pickle.loads(exception_pickled)  # nosec B301
 
-    if asset_type == FailedAssetKind.FAILED_ASSET_FUNCTION:
-        error_type = compute_task_errors.ComputeTaskErrorType.BUILD_ERROR.value
-    else:
-        error_type = compute_task_errors.get_error_type(exception)
+    error_type = get_error_type(exception)
 
     failure_report = store_failure(exception, asset_key, asset_type, error_type)
 
@@ -66,3 +63,21 @@ def store_asset_failure_report(
         client.register_failure_report(
             {"asset_key": asset_key, "error_type": error_type, "asset_type": asset_type, "logs_address": logs_address}
         )
+
+
+def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType.ValueType:
+    """From a given exception, return an error type safe to store and to advertise to the user.
+
+    Args:
+        exc: The exception to process.
+
+    Returns:
+        The error type corresponding to the exception.
+    """
+
+    if isinstance(exc, compute_task_errors._ComputeTaskError):
+        error_type = exc.error_type
+    else:
+        error_type = compute_task_errors.ComputeTaskErrorType.INTERNAL_ERROR
+
+    return error_type.value

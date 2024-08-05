@@ -74,24 +74,6 @@ class ExecutionError(_ComputeTaskError, CeleryNoRetryError):
         super().__init__(logs, *args, **kwargs)
 
 
-def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType.ValueType:
-    """From a given exception, return an error type safe to store and to advertise to the user.
-
-    Args:
-        exc: The exception to process.
-
-    Returns:
-        The error type corresponding to the exception.
-    """
-
-    if isinstance(exc, _ComputeTaskError):
-        error_type = exc.error_type
-    else:
-        error_type = ComputeTaskErrorType.INTERNAL_ERROR
-
-    return error_type.value
-
-
 class InvalidContextError(_ComputeTaskError, CeleryNoRetryError):
     """Error due to invalid task Context"""
 

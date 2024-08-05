@@ -5,9 +5,12 @@ from typing import Type
 import pytest
 from pytest_mock import MockerFixture
 
+from builder import exceptions as build_errors
+from orchestrator import failure_report_pb2
 from substrapp.compute_tasks import errors
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
 from substrapp.models import FailedAssetKind
+from substrapp.tasks.tasks_asset_failure_report import get_error_type
 from substrapp.tasks.tasks_asset_failure_report import store_asset_failure_report
 from substrapp.utils.errors import store_failure
 
@@ -67,3 +70,15 @@ def test_store_failure_ignored_exception(exc_class: Type[Exception]):
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected"),
+    [
+        (build_errors.BuildError(logs="some build error"), failure_report_pb2.ERROR_TYPE_BUILD),
+        (errors.ExecutionError(logs=io.BytesIO()), failure_report_pb2.ERROR_TYPE_EXECUTION),
+        (Exception(), failure_report_pb2.ERROR_TYPE_INTERNAL),
+    ],
+)
+def test_get_error_type(exc: Exception, expected: str):
+    assert get_error_type(exc) == expected
