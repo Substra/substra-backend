@@ -2,13 +2,18 @@
 
 <!-- towncrier release notes start -->
 
+## [26.10.1] - 2024-09-13
+
+# Changed
+
+Upgrade default version for kaniko executor and warmer.
+
 ## [26.10.0] - 2024-09-13
 
 ### Changed
 
 - Docker registry update strategy is now `Recreate` to avoid race condition on the attached PVC during upgrade
 - Server update strategy is now configurable and set to `Recreate` by default to avoid race condition on the attached PVC during upgrade
-
 
 ## [26.9.1] - 2024-09-12
 
