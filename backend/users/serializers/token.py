@@ -7,7 +7,7 @@ from users.models.token import ImplicitBearerToken
 
 
 class BearerTokenSerializer(serializers.ModelSerializer):
-    expires_at = serializers.DateTimeField(default_timezone=timezone.utc, allow_null=True)
+    expires_at = serializers.DateTimeField(default_timezone=timezone.utc, allow_null=False)
     created_at = serializers.DateTimeField(default_timezone=timezone.utc, source="created", read_only=True)
     token = serializers.CharField(source="key", read_only=True)
 
