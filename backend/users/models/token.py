@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 
 class BearerToken(Token):
     note = models.TextField(null=True)
-    expires_at = models.DateTimeField(null=True)
+    expires_at = models.DateTimeField(null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="bearer_tokens", on_delete=models.CASCADE)
     id = models.UUIDField(default=uuid.uuid4, editable=False)
 
