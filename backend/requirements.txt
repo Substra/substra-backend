@@ -28,4 +28,4 @@ tqdm==4.66.4
 python-dxf==12.1.0
 watchdog==2.1.9
 # Prevent error linked to Deprecation warnings
-pyopenssl<24.2.1
+pyopenssl<24.2.2
