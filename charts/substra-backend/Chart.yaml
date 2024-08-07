@@ -1,39 +1,39 @@
 apiVersion: v2
 name: substra-backend
 home: https://github.com/Substra
-version: "26.9.0"
-appVersion: "0.47.0"
-kubeVersion: ">= 1.19.0-0"
+version: 26.7.2fake
+appVersion: 0.47.0fake-rc1
+kubeVersion: '>= 1.19.0-0'
 description: Main package for Substra
 type: application
 icon: https://avatars.githubusercontent.com/u/84009910?s=200&v=4
 sources:
-  - https://github.com/Substra/substra-backend
+- https://github.com/Substra/substra-backend
 maintainers:
-  - name: Substra Team
-    email: support@substra.org
+- name: Substra Team
+  email: support@substra.org
 dependencies:
-  - name: redis
-    repository: https://charts.bitnami.com/bitnami
-    condition: redis.enabled
-    version: 19.5.0
-  - name: common
-    repository: https://charts.bitnami.com/bitnami
-    condition: redis.enabled,postgresql.enabled,minio.enabled
-    version: 2.16.1
-  - name: postgresql
-    repository: https://charts.bitnami.com/bitnami
-    version: 15.4.1
-    condition: postgresql.enabled
-  - name: docker-registry
-    repository: https://helm.twun.io
-    version: 2.2.3
-    condition: docker-registry.enabled
-  - name: minio
-    repository: https://charts.bitnami.com/bitnami
-    version: 14.6.1
-    condition: minio.enabled
-  - name: localstack
-    repository: https://localstack.github.io/helm-charts
-    version: 0.6.9
-    condition: localstack.enabled
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  condition: redis.enabled
+  version: 19.5.0
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  condition: redis.enabled,postgresql.enabled,minio.enabled
+  version: 2.16.1
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 15.4.1
+  condition: postgresql.enabled
+- name: docker-registry
+  repository: https://helm.twun.io
+  version: 2.2.3
+  condition: docker-registry.enabled
+- name: minio
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.6.1
+  condition: minio.enabled
+- name: localstack
+  repository: https://localstack.github.io/helm-charts
+  version: 0.6.9
+  condition: localstack.enabled
