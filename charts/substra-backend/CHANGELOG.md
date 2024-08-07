@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.9.1] - 2024-08-05
+
+# Changed
+
+Upgrade default version for kaniko executor and warmer.
+
 ## [26.9.0] - 2024-07-22
 
 # Added
