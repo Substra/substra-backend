@@ -2,6 +2,11 @@
 
 <!-- towncrier release notes start -->
 
+
+## [26.7.10fake] - 2024-08-07
+
+Bump app version to 0.47.10fake
+
 ## [26.7.10fake] - 2024-08-07
 
 Bump app version to 0.47.10fake-rc1
