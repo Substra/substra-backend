@@ -79,7 +79,7 @@ def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType.ValueType:
         return compute_task_errors.ComputeTaskErrorType.INTERNAL_ERROR.value
 
     try:
-        error_type = exc.error_type
+        error_type = exc.error_type  # type: ignore[attr-defined]
     except AttributeError:
         error_type = compute_task_errors.ComputeTaskErrorType.INTERNAL_ERROR
 
