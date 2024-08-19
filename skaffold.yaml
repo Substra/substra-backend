@@ -10,6 +10,9 @@ requires:
       - name: org-2-external-registry
         activatedBy:
           - org-2-external-registry
+      - name: three-orgs
+        activatedBy:
+          - three-orgs
   - path: examples/values/serviceAccounts/skaffold.yaml
 
 build:
