@@ -5,7 +5,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    groups: &group_def
+    groups:
       production-dependencies:
         dependency-type: "production"
       development-dependencies:
@@ -15,22 +15,38 @@ updates:
     directory: "/backend"
     schedule:
       interval: "monthly"
-    groups: *group_def
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
 
   - package-ecosystem: "pip"
     directory: "/metrics-exporter"
     schedule:
       interval: "monthly"
-    groups: *group_def
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
 
   - package-ecosystem: "docker"
     directory: "/docker/connect-backend"
     schedule:
       interval: "monthly"
-    groups: *group_def
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
 
   - package-ecosystem: "docker"
     directory: "/docker/metrics-exporter"
     schedule:
       interval: "monthly"
-    groups: *group_def
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
