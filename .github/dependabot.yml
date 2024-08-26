@@ -18,6 +18,8 @@ updates:
     groups:
       production-dependencies:
         dependency-type: "production"
+        patterns:
+          - "docker"
       development-dependencies:
         dependency-type: "development"
 
@@ -28,6 +30,8 @@ updates:
     groups:
       production-dependencies:
         dependency-type: "production"
+        patterns:
+          - "docker"
       development-dependencies:
         dependency-type: "development"
 
