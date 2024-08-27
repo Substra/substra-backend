@@ -2,6 +2,7 @@
 
 import django.utils.timezone
 from django.db import migrations
+from django.db import models
 
 
 def set_default_expires_at(apps, schema_editor):
@@ -14,4 +15,11 @@ class Migration(migrations.Migration):
         ("users", "0007_implicitbearertoken_id_and_more"),
     ]
 
-    operations = [migrations.RunPython(set_default_expires_at)]
+    operations = [
+        migrations.RunPython(set_default_expires_at),
+        migrations.AlterField(
+            model_name="bearertoken",
+            name="expires_at",
+            field=models.DateTimeField(default=django.utils.timezone.now),
+        ),
+    ]
