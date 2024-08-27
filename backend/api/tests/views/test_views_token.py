@@ -29,8 +29,8 @@ def test_delete_token(authenticated_client):
 def test_multiple_token(authenticated_client, api_client):
     authenticated_client.create_user()
     user = authenticated_client.user
-    token_1 = BearerToken.objects.create(user=user)
-    token_2 = BearerToken.objects.create(user=user)
+    token_1 = BearerToken.objects.create(user=user, expires_at=timezone.now() + timedelta(days=1))
+    token_2 = BearerToken.objects.create(user=user, expires_at=timezone.now() + timedelta(days=2))
 
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 2
@@ -60,11 +60,35 @@ def test_multiple_token(authenticated_client, api_client):
 
 
 @pytest.mark.django_db
-def test_expiring_token(authenticated_client, api_client):
+def test_expired_token(authenticated_client, api_client):
     authenticated_client.create_user()
     user = authenticated_client.user
     # create a token that expired a day ago
     token = BearerToken.objects.create(user=user, expires_at=timezone.now() - timedelta(days=1))
+
+    tokens_count = BearerToken.objects.count()
+    assert tokens_count == 1
+
+    valid_auth_token_header = f"Token {token}"
+    api_client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
+
+    response = api_client.get("/active-api-tokens/")
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    url = f"/active-api-tokens/?id={token.id}"
+    response = api_client.delete(url)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    tokens_count = BearerToken.objects.count()
+    assert tokens_count == 1
+
+
+@pytest.mark.django_db
+def test_token_instant_expires(authenticated_client, api_client):
+    authenticated_client.create_user()
+    user = authenticated_client.user
+    # create a token that expired a day ago
+    token = BearerToken.objects.create(user=user)
 
     tokens_count = BearerToken.objects.count()
     assert tokens_count == 1
