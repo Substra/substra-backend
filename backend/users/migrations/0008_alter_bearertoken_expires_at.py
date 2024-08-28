@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="bearertoken",
             name="expires_at",
-            field=models.DateTimeField(default=django.utils.timezone.now),
+            field=models.DateTimeField(),
         ),
     ]
