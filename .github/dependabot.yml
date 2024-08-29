@@ -20,6 +20,12 @@ updates:
         dependency-type: "production"
       development-dependencies:
         dependency-type: "development"
+    ignore:
+      # exclude until josepy close this issue https://github.com/certbot/josepy/issues/181 so mozilla-django-oidc stops importing a library creating the warning
+      - dependency-name: "pyopenssl" 
+        versions: ["<25.0.0"]
+      - dependency-name: "cryptography"
+        versions: ["<44.0.0"]
 
   - package-ecosystem: "pip"
     directory: "/metrics-exporter"

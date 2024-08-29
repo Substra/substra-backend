@@ -3,7 +3,6 @@ structlog==24.4.0
 django-structlog==8.1.0
 celery==5.4.0
 checksumdir==1.2.0
-cryptography==43.0.0
 django-cors-headers==4.4.0
 django-celery-results==2.5.1
 djangorestframework==3.15.2
@@ -28,4 +27,6 @@ tqdm==4.66.5
 python-dxf==12.1.0
 watchdog==4.0.2
 # Prevent error linked to Deprecation warnings
-pyopenssl<24.2.2
+pyopenssl<24.2.1
+cryptography<43.0.0
+
