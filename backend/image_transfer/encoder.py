@@ -7,6 +7,7 @@ from typing import Iterator
 from typing import Optional
 from typing import Union
 
+import structlog
 from dxf import DXF
 from dxf import DXFBase
 from requests import HTTPError
@@ -21,6 +22,8 @@ from image_transfer.common import PayloadSide
 from image_transfer.common import progress_as_string
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.utils import safezip
+
+logger = structlog.get_logger("events")
 
 
 def add_blobs_to_zip(
@@ -64,6 +67,8 @@ def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: safezip.ZipFil
     with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
         for chunk in bytes_iterator:
             blob_in_zip.write(chunk)
+
+    logger.info(f"Blob {blob} of size {total_size} downloaded and stored in zip file")
     return blob_path_in_zip
 
 
