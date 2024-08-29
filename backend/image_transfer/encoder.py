@@ -10,7 +10,6 @@ from typing import Union
 from dxf import DXF
 from dxf import DXFBase
 from requests import HTTPError
-from tqdm import tqdm
 
 from image_transfer.common import Authenticator
 from image_transfer.common import Blob
@@ -61,12 +60,10 @@ def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: safezip.ZipFil
     bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
 
     # we write the blob directly to the zip file
-    with tqdm(total=total_size, unit="B", unit_scale=True) as pbar:
-        blob_path_in_zip = f"blobs/{blob.digest}"
-        with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
-            for chunk in bytes_iterator:
-                blob_in_zip.write(chunk)
-                pbar.update(len(chunk))
+    blob_path_in_zip = f"blobs/{blob.digest}"
+    with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
+        for chunk in bytes_iterator:
+            blob_in_zip.write(chunk)
     return blob_path_in_zip
 
 
