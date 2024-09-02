@@ -12,7 +12,6 @@ from substrapp.compute_tasks import utils
 
 logger = structlog.get_logger(__name__)
 
-IMAGE_BUILD_TIMEOUT = settings.IMAGE_BUILD_TIMEOUT
 IMAGE_BUILD_CHECK_DELAY = settings.IMAGE_BUILD_CHECK_DELAY
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
