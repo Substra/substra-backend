@@ -60,13 +60,21 @@ def add_blobs_to_zip(
 
 def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: safezip.ZipFile):
     repository_dxf = DXF.from_base(dxf_base, blob.repository)
-    bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
+    try:
+        bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
+    except Exception as e:
+        logger.exception(f"Failed to download blob {blob}", e=e)
+        raise e
 
     # we write the blob directly to the zip file
     blob_path_in_zip = f"blobs/{blob.digest}"
-    with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
-        for chunk in bytes_iterator:
-            blob_in_zip.write(chunk)
+    try:
+        with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
+            for chunk in bytes_iterator:
+                blob_in_zip.write(chunk)
+    except Exception as e:
+        logger.exception(f"Failed to write blob {blob} to zip file", e=e)
+        raise e
 
     logger.info(f"Blob {blob} of size {total_size} downloaded and stored in zip file")
     return blob_path_in_zip
