@@ -32,3 +32,13 @@ class IntegrityError(Exception):
 
 class ServerMediasNoSubdirError(Exception):
     """A supplied servermedias path didn't contain the expected subdir"""
+
+
+class LockError(Exception):
+    """Cannot get a lock file to write on"""
+
+    lock_file: str
+
+    def __init__(self, *args, lock_file: str, **kwargs) -> None:
+        self.lock_file = lock_file
+        super().__init__(args, kwargs)

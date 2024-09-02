@@ -7,6 +7,8 @@ from typing import Optional
 
 import structlog
 
+from substrapp.exceptions import LockError
+
 logger = structlog.get_logger(__name__)
 
 LOCK_FILE_FOLDER = "/tmp"  # nosec
@@ -47,7 +49,7 @@ def lock_resource(
             did_wait = True
             logger.debug("Lock: Waiting for lock to be released", lock_file=lock_file)
         if time.time() - start > timeout:
-            raise Exception(f"Failed to acquire lock after {timeout} seconds", lock_file=lock_file)
+            raise LockError(f"Failed to acquire lock after {timeout} seconds", lock_file=lock_file)
         time.sleep(delay)
 
     logger.debug("Lock: Acquired", lock_file=lock_file)
