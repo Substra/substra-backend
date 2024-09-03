@@ -49,7 +49,7 @@ def test_build_image_if_missing_image_build_needed(mocker: MockerFixture, functi
 
 
 def test__build_container_image_podtimeouterror(mocker: MockerFixture) -> None:
-    mocker.patch("kubernetes.config.load_incluster_config"),
+    mocker.patch("kubernetes.config.load_incluster_config")
     mocker.patch("builder.image_builder.image_builder._assert_dockerfile_exist")
     mocker.patch("builder.image_builder.image_builder.pod_exists", return_value=True)
     watch_pod = mocker.patch("builder.image_builder.image_builder.watch_pod", side_effect=PodTimeoutError())
