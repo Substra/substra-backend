@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.11.0] - 2024-09-17
+
+# Added
+
+New configurable value `.Values.builder.timeout` configuring the duration before a building task would fail.
+
 ## [26.10.2] - 2024-09-17
 
 # Fixed
