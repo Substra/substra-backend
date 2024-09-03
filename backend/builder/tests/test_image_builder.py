@@ -5,6 +5,8 @@ from pytest_mock import MockerFixture
 
 import orchestrator
 from builder.exceptions import BuildError
+from builder.exceptions import BuildRetryError
+from builder.exceptions import PodTimeoutError
 from builder.image_builder import image_builder
 from substrapp.compute_tasks import utils
 
@@ -44,6 +46,18 @@ def test_build_image_if_missing_image_build_needed(mocker: MockerFixture, functi
     m_container_image_exists.assert_called_once_with(function_image_tag)
     m_build_function_image.assert_called_once()
     assert m_build_function_image.call_args.args[1] == function
+
+
+def test__build_container_image_podtimeouterror(mocker: MockerFixture) -> None:
+    mocker.patch("kubernetes.config.load_incluster_config"),
+    mocker.patch("builder.image_builder.image_builder._assert_dockerfile_exist")
+    mocker.patch("builder.image_builder.image_builder.pod_exists", return_value=True)
+    watch_pod = mocker.patch("builder.image_builder.image_builder.watch_pod", side_effect=PodTimeoutError())
+
+    with pytest.raises(BuildRetryError):
+        image_builder._build_container_image("path", "name")
+
+    watch_pod.assert_called_once()
 
 
 def test_get_entrypoint_from_dockerfile_valid_dockerfile(tmp_path: pathlib.Path):
