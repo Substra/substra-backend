@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "django_celery_results",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "substrapp",
