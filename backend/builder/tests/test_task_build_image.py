@@ -30,6 +30,7 @@ def test_store_failure_build_error():
     assert failure_report.logs.read() == str.encode(msg)
 
 
+@pytest.mark.django_db
 def test_catch_all_exceptions(celery_app, celery_worker, mocker):
     mocker.patch("builder.tasks.task.orchestrator.get_orchestrator_client")
     mocker.patch("builder.image_builder.image_builder.build_image_if_missing", side_effect=Exception("random error"))
@@ -39,6 +40,7 @@ def test_catch_all_exceptions(celery_app, celery_worker, mocker):
         r.get()
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize("execution_number", range(10))
 def test_order_building_success(celery_app, celery_worker, mocker, execution_number):
     function_1 = orc_mock.FunctionFactory()
@@ -63,6 +65,7 @@ def test_order_building_success(celery_app, celery_worker, mocker, execution_num
     assert result_2.state == "WAITING"
 
 
+@pytest.mark.django_db
 @pytest.mark.parametrize("execution_number", range(10))
 def test_order_building_retry(celery_app, celery_worker, mocker, execution_number):
     function_retry = orc_mock.FunctionFactory()
@@ -100,6 +103,7 @@ def test_order_building_retry(celery_app, celery_worker, mocker, execution_numbe
     assert result_other.state == "WAITING"
 
 
+@pytest.mark.django_db
 def test_ssl_connection_timeout(celery_app, celery_worker, mocker):
     """
     Test that in case of a SSL connection timeout, the task is retried max_retries times,
