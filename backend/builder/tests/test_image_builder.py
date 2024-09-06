@@ -4,6 +4,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import orchestrator
+from api.models import ComputePlan
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.exceptions import PodTimeoutError
@@ -85,3 +86,31 @@ def test_get_entrypoint_from_dockerfile_invalid_dockerfile(
         image_builder._get_entrypoint_from_dockerfile(str(tmp_path))
 
     assert expected_exc_content in bytes.decode(exc.value.logs.read())
+
+
+@pytest.mark.parametrize(
+    ["statuses", "expected_result"],
+    [
+        ([], True),
+        ([ComputePlan.Status.PLAN_STATUS_DONE.value], True),
+        ([ComputePlan.Status.PLAN_STATUS_FAILED.value, ComputePlan.Status.PLAN_STATUS_CANCELED.value], False),
+        (
+            [
+                ComputePlan.Status.PLAN_STATUS_DONE.value,
+                ComputePlan.Status.PLAN_STATUS_FAILED.value,
+                ComputePlan.Status.PLAN_STATUS_CANCELED.value,
+            ],
+            True,
+        ),
+    ],
+    ids=["no cp", "done cp", "failed + canceled cp", "done + failed + canceled cp"],
+)
+def test_check_function_is_runnable(mocker: MockerFixture, statuses: str, expected_result: bool) -> None:
+    function_key = "key"
+    channel_name = "channel_name"
+    compute_plan_getter = mocker.patch("builder.image_builder.image_builder.ComputePlan.objects.filter")
+    compute_plan_getter.return_value.values_list.return_value.distinct.return_value = statuses
+    result = image_builder.check_function_is_runnable(function_key=function_key, channel_name=channel_name)
+
+    assert result == expected_result
+    compute_plan_getter.assert_called_once_with(compute_tasks__function__key=function_key, channel=channel_name)
