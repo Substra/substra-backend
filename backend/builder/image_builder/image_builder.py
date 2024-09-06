@@ -9,6 +9,7 @@ import structlog
 from django.conf import settings
 
 import orchestrator
+from api.models import ComputePlan
 from builder import docker
 from builder import exceptions
 from builder.exceptions import BuildError
@@ -348,3 +349,17 @@ def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[st
         if REGISTRY_SCHEME == "http":
             args.append("--insecure-pull")
     return args
+
+
+def check_function_is_runnable(function_key: str, channel_name: str) -> bool:
+    compute_plans_statuses = set(
+        ComputePlan.objects.filter(compute_tasks__function__key=function_key, channel=channel_name)
+        .values_list("status", flat=True)
+        .distinct()
+    )
+
+    if len(compute_plans_statuses) == 0:
+        return True
+
+    target_statuses = {ComputePlan.Status.PLAN_STATUS_CANCELED, ComputePlan.Status.PLAN_STATUS_FAILED}
+    return not compute_plans_statuses.issubset(target_statuses)
