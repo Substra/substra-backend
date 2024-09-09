@@ -10,6 +10,7 @@ from django.conf import settings
 
 import orchestrator
 from api.models import ComputePlan
+from api.models import Function
 from builder import docker
 from builder import exceptions
 from builder.exceptions import BuildError
@@ -362,4 +363,9 @@ def check_function_is_runnable(function_key: str, channel_name: str) -> bool:
         return True
 
     target_statuses = {ComputePlan.Status.PLAN_STATUS_CANCELED, ComputePlan.Status.PLAN_STATUS_FAILED}
-    return not compute_plans_statuses.issubset(target_statuses)
+    is_runnable = not compute_plans_statuses.issubset(target_statuses)
+
+    if not is_runnable:
+        Function.objects.get(key=function_key).cancel()
+
+    return is_runnable
