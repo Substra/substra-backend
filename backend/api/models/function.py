@@ -68,3 +68,7 @@ class Function(models.Model, AssetPermissionMixin):
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations
+
+    def cancel(self) -> None:
+        self.status = Function.Status.FUNCTION_STATUS_CANCELED
+        self.save()
