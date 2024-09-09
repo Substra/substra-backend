@@ -106,7 +106,7 @@ def test_get_entrypoint_from_dockerfile_invalid_dockerfile(
     ids=["no cp", "done cp", "failed + canceled cp", "done + failed + canceled cp"],
 )
 def test_check_function_is_runnable(mocker: MockerFixture, statuses: str, expected_result: bool) -> None:
-    function_key = "key"
+    function_key = "e7f8aed4-f2c9-442d-a02c-8b7858a2ac4f"
     channel_name = "channel_name"
     compute_plan_getter = mocker.patch("builder.image_builder.image_builder.ComputePlan.objects.filter")
     compute_plan_getter.return_value.values_list.return_value.distinct.return_value = statuses
