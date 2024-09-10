@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count
 from django.db.models import Q
+from django.utils import timezone
 
 from api.models.computetask import ComputeTask
 
@@ -111,6 +112,9 @@ class ComputePlan(models.Model):
             status=compute_plan_status,
             **stats,
         )
+
+        if compute_plan_status != self.Status.PLAN_STATUS_CREATED and not self.start_date:
+            self.start_date = timezone.now()
 
         self.status = compute_plan_status
 
