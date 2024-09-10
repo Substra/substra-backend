@@ -1,0 +1,2 @@
+Check if function is linked with compute plans (through the compute tasks) before building. If all compute plans have been cancelled or failed, cancels the function.
+  
