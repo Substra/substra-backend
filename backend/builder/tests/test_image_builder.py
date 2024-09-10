@@ -89,7 +89,7 @@ def test_get_entrypoint_from_dockerfile_invalid_dockerfile(
 
 
 @pytest.mark.parametrize(
-    ["statuses", "expected_result"],
+    ["statuses", "is_function_runnable"],
     [
         ([], True),
         ([ComputePlan.Status.PLAN_STATUS_DONE.value], True),
@@ -105,12 +105,15 @@ def test_get_entrypoint_from_dockerfile_invalid_dockerfile(
     ],
     ids=["no cp", "done cp", "failed + canceled cp", "done + failed + canceled cp"],
 )
-def test_check_function_is_runnable(mocker: MockerFixture, statuses: str, expected_result: bool) -> None:
+def test_check_function_is_runnable(mocker: MockerFixture, statuses: str, is_function_runnable: bool) -> None:
     function_key = "e7f8aed4-f2c9-442d-a02c-8b7858a2ac4f"
     channel_name = "channel_name"
     compute_plan_getter = mocker.patch("builder.image_builder.image_builder.ComputePlan.objects.filter")
+    function_cancel = mocker.patch("builder.image_builder.image_builder.Function.objects.get")
     compute_plan_getter.return_value.values_list.return_value.distinct.return_value = statuses
     result = image_builder.check_function_is_runnable(function_key=function_key, channel_name=channel_name)
 
-    assert result == expected_result
+    assert result == is_function_runnable
     compute_plan_getter.assert_called_once_with(compute_tasks__function__key=function_key, channel=channel_name)
+    if not is_function_runnable:
+        function_cancel.assert_called_once_with(key=function_key)
