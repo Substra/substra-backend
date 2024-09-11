@@ -123,13 +123,8 @@ class ComputePlan(models.Model):
 
         self.save()
 
-    def update_dates(self) -> None:
+    def update_end_date(self) -> None:
         """Update start_date, end_date"""
-
-        if not self.start_date:
-            first_started_task = self.compute_tasks.filter(start_date__isnull=False).order_by("start_date").first()
-            if first_started_task:
-                self.start_date = first_started_task.start_date
 
         ongoing_tasks = self.compute_tasks.filter(end_date__isnull=True).exists()
         failed_or_canceled_tasks = self.compute_tasks.filter(

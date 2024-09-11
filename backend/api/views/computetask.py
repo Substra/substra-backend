@@ -108,7 +108,7 @@ def task_bulk_create(request):
             api_task_data = api_serializer.data
         data.append(api_task_data)
 
-    compute_plan.update_dates()
+    compute_plan.update_end_date()
     compute_plan.update_status()
     return ApiResponse(data, status=status.HTTP_200_OK)
 

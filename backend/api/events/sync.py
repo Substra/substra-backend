@@ -155,7 +155,7 @@ def _update_computeplan(key: str, data: dict) -> None:
     compute_plan.cancelation_date = data.get("cancelation_date")
     compute_plan.name = data.get("name")
     compute_plan.save()
-    compute_plan.update_dates()
+    compute_plan.update_end_date()
     compute_plan.update_status()
 
 
@@ -167,7 +167,7 @@ def _on_create_computetask_event(event: dict) -> None:
     _create_computetask(channel=event["channel"], data=task_data)
 
     compute_plan = ComputePlan.objects.get(key=task_data["compute_plan_key"])
-    compute_plan.update_dates()
+    compute_plan.update_end_date()
     compute_plan.update_status()
 
 
@@ -205,7 +205,7 @@ def _on_update_computetask_event(event: dict) -> None:
     # update CP dates:
     # - after task status, to ensure proper rules are applied
     # - before CP status, to ensure dates are up-to-date when client wait on status
-    compute_plan.update_dates()
+    compute_plan.update_end_date()
     compute_plan.update_status()
 
 
