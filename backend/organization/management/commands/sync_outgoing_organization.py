@@ -8,13 +8,11 @@ from .base_sync import Element
 
 class Command(BaseSyncCommand):
     help = "Sync outgoing organizations"
+    model = OutgoingOrganization
+    model_name = "Outgoing organization"
+    field_key = "organization_id"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model = OutgoingOrganization
-        self.model_name = "Outgoing organization"
-        self.field_key = "organization_id"
-
+    # Password saved as clear text
     def update_password(self, element: Element) -> models.Model:
         model = self.get(element)
         model.secret = element.password
