@@ -2,13 +2,9 @@ import abc
 import argparse
 
 import pydantic
-import structlog
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 from django.db import models
-
-# Get an instance of a logger
-logger = structlog.getLogger(__name__)
 
 
 class Element(pydantic.BaseModel):
