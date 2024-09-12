@@ -2,15 +2,25 @@
 
 <!-- towncrier release notes start -->
 
+## [26.10.0] - 2024-09-13
+
+### Changed
+
+- Docker registry update strategy is now `Recreate` to avoid race condition on the attached PVC during upgrade
+- Server update strategy is now configurable and set to `Recreate` by default to avoid race condition on the attached PVC during upgrade
+
+
 ## [26.9.1] - 2024-09-12
 
-Bump app version to 0.48.0
+### Changed
+
+- Bump app version to 0.48.0
 
 ## [26.9.0] - 2024-07-22
 
 # Added
 
-Configuration of compute pod `affinity`, `nodeSelector` and `toleration` on `values.yaml` file.
+- Configuration of compute pod `affinity`, `nodeSelector` and `toleration` on `values.yaml` file.
 
 ## [26.8.3] - 2024-07-16
 
