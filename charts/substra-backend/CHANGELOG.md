@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.12.0] - 2024-09-30
+
+# Changed
+
+`job-migrations` now relies on `sync_incoming_organizations`, `sync_outgoing_organizations` and `sync_users`.
+
 ## [26.11.0] - 2024-09-17
 
 # Added
