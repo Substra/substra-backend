@@ -16,11 +16,11 @@ class Element(pydantic.BaseModel):
     password: str
 
 
-class BaseSyncOrganizationCommand(BaseCommand, abc.ABC):
-    help = "Sync organization"
+class BaseSyncCommand(BaseCommand, abc.ABC):
+    help = "Sync base"
     model: models.Model
     model_name: str
-    field_password: str
+    field_key: str
 
     def add_arguments(self, parser):
         parser.add_argument("path", type=argparse.FileType())
@@ -28,12 +28,13 @@ class BaseSyncOrganizationCommand(BaseCommand, abc.ABC):
     def handle(self, *args, **options):
         file = options["path"]
 
-        existing_elements = set(self.model.objects.values_list("organization_id", flat=True))
+        existing_elements = set(self.model.objects.values_list(self.field_key, flat=True))
 
         for line in file:
             line_trimmed = line.removesuffix("\n")
             element = self.parse_line(line_trimmed)
-            self.handle_element(element, existing_elements=existing_elements)
+            self.handle_element(element)
+            existing_elements.discard(element.key)
 
         self.delete_elements(existing_elements)
 
@@ -47,22 +48,24 @@ class BaseSyncOrganizationCommand(BaseCommand, abc.ABC):
             self.create(element.key, element.password)
         except IntegrityError:
             self.update_password(element.key, element.password)
-        existing_elements.discard(element.key)
 
     def create(self, key: str, password: str) -> None:
-        self.model.objects.create(
-            organization_id=key,
-            password=password,
-        )
+        parameters = {
+            self.field_key: key,
+            "password": password,
+        }
+        self.model.objects.create(**parameters)
         self.stdout.write(f"{self.model_name} created: {key}")
 
     def update_password(self, key: str, password: str) -> None:
-        element = self.model.objects.get(organization_id=key)
+        parameters = {self.field_key: key}
+        element = self.model.objects.get(**parameters)
         element.set_password(password)
         element.save()
         self.stdout.write(f"{self.model_name} updated: {key}")
 
     def delete_elements(self, discarded_elements: set[models.Model]) -> None:
         if len(discarded_elements) > 0:
-            self.model.objects.filter(organization_id__in=discarded_elements).delete()
+            parameters = {f"{self.field_key}__in": discarded_elements}
+            self.model.objects.filter(**parameters).delete()
             self.stdout.write(f"{self.model_name} deleted: {', '.join(discarded_elements)}")
