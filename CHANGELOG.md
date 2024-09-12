@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- casting when receiving `FunctionProfilingStep` from the orchestrator ([#932](https://github.com/Substra/substra-backend/pull/932))
+- Casting when receiving `FunctionProfilingStep` from the orchestrator ([#932](https://github.com/Substra/substra-backend/pull/932))
 - Improved resilience to docker image deletion (in particular when plugged in to an external registry). ([#934](https://github.com/Substra/substra-backend/pull/934))
 - Function durations received from the orchestrator are now correctly saved as milliseconds instead of seconds ([#949](https://github.com/Substra/substra-backend/pull/949))
 - `tqdm` and `python-dxf` versions have been pinned. ([#957](https://github.com/Substra/substra-backend/pull/957))
