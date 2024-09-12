@@ -1,1 +1,0 @@
-Celery was failing silently when a task called `FailableTask.on_failure` if the task didn't have a `logs` attribute (now return internal error)
