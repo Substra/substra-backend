@@ -49,28 +49,13 @@ spec:
             ./manage.py migrate
 
             ## Users
-            while read -r user_password_channel; do
-                read user password channel <<< "$user_password_channel"
-                ./manage.py add_user "$user" "$password" "$channel"
-            done < /accounts/users
+            ./manage.py sync_users /accounts/users
 
             ## IncomingOrganization
-            while IFS= read -r org_password; do
-              # Extract the password as the last word
-              password=$(echo "$org_password" | awk '{print $NF}')
-              # Extract the username by removing the last word
-              orgname=$(echo "$org_password" | sed 's/ [^ ]*$//')
-              ./manage.py create_incoming_organization "$orgname" "$password"
-            done < /accounts/incoming_organizations
+            ./manage.py sync_incoming_organization /accounts/incoming_organizations
 
             ## OutgoingOrganization
-            while IFS= read -r org_password; do
-              # Extract the password as the last word
-              password=$(echo "$org_password" | awk '{print $NF}')
-              # Extract the username by removing the last word
-              orgname=$(echo "$org_password" | sed 's/ [^ ]*$//')
-              ./manage.py create_outgoing_organization "$orgname" "$password"
-            done < /accounts/outgoing_organizations
+            ./manage.py sync_outgoing_organization  /accounts/outgoing_organizations
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
