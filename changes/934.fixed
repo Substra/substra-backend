@@ -1,1 +1,0 @@
-Improved resilience to docker image deletion (in particular when plugged in to an external registry).

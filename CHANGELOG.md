@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.48.0](https://github.com/Substra/substra-backend/releases/tag/0.48.0) - 2024-09-12
+
+### Added
+
+- Propagate function profiling step through the orchestrator
+    - Create `FunctionProfilingStep` model in the API
+    - Create `FunctionProfilingStep` in orchestrator.resources` representing the different profiling step for the function
+    - Save in the local DB when receive the event `ASSET_PROFILING_STEP` ([#886](https://github.com/Substra/substra-backend/pull/886))
+- Views returning the function duration ([#949](https://github.com/Substra/substra-backend/pull/949))
+
+### Changed
+
+- `get_orchestrator_client` moved from `substrapp.orchestrator` to `orchestrator` ([#886](https://github.com/Substra/substra-backend/pull/886))
+- Function images are only downloaded if they do not already exist on the local backend when a task is launched. ([#934](https://github.com/Substra/substra-backend/pull/934))
+- Disable never expiring users `BearerToken` ([#969](https://github.com/Substra/substra-backend/pull/969))
+
+### Fixed
+
+- casting when receiving `FunctionProfilingStep` from the orchestrator ([#932](https://github.com/Substra/substra-backend/pull/932))
+- Improved resilience to docker image deletion (in particular when plugged in to an external registry). ([#934](https://github.com/Substra/substra-backend/pull/934))
+- Function durations received from the orchestrator are now correctly saved as milliseconds instead of seconds ([#949](https://github.com/Substra/substra-backend/pull/949))
+- `tqdm` and `python-dxf` versions have been pinned. ([#957](https://github.com/Substra/substra-backend/pull/957))
+- Pin `pyopenssl` to version `24.1.0` to avoid deprecation warnings ([#958](https://github.com/Substra/substra-backend/pull/958))
+- Celery was failing silently when a task called `FailableTask.on_failure` if the task didn't have a `logs` attribute (now return internal error) ([#970](https://github.com/Substra/substra-backend/pull/970))
+- \`OrganizationHttpError.status_code\` is now always getting a value properly ([#982](https://github.com/Substra/substra-backend/pull/982))
+
+### Removed
+
+- `argh` dependency has been removed. ([#957](https://github.com/Substra/substra-backend/pull/957))
+
+
 ## [0.47.0](https://github.com/Substra/substra-backend/releases/tag/0.47.0) - 2024-06-11
 
 
