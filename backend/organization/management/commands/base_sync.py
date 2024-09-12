@@ -43,26 +43,31 @@ class BaseSyncCommand(BaseCommand, abc.ABC):
 
         return Element(key=key, password=password)
 
-    def handle_element(self, element: Element, existing_elements: set[str]) -> None:
+    def handle_element(self, element: Element) -> None:
         try:
-            self.create(element.key, element.password)
+            self.create(element)
         except IntegrityError:
-            self.update_password(element.key, element.password)
+            self.update_password(element)
 
-    def create(self, key: str, password: str) -> None:
+    def get(self, element: Element) -> models.Model:
+        parameters = {self.field_key: element.key}
+        return self.model.objects.get(**parameters)
+
+    def create(self, element: Element) -> models.Model:
         parameters = {
-            self.field_key: key,
-            "password": password,
+            self.field_key: element.key,
+            "password": element.password,
         }
-        self.model.objects.create(**parameters)
-        self.stdout.write(f"{self.model_name} created: {key}")
+        model = self.model.objects.create(**parameters)
+        self.stdout.write(f"{self.model_name} created: {element.key}")
+        return model
 
-    def update_password(self, key: str, password: str) -> None:
-        parameters = {self.field_key: key}
-        element = self.model.objects.get(**parameters)
-        element.set_password(password)
-        element.save()
-        self.stdout.write(f"{self.model_name} updated: {key}")
+    def update_password(self, element: Element) -> models.Model:
+        model = self.get(element)
+        model.set_password(element.password)
+        model.save()
+        self.stdout.write(f"{self.model_name} updated: {element.key}")
+        return model
 
     def delete_elements(self, discarded_elements: set[models.Model]) -> None:
         if len(discarded_elements) > 0:
