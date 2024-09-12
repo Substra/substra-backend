@@ -52,10 +52,10 @@ spec:
             ./manage.py sync_users /accounts/users
 
             ## IncomingOrganization
-            ./manage.py sync_incoming_organization /accounts/incoming_organizations
+            ./manage.py sync_incoming_organizations /accounts/incoming_organizations
 
             ## OutgoingOrganization
-            ./manage.py sync_outgoing_organization  /accounts/outgoing_organizations
+            ./manage.py sync_outgoing_organizations  /accounts/outgoing_organizations
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
