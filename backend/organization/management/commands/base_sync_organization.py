@@ -44,14 +44,17 @@ class BaseSyncOrganizationCommand(BaseCommand, abc.ABC):
 
     def handle_element(self, element: Element, existing_elements: set[str]) -> None:
         try:
-            self.model.objects.create(
-                organization_id=element.key,
-                password=element.password,
-            )
-            self.stdout.write(f"{self.model_name} created: {element.key}")
+            self.create(element.key, element.password)
         except IntegrityError:
             self.update_password(element.key, element.password)
         existing_elements.discard(element.key)
+
+    def create(self, key: str, password: str) -> None:
+        self.model.objects.create(
+            organization_id=key,
+            password=password,
+        )
+        self.stdout.write(f"{self.model_name} created: {key}")
 
     def update_password(self, key: str, password: str) -> None:
         element = self.model.objects.get(organization_id=key)
