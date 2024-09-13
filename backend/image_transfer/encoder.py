@@ -7,10 +7,10 @@ from typing import Iterator
 from typing import Optional
 from typing import Union
 
+import structlog
 from dxf import DXF
 from dxf import DXFBase
 from requests import HTTPError
-from tqdm import tqdm
 
 from image_transfer.common import Authenticator
 from image_transfer.common import Blob
@@ -22,6 +22,8 @@ from image_transfer.common import PayloadSide
 from image_transfer.common import progress_as_string
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.utils import safezip
+
+logger = structlog.get_logger("worker")
 
 
 def add_blobs_to_zip(
@@ -58,15 +60,23 @@ def add_blobs_to_zip(
 
 def download_blob_to_zip(dxf_base: DXFBase, blob: Blob, zip_file: safezip.ZipFile):
     repository_dxf = DXF.from_base(dxf_base, blob.repository)
-    bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
+    try:
+        bytes_iterator, total_size = repository_dxf.pull_blob(blob.digest, size=True)
+    except Exception as e:
+        logger.exception(f"Failed to download blob {blob}", e=e)
+        raise e
 
     # we write the blob directly to the zip file
-    with tqdm(total=total_size, unit="B", unit_scale=True) as pbar:
-        blob_path_in_zip = f"blobs/{blob.digest}"
+    blob_path_in_zip = f"blobs/{blob.digest}"
+    try:
         with zip_file.open(blob_path_in_zip, "w", force_zip64=True) as blob_in_zip:
             for chunk in bytes_iterator:
                 blob_in_zip.write(chunk)
-                pbar.update(len(chunk))
+    except Exception as e:
+        logger.exception(f"Failed to write blob {blob} to zip file", e=e)
+        raise e
+
+    logger.info(f"Blob {blob} of size {total_size} downloaded and stored in zip file")
     return blob_path_in_zip
 
 
