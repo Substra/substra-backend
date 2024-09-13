@@ -804,7 +804,7 @@ kaniko:
   image:
     registry: gcr.io
     repository: kaniko-project/executor
-    tag: v1.8.1
+    tag: &kanikoVersion v1.23.2
   ## @param kaniko.resources.requests.cpu Kaniko container cpu request
   ## @param kaniko.resources.requests.memory Kaniko container memory request
   ## @param kaniko.resources.limits.memory Kaniko container memory limit
@@ -830,7 +830,7 @@ kaniko:
       image:
         registry: gcr.io
         repository: kaniko-project/warmer
-        tag: v1.8.1
+        tag: *kanikoVersion
       ## @param kaniko.cache.warmer.cachedImages A list of docker images to warmup the Kaniko cache
       ## e.g:
       ## - ghcr.io/substra-314908/substra-tools:0.9.0-minimal
