@@ -23,7 +23,7 @@ from image_transfer.common import progress_as_string
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.utils import safezip
 
-logger = structlog.get_logger("builder")
+logger = structlog.get_logger("worker")
 
 
 def add_blobs_to_zip(
