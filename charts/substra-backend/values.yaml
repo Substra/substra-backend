@@ -49,6 +49,7 @@ privateCa:
 ## @param server.uwsgiThreads The number of uwsgi threads
 ## @param server.allowImplicitLogin Allow clients to get API tokens directly with username+password on the `/api-token-auth/` endpoint (ie `Client.login` in the Substra SDK)
 ## @param server.allowLocalRequests Allow calls to the backend API from within the cluster and local addresses (for instance when multiple organization are in the same cluster, or using a cluster on your machine)
+## @param server.updateStrategy.type The update strategy for the server deployment (defaults to Recreate). If set to `RollingUpdate`, the server might run into a race condition during upgrade, because the new pod tries to attach to a RWO PVC. Changing this value is not recommended.
 ##
 server:
   replicaCount: 1
@@ -59,6 +60,8 @@ server:
   uwsgiThreads: 10
   allowImplicitLogin: true
   allowLocalRequests: false
+  updateStrategy:
+    type: Recreate
 
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry
@@ -1077,6 +1080,8 @@ docker-registry:
     runAsNonRoot: true
     seccompProfile:
       type: RuntimeDefault
+  updateStrategy:
+    type: Recreate
 
 ## @skip minio
 ##

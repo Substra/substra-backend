@@ -12,6 +12,7 @@ spec:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         {{ include "substra.selectorLabels" . | nindent 8}}
+  strategy: {{ .Values.server.updateStrategy }}
   template:
     metadata:
       labels:
