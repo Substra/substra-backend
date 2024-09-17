@@ -583,6 +583,10 @@ builder:
   ##
   concurrency: 1
 
+  ## @param builder.timeout Number of seconds to wait before failing a build
+  ##
+  timeout: 3600
+
   ## @param builder.kanikoStartup.maxAttempts Number of checks done before considering a kaniko pod has failed to spawn
   ## @param builder.kanikoStartup.checkDelay Time, in seconds, to wait when a container is in pending state before checking again its status
   ##
