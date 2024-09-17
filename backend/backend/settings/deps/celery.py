@@ -3,13 +3,14 @@ Task broker settings
 """
 
 import os
+import typing
 
 from substrapp.compute_tasks.errors import CeleryRetryError
 
 from .org import ORG_NAME
 
 
-def build_broker_url(user: str, password: str, host: str, port: str) -> str:
+def build_redis_url(user: str, password: str, host: str, port: str, db: typing.Optional[int] = None) -> str:
     """Builds a redis connection string
 
     Args:
@@ -17,24 +18,32 @@ def build_broker_url(user: str, password: str, host: str, port: str) -> str:
         password (str): redis password
         host (str): redis hostname
         port (str): redis port
+        db (typing.Optional[str]): redis database. Accepted values are None (default value) or 0 to 15.
 
     Returns:
-        str: a connection string of the form "redis://user:password@hostname:port//"
+        str: a connection string of the form "redis://user:password@hostname:port/db"
     """
     conn_info = ""
     conn_port = ""
+    conn_db = ""
     if user and password:
         conn_info = f"{user}:{password}@"
     if port:
         conn_port = f":{port}"
-    return f"redis://{conn_info}{host}{conn_port}//"
+    if db is not None:
+        conn_db = str(db)
+    return f"redis://{conn_info}{host}{conn_port}/{conn_db}/"
 
 
 CELERY_BROKER_USER = os.environ.get("CELERY_BROKER_USER")
 CELERY_BROKER_PASSWORD = os.environ.get("CELERY_BROKER_PASSWORD")
 CELERY_BROKER_HOST = os.environ.get("CELERY_BROKER_HOST", "localhost")
 CELERY_BROKER_PORT = os.environ.get("CELERY_BROKER_PORT", "5672")
-CELERY_BROKER_URL = build_broker_url(CELERY_BROKER_USER, CELERY_BROKER_PASSWORD, CELERY_BROKER_HOST, CELERY_BROKER_PORT)
+CELERY_BROKER_URL = build_redis_url(CELERY_BROKER_USER, CELERY_BROKER_PASSWORD, CELERY_BROKER_HOST, CELERY_BROKER_PORT)
+
+CELERY_RESULT_BACKEND = build_redis_url(
+    CELERY_BROKER_USER, CELERY_BROKER_PASSWORD, CELERY_BROKER_HOST, CELERY_BROKER_PORT, db=1
+)
 
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_RESULT_SERIALIZER = "json"

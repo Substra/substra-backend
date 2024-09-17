@@ -44,5 +44,4 @@ SITE_HOST = f"substra-backend.{ORG_NAME}.xyz"
 SITE_PORT = DEFAULT_PORT
 DEFAULT_DOMAIN = os.environ.get("DEFAULT_DOMAIN", f"http://{SITE_HOST}:{SITE_PORT}")
 
-CELERY_RESULT_BACKEND = "django-db"
 CELERY_TASK_MAX_RETRIES = int(os.environ.get("CELERY_TASK_MAX_RETRIES", 0))
