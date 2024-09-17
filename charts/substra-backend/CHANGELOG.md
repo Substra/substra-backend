@@ -1,6 +1,11 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.10.2] - 2024-09-17
+
+# Fixed
+
+update path for `server.spec.strategy.type`
 
 ## [26.10.1] - 2024-09-13
 
