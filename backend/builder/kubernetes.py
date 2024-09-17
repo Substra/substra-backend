@@ -78,8 +78,6 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
         PodTimeoutError: this exception is raised if the pod does not reach the running state after some time
     """
     attempt = 0
-    # with 60 attempts we wait max 2 min with a pending pod
-    max_attempts = 60
 
     # This variable is used to track the current status through retries
     previous_pod_status = None
@@ -104,7 +102,7 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
                 reason=pod_state.reason,
                 message=pod_state.message,
                 attempt=attempt,
-                max_attempts=max_attempts,
+                max_attempts=BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS,
             )
 
         if pod_state.status == ObjectState.COMPLETED:
@@ -132,7 +130,7 @@ def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str) -> None:
 
         time.sleep(0.2)
 
-    raise PodTimeoutError(f"Pod {name} didn't complete after {max_attempts} attempts")
+    raise PodTimeoutError(f"Pod {name} didn't complete after {BUILDER_KANIKO_STARTUP_MAX_ATTEMPTS} attempts")
 
 
 def retrieve_pod_status(k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> kubernetes.client.V1PodStatus:
