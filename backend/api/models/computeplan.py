@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count
 from django.db.models import Q
+from django.utils import timezone
 
 from api.models.computetask import ComputeTask
 
@@ -112,6 +113,9 @@ class ComputePlan(models.Model):
             **stats,
         )
 
+        if compute_plan_status != self.Status.PLAN_STATUS_CREATED and not self.start_date:
+            self.start_date = timezone.now()
+
         self.status = compute_plan_status
 
         if self.status == self.Status.PLAN_STATUS_FAILED:
@@ -119,13 +123,8 @@ class ComputePlan(models.Model):
 
         self.save()
 
-    def update_dates(self) -> None:
+    def update_end_date(self) -> None:
         """Update start_date, end_date"""
-
-        if not self.start_date:
-            first_started_task = self.compute_tasks.filter(start_date__isnull=False).order_by("start_date").first()
-            if first_started_task:
-                self.start_date = first_started_task.start_date
 
         ongoing_tasks = self.compute_tasks.filter(end_date__isnull=True).exists()
         failed_or_canceled_tasks = self.compute_tasks.filter(
