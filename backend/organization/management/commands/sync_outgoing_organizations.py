@@ -14,7 +14,7 @@ class Command(BaseSyncCommand):
 
     # Password saved as clear text
     def update_password(self, element: Element) -> models.Model:
-        model = self.get(element)
+        model = self.get(element.key)
         model.secret = element.password
         model.save()
         self.stdout.write(f"{self.model_name} updated: {element.key}")
