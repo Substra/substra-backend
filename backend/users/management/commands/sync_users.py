@@ -32,7 +32,7 @@ class Command(BaseSyncCommand):
             self.stderr.write("\n".join(err.messages))
             return
 
-        user = self.model.objects.create_user(element.key, element.password)
+        user = self.model.objects.create_user(username=element.key, password=element.password)
         self.stdout.write(f"{self.model_name} created: {element.key}, password={element.password}")
         UserChannel.objects.create(user=user, channel_name=element.channel, role=_validate_role("ADMIN"))
         self.stdout.write(f"User channel created: {element.key}")
