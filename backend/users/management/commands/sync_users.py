@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from api.models import ComputePlan
+from api.models.computeplan import _get_or_create_deleted_user
 from organization.management.commands.base_sync import BaseSyncCommand
 from organization.management.commands.base_sync import Element
 from users.models import UserChannel
@@ -15,9 +17,12 @@ class UserElement(Element):
 
 class Command(BaseSyncCommand):
     help = "Sync users"
-    model = get_user_model()
     model_name = "User"
     field_key = "username"
+
+    def __init__(self, *args, **kwargs):
+        self.model = get_user_model()
+        super().__init__(*args, **kwargs)
 
     def parse_line(self, line: str) -> UserElement:
         (key, password, channel) = line.split(" ")
@@ -46,3 +51,8 @@ class Command(BaseSyncCommand):
         user_channel.save()
         self.stdout.write(f"User channel updated: {element.key}")
         return user
+
+    def delete(self, discarded_keys: set[str]) -> None:
+        deleted_user = _get_or_create_deleted_user()
+        ComputePlan.objects.filter(creator__username__in=discarded_keys).update(creator_id=deleted_user.id)
+        super().delete(discarded_keys)
