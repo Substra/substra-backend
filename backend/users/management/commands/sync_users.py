@@ -1,10 +1,9 @@
+from django.config import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from api.models import ComputePlan
-from api.models.computeplan import _get_or_create_deleted_user
 from organization.management.commands.base_sync import BaseSyncCommand
 from organization.management.commands.base_sync import Element
 from users.models import UserChannel
@@ -53,6 +52,6 @@ class Command(BaseSyncCommand):
         return user
 
     def delete(self, discarded_keys: set[str]) -> None:
-        deleted_user = _get_or_create_deleted_user()
-        ComputePlan.objects.filter(creator__username__in=discarded_keys).update(creator_id=deleted_user.id)
+        # Prevent the deletion of virtual users
+        discarded_keys.difference_update(settings.VIRTUAL_USERNAMES.values())
         super().delete(discarded_keys)
