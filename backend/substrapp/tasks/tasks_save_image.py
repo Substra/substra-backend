@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import structlog
+from celery.exceptions import SoftTimeLimitExceeded
 from django.conf import settings
 from django.core.files import File
 from django.urls import reverse
@@ -18,6 +19,7 @@ from builder.exceptions import BuildRetryError
 from orchestrator import get_orchestrator_client
 from substrapp.compute_tasks import utils
 from substrapp.compute_tasks.errors import CeleryNoRetryError
+from substrapp.compute_tasks.errors import CeleryRetryError
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import RegistryPreconditionFailedException
 from substrapp.models import FailedAssetKind
@@ -38,6 +40,7 @@ class SaveImageTask(FailableTask):
     retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
     retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
     retry_jitter = settings.CELERY_TASK_RETRY_JITTER
+    soft_time_limit = 100_000
     acks_late = True
     reject_on_worker_lost = True
     ignore_result = False
@@ -78,59 +81,63 @@ class SaveImageTask(FailableTask):
 def save_image(function_serialized: str, channel_name: str) -> dict:
     logger.info("Starting save_image")
     logger.info(f"Parameters: function_serialized {function_serialized}, " f"channel_name {channel_name}")
+    try:
+        # create serialized image
+        function = orchestrator.Function.model_validate_json(function_serialized)
+        container_image_tag = utils.container_image_tag_from_function(function)
 
-    # create serialized image
-    function = orchestrator.Function.model_validate_json(function_serialized)
-    container_image_tag = utils.container_image_tag_from_function(function)
+        os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
 
-    os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
+        logger.info("Serialising the image from the registry")
 
-    logger.info("Serialising the image from the registry")
+        with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
+            storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
+            try:
+                image_transfer.make_payload(
+                    zip_file=storage_path,
+                    docker_images_to_transfer=[f"{USER_IMAGE_REPOSITORY}:{container_image_tag}"],
+                    registry=REGISTRY,
+                    secure=REGISTRY_SCHEME == "https",
+                )
+            except RegistryPreconditionFailedException as e:
+                raise BuildRetryError(
+                    f"The image associated with the function {function.key} was built successfully "
+                    f"but did not pass the security checks; "
+                    "please contact an Harbor administrator to ensure that the image was scanned, "
+                    "and get more information about the CVE."
+                ) from e
 
-    with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
-        storage_path = pathlib.Path(tmp_dir) / f"{container_image_tag}.zip"
-        try:
-            image_transfer.make_payload(
-                zip_file=storage_path,
-                docker_images_to_transfer=[f"{USER_IMAGE_REPOSITORY}:{container_image_tag}"],
-                registry=REGISTRY,
-                secure=REGISTRY_SCHEME == "https",
+            logger.info("Start saving the serialized image")
+            # save it
+            image = FunctionImage.objects.create(
+                function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
             )
-        except RegistryPreconditionFailedException as e:
-            raise BuildRetryError(
-                f"The image associated with the function {function.key} was built successfully "
-                f"but did not pass the security checks; "
-                "please contact an Harbor administrator to ensure that the image was scanned, "
-                "and get more information about the CVE."
-            ) from e
+            # update APIFunction image-related fields
+            api_function = ApiFunction.objects.get(key=function.key)
+            # TODO get full url cf https://github.com/Substra/substra-backend/backend/api/serializers/function.py#L66
+            api_function.image_address = settings.DEFAULT_DOMAIN + reverse(
+                "api:function_permissions-image", args=[function.key]
+            )
+            api_function.image_checksum = image.checksum
+            api_function.save()
 
-        logger.info("Start saving the serialized image")
-        # save it
-        image = FunctionImage.objects.create(
-            function_id=function.key, file=File(file=storage_path.open(mode="rb"), name="image.zip")
-        )
-        # update APIFunction image-related fields
-        api_function = ApiFunction.objects.get(key=function.key)
-        # TODO get full url cf https://github.com/Substra/substra-backend/backend/api/serializers/function.py#L66
-        api_function.image_address = settings.DEFAULT_DOMAIN + reverse(
-            "api:function_permissions-image", args=[function.key]
-        )
-        api_function.image_checksum = image.checksum
-        api_function.save()
+            logger.info("Serialized image saved")
 
-        logger.info("Serialized image saved")
+            orc_update_function_param = {
+                "key": str(api_function.key),
+                # TODO find a way to propagate the name or make it optional at update
+                "name": api_function.name,
+                "image": {
+                    "checksum": api_function.image_checksum,
+                    "storage_address": api_function.image_address,
+                },
+            }
 
-        orc_update_function_param = {
-            "key": str(api_function.key),
-            # TODO find a way to propagate the name or make it optional at update
-            "name": api_function.name,
-            "image": {
-                "checksum": api_function.image_checksum,
-                "storage_address": api_function.image_address,
-            },
-        }
-
-        return orc_update_function_param
+            return orc_update_function_param
+    except SoftTimeLimitExceeded as e:
+        raise CeleryRetryError from e
+    except Exception:
+        raise
 
 
 @app.task(
