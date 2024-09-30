@@ -39,6 +39,7 @@ Accepted true values for `bool` are: `1`, `ON`, `On`, `on`, `T`, `t`, `TRUE`, `T
 | string | `HOSTNAME` | nil |  |
 | string | `HOST_IP` | nil |  |
 | int | `HTTP_CLIENT_TIMEOUT_SECONDS` | `30` |  |
+| int | `IMAGE_SAVING_TIMEOUT_SECONDS` | `60` |  |
 | bool | `ISOLATED` | nil |  |
 | string | `K8S_SECRET_NAMESPACE` | `default` |  |
 | string | `KANIKO_DOCKER_CONFIG_SECRET_NAME` | nil |  |
