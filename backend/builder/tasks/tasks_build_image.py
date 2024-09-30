@@ -2,6 +2,7 @@ import structlog
 
 import orchestrator
 from backend.celery import app
+from builder.exceptions import BuildCanceledError
 from builder.exceptions import BuildError
 from builder.exceptions import BuildRetryError
 from builder.exceptions import CeleryNoRetryError
@@ -24,9 +25,11 @@ def build_image(task: BuildTask, function_serialized: str, channel_name: str) ->
     timer = Timer()
     attempt = 0
     while attempt <= task.max_retries:
+        if not image_builder.check_function_is_runnable(function.key, channel_name):
+            logger.info("build has been canceled", function_id=function.key)
+            raise BuildCanceledError
         try:
             timer.start()
-
             image_builder.build_image_if_missing(channel_name, function)
 
             with orchestrator.get_orchestrator_client(channel_name) as client:

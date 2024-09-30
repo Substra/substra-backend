@@ -41,3 +41,7 @@ class BuildRetryError(_BuildError, CeleryRetryError):
     Args:
         logs (str): the container image build logs
     """
+
+
+class BuildCanceledError(CeleryNoRetryError):
+    """A function built has been cancelled (for instance, all the linked ocmpute plans has been cancelled or failed)"""

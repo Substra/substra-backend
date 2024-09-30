@@ -1,7 +1,11 @@
+from typing import Any
+
 import structlog
+from billiard.einfo import ExceptionInfo
 from django.conf import settings
 
 import orchestrator
+from builder.exceptions import BuildCanceledError
 from substrapp.models import FailedAssetKind
 from substrapp.tasks.task import FailableTask
 
@@ -36,3 +40,11 @@ class BuildTask(FailableTask):
         function = orchestrator.Function.model_validate_json(kwargs["function_serialized"])
         channel_name = kwargs["channel_name"]
         return function.key, channel_name
+
+    def on_failure(
+        self, exc: Exception, task_id: str, args: tuple, kwargs: dict[str, Any], einfo: ExceptionInfo
+    ) -> None:
+        if isinstance(exc, BuildCanceledError):
+            return
+
+        super().on_failure(exc, task_id, args, kwargs, einfo)
