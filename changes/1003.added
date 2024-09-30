@@ -1,0 +1,1 @@
+Celery soft timeout on `SaveImageTask` and env variable (`IMAGE_SAVING_TIMEOUT_SECONDS`) to customize the timeout
