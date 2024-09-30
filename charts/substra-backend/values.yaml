@@ -644,6 +644,9 @@ builder:
   ## @param builder.affinity Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`
   ##
   affinity: { }
+  ## @param builder.saveImageTimeoutSeconds Amount of seconds before restarting the image save as a blob
+  #
+  saveImageTimeoutSeconds: 60
 
 
   persistence:

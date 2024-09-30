@@ -145,6 +145,8 @@ spec:
               value: {{ toYaml .Values.worker.computePod.resources | quote }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
               value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
+            - name: IMAGE_SAVING_TIMEOUT_SECONDS
+              value: {{ .Values.builder.saveImageTimeoutSeconds | quote }}
             - name: OBJECTSTORE_URL
               value: {{ include "substra-backend.objectStore.url" . | quote }}
             - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS

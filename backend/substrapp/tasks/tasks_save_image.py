@@ -30,6 +30,7 @@ from substrapp.utils import Timer
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
+IMAGE_SAVING_TIMEOUT_SECONDS = settings.IMAGE_SAVING_TIMEOUT_SECONDS
 
 logger = structlog.get_logger("worker")
 
@@ -40,7 +41,7 @@ class SaveImageTask(FailableTask):
     retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
     retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
     retry_jitter = settings.CELERY_TASK_RETRY_JITTER
-    soft_time_limit = 100_000
+    soft_time_limit = IMAGE_SAVING_TIMEOUT_SECONDS
     acks_late = True
     reject_on_worker_lost = True
     ignore_result = False
