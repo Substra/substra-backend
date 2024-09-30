@@ -332,9 +332,10 @@ def _build_container_args(dockerfile_mount_path: str, image_tag: str) -> list[st
         f"--destination={REGISTRY}/{USER_IMAGE_REPOSITORY}:{image_tag}",
         "--cache=true",
         "--log-timestamp=true",
-        "--snapshotMode=redo",
+        "--snapshot-mode=redo",
         "--push-retry=3",
         "--cache-copy-layers",
+        "--cache-run-layers",
         "--log-format=text",
         f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
     ]
