@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.13.0] - 2024-09-30
+
+# Added
+
+`.Values.builder.saveImageTimeoutSeconds` configuring the timeout for the Celery task `SaveImageTask`. 
+
 ## [26.12.0] - 2024-09-30
 
 # Changed
