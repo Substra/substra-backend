@@ -27,7 +27,6 @@ router.register(r"compute_plan_metadata", views.ComputePlanMetadataViewSet, base
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
 router.register(r"performance", views.PerformanceViewSet, basename="performance")
 router.register(r"logs", views.FailedAssetLogsViewSet, basename="logs")
-router.register(r"task_profiling", views.TaskProfilingViewSet, basename="task_profiling")
 
 function_profiling_router = routers.NestedDefaultRouter(router, r"function", lookup="function")
 function_profiling_router.register(r"profiling", views.FunctionProfilingViewSet, basename="function-profiling")
@@ -41,10 +40,19 @@ compute_plan_router.register(r"functions", views.CPFunctionViewSet, basename=f"{
 compute_plan_router.register(r"perf", views.CPPerformanceViewSet, basename=f"{CP_BASENAME_PREFIX}perf")
 
 
+task_profiling_view = views.TaskProfilingViewSet.as_view(
+    {
+        "get": "list",
+        "post": "create",
+        "put": "update",
+    }
+)
+
 urlpatterns = [
     path("", include(router.urls)),
     path("", include(compute_plan_router.urls)),
     path("", include(task_profiling_router.urls)),
     path("", include(function_profiling_router.urls)),
+    path(r"task/<compute_task_pk>/profiling", task_profiling_view, name="task-profiling"),
     path(r"compute_plan/<compute_plan_pk>/workflow_graph/", views.get_cp_graph, name="workflow_graph"),
 ]

@@ -57,7 +57,6 @@ from substrapp.utils import Timer
 from substrapp.utils import get_owner
 from substrapp.utils import list_dir
 from substrapp.utils import retry
-from substrapp.utils.url import TASK_PROFILING_BASE_URL
 from substrapp.utils.url import get_task_profiling_detail_url
 from substrapp.utils.url import get_task_profiling_steps_base_url
 from substrapp.utils.url import get_task_profiling_steps_detail_url
@@ -152,10 +151,9 @@ def _send_profiling_event(*, channel_name: str, url_create: str, url_update: str
 
 @retry()
 def _create_task_profiling(channel_name: str, compute_task_key: str) -> bytes:
-    url_create = TASK_PROFILING_BASE_URL
-    url_update = get_task_profiling_detail_url(compute_task_key)
+    url = get_task_profiling_detail_url(compute_task_key)
     data = {"compute_task_key": compute_task_key}
-    return _send_profiling_event(channel_name=channel_name, url_create=url_create, url_update=url_update, data=data)
+    return _send_profiling_event(channel_name=channel_name, url_create=url, url_update=url, data=data)
 
 
 @retry()

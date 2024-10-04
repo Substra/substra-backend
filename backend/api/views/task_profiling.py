@@ -31,8 +31,6 @@ logger = structlog.get_logger(__name__)
 class TaskProfilingViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
     GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
@@ -40,6 +38,7 @@ class TaskProfilingViewSet(
     pagination_class = LargePageNumberPagination
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthorized, IsCurrentBackendOrReadOnly]
+    lookup_url_kwarg = "compute_task_pk"
 
     def get_queryset(self) -> QuerySet[TaskProfiling]:
         return TaskProfiling.objects.filter(compute_task__channel=get_channel_name(self.request))
@@ -55,6 +54,12 @@ class TaskProfilingViewSet(
     def perform_update(self, serializer):
         kwargs = {"creation_date": timezone.now()}
         return serializer.save(**kwargs)
+
+    # Do not use pagination
+    def list(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericViewSet):
