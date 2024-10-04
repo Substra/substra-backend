@@ -72,7 +72,7 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
         return ProfilingStep.objects.filter(compute_task_profile__compute_task__channel=get_channel_name(self.request))
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        task_profile_pk = kwargs["task_profiling_pk"]
+        task_profile_pk = kwargs["compute_task_pk"]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -85,7 +85,7 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
     def get_object(self):
         queryset = self.get_queryset()
         filters = {**self.kwargs}
-        filters["compute_task_profile_id"] = filters.pop("task_profiling_pk")
+        filters["compute_task_profile_id"] = filters.pop("compute_task_pk")
         obj = get_object_or_404(queryset, **filters)
 
         self.check_object_permissions(self.request, obj)

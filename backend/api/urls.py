@@ -31,9 +31,8 @@ router.register(r"logs", views.FailedAssetLogsViewSet, basename="logs")
 function_profiling_router = routers.NestedDefaultRouter(router, r"function", lookup="function")
 function_profiling_router.register(r"profiling", views.FunctionProfilingViewSet, basename="function-profiling")
 
-task_profiling_router = routers.NestedDefaultRouter(router, r"task_profiling", lookup="task_profiling")
-task_profiling_router.register(r"step", views.TaskProfilingStepViewSet, basename="step")
-
+task_profiling_router = routers.NestedDefaultRouter(router, r"task", lookup="compute_task")
+task_profiling_router.register(r"profiling/step", views.TaskProfilingStepViewSet, basename="step")
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
 compute_plan_router.register(r"task", views.CPTaskViewSet, basename=f"{CP_BASENAME_PREFIX}task")
 compute_plan_router.register(r"functions", views.CPFunctionViewSet, basename=f"{CP_BASENAME_PREFIX}function")
