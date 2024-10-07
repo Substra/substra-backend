@@ -12,6 +12,7 @@ data:
     for i in {1..5}
     do
         [[ $(./manage.py migrate --check) == 0 ]] && exit
+        echo "retrying wait for migration $i"
         sleep 15
     done
     exit 1
