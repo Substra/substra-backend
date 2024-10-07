@@ -108,7 +108,7 @@ def grpc_retry(func):
 
 CONVERT_SETTINGS = {
     "preserving_proto_field_name": True,
-    "including_default_value_fields": True,
+    "always_print_fields_with_no_presence": True,
 }
 
 
