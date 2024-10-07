@@ -8,23 +8,10 @@ data:
   wait-init-migration.sh: |
     #!/usr/bin/env bash
 
-    # Ensure the django migration have finished running before deploying the event app
-    # FIXME when moving to Django 4.0 replace with ./manage.py migrate --check
-    # link to doc: https://docs.djangoproject.com/fr/4.0/ref/django-admin/#cmdoption-migrate-check
-
+    # Ensure the django migration have finished running before deploying apps
     for i in {1..5}
     do
-        all_migrations=$(./manage.py showmigrations)
-        all_migrations_status=$?
-
-        unapplied_migrations=$(echo "$all_migrations" | grep '\[ \]')
-
-        if [ $all_migrations_status -eq 0 ] && [ -z "$unapplied_migrations" ]
-        then
-            exit 0
-        else
-            echo "retrying wait for migration $i"
-            sleep 15
-        fi
+        [[ $(./manage.py migrate --check) == 0 ]] && exit
+        sleep 15
     done
     exit 1
