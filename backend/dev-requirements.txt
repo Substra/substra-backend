@@ -13,7 +13,6 @@ pytest-django==4.9.0
 pytest-xdist[psutil]==3.6.1
 pytest==8.3.3
 responses==0.25.3
-watchdog==2.1.9
 flake8-bugbear==24.8.19
 pdbpp==0.10.3
 factory-boy==3.3.1
@@ -22,5 +21,6 @@ djangorestframework-stubs==3.15.1
 django-stubs==5.1.0
 celery-types==0.22.0
 docker==7.1.0
-celery[pytest]
+# Pined because moving to pytest-celery º1.0.0 would require more exxtensive work to use docker images
+pytest-celery<1.0.0
 towncrier==24.8.0
