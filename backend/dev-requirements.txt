@@ -13,7 +13,6 @@ pytest-django==4.9.0
 pytest-xdist[psutil]==3.6.1
 pytest==8.3.3
 responses==0.25.3
-watchdog==4.0.2
 flake8-bugbear==24.8.19
 pdbpp==0.10.3
 factory-boy==3.3.1
