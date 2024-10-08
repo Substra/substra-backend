@@ -21,5 +21,6 @@ djangorestframework-stubs==3.15.1
 django-stubs==5.1.0
 celery-types==0.22.0
 docker==7.1.0
-celery[pytest]
+# Pined because moving to pytest-celery º1.0.0 would require more exxtensive work to use docker images
+pytest-celery<1.0.0
 towncrier==24.8.0
