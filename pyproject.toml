@@ -24,6 +24,7 @@ DJANGO_SETTINGS_MODULE = "backend.settings.test"
 addopts = "--cov=. --cov-config=../pyproject.toml -p no:unraisableexception"
 filterwarnings = [
     "error",
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:rest_framework_simplejwt",
     "ignore:CSR support in pyOpenSSL is deprecated. You should use the APIs in cryptography.:DeprecationWarning:josepy",
 ]
 
