@@ -254,6 +254,20 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- end }}
 {{- end -}}
 
+{{- define "common.waitRedisInitContainer" -}}
+{{- if .Values.redis.enabled }}
+- name: wait-redis
+  image: jwilder/dockerize:0.6.1
+  securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      capabilities:
+        drop: ["ALL"]
+  command: ['dockerize', '-wait', 'tcp://{{ default (include "redis.serviceName" .) .Values.redis.host }}:{{ .Values.redis.master.service.ports.redis }}', '-timeout', '15s']
+{{- end }}
+{{- end -}}
 
 {{/*
 `wait-postgresql` container initialisation used inside of `initContainers`
