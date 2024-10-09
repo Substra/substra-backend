@@ -31,8 +31,6 @@ logger = structlog.get_logger(__name__)
 class TaskProfilingViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
     GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
@@ -40,6 +38,7 @@ class TaskProfilingViewSet(
     pagination_class = LargePageNumberPagination
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthorized, IsCurrentBackendOrReadOnly]
+    lookup_url_kwarg = "compute_task_pk"
 
     def get_queryset(self) -> QuerySet[TaskProfiling]:
         return TaskProfiling.objects.filter(compute_task__channel=get_channel_name(self.request))
@@ -56,6 +55,12 @@ class TaskProfilingViewSet(
         kwargs = {"creation_date": timezone.now()}
         return serializer.save(**kwargs)
 
+    # Do not use pagination
+    def list(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
 
 class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericViewSet):
     serializer_class = ProfilingStepSerializer
@@ -67,7 +72,7 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
         return ProfilingStep.objects.filter(compute_task_profile__compute_task__channel=get_channel_name(self.request))
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        task_profile_pk = kwargs["task_profiling_pk"]
+        task_profile_pk = kwargs["compute_task_pk"]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -80,7 +85,7 @@ class TaskProfilingStepViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin,
     def get_object(self):
         queryset = self.get_queryset()
         filters = {**self.kwargs}
-        filters["compute_task_profile_id"] = filters.pop("task_profiling_pk")
+        filters["compute_task_profile_id"] = filters.pop("compute_task_pk")
         obj = get_object_or_404(queryset, **filters)
 
         self.check_object_permissions(self.request, obj)
