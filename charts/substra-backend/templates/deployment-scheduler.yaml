@@ -99,6 +99,8 @@ spec:
             {{ end }}
           resources:
             {{- toYaml .Values.scheduler.resources | nindent 12 }}
+      initContainers:
+        {{- include "common.waitRedisInitContainer" . | nindent 8 }}
       volumes:
       - name: runtime-db
         emptyDir: {}
