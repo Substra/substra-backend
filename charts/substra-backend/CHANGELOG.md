@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.14.0] - 2024-10-09
+
+# Added
+
+Pods relying on redis uses a new init container `wait-redis` which wait for redis to be up before spawning
+
 ## [26.13.0] - 2024-09-30
 
 # Added
