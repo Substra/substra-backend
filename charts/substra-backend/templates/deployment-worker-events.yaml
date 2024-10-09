@@ -111,6 +111,7 @@ spec:
         {{- include "common.addCertInitContainer" . | nindent 8 }}
         {{- include "common.waitPostgresqlInitContainer" . | nindent 8 }}
         {{- include "common.waitInitMigrationsInitContainer" . | nindent 8}}
+        {{- include "common.waitRedisInitContainer" . | nindent 8 }}
       volumes:
       - name: volume-wait-init-migrations
         configMap:

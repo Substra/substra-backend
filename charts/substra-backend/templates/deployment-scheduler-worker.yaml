@@ -98,6 +98,7 @@ spec:
             {{- toYaml .Values.schedulerWorker.resources | nindent 12 }}
       initContainers:
         {{- include "common.addCertInitContainer" . | nindent 8 }}
+        {{- include "common.waitRedisInitContainer" . | nindent 8 }}
       volumes:
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs

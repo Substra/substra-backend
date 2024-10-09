@@ -68,6 +68,7 @@ spec:
       serviceAccountName: {{ template "substra.fullname" . }}-builder
       initContainers:
       {{- include "common.waitPostgresqlInitContainer" . | nindent 6 }}
+      {{- include "common.waitRedisInitContainer" . | nindent 6 }}
       {{- if .Values.privateCa.enabled }}
       - name: add-cert
         image: {{ include "common.images.name" .Values.privateCa.image }}
