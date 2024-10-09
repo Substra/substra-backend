@@ -9,10 +9,10 @@ data:
     #!/usr/bin/env bash
 
     # Ensure the django migration have finished running before deploying apps
-    for i in {1..5}
+    for i in {1..10}
     do
         [[ $(./manage.py migrate --check) == 0 ]] && exit
         echo "retrying wait for migration $i"
-        sleep 15
+        sleep 30
     done
     exit 1
