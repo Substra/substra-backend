@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.14.1] - 2024-10-09
+
+# Changed
+
+pod `server` does not use init container `init migrate` but instead wait for migration to be done
+
 ## [26.14.0] - 2024-10-09
 
 # Added
