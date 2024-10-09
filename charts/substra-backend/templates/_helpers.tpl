@@ -265,7 +265,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
         type: RuntimeDefault
       capabilities:
         drop: ["ALL"]
-  command: ['dockerize', '-wait', 'tcp://{{ default (include "redis.serviceName" .) .Values.redis.host }}:{{ .Values.redis.master.service.ports.redis }}', '-timeout', '15s']
+  command: ['dockerize', '-wait', 'tcp://{{ default (include "redis.serviceName" .) .Values.redis.host }}:{{ .Values.redis.master.service.ports.redis }}', '-timeout', '60s']
 {{- end }}
 {{- end -}}
 
