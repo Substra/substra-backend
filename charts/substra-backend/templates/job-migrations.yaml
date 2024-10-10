@@ -6,7 +6,6 @@ metadata:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.fullname" . }}-migrations
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   template:
@@ -31,6 +30,8 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+      {{- include "common.waitPostgresqlInitContainer" . | nindent 8 }}
       containers:
       - name: db-migrations
         securityContext:
