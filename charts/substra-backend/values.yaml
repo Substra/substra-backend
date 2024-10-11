@@ -646,7 +646,7 @@ builder:
   affinity: { }
   ## @param builder.saveImageTimeoutSeconds Amount of seconds before restarting the image save as a blob
   #
-  saveImageTimeoutSeconds: 60
+  saveImageTimeoutSeconds: 180
 
 
   persistence:
