@@ -1,6 +1,12 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.14.1] - 2024-10-11
+
+# Fixed
+
+Save image timeout not set correctly
+
 ## [26.14.0] - 2024-10-09
 
 # Added
