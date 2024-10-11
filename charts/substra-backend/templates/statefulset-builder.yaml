@@ -200,6 +200,8 @@ spec:
             value: {{ toYaml .Values.builder.kanikoStartup.maxAttempts | quote }}
           - name: BUILDER_KANIKO_STARTUP_PENDING_STATE_WAIT_SECONDS
             value: {{ toYaml .Values.builder.kanikoStartup.checkDelay | quote }}
+          - name: IMAGE_SAVING_TIMEOUT_SECONDS
+            value: {{ .Values.builder.saveImageTimeoutSeconds | quote }}
           - name: IMAGE_BUILD_TIMEOUT
             value: {{ toYaml .Values.builder.timeout | quote }}
         ports:
