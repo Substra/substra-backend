@@ -1,1 +1,0 @@
-django commands `sync_users`,  `sync_incoming_organizations` and `sync_outgoing_organizations` that can add, update and remove corresponding entities.

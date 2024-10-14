@@ -1,1 +1,0 @@
-replaced `django-celery-results` by a connexion to the existing redis instance.
