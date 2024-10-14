@@ -1,1 +1,0 @@
-Compute plans now starts when first compute task status transition to building instead of executing.

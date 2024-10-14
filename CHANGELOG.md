@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [1.0.0](https://github.com/Substra/substra-backend/releases/tag/1.0.0) - 2024-10-14
+
+### Added
+
+- Add configurable builder timeout through the env var `IMAGE_BUILD_TIMEOUT` ([#992](https://github.com/Substra/substra-backend/pull/992))
+- Check if function is linked with compute plans (through the compute tasks) before building. If all compute plans have been cancelled or failed, cancels the function. ([#997](https://github.com/Substra/substra-backend/pull/997))
+- django commands `sync_users`,  `sync_incoming_organizations` and `sync_outgoing_organizations` that can add, update and remove corresponding entities. ([#999](https://github.com/Substra/substra-backend/pull/999))
+- Celery soft timeout on `SaveImageTask` and env variable (`IMAGE_SAVING_TIMEOUT_SECONDS`) to customize the timeout ([#1003](https://github.com/Substra/substra-backend/pull/1003))
+
+### Changed
+
+- replaced `django-celery-results` by a connexion to the existing redis instance. ([#995](https://github.com/Substra/substra-backend/pull/995))
+- Compute plans now starts when first compute task status transition to building instead of executing. ([#998](https://github.com/Substra/substra-backend/pull/998))
+
+### Removed
+
+- `tqdm` dependency, only used in logging ([#990](https://github.com/Substra/substra-backend/pull/990))
+
+
 ## [0.48.0](https://github.com/Substra/substra-backend/releases/tag/0.48.0) - 2024-09-12
 
 ### Added

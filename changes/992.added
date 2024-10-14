@@ -1,1 +1,0 @@
-Add configurable builder timeout through the env var `IMAGE_BUILD_TIMEOUT`
