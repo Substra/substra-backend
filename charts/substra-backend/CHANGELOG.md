@@ -1,7 +1,7 @@
 # Changelog
 
 <!-- towncrier release notes start -->
-## [26.14.2-alpha.1] - 2024-10-14
+## [26.14.2] - 2024-10-14
 
 # Changed
 
