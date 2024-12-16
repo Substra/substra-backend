@@ -274,7 +274,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 */}}
 {{- define "common.waitPostgresqlInitContainer" -}}
 - name: wait-postgresql
-  image: postgres
+  image: {{ include "common.images.name" $.Values.images.initPostgresql }}
   securityContext:
       allowPrivilegeEscalation: false
       runAsNonRoot: true

@@ -1191,3 +1191,7 @@ images:
     registry: docker.io
     repository: jwilder/dockerize
     tag: "0.6.1"
+  initPostgresql:
+    registry: docker.io
+    repository: postgres
+    tag: 17
