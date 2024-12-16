@@ -418,6 +418,17 @@ See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
 | `hooks.deleteComputePods.image.repository` | Image repository for the hook image                                         | `bitnami/kubectl` |
 | `hooks.deleteComputePods.image.tag`        | Image tag for the hook image                                                | `latest`          |
 
+### Images
+
+| Name                               | Description                               | Value               |
+| ---------------------------------- | ----------------------------------------- | ------------------- |
+| `images.initDockerize.repository`  | Dockerize image                           | `jwilder/dockerize` |
+| `images.initDockerize.tag`         | Dockerize injector tag                    | `0.6.1`             |
+| `images.initDockerize.registry`    | The registry to pull the Dockerize image  | `docker.io`         |
+| `images.initPostgresql.repository` | PostgreSQL image                          | `postgres`          |
+| `images.initPostgresql.tag`        | PostgreSQL tag                            | `17`                |
+| `images.initPostgresql.registry`   | The registry to pull the PostgreSQL image | `docker.io`         |
+
 
 ## Usage
 
