@@ -1185,3 +1185,9 @@ hooks:
     image:
       repository: bitnami/kubectl
       tag: latest
+
+images:
+  initDockerize:
+    registry: docker.io
+    repository: jwilder/dockerize
+    tag: "0.6.1"

@@ -24,7 +24,7 @@ spec:
     spec:
       initContainers:
       - name: wait-registry
-        image: jwilder/dockerize:0.6.1
+        image: {{ include "common.images.name" $.Values.images.initDockerize }}
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: false
