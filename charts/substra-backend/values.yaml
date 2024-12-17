@@ -1202,4 +1202,4 @@ images:
     ## @param images.initPostgresql.registry The registry to pull the PostgreSQL image
     registry: docker.io
     repository: postgres
-    tag: 17
+    tag: "17"
