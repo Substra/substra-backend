@@ -422,12 +422,12 @@ See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
 
 | Name                               | Description                               | Value               |
 | ---------------------------------- | ----------------------------------------- | ------------------- |
-| `images.initDockerize.repository`  | Dockerize image                           | `jwilder/dockerize` |
-| `images.initDockerize.tag`         | Dockerize injector tag                    | `0.6.1`             |
-| `images.initDockerize.registry`    | The registry to pull the Dockerize image  | `docker.io`         |
-| `images.initPostgresql.repository` | PostgreSQL image                          | `postgres`          |
-| `images.initPostgresql.tag`        | PostgreSQL tag                            | `17`                |
-| `images.initPostgresql.registry`   | The registry to pull the PostgreSQL image | `docker.io`         |
+| `initImages.dockerize.repository`  | Dockerize image                           | `jwilder/dockerize` |
+| `initImages.dockerize.tag`         | Dockerize injector tag                    | `0.6.1`             |
+| `initImages.dockerize.registry`    | The registry to pull the Dockerize image  | `docker.io`         |
+| `initImages.postgresql.repository` | PostgreSQL image                          | `postgres`          |
+| `initImages.postgresql.tag`        | PostgreSQL tag                            | `17`                |
+| `initImages.postgresql.registry`   | The registry to pull the PostgreSQL image | `docker.io`         |
 
 
 ## Usage
