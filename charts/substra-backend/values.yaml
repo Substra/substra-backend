@@ -1188,18 +1188,18 @@ hooks:
 
 ## @section Images
 ##
-images:
-  initDockerize:
-    ## @param images.initDockerize.repository Dockerize image
-    ## @param images.initDockerize.tag Dockerize injector tag
-    ## @param images.initDockerize.registry The registry to pull the Dockerize image
+initImages:
+  dockerize:
+    ## @param initImages.dockerize.repository Dockerize image
+    ## @param initImages.dockerize.tag Dockerize injector tag
+    ## @param initImages.dockerize.registry The registry to pull the Dockerize image
     registry: docker.io
     repository: jwilder/dockerize
     tag: "0.6.1"
-  initPostgresql:
-    ## @param images.initPostgresql.repository PostgreSQL image
-    ## @param images.initPostgresql.tag PostgreSQL tag
-    ## @param images.initPostgresql.registry The registry to pull the PostgreSQL image
+  postgresql:
+    ## @param initImages.postgresql.repository PostgreSQL image
+    ## @param initImages.postgresql.tag PostgreSQL tag
+    ## @param initImages.postgresql.registry The registry to pull the PostgreSQL image
     registry: docker.io
     repository: postgres
     tag: "17"

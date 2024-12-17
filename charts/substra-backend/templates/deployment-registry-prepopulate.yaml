@@ -24,7 +24,7 @@ spec:
     spec:
       initContainers:
       - name: wait-registry
-        image: {{ include "common.images.name" $.Values.images.initDockerize }}
+        image: {{ include "common.images.name" $.Values.initImages.dockerize }}
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: false
