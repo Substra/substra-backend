@@ -1185,3 +1185,21 @@ hooks:
     image:
       repository: bitnami/kubectl
       tag: latest
+
+## @section Images
+##
+initImages:
+  dockerize:
+    ## @param initImages.dockerize.repository Dockerize image
+    ## @param initImages.dockerize.tag Dockerize injector tag
+    ## @param initImages.dockerize.registry The registry to pull the Dockerize image
+    registry: docker.io
+    repository: jwilder/dockerize
+    tag: "0.6.1"
+  postgresql:
+    ## @param initImages.postgresql.repository PostgreSQL image
+    ## @param initImages.postgresql.tag PostgreSQL tag
+    ## @param initImages.postgresql.registry The registry to pull the PostgreSQL image
+    registry: docker.io
+    repository: postgres
+    tag: "17"

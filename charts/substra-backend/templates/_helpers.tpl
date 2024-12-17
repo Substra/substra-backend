@@ -242,7 +242,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.waitMinIOContainer" -}}
 {{- if or .Values.minio.enabled .Values.localstack.enabled }}
 - name: wait-minio
-  image: jwilder/dockerize:0.6.1
+  image: {{ include "common.images.name" $.Values.initImages.dockerize }}
   securityContext:
       allowPrivilegeEscalation: false
       runAsNonRoot: true
@@ -257,7 +257,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "common.waitRedisInitContainer" -}}
 {{- if .Values.redis.enabled }}
 - name: wait-redis
-  image: jwilder/dockerize:0.6.1
+  image: {{ include "common.images.name" $.Values.initImages.dockerize }}
   securityContext:
       allowPrivilegeEscalation: false
       runAsNonRoot: true
@@ -274,7 +274,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 */}}
 {{- define "common.waitPostgresqlInitContainer" -}}
 - name: wait-postgresql
-  image: postgres
+  image: {{ include "common.images.name" $.Values.initImages.postgresql }}
   securityContext:
       allowPrivilegeEscalation: false
       runAsNonRoot: true
