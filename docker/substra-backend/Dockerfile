@@ -1,4 +1,4 @@
-FROM ubuntu:23.10 AS build
+FROM ubuntu:24.04 AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
@@ -52,7 +52,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip install --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
