@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
-    && apt-get --no-install-recommends -y install software-properties-common python3-pip gcc python3.11-dev python3-watchdog celery python-is-python3 python3.11-venv \
+    && apt-get --no-install-recommends -y install software-properties-common python3-pip gcc python3-dev python3-watchdog celery python-is-python3 python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
