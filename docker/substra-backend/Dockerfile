@@ -1,18 +1,18 @@
-FROM ubuntu:23.10 AS build
+FROM ubuntu:24.04 AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update -y \
     && apt-get install --no-install-recommends -y --only-upgrade gnupg \
-    && apt-get --no-install-recommends -y install software-properties-common python3-pip gcc python3.11-dev python3-watchdog celery python-is-python3 python3.11-venv \
+    && apt-get --no-install-recommends -y install software-properties-common python3-pip gcc python3-dev python3-watchdog celery python-is-python3 python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
 
-RUN python3.11 -m venv /venv
+RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 RUN pip install --upgrade --no-cache-dir pip==24.0 \
@@ -52,7 +52,7 @@ COPY ./backend/dev-requirements.txt /usr/src/app/.
 RUN pip install --no-cache-dir -r dev-requirements.txt
 COPY backend/dev-startup.sh .
 
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 
 ARG VERSION
 ENV BACKEND_VERSION=${VERSION:-dev}
