@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
 
-RUN python3.11 -m venv /venv
+RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV="/venv"
 
 RUN pip install --upgrade --no-cache-dir pip==24.0 \
