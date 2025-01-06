@@ -1,6 +1,10 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.15.1] - 2025-01-06
+
+Fix missing role on builder pod
+
 ## [26.15.0] - 2024-12-16
 
 Bump app version to 1.0.0
@@ -25,7 +29,7 @@ Pods relying on redis uses a new init container `wait-redis` which wait for redi
 
 # Added
 
-`.Values.builder.saveImageTimeoutSeconds` configuring the timeout for the Celery task `SaveImageTask`. 
+`.Values.builder.saveImageTimeoutSeconds` configuring the timeout for the Celery task `SaveImageTask`.
 
 ## [26.12.0] - 2024-09-30
 

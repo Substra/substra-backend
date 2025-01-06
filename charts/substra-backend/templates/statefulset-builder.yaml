@@ -33,10 +33,7 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-builder
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/component: substra-builder
-        {{- if .Values.privateCa.enabled }}
-        # Needed to create the secret with the certificate
         role-api-k8s-client: 'true'
-        {{- end }}
         role-database-client: 'true'
         role-internet-egress: 'true'
         role-orchestrator-client: 'true'
