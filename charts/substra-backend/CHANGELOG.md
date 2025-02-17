@@ -1,10 +1,5 @@
 # Changelog
 
-<!-- towncrier release notes start -->
-## [26.15.2] - 2025-02-17
-
-Inject OIDC config in migration job & bump app version to 1.0.1
-
 ## [26.15.1] - 2025-01-06
 
 Fix missing role on builder pod
