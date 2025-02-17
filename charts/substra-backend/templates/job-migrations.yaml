@@ -61,6 +61,8 @@ spec:
               name: {{ include "substra.fullname" . }}-orchestrator
           - configMapRef:
               name: {{ include "substra.fullname" . }}-database
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-oidc
           - secretRef:
               name: {{ include "substra-backend.database.secret-name" . }}
         env:

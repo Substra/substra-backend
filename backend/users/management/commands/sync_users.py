@@ -1,9 +1,12 @@
+import os
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from backend.settings.deps.utils import to_bool
 from organization.management.commands.base_sync import BaseSyncCommand
 from organization.management.commands.base_sync import Element
 from users.models import UserChannel
@@ -52,6 +55,9 @@ class Command(BaseSyncCommand):
         return user
 
     def delete(self, discarded_keys: set[str]) -> None:
-        # Prevent the deletion of virtual users
-        discarded_keys.difference_update(settings.VIRTUAL_USERNAMES.values())
-        super().delete(discarded_keys)
+        if to_bool(os.environ.get("OIDC_ENABLED", "false")):
+            self.stdout.write("Not deleting users that are not in the file to avoid removing OIDC users.")
+        else:
+            # Prevent the deletion of virtual users
+            discarded_keys.difference_update(settings.VIRTUAL_USERNAMES.values())
+            super().delete(discarded_keys)
