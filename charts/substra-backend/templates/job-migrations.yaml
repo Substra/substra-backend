@@ -15,6 +15,10 @@ spec:
       labels:
           {{ include "substra.labels" . | nindent 10 }}
           role-database-client: 'true'
+          # If OIDC is enabled, we need to allow the job to access the internet to fetch the user info, as it is based on the user info.
+          {{- if .Values.oidc.enabled }}
+          role-internet-ingress: 'true'
+          {{- end }}
     spec:
       restartPolicy: OnFailure
       automountServiceAccountToken: false
