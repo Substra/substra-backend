@@ -1,6 +1,10 @@
 # Changelog
 
 <!-- towncrier release notes start -->
+## [26.15.3] - 2025-30-05
+
+Allow OIDC connection to job-migration
+
 ## [26.15.2] - 2025-02-17
 
 Inject OIDC config in migration job & bump app version to 1.0.1
