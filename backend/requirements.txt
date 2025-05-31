@@ -1,4 +1,4 @@
-Django==4.2.16
+Django==4.2.18
 structlog==24.4.0
 django-structlog==8.1.0
 celery==5.4.0
